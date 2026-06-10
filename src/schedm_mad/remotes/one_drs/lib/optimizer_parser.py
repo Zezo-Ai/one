@@ -17,6 +17,7 @@
 
 from collections import defaultdict
 import io
+import platform
 import sys
 from dataclasses import replace
 
@@ -43,10 +44,13 @@ from lib.models.scheduler_driver_action import SchedulerDriverAction
 class OptimizerParser:
     CONFIG_FILE_PATH = "/etc/one/schedulers/one_drs.conf"
     SOLVERS = {"GLPK": GLPK_CMD, "CBC": COIN_CMD, "COINMP": COINMP_DLL}
+    # pulp ships the CBC solver under a per-architecture folder; map the
+    # Linux uname -m value to pulp's folder name
+    ARCH_MAP = {"x86_64": "i64", "aarch64": "arm64"}
     DEFAULT_CONFIG = {
         "DEFAULT_SCHED": {
             "SOLVER": "CBC",
-            "SOLVER_PATH": "/usr/lib/one/python/pulp/solverdir/cbc/linux/64/cbc",
+            "SOLVER_PATH": "/usr/lib/one/python/pulp/solverdir/cbc/linux/$arch/cbc",
         },
         "PLACE": {
             "POLICY": "BALANCE",
@@ -90,6 +94,18 @@ class OptimizerParser:
     @property
     def plan_id(self) -> int:
         return self._plan_id
+
+    @classmethod
+    def _resolve_solver_path(cls, path: str) -> str:
+        machine = platform.machine().lower()
+        arch = cls.ARCH_MAP.get(machine)
+        if arch is None:
+            arch = "i64"
+            cls.log_general(
+                "WARNING",
+                f"Unsupported architecture '{machine}', defaulting to '{arch}'.",
+            )
+        return path.replace("$arch", arch)
 
     @staticmethod
     def log_general(level: str, message: str):
@@ -140,6 +156,7 @@ class OptimizerParser:
                 default_solver["SOLVER"],
                 default_solver["SOLVER_PATH"],
             )
+        solver_path = cls._resolve_solver_path(solver_path)
         solver = cls.SOLVERS[solver_name](msg=False, timeLimit=60, path=solver_path)
         if not solver.available():
             cls.log_general("ERROR", f"Solver {solver_name} is not available.")

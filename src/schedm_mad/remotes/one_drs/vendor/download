@@ -38,13 +38,9 @@ done
 # Remove precompiled bytecode
 find "$SELF/lib/" -type d -name "__pycache__" -exec rm -rf {} +
 
-# Remove uneeded folders
+# Remove uneeded folders (keep linux/i64 for amd64 and linux/arm64)
 CBC_BASE="${SELF}/lib/pulp/solverdir/cbc"
 
-folders=("${CBC_BASE}/osx" \
-         "${CBC_BASE}/win" \
-         "${CBC_BASE}/linux/32")
-
-for folder in "${folders[@]}"; do
-    [ -d "$folder" ] && rm -rf "$folder"
-done
+rm -rf "${CBC_BASE}/osx" \
+       "${CBC_BASE}/win" \
+       "${CBC_BASE}/linux/i32"
