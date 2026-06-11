@@ -572,7 +572,7 @@ class VirtualMachineSGAttachGRPC : public RequestGRPC, public VirtualMachineAPI
 {
 public:
     VirtualMachineSGAttachGRPC()
-        : RequestGRPC("one.vm.sgattach", "/one.vm.VirtualMachineService/SGAttach")
+        : RequestGRPC("one.vm.attachsg", "/one.vm.VirtualMachineService/SGAttach")
         , VirtualMachineAPI(static_cast<Request&>(*this))
     {}
 
@@ -587,7 +587,7 @@ class VirtualMachineSGDetachGRPC : public RequestGRPC, public VirtualMachineAPI
 {
 public:
     VirtualMachineSGDetachGRPC()
-        : RequestGRPC("one.vm.sgdetach", "/one.vm.VirtualMachineService/SGDetach")
+        : RequestGRPC("one.vm.detachsg", "/one.vm.VirtualMachineService/SGDetach")
         , VirtualMachineAPI(static_cast<Request&>(*this))
     {}
 
@@ -974,12 +974,12 @@ public:
 
 /* ------------------------------------------------------------------------- */
 
-class VirtualMachinePoolShowbackCalculateGRPC : public RequestGRPC, public VirtualMachinePoolAPI
+class VirtualMachinePoolShowbackCalculateGRPC : public RequestGRPC, public VirtualMachinePoolShowbackCalculateAPI
 {
 public:
     VirtualMachinePoolShowbackCalculateGRPC()
         : RequestGRPC("one.vmpool.calculateshowback", "/one.vm.VirtualMachineService/PoolCalculateShowback")
-        , VirtualMachinePoolAPI(static_cast<Request&>(*this))
+        , VirtualMachinePoolShowbackCalculateAPI(static_cast<Request&>(*this))
     {}
 
     void request_execute(const google::protobuf::Message* _request,
