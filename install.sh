@@ -2923,7 +2923,7 @@ if [ "$UNINSTALL" = "no" ] ; then
     if [ $ARCH = 'x86_64' ]; then
         rm -rf $DESTDIR$LIB_LOCATION/python/pulp/solverdir/cbc/linux/arm64/cbc
     else
-        rm -rf $DESTDIR$LIB_LOCATION/python/pulp/solverdir/cbc/linux/64/cbc
+        rm -rf $DESTDIR$LIB_LOCATION/python/pulp/solverdir/cbc/linux/i64/cbc
     fi
 else
     for d in `echo $DELETE_DIRS | awk '{for (i=NF;i>=1;i--) printf $i" "}'`; do
