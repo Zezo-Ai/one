@@ -40,6 +40,7 @@ class ObjectXML;
  *     <LAST_BACKUP_ID> ID of the active backup(*)
  *     <LAST_BACKUP_SIZE> SIZE of the active backup(*)
  *     <ACTIVE_FLATTEN> if true current chain is being flatten
+ *     <INTERACTIVE> if true backup is being performed interactively
  *   <BACKUP_IDS>
  *     <ID> ID of the image with a valid backup
  *
@@ -50,6 +51,7 @@ class ObjectXML;
  *    - BACKUP_VOLATILE "NO"
  *    - FS_FREEZE "NONE"
  *    - KEEP_LAST (empty = keep all)
+ *    - INTERACTIVE "NO"
  */
 class Backups
 {
@@ -119,6 +121,7 @@ public:
      *     - KEEP_LAST
      *     - FS_FREEZE
      *     - MODE
+     *     - INTERACTIVE
      *
      *  The following attributes are stored in the configuration and refers
      *  only to the active backup operation
@@ -204,6 +207,11 @@ public:
     void backup_job_id(int id)
     {
         config.replace("BACKUP_JOB_ID", id);
+    }
+
+    void interactive(bool interactive)
+    {
+        config.replace("INTERACTIVE", interactive);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -302,6 +310,15 @@ public:
         }
 
         return id;
+    }
+
+    bool interactive() const
+    {
+        bool i = false;
+
+        config.get("INTERACTIVE", i);
+
+        return i;
     }
 
     /* ---------------------------------------------------------------------- */

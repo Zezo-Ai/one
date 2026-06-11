@@ -1008,6 +1008,10 @@ int ImageManager::stat_image(Template*     img_tmpl,
                          << one_util::xml_escape(res)
                          << "</PATH>";
 
+                img_tmpl->get("SIZE", res);
+
+                img_data << "<SIZE>" << one_util::xml_escape(res) << "</SIZE>";
+
                 img_tmpl->get("BACKUP_JOB_ID", res);
 
                 if (!res.empty())

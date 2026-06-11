@@ -1,0 +1,123 @@
+#!/usr/bin/env ruby
+
+# -------------------------------------------------------------------------- #
+# Copyright 2002-2026, OpenNebula Project, OpenNebula Systems                #
+#                                                                            #
+# Licensed under the Apache License, Version 2.0 (the "License"); you may    #
+# not use this file except in compliance with the License. You may obtain    #
+# a copy of the License at                                                   #
+#                                                                            #
+# http://www.apache.org/licenses/LICENSE-2.0                                 #
+#                                                                            #
+# Unless required by applicable law or agreed to in writing, software        #
+# distributed under the License is distributed on an "AS IS" BASIS,          #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+# See the License for the specific language governing permissions and        #
+# limitations under the License.                                             #
+#--------------------------------------------------------------------------- #
+
+# %%RUBYGEMS_SETUP_BEGIN%%
+require 'load_opennebula_paths'
+# %%RUBYGEMS_SETUP_END%%
+
+$LOAD_PATH << RUBY_LIB_LOCATION
+
+require 'base64'
+require 'fileutils'
+require 'json'
+require 'pathname'
+require 'rexml/document'
+require 'securerandom'
+require 'shellwords'
+
+require_relative '../../tm/lib/datastore'
+require_relative '../../tm/lib/tm_action'
+
+# BACKUP host:remote_dir DISK_ID:..:DISK_ID vm_uuid bj_id vm_id ds_id
+
+TransferManager::Datastore.load_env
+
+_xml = STDIN.read
+
+dir      = ARGV[0].split(':')
+_vm_uuid = ARGV[2]
+_bj_id   = ARGV[3]
+vm_id    = ARGV[4]
+_ds_id   = ARGV[5]
+
+backup_id = SecureRandom.hex[0, 6].to_s
+
+dsrdir = ENV['BACKUP_BASE_PATH']
+
+vm_dir = if dsrdir
+             Pathname.new("#{dsrdir}/#{vm_id}/backup").cleanpath.to_s
+         else
+             Pathname.new("#{dir[1]}/backup").cleanpath.to_s
+         end
+
+begin
+    vm_host = dir[0]
+rescue StandardError => e
+    STDERR.puts e.message
+    exit(-1)
+end
+
+vm_xml_path  = "#{vm_dir}/vm.xml"
+exports_path = "#{vm_dir}/interactive_exports.json"
+
+# rubocop:disable Layout/HeredocIndentation
+cmd = <<~EOS
+    ruby -rjson -rbase64 - #{Shellwords.escape(vm_xml_path)} #{Shellwords.escape(exports_path)} <<'RUBY'
+        payload = {
+            "vm_xml" => Base64.strict_encode64(File.binread(ARGV.fetch(0))),
+            "exports_json" => Base64.strict_encode64(File.binread(ARGV.fetch(1)))
+        }
+
+        STDOUT.write(JSON.generate(payload))
+RUBY
+EOS
+# rubocop:enable Layout/HeredocIndentation
+
+# Read vm.xml and interactive_exports.json
+rc = TransferManager::Action.ssh 'read_interactive_backup_metadata',
+                                 :host     => vm_host,
+                                 :cmds     => cmd,
+                                 :nostdout => false,
+                                 :nostderr => false
+
+if rc.code != 0 || rc.stdout.empty?
+    STDERR.puts "Error reading backup metadata from host #{vm_host}: #{rc.stderr}"
+    exit(-1)
+end
+
+begin
+    metadata = JSON.parse(rc.stdout)
+
+    vm_xml       = Base64.decode64(metadata['vm_xml'].to_s)
+    exports_json = Base64.decode64(metadata['exports_json'].to_s)
+
+    raise StandardError, 'missing vm.xml' if vm_xml.empty?
+    raise StandardError, 'missing interactive_exports.json' if exports_json.empty?
+
+    exports = JSON.parse(exports_json)
+
+    raise StandardError, 'interactive_exports.json does not contain any disks' \
+        if exports.empty?
+
+    backup_size   = 0
+    backup_format = nil
+
+    exports.each_value do |disk|
+        size   = disk['size'].to_i
+        format = disk['format'].to_s
+
+        backup_size   += size if size > 0
+        backup_format ||= format unless format.empty?
+    end
+rescue StandardError => e
+    STDERR.puts "Error parsing backup metadata from host #{vm_host}: #{e.message}"
+    exit(-1)
+end
+
+STDOUT.puts "#{backup_id} #{backup_size} #{backup_format}"
+exit(0)

@@ -214,7 +214,8 @@ std::map<std::string, std::vector<std::string>> VirtualMachineTemplate::UPDATECO
             "KEEP_LAST",
             "BACKUP_VOLATILE",
             "INCREMENT_MODE",
-            "MODE"
+            "MODE",
+            "INTERACTIVE"
         }
     }
 };

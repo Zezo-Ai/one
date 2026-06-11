@@ -356,6 +356,7 @@ VAR_DIRS="$VAR_LOCATION/remotes \
           $VAR_LOCATION/remotes/etc/vmm/lxc \
           $VAR_LOCATION/remotes/etc/vmm/lxc/profiles \
           $VAR_LOCATION/remotes/etc/vnm \
+          $VAR_LOCATION/remotes/etc/onebex \
           $VAR_LOCATION/remotes/im \
           $VAR_LOCATION/remotes/im/lib \
           $VAR_LOCATION/remotes/im/lib/python \
@@ -458,6 +459,7 @@ VAR_DIRS="$VAR_LOCATION/remotes \
           $VAR_LOCATION/remotes/datastore/rsync \
           $VAR_LOCATION/remotes/datastore/restic \
           $VAR_LOCATION/remotes/datastore/virtiofs \
+          $VAR_LOCATION/remotes/datastore/interactive \
           $VAR_LOCATION/remotes/market \
           $VAR_LOCATION/remotes/market/http \
           $VAR_LOCATION/remotes/market/one \
@@ -478,7 +480,12 @@ VAR_DIRS="$VAR_LOCATION/remotes \
           $VAR_LOCATION/remotes/scheduler/one_drs \
           $VAR_LOCATION/remotes/scheduler/one_drs/lib \
           $VAR_LOCATION/remotes/scheduler/one_drs/lib/mapper \
-          $VAR_LOCATION/remotes/scheduler/one_drs/lib/models"
+          $VAR_LOCATION/remotes/scheduler/one_drs/lib/models \
+          $VAR_LOCATION/remotes/onebex \
+          $VAR_LOCATION/remotes/onebex/app \
+          $VAR_LOCATION/remotes/onebex/config \
+          $VAR_LOCATION/remotes/onebex/etc \
+          $VAR_LOCATION/remotes/onebex/exporters"
 
 FIREEDGE_DIRS="$FIREEDGE_LOCATION"
 
@@ -650,6 +657,7 @@ INSTALL_FILES=(
     DATASTORE_DRIVER_RSYNC_SCRIPTS:$VAR_LOCATION/remotes/datastore/rsync
     DATASTORE_DRIVER_RESTIC_SCRIPTS:$VAR_LOCATION/remotes/datastore/restic
     DATASTORE_DRIVER_VIRTIOFS_SCRIPTS:$VAR_LOCATION/remotes/datastore/virtiofs
+    DATASTORE_DRIVER_INTERACTIVE_SCRIPTS:$VAR_LOCATION/remotes/datastore/interactive
     DATASTORE_DRIVER_ETC_SCRIPTS:$VAR_LOCATION/remotes/etc/datastore
 
     MARKETPLACE_DRIVER_HTTP_SCRIPTS:$VAR_LOCATION/remotes/market/http
@@ -740,6 +748,12 @@ INSTALL_FILES=(
 
     ONEPROMETHEUS_SMARTCTL_EXPORTER_BIN_FILES:$BIN_LOCATION
     ONEPROMETHEUS_SMARTCTL_EXPORTER_FILES:$LIB_LOCATION/smartctl_exporter
+
+    ONEBEX_FILES:$VAR_LOCATION/remotes/onebex
+    ONEBEX_APP_FILES:$VAR_LOCATION/remotes/onebex/app
+    ONEBEX_CONFIG_FILES:$VAR_LOCATION/remotes/onebex/config
+    ONEBEX_EXPORTERS_FILES:$VAR_LOCATION/remotes/onebex/exporters
+    ONEBEX_ETC_FILES:$VAR_LOCATION/remotes/etc/onebex
 )
 
 INSTALL_CLIENT_FILES=(
@@ -1412,6 +1426,9 @@ TM_LIB_FILES="src/tm_mad/lib/kvm.rb \
               src/tm_mad/lib/lvm.rb \
               src/tm_mad/lib/shell.rb \
               src/tm_mad/lib/tm_action.rb \
+              src/tm_mad/lib/backup_command.rb \
+              src/tm_mad/lib/backup_image.rb \
+              src/tm_mad/lib/backup_kvm.rb \
               src/tm_mad/lib/backup_qcow2.rb \
               src/tm_mad/lib/backup_lvmthin.rb \
               src/tm_mad/lib/backup_rbd.rb \
@@ -1653,6 +1670,8 @@ DATASTORE_DRIVER_COMMON_SCRIPTS="src/datastore_mad/remotes/xpath.rb \
                              src/datastore_mad/remotes/lxd_downloader.sh \
                              src/datastore_mad/remotes/restic_downloader.rb \
                              src/datastore_mad/remotes/rsync_downloader.rb \
+                             src/datastore_mad/remotes/onebex_downloader.rb \
+                             src/datastore_mad/remotes/onebex_writer.rb \
                              src/datastore_mad/remotes/url.rb \
                              src/datastore_mad/remotes/lvm.rb \
                              src/datastore_mad/remotes/libfs.sh"
@@ -1759,6 +1778,18 @@ DATASTORE_DRIVER_VIRTIOFS_SCRIPTS="src/datastore_mad/remotes/virtiofs/clone \
                                    src/datastore_mad/remotes/virtiofs/snap_revert \
                                    src/datastore_mad/remotes/virtiofs/stat"
 
+DATASTORE_DRIVER_INTERACTIVE_SCRIPTS="src/datastore_mad/remotes/interactive/backup \
+                                      src/datastore_mad/remotes/interactive/backup_cancel \
+                                      src/datastore_mad/remotes/interactive/increment_flatten \
+                                      src/datastore_mad/remotes/interactive/mkfs \
+                                      src/datastore_mad/remotes/interactive/monitor \
+                                      src/datastore_mad/remotes/interactive/restore \
+                                      src/datastore_mad/remotes/interactive/rm \
+                                      src/datastore_mad/remotes/interactive/snap_delete \
+                                      src/datastore_mad/remotes/interactive/snap_flatten \
+                                      src/datastore_mad/remotes/interactive/snap_revert \
+                                      src/datastore_mad/remotes/interactive/stat"
+
 DATASTORE_DRIVER_ETC_SCRIPTS="src/datastore_mad/remotes/datastore.conf"
 
 #-------------------------------------------------------------------------------
@@ -1839,6 +1870,24 @@ SCHEDULER_DRIVER_ONEDRS_MODELS="src/schedm_mad/remotes/one_drs/lib/models/__init
             src/schedm_mad/remotes/one_drs/lib/models/vm_pool_extended.py \
             src/schedm_mad/remotes/one_drs/lib/models/vnet.py \
             src/schedm_mad/remotes/one_drs/lib/models/vnet_pool_extended.py"
+
+#-------------------------------------------------------------------------------
+# OneBEX files, to be installed under $REMOTES_LOCATION/onebex (except config)
+#-------------------------------------------------------------------------------
+
+ONEBEX_FILES="src/onebex/onebex-server.rb \
+              src/onebex/bex_state.rb \
+              src/onebex/config.ru"
+
+ONEBEX_APP_FILES="src/onebex/app/routes.rb \
+                  src/onebex/app/helpers.rb"
+
+ONEBEX_CONFIG_FILES="src/onebex/config/environment.rb"
+
+ONEBEX_EXPORTERS_FILES="src/onebex/exporters/registry.rb \
+                        src/onebex/exporters/nbd.rb"
+
+ONEBEX_ETC_FILES="src/onebex/etc/onebex-server.conf"
 
 #-------------------------------------------------------------------------------
 # Migration scripts for onedb command, to be installed under $LIB_LOCATION

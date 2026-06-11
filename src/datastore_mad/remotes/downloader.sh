@@ -371,6 +371,7 @@ else
 fi
 
 GLOBAL_CURL_ARGS="--fail -sS -k -L $(curl_retry_args)"
+INTERACTIVE=false
 
 case "$FROM" in
 http://*|https://*)
@@ -448,6 +449,16 @@ purefa://*)
     [ $ret -ne 0 ] && exit $ret
     eval "$defs"
     ;;
+onebex://*)
+    # onebex://<ds_id>:<port>
+    file_type="application/octet-stream"
+    INTERACTIVE=true
+
+    defs=`$VAR_LOCATION/remotes/datastore/onebex_downloader.rb "$FROM" "$TO" | grep -e '^command=' -e '^clean_command='`
+    ret=$?
+    [ $ret -ne 0 ] && exit $ret
+    eval "$defs"
+    ;;
 *)
     if [ ! -r $FROM ]; then
         echo "Cannot read from $FROM" >&2
@@ -457,65 +468,80 @@ purefa://*)
     ;;
 esac
 
-[ -z "$file_type" ] && file_type=$(get_type "$command")
-decompressor=$(get_decompressor "$file_type")
+if [ "$INTERACTIVE" = true ]; then
+    if [ -n "$HASH_TYPE" ]; then
+        echo "Hash check not supported for interactive downloads" >&2
+        exit -1
+    fi
 
-if [ -z "${MAX_SIZE}" ]; then
-    eval "$command" | \
-        tee >( hasher $HASH_TYPE) | \
-        decompress "$decompressor" "$TO"
+    eval "$command"
+    ret=$?
 
-    if [ "$?" != "0" -o "$PIPESTATUS" != "0" ]; then
+    if [ "$ret" != "0" -a "$ret" != "143" ]; then
         echo "Error copying" >&2
         exit -1
     fi
 else
-    # Order of the 'head' command is here on purpose:
-    # 1. We want to download more bytes than needed to get a requested
-    #    number of bytes on the output. Decompressor may need more
-    #    data to decompress the stream.
-    # 2. Decompressor command is also misused to detect SIGPIPE error.
-    eval "$command" | \
-        decompress "$decompressor" "$TO" 2>/dev/null | \
-        head -c "${MAX_SIZE}"
+    [ -z "$file_type" ] && file_type=$(get_type "$command")
+    decompressor=$(get_decompressor "$file_type")
 
-    # Following table shows exit codes of each command
-    # in the pipe for various scenarios:
-    #
-    # ----------------------------------------------------
-    # | $COMMAND | TYPE          | PIPESTATUS | BEHAVIOUR
-    # ----------------------------------------------------
-    # | cat      | partial       | 141 141  0 | OK
-    # | cat      | full          |   0   0  0 | OK
-    # | cat      | error         |   1   0  0 | fail
-    # | curl     | partial       |  23 141  0 | OK
-    # | curl     | full          |   0   0  0 | OK
-    # | curl     | error         |  22   0  0 | fail
-    # | ssh      | partial       | 255 141  0 | OK
-    # | ssh      | full          |   0   0  0 | OK
-    # | ssh      | error ssh     | 255   0  0 | fail
-    # | ssh      | error ssh cat |   1   0  0 | fail
-    if [ \( "${PIPESTATUS[0]}" != '0' -a "${PIPESTATUS[1]}" = '0' \) \
-         -o \( "${PIPESTATUS[1]}" != '0' -a "${PIPESTATUS[1]}" != '141' \) \
-         -o \( "${PIPESTATUS[2]}" != "0" \) ];
-    then
-        echo "Error copying" >&2
-        exit -1
+    if [ -z "${MAX_SIZE}" ]; then
+        eval "$command" | \
+            tee >( hasher $HASH_TYPE) | \
+            decompress "$decompressor" "$TO"
+
+        if [ "$?" != "0" -o "$PIPESTATUS" != "0" ]; then
+            echo "Error copying" >&2
+            exit -1
+        fi
+    else
+        # Order of the 'head' command is here on purpose:
+        # 1. We want to download more bytes than needed to get a requested
+        #    number of bytes on the output. Decompressor may need more
+        #    data to decompress the stream.
+        # 2. Decompressor command is also misused to detect SIGPIPE error.
+        eval "$command" | \
+            decompress "$decompressor" "$TO" 2>/dev/null | \
+            head -c "${MAX_SIZE}"
+
+        # Following table shows exit codes of each command
+        # in the pipe for various scenarios:
+        #
+        # ----------------------------------------------------
+        # | $COMMAND | TYPE          | PIPESTATUS | BEHAVIOUR
+        # ----------------------------------------------------
+        # | cat      | partial       | 141 141  0 | OK
+        # | cat      | full          |   0   0  0 | OK
+        # | cat      | error         |   1   0  0 | fail
+        # | curl     | partial       |  23 141  0 | OK
+        # | curl     | full          |   0   0  0 | OK
+        # | curl     | error         |  22   0  0 | fail
+        # | ssh      | partial       | 255 141  0 | OK
+        # | ssh      | full          |   0   0  0 | OK
+        # | ssh      | error ssh     | 255   0  0 | fail
+        # | ssh      | error ssh cat |   1   0  0 | fail
+        if [ \( "${PIPESTATUS[0]}" != '0' -a "${PIPESTATUS[1]}" = '0' \) \
+             -o \( "${PIPESTATUS[1]}" != '0' -a "${PIPESTATUS[1]}" != '141' \) \
+             -o \( "${PIPESTATUS[2]}" != "0" \) ];
+        then
+            echo "Error copying" >&2
+            exit -1
+        fi
     fi
-fi
 
-if [ -n "$HASH_TYPE" ]; then
-    HASH_RESULT=$( cat $HASH_FILE)
-    rm $HASH_FILE
-    if [ "$HASH_RESULT" != "$HASH" ]; then
-        echo "Hash does not match" >&2
-        exit -1
+    if [ -n "$HASH_TYPE" ]; then
+        HASH_RESULT=$( cat $HASH_FILE)
+        rm $HASH_FILE
+        if [ "$HASH_RESULT" != "$HASH" ]; then
+            echo "Hash does not match" >&2
+            exit -1
+        fi
     fi
-fi
 
-# Unarchive only if the destination is filesystem
-if [ "$TO" != "-" ]; then
-    unarchive "$TO"
+    # Unarchive only if the destination is filesystem
+    if [ "$TO" != "-" ]; then
+        unarchive "$TO"
+    fi
 fi
 
 # Perform any clean operation

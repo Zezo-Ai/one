@@ -124,6 +124,7 @@ int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string&
     int    iattr;
     bool   battr;
     string sattr;
+    bool   intattr;
 
     if ( tmpl->remove("BACKUP_CONFIG", cfg_a) == 0 )
     {
@@ -150,6 +151,7 @@ int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string&
     /*  - BACKUP_VOLATILE                                                     */
     /*  - FSFREEZE                                                            */
     /*  - MODE                                                                */
+    /*  - INTERACTIVE                                                         */
     /* ---------------------------------------------------------------------- */
     if (cfg->vector_value("KEEP_LAST", iattr) == 0)
     {
@@ -236,6 +238,30 @@ int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string&
                 config.replace("INCREMENT_MODE", "CBT");
             }
         }
+    }
+
+    if (cfg->vector_value("INTERACTIVE", intattr) == 0)
+    {
+        config.replace("INTERACTIVE", intattr);
+    }
+    else if (!append)
+    {
+        config.replace("INTERACTIVE", "NO");
+    }
+
+    config.get("INCREMENT_MODE", sattr);
+    one_util::toupper(sattr);
+
+    if (interactive() && mode() == INCREMENT && sattr == "SNAPSHOT")
+    {
+        error_str = "Interactive backups do not support SNAPSHOT increment mode.";
+
+        for (auto &i : cfg_a)
+        {
+            delete i;
+        }
+
+        return -1;
     }
 
     for (auto &i : cfg_a)
