@@ -513,7 +513,9 @@ module VirtualMachineManagerKVM
             filter = env('DEFAULT_ATTACH_NIC_FILTER') if filter.empty?
             filter.encode!(:xml => :attr) unless filter.empty?
 
-            if exist?('BRIDGE') && @xml["#{@xpath_prefix}NETWORK_MODE"] != 'dummy'
+            dummy = @xml["#{@xpath_prefix}NETWORK_MODE"].to_s.casecmp('dummy').zero?
+
+            if exist?('BRIDGE') && !dummy
                 bridge_type = @xml["#{@xpath_prefix}BRIDGE_TYPE"]
 
                 case bridge_type

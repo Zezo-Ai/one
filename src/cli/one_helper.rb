@@ -1875,9 +1875,11 @@ Bash symbols must be escaped on STDIN passing'
             user, object=*res
 
             template<<"#{section.upcase}=[\n"
-            if object.downcase == 'auto'
-                template<<"  NETWORK_MODE=\"#{object}\"\n"
-            elsif object.downcase == 'dummy'
+            if section.upcase == 'NIC' && ['auto', 'dummy'].include?(object.downcase)
+                extra_attributes.each do |extra_attribute|
+                    key, value = extra_attribute.split('=')
+                    template<<"  #{key.upcase}=\"#{value}\",\n"
+                end
                 template<<"  NETWORK_MODE=\"#{object}\"\n"
             else
                 template<<"  #{name.upcase}_UNAME=\"#{user}\",\n" if user

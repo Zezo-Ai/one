@@ -232,7 +232,7 @@ class OpenNebulaVM
                     "TEMPLATE/NIC[ATTACH='YES']"
                 end
 
-        @xml["#{xpath}/NETWORK_MODE"] == 'dummy'
+        @xml["#{xpath}/NETWORK_MODE"].to_s.casecmp('dummy').zero?
     end
 
     def swap_limitable?
