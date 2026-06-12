@@ -1533,6 +1533,13 @@ static int get_cluster_requirements(Template *tmpl, set<int>& cluster_ids,
 
     for (int i=0; i<num_vatts; i++)
     {
+        std::string net_mode = vatts[i]->vector_value("NETWORK_MODE");
+
+        if ( one_util::icasecmp(net_mode, "DUMMY") )
+        {
+            continue;
+        }
+
         update_nic_cluster_id(vatts[i]);
 
         rc = check_and_set_cluster_id("CLUSTER_ID", vatts[i], cluster_ids);
@@ -1552,6 +1559,13 @@ static int get_cluster_requirements(Template *tmpl, set<int>& cluster_ids,
     for (int i=0; i<num_vatts; i++)
     {
         if ( vatts[i]->vector_value("TYPE") != "NIC" )
+        {
+            continue;
+        }
+
+        std::string net_mode = vatts[i]->vector_value("NETWORK_MODE");
+
+        if ( one_util::icasecmp(net_mode, "DUMMY") )
         {
             continue;
         }

@@ -685,7 +685,6 @@ int LibVirtDriver::deployment_description_kvm(
 
     string mac;
     string bridge;
-    string vn_mad;
     string script;
     string model;
     string ip;
@@ -693,6 +692,7 @@ int LibVirtDriver::deployment_description_kvm(
     string filter;
     string virtio_queues;
     string bridge_type;
+    string net_mode;
     string nic_id;
 
     string i_avg_bw;
@@ -1906,7 +1906,6 @@ int LibVirtDriver::deployment_description_kvm(
     {
         nic_id        = nic[i]->vector_value("NIC_ID");
         bridge        = nic[i]->vector_value("BRIDGE");
-        vn_mad        = nic[i]->vector_value("VN_MAD");
         mac           = nic[i]->vector_value("MAC");
         target        = nic[i]->vector_value("TARGET");
         script        = nic[i]->vector_value("SCRIPT");
@@ -1915,6 +1914,7 @@ int LibVirtDriver::deployment_description_kvm(
         filter        = nic[i]->vector_value("FILTER");
         virtio_queues = nic[i]->vector_value("VIRTIO_QUEUES");
         bridge_type   = nic[i]->vector_value("BRIDGE_TYPE");
+        net_mode      = nic[i]->vector_value("NETWORK_MODE");
 
         vrouter_ip = nic[i]->vector_value("VROUTER_IP");
 
@@ -1926,7 +1926,7 @@ int LibVirtDriver::deployment_description_kvm(
         o_peak_bw = nic[i]->vector_value("OUTBOUND_PEAK_BW");
         o_peak_kb = nic[i]->vector_value("OUTBOUND_PEAK_KB");
 
-        if ( bridge.empty() )
+        if ( bridge.empty() || one_util::icasecmp(net_mode, "DUMMY") )
         {
             file << "\t\t<interface type='ethernet'>" << endl;
         }

@@ -999,15 +999,15 @@ class ExecDriver < VirtualMachineDriver
         end
 
         begin
-            source = xml_data.elements["#{base_tmpl}/BRIDGE"]
-            mac    = xml_data.elements["#{base_tmpl}/MAC"]
-            target = xml_data.elements["#{base_tmpl}/TARGET"]
-            vn_mad = xml_data.elements["#{base_tmpl}/VN_MAD"]
+            source   = xml_data.elements["#{base_tmpl}/BRIDGE"]
+            mac      = xml_data.elements["#{base_tmpl}/MAC"]
+            target   = xml_data.elements["#{base_tmpl}/TARGET"]
+            vn_mad   = xml_data.elements["#{base_tmpl}/VN_MAD"]
 
-            source = source.text.strip
-            mac    = mac.text.strip
-            target = target.text.strip
-            vn_mad = vn_mad.text.strip
+            source   = source.text.strip if source
+            mac      = mac.text.strip if mac
+            target   = target.text.strip if target
+            vn_mad   = vn_mad.text.strip if vn_mad
         rescue StandardError
             send_message(action, RESULT[:failure], id,
                          'Missing VN_MAD, BRIDGE, TARGET or MAC in VM NIC')

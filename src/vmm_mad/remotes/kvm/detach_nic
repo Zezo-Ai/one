@@ -100,6 +100,8 @@ if vm.pci_attach?
     rc = detach_device(domain, vm.hostdev_xml(:force_hostdev => true))
 elsif vm.dpdk_interface?(mac)
     rc = detach_device(domain, vm.dpdk_interface_xml(mac))
+elsif vm.dummy_interface?(mac)
+    rc = detach_device(domain, vm.interface_xml)
 else
     rc = detach_nic(domain, mac)
 end

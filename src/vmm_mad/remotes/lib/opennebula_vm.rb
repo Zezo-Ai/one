@@ -225,6 +225,16 @@ class OpenNebulaVM
         @xml["#{xpath}/BRIDGE_TYPE"] == 'openvswitch_dpdk'
     end
 
+    def dummy_interface?(mac = nil)
+        xpath = if mac
+                    "TEMPLATE/NIC[MAC='#{mac}']"
+                else
+                    "TEMPLATE/NIC[ATTACH='YES']"
+                end
+
+        @xml["#{xpath}/NETWORK_MODE"] == 'dummy'
+    end
+
     def swap_limitable?
         if File.exist?('/sys/fs/cgroup/memory/memory.memsw.limit_in_bytes')
             return true

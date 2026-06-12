@@ -15,6 +15,7 @@
 /* -------------------------------------------------------------------------- */
 
 #include "VirtualMachineNic.h"
+#include "AddressRange.h"
 #include "NebulaUtil.h"
 #include "Nebula.h"
 #include "SecurityGroupPool.h"
@@ -31,6 +32,11 @@ int VirtualMachineNic::release_network_leases(int vmid)
     VirtualNetworkPool* vnpool = nd.get_vnpool();
 
     int vnid;
+
+    if ( is_dummy() )
+    {
+        return 0;
+    }
 
     if ( vector_value("NETWORK_ID", vnid) != 0 )
     {
@@ -154,7 +160,10 @@ void VirtualMachineNic::authorize(PoolObjectSQL::ObjectType ot, int uid,
 
     get_security_groups(sgroups);
 
-    vnpool->authorize_nic(ot, this, uid, ar, sgroups, check_lock);
+    if ( !is_dummy() )
+    {
+        vnpool->authorize_nic(ot, this, uid, ar, sgroups, check_lock);
+    }
 
     for (auto sg : sgroups)
     {
@@ -310,7 +319,7 @@ int VirtualMachineNics::get_network_leases(int vm_id, int uid,
         {
             VirtualMachineNic * nic = new VirtualMachineNic(vnic, nic_id);
 
-            if (net_mode != "AUTO")
+            if (net_mode != "AUTO" && net_mode != "DUMMY")
             {
                 if ( nic_default != 0 )
                 {
@@ -337,15 +346,33 @@ int VirtualMachineNics::get_network_leases(int vm_id, int uid,
                 nic->set_nic_name();
 
                 nic->replace("NIC_ID", nic_id);
+
+                if (net_mode == "DUMMY")
+                {
+                    if ( nic_default != 0 )
+                    {
+                        nic->merge(nic_default, false);
+                    }
+
+                    if (nic->vector_value("MAC").empty())
+                    {
+                        unsigned int rmac[2];
+
+                        rmac[1] = VirtualNetworkPool::mac_prefix();
+                        rmac[0] = one_util::random<uint32_t>() & 0xFFFFFFFF;
+
+                        nic->replace("MAC", AddressRange::mac_to_s(rmac));
+                    }
+                }
             }
 
             nic_id++;
 
             add_attribute(nic, nic->get_nic_id());
         }
-        else if (net_mode == "AUTO")
+        else if (net_mode == "AUTO" || net_mode == "DUMMY")
         {
-            error_str = "Alias is incompatible with auto mode";
+            error_str = "Alias is incompatible with mode " + net_mode;
 
             return -1;
         }
@@ -646,13 +673,28 @@ int VirtualMachineNics::set_up_attach_nic(int vmid, int uid, int cluster_id,
     // -------------------------------------------------------------------------
     // Acquire a new network lease
     // -------------------------------------------------------------------------
-    int rc = vnpool->nic_attribute(PoolObjectSQL::VM, nic, max_nic_id+1, uid,
-                                   vmid, error_str);
-
-    if ( rc == -1 ) //-2 is not using a pre-defined network
+    if ( !nic->is_dummy() )
     {
-        delete nic;
-        return -1;
+        if ( vnpool->nic_attribute(PoolObjectSQL::VM, nic, max_nic_id+1, uid,
+                                   vmid, error_str) == -1 )
+        {
+            delete nic;
+            return -1;
+        }
+    }
+    else
+    {
+        nic->replace("NIC_ID", max_nic_id + 1);
+
+        if (nic->vector_value("MAC").empty())
+        {
+            unsigned int rmac[2];
+
+            rmac[1] = VirtualNetworkPool::mac_prefix();
+            rmac[0] = one_util::random<uint32_t>() & 0xFFFFFFFF;
+
+            nic->replace("MAC", AddressRange::mac_to_s(rmac));
+        }
     }
 
     // -------------------------------------------------------------------------

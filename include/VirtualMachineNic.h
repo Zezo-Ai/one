@@ -154,6 +154,16 @@ public:
     }
 
     /**
+     *  Check if the NIC uses dummy mode
+     */
+    bool is_dummy() const
+    {
+        std::string net_mode = vector_value("NETWORK_MODE");
+
+        return one_util::icasecmp(net_mode, "DUMMY");
+    }
+
+    /**
      *  Check if the NIC is using a shared address
      */
     bool is_shared() const

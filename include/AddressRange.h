@@ -71,6 +71,12 @@ public:
     static std::string type_to_str(AddressType ob);
 
     /**
+     *  MAC to string
+     *    @param mac in array form
+     */
+    static std::string mac_to_s(const unsigned int mac[]);
+
+    /**
      *  Return the string representation of an AddressType
      *    @param ob the type
      *    @return the string
@@ -604,12 +610,6 @@ private:
      *    @return 0 on success
      */
     static int mac_to_i(std::string mac, unsigned int i_mac[]);
-
-    /**
-     *  MAC to string
-     *    @param mac in array form
-     */
-    static std::string mac_to_s(const unsigned int mac[]);
 
     /**
      *  IP version 4 to binary (32 bits)
