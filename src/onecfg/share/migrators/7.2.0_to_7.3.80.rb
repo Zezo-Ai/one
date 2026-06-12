@@ -25,10 +25,25 @@ module Migrator
         #TBD
     end
 
-
     # Upgrade steps
-    def up;
-        #TBD
+    def up
+        process('/etc/one/onegate-server.conf', 'Yaml') do |old, new|
+            break unless old.is_a?(Hash) && new.is_a?(Hash)
+
+            feature7226_sinatra_conf(old, new)
+        end
+    end
+
+    def feature7226_sinatra_conf(old, new)
+        host = old[:host]
+        port = old[:port]
+
+        new.delete(:host)
+        new.delete(:port)
+
+        new[:server] ||= {}
+        new[:server][:bind] = host if old.key?(:host)
+        new[:server][:port] = port if old.key?(:port)
     end
 
 end

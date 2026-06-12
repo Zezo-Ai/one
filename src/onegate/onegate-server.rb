@@ -90,15 +90,18 @@ rescue Exception => e
     exit 1
 end
 
-set :bind, $conf[:host]
-set :port, $conf[:port]
-set :host_authorization, { :permitted_hosts => [] }
+server_conf = {
+    :host_authorization => { :permitted_hosts => [] },
+    :dump_errors        => true,
+    :raise_errors       => false,
+    :show_exceptions    => false
+}.merge($conf[:server] || {})
+
+server_conf.each do |key, value|
+    set key, value
+end
 
 set :config, $conf
-
-set :dump_errors, true
-set :raise_errors, false
-set :show_exceptions, false
 
 include CloudLogger
 
