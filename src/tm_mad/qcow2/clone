@@ -91,7 +91,7 @@ ANFS_HOST="${XPATH_ELEMENTS[j++]}"
 ANFS_PATH="${XPATH_ELEMENTS[j++]}"
 ANFS_OPTS="${XPATH_ELEMENTS[j++]}"
 
-DS_SYS_ID="$(basename "$DST_DIR")"
+DS_SYS_ID="$(dirname "$DST_DIR" | xargs basename)"
 
 while IFS= read -r -d '' element; do
     XPATH_ELEMENTS[i++]="$element"
