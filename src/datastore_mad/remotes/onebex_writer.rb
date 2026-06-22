@@ -71,28 +71,28 @@ begin
     FileUtils.touch(to)
 
     server = TCPServer.new(bind_addr, port)
-    terminated = false
+    socket = nil
 
-    trap('TERM') do
-        terminated = true
+    pipe_r, pipe_w = IO.pipe
+
+    Thread.new do
+        loop do
+            rs, _ws, _es = IO.select([pipe_r])
+            break if rs[0] == pipe_r
+        end
+
+        server.close rescue nil
+        socket.close rescue nil
+    end
+
+    Signal.trap(:TERM) do
+        pipe_w.write 'W'
     end
 
     loop do
-        break if terminated
-
         begin
-            ready = IO.select([server], nil, nil, 0.5)
-        rescue Errno::EINTR
-            next
-        end
-
-        next unless ready
-        break if terminated
-
-        socket = nil
-
-        begin
-            socket = server.accept_nonblock
+            socket = nil
+            socket = server.accept
             socket.binmode
 
             header = read_exact(socket, 16)
@@ -113,14 +113,14 @@ begin
                 file.flush
                 file.fsync
             end
-        rescue IO::WaitReadable, Errno::EINTR
-            next
+        rescue IOError, Errno::EBADF
+            break if server.closed?
+
+            raise
         ensure
             socket.close rescue nil
         end
     end
-
-    server.close rescue nil
 rescue StandardError => e
     STDERR.puts e.full_message
     exit(-1)
