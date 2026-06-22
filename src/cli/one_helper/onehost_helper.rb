@@ -16,7 +16,6 @@
 
 require 'time'
 require 'fileutils'
-require 'HostSyncManager'
 require 'one_helper'
 require 'one_helper/onevm_helper'
 require 'opennebula/host'
@@ -198,6 +197,16 @@ class OneHostHelper < OpenNebulaHelper::OneHelper
 
     NUM_THREADS = 15
     def sync(host_ids, options)
+        # HostSyncManager lives in the driver tree and is only shipped with the
+        # server packages. It is required lazily here so that a CLI-only install
+        # (opennebula-tools) keeps working for every other onehost subcommand,
+        # and only 'onehost sync' degrades when the driver libs are absent.
+        begin
+            require 'HostSyncManager'
+        rescue LoadError
+            return -1, "'onehost sync' is only available on the frontend."
+        end
+
         if Process.uid.zero? || Process.gid.zero?
             STDERR.puts("Cannot run 'onehost sync' as root")
             exit(-1)
