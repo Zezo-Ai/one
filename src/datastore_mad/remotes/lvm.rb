@@ -83,9 +83,13 @@ module MAD
             LVMWrapper.lvmsync(sh)
         end
 
-        def self.with_lvm_lock(vgname)
+        def self.lock_path(vgname)
             lockname = vgname.gsub(/[^A-Za-z0-9_.-]/, '_')
-            lockpath = File.join(LOCK_DIR, "tm-onelvm-#{lockname}.lock")
+            File.join(LOCK_DIR, "tm-onelvm-#{lockname}.lock")
+        end
+
+        def self.with_lvm_lock(vgname)
+            lockpath = lock_path(vgname)
 
             FileUtils.mkdir_p(LOCK_DIR)
 
@@ -106,6 +110,28 @@ module MAD
 
         def with_lvm_lock(vgname, &block)
             LVMWrapper.with_lvm_lock(vgname, &block)
+        end
+
+        def self.with_lvm_lock_sh(vgname, sh)
+            lockpath = lock_path(vgname)
+
+            <<~EOF
+                (
+                    mkdir -p '#{LOCK_DIR}'
+                    umask 0027
+                    exec 9> '#{lockpath}'
+                    if ! flock -w #{LOCK_TIMEOUT} 9; then
+                        echo "Could not acquire exclusive lock on #{lockpath}" >&2
+                        exit 1
+                    fi
+
+                    #{sh.strip.hd_indent}
+                )
+            EOF
+        end
+
+        def with_lvm_lock_sh(vgname, sh)
+            LVMWrapper.with_lvm_lock_sh(vgname, sh)
         end
 
     end
