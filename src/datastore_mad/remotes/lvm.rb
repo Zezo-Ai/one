@@ -17,7 +17,9 @@
 #--------------------------------------------------------------------------- #
 
 require 'rexml/document'
+require 'fileutils'
 require 'opennebula'
+require 'timeout'
 require 'CommandManager' # SSHCommand, LocalCommand
 
 # Extend string class with formatting utils
@@ -51,7 +53,7 @@ module MAD
         # Return nil either if the node does not exist, or if it's empty
         def xml_text(xpath, required = false)
             val = self[xpath]&.text
-            val = nil if val&.empty?
+            val = nil if val && val.empty?
             raise "Missing required XML attribute: '#{xpath}'" if required && !val
 
             val
@@ -61,6 +63,10 @@ module MAD
 
     # Trait for classes that wrap some LVM component
     module LVMWrapper
+
+        LOCK_DIR = '/var/lock/one'
+        LOCK_TIMEOUT = 120
+        LOCK_SLEEP = 0.5
 
         # For some reason, using 'lvscan -q' instead of '-qq' sometimes returns an error 141. It
         # looks like it may be trying to show some prompt but no idea what.
@@ -75,6 +81,31 @@ module MAD
 
         def lvmsync(sh)
             LVMWrapper.lvmsync(sh)
+        end
+
+        def self.with_lvm_lock(vgname)
+            lockname = vgname.gsub(/[^A-Za-z0-9_.-]/, '_')
+            lockpath = File.join(LOCK_DIR, "tm-onelvm-#{lockname}.lock")
+
+            FileUtils.mkdir_p(LOCK_DIR)
+
+            File.open(lockpath, File::RDWR | File::CREAT, 0o640) do |file|
+                Timeout.timeout(LOCK_TIMEOUT) do
+                    sleep LOCK_SLEEP until file.flock(File::LOCK_EX | File::LOCK_NB)
+                end
+
+                begin
+                    yield
+                ensure
+                    file.flock(File::LOCK_UN)
+                end
+            end
+        rescue Timeout::Error
+            raise StandardError, "Could not acquire exclusive lock on #{lockpath}"
+        end
+
+        def with_lvm_lock(vgname, &block)
+            LVMWrapper.with_lvm_lock(vgname, &block)
         end
 
     end
@@ -223,6 +254,11 @@ module MAD
                 if [ -z "$(sudo lvs --noheading -S 'vg_name = #{@vgname} && lv_name = #{@lvname}')" ]; then
                     # ... create it
                     sudo lvcreate -W n --thin -L '#{poolsize}M' '#{@lvfname}' -ky -Zy -an
+                fi
+                lv_attr="$(sudo lvs --noheading -o lv_attr '#{@lvfname}' | tr -d '[:space:]')"
+                if [ "${lv_attr#t}" = "$lv_attr" ]; then
+                    echo "Invalid thin pool '#{@lvfname}' lv_attr='$lv_attr'; expected 't*'" >&2
+                    exit 1
                 fi
             EOF
         end
@@ -486,6 +522,14 @@ module MAD
             super(lvmsync(script), errmsg)
         end
 
+        # LVM operations which change VG metadata should be run through this to prevent
+        # concurrency issues
+        def run_bridge_locked(script, errmsg = nil)
+            with_lvm_lock(@vgname) do
+                run_bridge(script, errmsg)
+            end
+        end
+
     end
 
     # Image
@@ -566,7 +610,7 @@ module MAD
         end
 
         def activate(activate = true)
-            @ds.run_bridge(@lv.activate_sh(activate))
+            @ds.run_bridge_locked(@lv.activate_sh(activate))
         end
 
         # Alias
@@ -578,46 +622,61 @@ module MAD
         # Create thin pool + volume. Tries to be atomic, i.e., on failure the half-created LV is
         # destroyed again.
         def create(activate = false)
-            @ds.run_bridge(<<~EOF, 'Error creating LV')
-                #{@lv.create_sh(@size, :activate => true).strip}
-                #{@lv.mkswap_sh.strip if @format == 'swap'}
-                #{@lv.mkfs_sh(@fs).strip if @fs && @format != 'save_as'}
-                #{@lv.activate_sh(false).strip unless activate}
-            EOF
+            format_sh = [
+                (@lv.mkswap_sh.strip if @format == 'swap'),
+                (@lv.mkfs_sh(@fs).strip if @fs && @format != 'save_as')
+            ].compact.join("\n")
+
+            @ds.run_bridge_locked(@lv.create_sh(@size, :activate => true),
+                                  'Error creating LV')
+
+            @ds.run_bridge(format_sh, 'Error creating LV') unless format_sh.empty?
+
+            unless activate
+                @ds.run_bridge_locked(@lv.activate_sh(false), 'Error creating LV')
+            end
         rescue StandardError => e
-            @ds.run_bridge(@lv.delete_sh(:cleanup_pool => true))
+            @ds.run_bridge_locked(@lv.delete_sh(:cleanup_pool => true))
             raise e
         end
 
         # Activate the base image and copy
+        # Locking is more fine-grained in this method as the `dd` can take a bit of time
         def clone_from_path
-            script = <<~EOF
+            @ds.run_bridge_locked(<<~EOF)
                 sudo lvchange -K -ay #{@path}
-                dd if=/dev/#{@path} of=#{@lv.dev} bs=1M conv=sparse
-                sudo lvchange -an #{@path}
-                #{@lv.activate_sh(false).strip}
             EOF
-            @ds.run_bridge(script)
+
+            begin
+                @ds.run_bridge(<<~EOF)
+                    dd if=/dev/#{@path} of=#{@lv.dev} bs=1M conv=sparse
+                EOF
+            ensure
+                @ds.run_bridge_locked(<<~EOF)
+                    sudo lvchange -an #{@path}
+                    #{@lv.activate_sh(false).strip}
+                EOF
+            end
         end
 
         # Activate persistent image as VM disk in a specific location (host)
         def activate_and_link(dst)
-            vmdir  = dst.path.dirname
-            script = <<~EOF
-                mkdir -p '#{vmdir}'
-                hostname -f > "#{vmdir}/.host" || :
-                rm -f '#{vmdir.parent}/.monitor'
-                #{@lv.activate_sh.strip}
-                ln -s '#{@lv.dev}' '#{dst.path}'
-            EOF
-
-            MAD.run(dst.host, lvmsync(script), "Error linking disk #{@lv.lvfname} to #{dst}")
+            vmdir = dst.path.dirname
+            with_lvm_lock(@lv.vgname) do
+                MAD.run(dst.host, lvmsync(<<~EOF), "Error linking disk #{@lv.lvfname} to #{dst}")
+                    mkdir -p '#{vmdir}'
+                    hostname -f > "#{vmdir}/.host" || :
+                    rm -f '#{vmdir.parent}/.monitor'
+                    #{@lv.activate_sh.strip}
+                    ln -s '#{@lv.dev}' '#{dst.path}'
+                EOF
+            end
         end
 
         # Delete volume (+ snapshots + cleanup thin pool, if it's a persistent image)
         def delete
-            @ds.run_bridge(@lv.delete_sh(:with_snapshots => true, :cleanup_pool => true),
-                           'Error removing LV')
+            @ds.run_bridge_locked(@lv.delete_sh(:with_snapshots => true, :cleanup_pool => true),
+                                  'Error removing LV')
         end
 
     end
@@ -705,29 +764,38 @@ module MAD
         # Create thin pool + volume. Tries to be atomic, i.e., on failure the half-created LV is
         # destroyed again.
         def create(dst, is_swap)
-            MAD.run(dst.host, <<~EOF, 'Error creating LV')
-                #{@lv.create_sh(@size, :activate => true).strip}
-                #{@lv.mkswap_sh.strip if is_swap}
-                #{@lv.mkfs_sh(@fs).strip if @fs}
-                ln -sf '#{@lv.dev}' '#{dst.path}'
-            EOF
+            post_create_sh = [
+                (@lv.mkswap_sh.strip if is_swap),
+                (@lv.mkfs_sh(@fs).strip if @fs),
+                "ln -sf '#{@lv.dev}' '#{dst.path}'"
+            ].compact.join("\n")
+            create_sh = @lv.create_sh(@size, :activate => true)
+
+            with_lvm_lock(@lv.vgname) do
+                MAD.run(dst.host, lvmsync(create_sh), 'Error creating LV')
+            end
+
+            MAD.run(dst.host, lvmsync(post_create_sh), 'Error creating LV')
         rescue StandardError => e
-            MAD.run(dst.host, @lv.delete_sh(:cleanup_pool => true))
+            with_lvm_lock(@lv.vgname) do
+                MAD.run(dst.host, lvmsync(@lv.delete_sh(:cleanup_pool => true)))
+            end
             raise e
         end
 
         # Create thin pool + volume. Atomic.
         def clone_from_lv(from_lvname)
-            script = <<~EOF
-                #{@lv.clone_sh(from_lvname, @size).strip}
-
-                #{@lv.activate_sh.strip}
-                #{symlink(:sh => true).strip}
-            EOF
-
-            MAD.run(@host, lvmsync(script), "Error cloning disk #{@lv.lvfname} to #{@path}")
+            with_lvm_lock(@lv.vgname) do
+                MAD.run(@host, lvmsync(<<~EOF), "Error cloning disk #{@lv.lvfname} to #{@path}")
+                    #{@lv.clone_sh(from_lvname, @size).strip}
+                    #{@lv.activate_sh.strip}
+                    #{symlink(:sh => true).strip}
+                EOF
+            end
         rescue StandardError => e
-            MAD.run(@host, lvmsync(@lv.delete_sh(:cleanup_pool => true)))
+            with_lvm_lock(@lv.vgname) do
+                MAD.run(@host, lvmsync(@lv.delete_sh(:cleanup_pool => true)))
+            end
             raise e
         end
 
@@ -741,17 +809,23 @@ module MAD
 
         # TODO: freeze/thaw VM when live
         def snap_create(snap_id, opts = {})
-            MAD.run(@host, lvmsync(@lv.snap_create_sh(snap_id, opts).strip),
-                    'Error creating snapshot')
+            with_lvm_lock(@lv.vgname) do
+                MAD.run(@host, lvmsync(@lv.snap_create_sh(snap_id, opts).strip),
+                        'Error creating snapshot')
+            end
         end
 
         def snap_revert(snap_id)
-            MAD.run(@host, lvmsync(@lv.snap_revert_sh(snap_id, :activate => true)),
-                    'Error reverting snapshot')
+            with_lvm_lock(@lv.vgname) do
+                MAD.run(@host, lvmsync(@lv.snap_revert_sh(snap_id, :activate => true)),
+                        'Error reverting snapshot')
+            end
         end
 
         def snap_delete(snap_id)
-            MAD.run(@host, lvmsync(@lv.snap_delete_sh(snap_id)), 'Error deleting snapshot')
+            with_lvm_lock(@lv.vgname) do
+                MAD.run(@host, lvmsync(@lv.snap_delete_sh(snap_id)), 'Error deleting snapshot')
+            end
         end
 
     end
