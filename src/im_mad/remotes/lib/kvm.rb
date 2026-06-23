@@ -412,6 +412,7 @@ class Domain < BaseDomain
     def ga_stats
         if KVM::QEMU_GA[:enabled]
             extract_ga_attributes
+            extract_network_attributes
 
             ga_commands = KVM::QEMU_GA[:commands].transform_values do |ga_cmd_config|
                 ga_cmd_config[:command].gsub('$vm_id', @vm[:id])
@@ -459,6 +460,31 @@ class Domain < BaseDomain
             @vm[:os_version] = osinfo['version-id'] || 'unknown'
             @vm[:os_machine] = osinfo['machine'] || 'unknown'
         end
+    end
+
+    # Get network information 
+    def extract_network_attributes
+        net_command    = "one-#{@vm[:id]} '{\"execute\":\"guest-network-get-interfaces\"}'"
+        net_text, _e, s = KVM.virsh(:qemuga, net_command)
+        net_info = JSON.parse(net_text)['return']
+        guest_ips = []
+        if s.success?
+            net_info.each do |info|
+                next if info['name'] == 'lo'
+                next unless info.keys.include? 'ip-addresses'
+
+                info['ip-addresses'].map do |ip|
+                    next if ['127.0.0.1', '::1'] in ip['ip-address']
+                    next unless %w(ipv4 ipv6).include? ip['ip-address-type']
+
+                    guest_ips.append(ip['ip-address'])
+                end
+            end
+        end
+
+        return if guest_ips.empty?
+
+        @vm[:guest_ip_addresses] = guest_ips.join(',')
     end
 
     # Check if command should run on given VM (OS filters)

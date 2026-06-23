@@ -45,7 +45,9 @@ class BaseDomain
         'os_id',
         'os_type',
         'os_version',
-        'os_machine'
+        'os_machine',
+        'guest_ip',
+        'guest_ip_addresses'
     ]
 
     DB_MONITOR_KEYS = MONITOR_KEYS.clone
