@@ -54,15 +54,22 @@ class Hash
     # Recursively converts all hash keys to symbols
     #
     # @return [Hash] a new hash with symbolized keys
-    def deep_symbolize_keys
+    def deep_symbolize_keys(downcase: false)
         each_with_object({}) do |(key, value), result|
-            sym_key = key.is_a?(String) ? key.to_sym : key
+            sym_key = if key.is_a?(String)
+                          (downcase ? key.downcase : key).to_sym
+                      else
+                          key
+                      end
+
             result[sym_key] =
                 case value
                 when Hash
-                    value.deep_symbolize_keys
+                    value.deep_symbolize_keys(:downcase => downcase)
                 when Array
-                    value.map {|e| e.is_a?(Hash) ? e.deep_symbolize_keys : e }
+                    value.map do |e|
+                        e.is_a?(Hash) ? e.deep_symbolize_keys(:downcase => downcase) : e
+                    end
                 else
                     value
                 end

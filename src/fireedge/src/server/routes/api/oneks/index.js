@@ -23,6 +23,7 @@ const {
   nodegroupFamilies,
   cluster,
   clusterFamily,
+  validateClusterDeployment,
   create,
   clusterDelete,
   clusterKubeconfig,
@@ -66,6 +67,10 @@ const endpoints = [
   {
     action: clusterEndpoint,
     ...Commands[Actions.ENDPOINT],
+  },
+  {
+    action: validateClusterDeployment,
+    ...Commands[Actions.VALIDATE_DEPLOYMENT],
   },
   {
     action: cluster,

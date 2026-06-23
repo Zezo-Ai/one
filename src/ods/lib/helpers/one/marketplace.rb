@@ -24,8 +24,6 @@ module OpenNebula
             # Defines methods to manage Marketplace Apps in OpenNebula
             module Marketplace
 
-                IMPORT_TAG = 'MARKETPLACE_IMPORT_ID'
-
                 def self.import(client, name, app_id, datastore_id)
                     return OpenNebula::Error.new(
                         'Marketplace appliance ID cannot be empty',
@@ -57,19 +55,6 @@ module OpenNebula
                     tmplt_error = tmplt_ids.find {|tmplt_id| OpenNebula.is_error?(tmplt_id) }
                     return tmplt_error if tmplt_error
 
-                    # Add ID reference to the app in each created image and template
-                    app_tag = { IMPORT_TAG => app['TEMPLATE/IMPORT_ID'] }
-
-                    image_ids.each do |image_id|
-                        rc = Image.update(client, image_id, app_tag, :append => true)
-                        return rc if OpenNebula.is_error?(rc)
-                    end
-
-                    tmplt_ids.each do |template_id|
-                        rc = Template.update(client, template_id, app_tag, :append => true)
-                        return rc if OpenNebula.is_error?(rc)
-                    end
-
                     app
                 end
 
@@ -80,7 +65,7 @@ module OpenNebula
                     !app.nil?
                 end
 
-                def self.name(client, app_id)
+                def self.get(client, app_id)
                     return OpenNebula::Error.new(
                         'Marketplace appliance ID cannot be nil',
                         OpenNebula::Error::EACTION
@@ -93,6 +78,27 @@ module OpenNebula
                         "Marketplace appliance '#{app_id}' not found",
                         OpenNebula::Error::EACTION
                     ) if app.nil?
+
+                    app
+                end
+
+                def self.body(client, app_id, downcase: true)
+                    app = get(client, app_id)
+                    return app if OpenNebula.is_error?(app)
+
+                    body = app.to_hash['MARKETPLACEAPP']
+
+                    return OpenNebula::Error.new(
+                        "Cannot retrieve Marketplace appliance body for resource '#{app_id}'",
+                        OpenNebula::Error::EACTION
+                    ) unless body
+
+                    body.deep_symbolize_keys(:downcase => downcase)
+                end
+
+                def self.name(client, app_id)
+                    app = get(client, app_id)
+                    return app if OpenNebula.is_error?(app)
 
                     name = app.name
                     return OpenNebula::Error.new(

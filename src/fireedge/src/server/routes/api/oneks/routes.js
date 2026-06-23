@@ -31,6 +31,7 @@ const Actions = {
   LIST_NODEGROUP_FAMILIES: 'oneks.list_nodegroup_families',
   SHOW: 'oneks.show',
   SHOW_FAMILY: 'oneks.show_families',
+  VALIDATE_DEPLOYMENT: 'oneks.validate_deployment',
   CREATE: 'oneks.create',
   DELETE: 'oneks.delete',
   KUBECONFIG: 'oneks.kubeconfig',
@@ -91,6 +92,17 @@ const Commands = {
     params: {
       name: {
         from: resource,
+      },
+    },
+  },
+  [Actions.VALIDATE_DEPLOYMENT]: {
+    path: `${basepath}/deployment/validate`,
+    apiPath: `${ApiBasePath}/deployment/validate`,
+    httpMethod: POST,
+    auth: true,
+    params: {
+      template: {
+        from: postBody,
       },
     },
   },

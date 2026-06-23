@@ -50,7 +50,7 @@ module OpenNebula
                     !vrouter.nil?
                 end
 
-                def self.name(client, vrouter_id)
+                def self.get(client, vrouter_id)
                     return OpenNebula::Error.new(
                         'VRouter ID cannot be nil', OpenNebula::Error::EACTION
                     ) if vrouter_id.nil?
@@ -59,6 +59,27 @@ module OpenNebula
 
                     rc = vrouter.info
                     return rc if OpenNebula.is_error?(rc)
+
+                    vrouter
+                end
+
+                def self.body(client, vrouter_id, downcase: true)
+                    vrouter = get(client, vrouter_id)
+                    return vrouter if OpenNebula.is_error?(vrouter)
+
+                    body = vrouter.to_hash['VROUTER']
+
+                    return OpenNebula::Error.new(
+                        "Cannot retrieve VRouter body for resource '#{vrouter_id}'",
+                        OpenNebula::Error::EACTION
+                    ) unless body
+
+                    body.deep_symbolize_keys(:downcase => downcase)
+                end
+
+                def self.name(client, vrouter_id)
+                    vrouter = get(client, vrouter_id)
+                    return vrouter if OpenNebula.is_error?(vrouter)
 
                     name = vrouter.name
                     return OpenNebula::Error.new(
@@ -97,14 +118,8 @@ module OpenNebula
                 end
 
                 def self.public_endpoint(client, vrouter_id)
-                    return OpenNebula::Error.new(
-                        'VRouter ID cannot be nil', OpenNebula::Error::EACTION
-                    ) if vrouter_id.nil?
-
-                    vrouter = OpenNebula::VirtualRouter.new_with_id(vrouter_id, client)
-
-                    rc = vrouter.info
-                    return rc if OpenNebula.is_error?(rc)
+                    vrouter = get(client, vrouter_id)
+                    return vrouter if OpenNebula.is_error?(vrouter)
 
                     endpoint = vrouter.to_hash.dig('VROUTER', 'TEMPLATE', 'NIC', 0, 'VROUTER_IP')
 

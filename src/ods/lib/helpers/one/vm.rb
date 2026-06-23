@@ -45,6 +45,20 @@ module OpenNebula
                     vm
                 end
 
+                def self.body(client, vm_id, downcase: true)
+                    vm = get(client, vm_id)
+                    return vm if OpenNebula.is_error?(vm)
+
+                    body = vm.to_hash['VM']
+
+                    return OpenNebula::Error.new(
+                        "Cannot retrieve VM body for resource '#{vm_id}'",
+                        OpenNebula::Error::EACTION
+                    ) unless body
+
+                    body.deep_symbolize_keys(:downcase => downcase)
+                end
+
                 def self.exists?(client, name)
                     vm = find(client, name)
                     return vm if OpenNebula.is_error?(vm)
@@ -52,7 +66,7 @@ module OpenNebula
                     !vm.nil?
                 end
 
-                def self.name(client, vm_id)
+                def self.get(client, vm_id)
                     return OpenNebula::Error.new(
                         'VM ID cannot be nil', OpenNebula::Error::EACTION
                     ) if vm_id.nil?
@@ -61,6 +75,13 @@ module OpenNebula
 
                     rc = vm.info
                     return rc if OpenNebula.is_error?(rc)
+
+                    vm
+                end
+
+                def self.name(client, vm_id)
+                    vm = get(client, vm_id)
+                    return vm if OpenNebula.is_error?(vm)
 
                     name = vm.name
                     return OpenNebula::Error.new(

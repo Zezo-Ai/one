@@ -47,6 +47,20 @@ module OpenNebula
                     vnet
                 end
 
+                def self.body(client, network_id, downcase: true)
+                    vnet = get(client, network_id)
+                    return vnet if OpenNebula.is_error?(vnet)
+
+                    body = vnet.to_hash['VNET']
+
+                    return OpenNebula::Error.new(
+                        "Cannot retrieve VNet body for resource '#{network_id}'",
+                        OpenNebula::Error::EACTION
+                    ) unless body
+
+                    body.deep_symbolize_keys(:downcase => downcase)
+                end
+
                 def self.exists?(client, name)
                     vnet = find(client, name)
                     return vnet if OpenNebula.is_error?(vnet)
@@ -54,15 +68,22 @@ module OpenNebula
                     !vnet.nil?
                 end
 
-                def self.name(client, network_id)
+                def self.get(client, network_id)
                     return OpenNebula::Error.new(
                         'Network ID cannot be nil', OpenNebula::Error::EACTION
                     ) if network_id.nil?
 
-                    vn = OpenNebula::VirtualNetwork.new_with_id(network_id, client)
+                    vnet = OpenNebula::VirtualNetwork.new_with_id(network_id, client)
 
-                    rc = vn.info
+                    rc = vnet.info
                     return rc if OpenNebula.is_error?(rc)
+
+                    vnet
+                end
+
+                def self.name(client, network_id)
+                    vn = get(client, network_id)
+                    return vn if OpenNebula.is_error?(vn)
 
                     name = vn.to_hash.dig('VNET', 'NAME')
                     return OpenNebula::Error.new(

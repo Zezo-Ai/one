@@ -160,6 +160,21 @@ const oneKsApi = oneApi.injectEndpoints({
       },
       transformResponse: (data) => data ?? {},
     }),
+    validateOneKsDeployment: builder.mutation({
+      /**
+       * Validates a OneKS deployment placement.
+       *
+       * @param {object} params - Request params
+       * @returns {object} Deployment validation result
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.VALIDATE_DEPLOYMENT
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+    }),
     getKubeConfig: builder.query({
       /**
        * Retrieves the Kubernetes configuration for a cluster.
@@ -411,6 +426,7 @@ const oneKsQueries = (({
 
   // Mutations
   useCreateOneKsClusterMutation,
+  useValidateOneKsDeploymentMutation,
   useDeleteOneKsClusterMutation,
   useDeleteNodeGroupMutation,
   useScaleOneKsClusterNodeGroupsMutation,
@@ -439,6 +455,7 @@ const oneKsQueries = (({
 
   // Mutations
   useCreateOneKsClusterMutation,
+  useValidateOneKsDeploymentMutation,
   useDeleteOneKsClusterMutation,
   useDeleteNodeGroupMutation,
   useScaleOneKsClusterNodeGroupsMutation,

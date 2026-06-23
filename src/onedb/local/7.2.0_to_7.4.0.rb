@@ -36,6 +36,7 @@ module Migrator
         init_log_time
 
         bug7244
+        feature7676
 
         log_time
 
@@ -55,6 +56,37 @@ module Migrator
 
                 json['uuid'] = json['name']
                 group_body.children[0].content = json.to_json
+
+                @db[:document_pool].where(:oid => row[:oid]).update(:body => doc.root.to_s)
+            end
+        end
+    end
+
+    # Move existing OneKS cluster networks into the deployment section
+    def feature7676
+        @db.transaction do
+            @db[:document_pool].where(:type => 120).each do |row|
+                doc = nokogiri_doc(row[:body], 'document_pool')
+
+                cluster_body = doc.at_xpath('/DOCUMENT/TEMPLATE/CLUSTER_BODY')
+                json         = JSON.parse(cluster_body.text)
+
+                next if json.key?('deployment')
+
+                public_network  = json.delete('public_network')
+                private_network = json.delete('private_network')
+
+                next if public_network.nil? || private_network.nil?
+
+                json['deployment'] = {
+                    'cluster'  => { 'id' => 0 },
+                    'networks' => {
+                        'public'  => { 'id' => public_network },
+                        'private' => { 'id' => private_network }
+                    }
+                }
+
+                cluster_body.children[0].content = json.to_json
 
                 @db[:document_pool].where(:oid => row[:oid]).update(:body => doc.root.to_s)
             end

@@ -19,6 +19,7 @@ const { defaults, httpCodes } = require('server/utils/constants')
 const { httpResponse, parsePostData } = require('server/utils/server')
 const {
   oneKsSchema,
+  oneKsDeploymentSchema,
   oneKsScaleNodeGroupSchema,
   oneKsCreateNodeGroupSchema,
 } = require('server/routes/api/oneks/schemas')
@@ -306,6 +307,69 @@ const nodegroupFamilies = (
 }
 
 /**
+ * Validate a OneKS deployment placement.
+ *
+ * @param {object} res - http response
+ * @param {Function} next - express stepper
+ * @param {object} params - params
+ * @param {object} userData - user data
+ * @returns {void}
+ */
+const validateClusterDeployment = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
+  const { user, password } = userData
+  const command = Commands[Actions.VALIDATE_DEPLOYMENT]
+
+  if (!user || !password || !params.template) {
+    res.locals.httpCode = httpResponse(
+      methodNotAllowed,
+      'Invalid OneKS deployment json',
+      `Invalid OneKS deployment json: received params: ${JSON.stringify(
+        params
+      )}`
+    )
+
+    return next()
+  }
+
+  const v = new Validator()
+  const template = parsePostData(params.template)
+
+  v.addSchema(oneKsDeploymentSchema, '/OneKsDeployment')
+  const valSchema = v.validate(template, oneKsDeploymentSchema)
+
+  if (!valSchema.valid) {
+    res.locals.httpCode = httpResponse(
+      internalServerError,
+      'Invalid schema',
+      `Invalid schema: ${returnSchemaError(
+        valSchema.errors
+      )}, Received template: ${JSON.stringify(template)}`
+    )
+
+    return next()
+  }
+
+  const config = {
+    method: command.httpMethod,
+    path: command.apiPath,
+    user,
+    password,
+    post: params.template,
+  }
+
+  oneKsConnection(
+    config,
+    (data) => success(next, res, data),
+    (data) => error(next, res, data)
+  )
+}
+
+/**
  * Create a oneks cluster.
  *
  * @param {object} res - http response
@@ -338,6 +402,7 @@ const create = (
   const template = parsePostData(params.template)
 
   v.addSchema(oneKsSchema, '/Oneks')
+  v.addSchema(oneKsDeploymentSchema, '/OneKsDeployment')
   const valSchema = v.validate(template, oneKsSchema)
 
   if (!valSchema.valid) {
@@ -1161,6 +1226,7 @@ const oneksApi = {
   nodegroupFamilies,
   cluster,
   clusterFamily,
+  validateClusterDeployment,
   create,
   clusterDelete,
   clusterKubeconfig,

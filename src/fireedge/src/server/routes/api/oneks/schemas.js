@@ -14,6 +14,65 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
+const oneKsDeploymentSchema = {
+  id: '/OneKsDeployment',
+  type: 'object',
+  properties: {
+    cluster: {
+      type: 'object',
+      required: true,
+      properties: {
+        id: {
+          type: 'integer',
+          required: true,
+        },
+      },
+    },
+    networks: {
+      type: 'object',
+      required: true,
+      properties: {
+        public: {
+          type: 'object',
+          required: true,
+          properties: {
+            id: {
+              type: 'integer',
+              required: true,
+            },
+          },
+        },
+        private: {
+          type: 'object',
+          required: true,
+          properties: {
+            id: {
+              type: 'integer',
+              required: true,
+            },
+          },
+        },
+      },
+    },
+    datastores: {
+      type: 'object',
+      required: false,
+      properties: {
+        image: {
+          type: 'object',
+          required: false,
+          properties: {
+            id: {
+              type: 'integer',
+              required: true,
+            },
+          },
+        },
+      },
+    },
+  },
+}
+
 const oneKsSchema = {
   id: '/Oneks',
   type: 'object',
@@ -30,12 +89,8 @@ const oneKsSchema = {
       type: 'string',
       required: true,
     },
-    public_network: {
-      type: 'integer',
-      required: true,
-    },
-    private_network: {
-      type: 'integer',
+    deployment: {
+      $ref: '/OneKsDeployment',
       required: true,
     },
     spec: {
@@ -109,6 +164,7 @@ const oneKsCreateNodeGroupSchema = {
 
 module.exports = {
   oneKsSchema,
+  oneKsDeploymentSchema,
   oneKsScaleNodeGroupSchema,
   oneKsCreateNodeGroupSchema,
 }

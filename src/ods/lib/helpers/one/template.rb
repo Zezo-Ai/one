@@ -43,6 +43,20 @@ module OpenNebula
                     template
                 end
 
+                def self.body(client, template_id, downcase: true)
+                    template = get(client, template_id)
+                    return template if OpenNebula.is_error?(template)
+
+                    body = template.to_hash['VMTEMPLATE']
+
+                    return OpenNebula::Error.new(
+                        "Cannot retrieve VM Template body for resource '#{template_id}'",
+                        OpenNebula::Error::EACTION
+                    ) unless body
+
+                    body.deep_symbolize_keys(:downcase => downcase)
+                end
+
                 def self.exists?(client, name)
                     template = find(client, name)
                     return template if OpenNebula.is_error?(template)
@@ -50,7 +64,7 @@ module OpenNebula
                     !template.nil?
                 end
 
-                def self.name(client, template_id)
+                def self.get(client, template_id)
                     return OpenNebula::Error.new(
                         'Template ID cannot be nil', OpenNebula::Error::EACTION
                     ) if template_id.nil?
@@ -59,6 +73,13 @@ module OpenNebula
 
                     rc = template.info
                     return rc if OpenNebula.is_error?(rc)
+
+                    template
+                end
+
+                def self.name(client, template_id)
+                    template = get(client, template_id)
+                    return template if OpenNebula.is_error?(template)
 
                     name = template.name
                     return OpenNebula::Error.new(
@@ -84,19 +105,84 @@ module OpenNebula
                     template
                 end
 
-                def self.find_by_attr(client, attr, value)
+                def self.find_by_attr(client, attr, value, image_id: nil)
                     template_pool = OpenNebula::TemplatePool.new(client, -1)
 
                     tc = template_pool.info
                     return tc if OpenNebula.is_error?(tc)
 
-                    template = template_pool.find do |tpl|
-                        tpl["TEMPLATE/#{attr}"].to_s == value.to_s
-                    end
-                    return if template.nil?
+                    template_pool.each do |tpl|
+                        next unless tpl["TEMPLATE/#{attr}"].to_s == value.to_s
 
-                    rc = template.info
+                        rc = tpl.info
+                        return rc if OpenNebula.is_error?(rc)
+
+                        next if image_id && tpl['TEMPLATE/DISK/IMAGE_ID'].to_s != image_id.to_s
+
+                        return tpl
+                    end
+
+                    nil
+                end
+
+                def self.find_by_image(client, image_id)
+                    return OpenNebula::Error.new(
+                        'Image ID cannot be nil', OpenNebula::Error::EACTION
+                    ) if image_id.nil?
+
+                    template_pool = OpenNebula::TemplatePool.new(client, -1)
+
+                    rc = template_pool.info
                     return rc if OpenNebula.is_error?(rc)
+
+                    templates = []
+                    template_pool.sort_by {|template| template.id.to_i }.each do |template|
+                        rc = template.info
+                        return rc if OpenNebula.is_error?(rc)
+
+                        body  = template.to_hash.dig('VMTEMPLATE', 'TEMPLATE') || {}
+                        disks = [body['DISK']].flatten.compact
+
+                        next unless disks.any? do |disk|
+                            disk.is_a?(Hash) && disk['IMAGE_ID'].to_s == image_id.to_s
+                        end
+
+                        templates << template
+                    end
+
+                    return if templates.empty?
+
+                    if templates.size > 1
+                        Log.warn(
+                            'ONE',
+                            "Multiple VM Templates found using appliance image #{image_id}. " \
+                            "Using template #{templates.first.id}."
+                        )
+                    end
+
+                    templates.first
+                end
+
+                def self.find_by_marketplace_uuid(client, appliance_uuid, ds_id)
+                    image = OneHelper::Image.find_by_marketplace_uuid(
+                        client, appliance_uuid, ds_id
+                    )
+                    return image if OpenNebula.is_error?(image)
+
+                    return OpenNebula::Error.new(
+                        "Cannot find marketplace appliance image #{appliance_uuid} " \
+                        "in datastore #{ds_id}",
+                        OpenNebula::Error::EACTION
+                    ) unless image
+
+                    template = find_by_image(client, image.id)
+                    return template if OpenNebula.is_error?(template)
+
+                    return OpenNebula::Error.new(
+                        "Cannot find marketplace appliance template #{appliance_uuid} " \
+                        "using image #{image.id}",
+                        OpenNebula::Error::EACTION
+                    ) unless template
 
                     template
                 end
