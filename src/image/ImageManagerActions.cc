@@ -919,9 +919,20 @@ int ImageManager::stat_image(Template*     img_tmpl,
     switch (Image::str_to_type(type_att))
     {
         case Image::FILESYSTEM:
-            res = "0";
+        {
+            img_tmpl->get("PATH", res);
 
-            return 0;
+            if (res.empty())
+            {
+                res = "Missing PATH attribute.";
+                return -1;
+            }
+
+            img_data << "<IMAGE><PATH>"
+                     << one_util::xml_escape(res)
+                     << "</PATH></IMAGE>";
+            break;
+        }
 
         case Image::BACKUP:
             if ( img_tmpl->get("SIZE", res) )

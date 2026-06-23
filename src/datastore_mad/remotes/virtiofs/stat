@@ -61,7 +61,7 @@ SIZE=""
 
 # Try local frontend
 if [ -d "${SRC}" ]; then
-    SIZE=$(du -sb "${SRC}" | cut -f1)
+    SIZE=$(du -sm "${SRC}" | cut -f1)
 fi
 
 # Try a bridge host if local failed
@@ -69,7 +69,7 @@ if [ -z "$SIZE" ] && [ -n "$BRIDGE_LIST" ]; then
     DST_HOST=$(get_destination_host "$ID")
 
     if [ -n "$DST_HOST" ]; then
-        SIZE=$(ssh_exec_and_log "$DST_HOST" "if [ -d '$SRC' ]; then du -sb '$SRC' | cut -f1; fi" 2>/dev/null)
+        SIZE=$(ssh_exec_and_log "$DST_HOST" "if [ -d '$SRC' ]; then du -sm '$SRC' | cut -f1; fi" 2>/dev/null)
     fi
 fi
 
