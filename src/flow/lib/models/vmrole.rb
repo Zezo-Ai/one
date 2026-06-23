@@ -182,6 +182,75 @@ module OpenNebula
             [false, error_msgs.join('\n')]
         end
 
+        # Delete the given scheduled action from the VM in this role that owns it.
+        #
+        # Missing scheduled actions are ignored to keep the operation
+        # idempotent. Missing VM records are also ignored because there is no
+        # scheduled action left to delete from them.
+        #
+        # @param [Integer] sched_id SCHED_ACTION ID
+        #
+        # @return [Array<true, String>, Array<false, String>] true if the action
+        #   was deleted or already missing, false and the error reasons if the
+        #   target VM could not be checked or the deletion failed
+        def delete_sched_action(sched_id)
+            found_vm     = nil
+            error        = nil
+            sched_id     = sched_id.to_i
+
+            nodes.each do |node|
+                vm_id = node['deploy_id']
+
+                if vm_id.nil?
+                    Log.debug LOG_COMP,
+                              "Role #{name} : skipping node without VM",
+                              @service.id
+                    next
+                end
+
+                vm = OpenNebula::VirtualMachine.new_with_id(vm_id,
+                                                            @service.client)
+                rc = vm.info
+                if OpenNebula.is_error?(rc)
+                    Log.warn LOG_COMP,
+                             "Role #{name} : VM #{vm_id} error getting " \
+                             "information; #{rc.message}",
+                             @service.id
+                    next
+                end
+
+                has_sched_action = vm.has_elements?(
+                    "TEMPLATE/SCHED_ACTION[ID=#{sched_id}]"
+                )
+
+                next unless has_sched_action
+
+                found_vm = vm_id
+
+                rc    = vm.sched_action_delete(sched_id)
+                error = OpenNebula.is_error?(rc)
+
+                if error
+                    msg = "Role #{name} : VM #{vm_id} error deleting sched " \
+                          "action #{sched_id}; #{rc.message}"
+
+                    Log.error LOG_COMP, msg, @service.id
+                    @service.log_error(msg)
+                else
+                    msg = "Role #{name} : sched action #{sched_id} " \
+                          "deleted from VM #{vm_id}"
+
+                    Log.debug LOG_COMP, msg, @service.id
+                end
+
+                break
+            end
+
+            return [!error, msg] if found_vm
+
+            [true, "Sched action:#{sched_id} not found on Role:#{name}"]
+        end
+
         ########################################################################
         # Scalability
         ########################################################################

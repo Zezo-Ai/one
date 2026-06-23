@@ -35,6 +35,7 @@ $LOAD_PATH << RUBY_LIB_LOCATION + '/cli'
 
 require 'json'
 require 'tempfile'
+require 'uri'
 
 require 'command_parser'
 require 'opennebula/oneflow_client'
@@ -58,6 +59,10 @@ def check_document_type(response)
             yield
         end
     end
+end
+
+def path_escape(path_segment)
+    URI::DEFAULT_PARSER.escape(path_segment, /[^A-Za-z0-9\-._~]/)
 end
 
 CommandParser::CmdParser.new(ARGV) do
@@ -110,6 +115,14 @@ CommandParser::CmdParser.new(ARGV) do
 
     set :format, :service_id_list, Service.list_to_id_desc('SERVICE') do |arg|
         Service.list_to_id(arg, 'SERVICE')
+    end
+
+    set :format, :sched_id, 'Scheduled action ID' do |arg|
+        if arg.match?(/\A\d+\z/)
+            [0, arg]
+        else
+            [-1, 'Scheduled action ID must be an integer number']
+        end
     end
 
     set :format,
@@ -338,8 +351,9 @@ CommandParser::CmdParser.new(ARGV) do
 
             json   = Service.build_json_action(args[2], params)
             client = helper.client(options)
+            role   = path_escape(args[1])
 
-            client.post("#{RESOURCE_PATH}/#{service_id}/role/#{args[1]}/action",
+            client.post("#{RESOURCE_PATH}/#{service_id}/role/#{role}/action",
                         json)
         end
     end
@@ -366,6 +380,43 @@ CommandParser::CmdParser.new(ARGV) do
             client = helper.client(options)
 
             client.post("#{RESOURCE_PATH}/#{service_id}/action", json)
+        end
+    end
+
+    ###
+
+    sched_delete_desc = <<-EOT.unindent
+        Delete a scheduled action from all the Virtual Machines of a given role.
+    EOT
+
+    command :'sched-delete',
+            sched_delete_desc,
+            :service_id,
+            :role_name,
+            :sched_id do
+        Service.perform_action(args[0]) do |service_id|
+            role = path_escape(args[1])
+
+            helper.client(options).delete(
+                "#{RESOURCE_PATH}/#{service_id}/role/#{role}/sched_action/#{args[2]}"
+            )
+        end
+    end
+
+    ###
+
+    sched_delete_desc = <<-EOT.unindent
+        Delete a scheduled action from all the Virtual Machines of a given service.
+    EOT
+
+    command [:service, :'sched-delete'],
+            sched_delete_desc,
+            :service_id,
+            :sched_id do
+        Service.perform_action(args[0]) do |service_id|
+            helper.client(options).delete(
+                "#{RESOURCE_PATH}/#{service_id}/sched_action/#{args[1]}"
+            )
         end
     end
 

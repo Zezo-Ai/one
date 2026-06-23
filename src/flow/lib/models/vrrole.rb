@@ -67,6 +67,15 @@ module OpenNebula
             )
         end
 
+        def delete_sched_action(sched_id)
+            log_msg = "Sched action:#{sched_id} delete skipped on Virtual " \
+                      "Router Role:#{name}"
+
+            Log.debug LOG_COMP, log_msg, @service.id
+
+            [true, log_msg]
+        end
+
         ########################################################################
         # Scalability
         ########################################################################

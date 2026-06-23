@@ -323,6 +323,50 @@ delete '/service/:id' do
     status 204
 end
 
+# Delete a scheduled action ID from its VM in the service.
+#
+# @param id       [Integer] Service ID
+# @param sched_id [Integer] SCHED_ACTION ID
+delete '/service/:id/sched_action/:sched_id' do
+    unless params[:sched_id].match?(/\A\d+\z/)
+        return internal_error('Sched action ID must be an integer number',
+                              VALIDATION_EC)
+    end
+
+    rc = lcm.service_sched_action_delete(@username,
+                                         params[:id],
+                                         params[:sched_id])
+
+    if OpenNebula.is_error?(rc)
+        return internal_error(rc.message, one_error_to_http(rc.errno))
+    end
+
+    status 204
+end
+
+# Delete a scheduled action ID from its VM in the service role.
+#
+# @param id        [Integer] Service ID
+# @param role_name [String]  Role name
+# @param sched_id  [Integer] SCHED_ACTION ID
+delete '/service/:id/role/:role_name/sched_action/:sched_id' do
+    unless params[:sched_id].match?(/\A\d+\z/)
+        return internal_error('Sched action ID must be an integer number',
+                              VALIDATION_EC)
+    end
+
+    rc = lcm.sched_action_delete(@username,
+                                 params[:id],
+                                 params[:role_name],
+                                 params[:sched_id])
+
+    if OpenNebula.is_error?(rc)
+        return internal_error(rc.message, one_error_to_http(rc.errno))
+    end
+
+    status 204
+end
+
 post '/service/:id/action' do
     action = JSON.parse(request.body.read)['action']
     opts   = action['params']

@@ -151,7 +151,7 @@ class ServiceLCM
         rc
     end
 
-    # Add shced action to service
+    # Add sched action to service
     #
     # @param external_user [String]  External user to impersonate
     # @param service_id    [Integer] Service ID
@@ -177,7 +177,87 @@ class ServiceLCM
     end
     # rubocop:enable Layout/LineLength
 
-    # Add shced action to service role
+    # Delete sched action from service
+    #
+    # @param external_user [String]  External user to impersonate
+    # @param service_id    [Integer] Service ID
+    # @param sched_id      [Integer] SCHED_ACTION ID
+    #
+    # @return [OpenNebula::Error] Error if any
+    def service_sched_action_delete(external_user, service_id, sched_id)
+        result_message = nil
+
+        rc = @srv_pool.get(service_id, external_user) do |service|
+            messages = []
+            errors   = []
+
+            service.roles.each do |_, role|
+                role_rc = role.delete_sched_action(sched_id)
+
+                if OpenNebula.is_error?(role_rc)
+                    errors << role_rc.message
+                elsif role_rc[0]
+                    messages << role_rc[1]
+                else
+                    errors << role_rc[1]
+                end
+            end
+
+            if errors.empty?
+                result_message = messages.join("\n")
+            else
+                OpenNebula::Error.new(errors.join("\n"))
+            end
+        end
+
+        if OpenNebula.is_error?(rc)
+            Log.error LOG_COMP, rc.message
+        else
+            Log.info LOG_COMP, result_message unless result_message.to_s.empty?
+        end
+
+        rc
+    end
+
+    # Delete sched action from service role
+    #
+    # @param external_user [String]  External user to impersonate
+    # @param service_id    [Integer] Service ID
+    # @param role_name     [String]  Role to delete action from
+    # @param sched_id      [Integer] SCHED_ACTION ID
+    #
+    # @return [OpenNebula::Error] Error if any
+    def sched_action_delete(external_user, service_id, role_name, sched_id)
+        result_message = nil
+
+        rc = @srv_pool.get(service_id, external_user) do |service|
+            role = service.roles[role_name]
+
+            if role.nil?
+                break OpenNebula::Error.new("Role '#{role_name}' not found")
+            end
+
+            role_rc = role.delete_sched_action(sched_id)
+
+            if OpenNebula.is_error?(role_rc)
+                break role_rc
+            elsif role_rc[0]
+                result_message = role_rc[1]
+            else
+                OpenNebula::Error.new(role_rc[1])
+            end
+        end
+
+        if OpenNebula.is_error?(rc)
+            Log.error LOG_COMP, rc.message
+        else
+            Log.info LOG_COMP, result_message unless result_message.to_s.empty?
+        end
+
+        rc
+    end
+
+    # Add sched action to service role
     #
     # @param external_user [String]  External user to impersonate
     # @param service_id    [Integer] Service ID
