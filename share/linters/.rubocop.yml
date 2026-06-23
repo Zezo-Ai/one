@@ -606,6 +606,9 @@ Style/PredicateWithKind:
 # LINT
 ######
 
+Lint/SafeNavigationWithEmpty:
+    Enabled: false
+
 Lint/UselessConstantScoping:
     Enabled: false
 
