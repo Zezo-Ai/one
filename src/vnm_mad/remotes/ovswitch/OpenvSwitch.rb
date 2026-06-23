@@ -381,14 +381,7 @@ class OpenvSwitchVLAN < VNMMAD::VNMDriver
             @nic.vlan_trunk_to_s
         end
 
-        vlan_mode = if @nic[:vlan_id].nil? || @nic[:vlan_id].empty?
-                        'trunk'
-                    else
-                        'native-untagged'
-                    end
-
         ovs_vsctl_cmd = "#{command(:ovs_vsctl)} set Port #{@nic[:tap]}"
-
 
         # Open vSwitch 2.7.0+ allows range intervals (x-y), but
         # we need to support even older versions. We expand the
@@ -396,6 +389,14 @@ class OpenvSwitchVLAN < VNMMAD::VNMDriver
         # which should work for all.
         cmd = "#{ovs_vsctl_cmd} trunks='#{trunks}'"
         run cmd
+
+        return if @nic[:cvlans] && !@nic[:cvlans].empty?
+
+        vlan_mode = if @nic[:vlan_id].nil? || @nic[:vlan_id].empty?
+                'trunk'
+            else
+                'native-untagged'
+            end
 
         cmd = "#{ovs_vsctl_cmd} vlan_mode=#{vlan_mode}"
         run cmd
