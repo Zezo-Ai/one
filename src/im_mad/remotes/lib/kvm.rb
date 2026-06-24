@@ -474,7 +474,7 @@ class Domain < BaseDomain
                 next unless info.keys.include? 'ip-addresses'
 
                 info['ip-addresses'].map do |ip|
-                    next if ['127.0.0.1', '::1'] in ip['ip-address']
+                    next if ['127.0.0.1', '::1'].include? ip['ip-address']
                     next unless %w(ipv4 ipv6).include? ip['ip-address-type']
 
                     guest_ips.append(ip['ip-address'])
