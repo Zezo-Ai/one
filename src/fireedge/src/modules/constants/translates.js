@@ -130,6 +130,7 @@ module.exports = {
   DeleteSeveralTemplates: 'Delete several Templates',
   DeleteSeveralVirtualNetworks: 'Delete several Virtual Networks',
   DeleteVirtualRouter: 'Delete Virtual Router',
+  DeleteVLANRule: 'Delete VLAN Rule',
   DeleteSeveralVirtualRouters: 'Delete several Virtual Routers',
   DeleteSomething: 'Delete: %s',
   DeletePlan: 'Delete',
@@ -229,6 +230,7 @@ module.exports = {
   SelectMarketplace: 'Select Marketplace',
   SelectNetwork: 'Select a network',
   SelectVirtualNetworks: 'Select virtual networks',
+  SelectVirtualNetworkTemplates: 'Select virtual network templates',
   SelectNewCluster: 'Select a new Cluster',
   SelectNewSecGroup: 'Select security group',
   SelectProvider: 'Select Provider',
@@ -654,6 +656,7 @@ module.exports = {
   PasteSSHKey: 'Paste your SSH Key here...',
   PastePrivateSSHKey: 'Paste your Private SSH Key here...',
   EnterPassphrase: 'Enter your passphrase...',
+  AllVnets: 'Apply to all vnets',
 
   /* DRS */
   Drs: 'OneDRS',
@@ -978,6 +981,19 @@ module.exports = {
   AllVNetworksAreIncludedInThisVDC:
     'All virtual networks are included in this VDC',
 
+  /* VLAN Group */
+  ANY: 'ANY',
+  VLAN_ID: 'VLAN_ID',
+  OUTER_VLAN_ID: 'OUTER_VLAN_ID',
+  CVLAN: 'CVLAN',
+  VLAN_TAGGED_ID: 'VLAN_TAGGED_ID',
+  VNET: 'VNET',
+  CLUSTER: 'CLUSTER',
+  Scope: 'Scope',
+  SCOPE: 'SCOPE',
+  TARGET_ID: 'TARGET_ID',
+  TargetId: 'Target ID',
+
   /* sections - templates & instances */
   Instances: 'Instances',
   VM: 'VM',
@@ -999,6 +1015,8 @@ module.exports = {
   Templates: 'Templates',
   VMTemplate: 'VM Template',
   VMTemplates: 'VM Templates',
+  VNTemplate: 'VN Template',
+  VNTemplates: 'VN Templates',
   Service: 'Service',
   Services: 'Services',
   ServiceTemplate: 'Service Template',
@@ -1035,6 +1053,7 @@ module.exports = {
   Information: 'Information',
   Placement: 'Placement',
   ServerPool: 'Server Pool',
+  VLANRules: 'VLAN Rules',
 
   /* general schema */
   ID: 'ID',
@@ -1932,6 +1951,8 @@ module.exports = {
   PhysicalDeviceSwitch: 'Use private host networking or a user-defined bridge',
   PhysicalDeviceSwitchConcept:
     "If enabled, OpenNebula won't assign any physical interface to the bridge. If the bridge is OpenNebula managed, by default it will only allow local host communication.",
+  TargetIdentifierConcept:
+    'Type the identifiers of the resources the rule applies to (e.g. 2,3) and press ENTER',
   VLANTagged: 'Specify a range of VLANs that are allowed for the VM traffic',
   VLANTaggedConcept:
     'Type a VLAN ID (e.g. 100) or a VLAN range (e.g. 101-104) and press ENTER',
@@ -2455,6 +2476,10 @@ module.exports = {
   'groups.actions.add.user.success': 'Users updated',
   'groups.actions.add.user': 'Add users',
   'groups.actions.remove.user': 'Remove users',
+  'groups.actions.add-vlan-rule': 'Add VLAN rule',
+  'groups.actions.update-vlan-rule': 'Update VLAN rule',
+  'groups.actions.vlan-rule.hint':
+    'This VLAN rule will apply to all VN templates',
   'groups.view.admin.name': 'Admin view',
   'groups.view.admin.description': 'View used by admin users',
   'groups.view.user.name': 'User view',

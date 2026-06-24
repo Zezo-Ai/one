@@ -93,6 +93,7 @@ type RPCCaller interface {
 	GroupAddAdmin(ctx context.Context, id, user_id int) (*Response, error)
 	GroupDelAdmin(ctx context.Context, id, user_id int) (*Response, error)
 	GroupQuota(ctx context.Context, id int, quota string) (*Response, error)
+	GroupVlan(ctx context.Context, id int, vlan string) (*Response, error)
 	GroupDefaultQuotaInfo(ctx context.Context) (*Response, error)
 	GroupDefaultQuotaUpdate(ctx context.Context, quota string) (*Response, error)
 	GroupPoolInfo(ctx context.Context) (*Response, error)

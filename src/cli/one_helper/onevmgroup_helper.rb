@@ -125,10 +125,9 @@ class OneVMGroupHelper < OpenNebulaHelper::OneHelper
         puts format(str, 'USER', vmgroup['UNAME'])
         puts format(str, 'GROUP', vmgroup['GNAME'])
         puts format(str, 'LOCK', OpenNebulaHelper.level_lock_to_str(vmgroup['LOCK/LOCKED']))
+        puts
 
         CLIHelper.print_header(str_h1 % 'PERMISSIONS', false)
-
-        puts
 
         ['OWNER', 'GROUP', 'OTHER'].each do |e|
             mask = '---'

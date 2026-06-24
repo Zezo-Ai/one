@@ -403,10 +403,8 @@ void HostMonitorManager::start_monitor_success(int oid)
 void HostMonitorManager::timer_action()
 {
     static int mark = 0;
-    static int tics = timer_period;
 
     mark += timer_period;
-    tics += timer_period;
 
     if ( mark >= 600 )
     {

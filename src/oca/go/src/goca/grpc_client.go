@@ -749,6 +749,16 @@ func (c *GRPCClient) GroupQuota(ctx context.Context, id int, quota string) (*Res
 	return &Response{status: true, bodyInt: int(res.Oid)}, nil
 }
 
+func (c *GRPCClient) GroupVlan(ctx context.Context, id int, vlan string) (*Response, error) {
+	client := group.NewGroupServiceClient(c.conn)
+	req := &group.VlanRequest{SessionId: c.token, Oid: int32(id), Vlan: vlan}
+	res, err := client.Vlan(ctx, req)
+	if err != nil {
+		return MakeErrorResponse(err)
+	}
+	return &Response{status: true, bodyInt: int(res.Oid)}, nil
+}
+
 func (c *GRPCClient) GroupDefaultQuotaInfo(ctx context.Context) (*Response, error) {
 	client := group.NewGroupServiceClient(c.conn)
 	req := &group.PoolInfoRequest{SessionId: c.token}

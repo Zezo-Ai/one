@@ -53,6 +53,7 @@ import UserCard from '@modules/components/Cards/UserCard'
 import VirtualDataCenterCard from '@modules/components/Cards/VirtualDataCenterCard'
 import VirtualMachineCard from '@modules/components/Cards/VirtualMachineCard'
 import VirtualMachineConsoleCard from '@modules/components/Cards/VirtualMachineConsoleCard'
+import VLANRuleCard from '@modules/components/Cards/VLANRuleCard'
 import VmGroupCard from '@modules/components/Cards/VmGroupCard'
 import VmTemplateCard from '@modules/components/Cards/VmTemplateCard'
 import WavesCard from '@modules/components/Cards/WavesCard'
@@ -98,6 +99,7 @@ export {
   VirtualDataCenterCard,
   VirtualMachineCard,
   VirtualMachineConsoleCard,
+  VLANRuleCard,
   VmGroupCard,
   VmTemplateCard,
   WavesCard,

@@ -102,11 +102,6 @@ protected:
                                      int&                       id,
                                      RequestAttributes&         att) override;
 
-    std::unique_ptr<Template> get_object_template() const override
-    {
-        return std::make_unique<Template>();
-    };
-
     int exist(const std::string& name, int uid) override
     {
         return zpool->exist(name);

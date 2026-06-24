@@ -142,3 +142,19 @@ func (s *GroupSuite) TestQuota(c *C) {
 	quota := group.QuotasList.VM[0].VMs
 	c.Assert(quota, Equals, 10)
 }
+
+func (s *GroupSuite) TestVlan(c *C) {
+	vlanTpl := `RULE = [ ID="1-100", SCOPE="VLAN_ID", VNTEMPLATE="1" ]`
+	groupC := testCtrl.Group(s.groupID)
+	err := groupC.Vlan(vlanTpl)
+	c.Assert(err, IsNil)
+
+	// Check VLAN rules added
+	group, err := testCtrl.Group(s.groupID).Info(false)
+	c.Assert(err, IsNil)
+
+	c.Assert(len(group.VlanRules.Rules), Equals, 1)
+	c.Assert(group.VlanRules.Rules[0].ID, Equals, "1-100")
+	c.Assert(group.VlanRules.Rules[0].Scope, Equals, "VLAN_ID")
+	c.Assert(group.VlanRules.Rules[0].VnTemplate, Equals, "1")
+}

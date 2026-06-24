@@ -28,6 +28,7 @@ type Pool struct {
 	XMLName            xml.Name          `xml:"GROUP_POOL"`
 	Groups             []GroupShort      `xml:"GROUP"`
 	Quotas             []shared.Quotas   `xml:"QUOTAS"`
+	VlanRules          []VlanRules       `xml:"VLAN_RULES"`
 	DefaultGroupQuotas shared.QuotasList `xml:"DEFAULT_GROUP_QUOTAS"`
 }
 
@@ -48,5 +49,6 @@ type Group struct {
 
 	// Variable part between one.groupool.info and one.group.info
 	shared.QuotasList
+	VlanRules          VlanRules         `xml:"VLAN_RULES"`
 	DefaultGroupQuotas shared.QuotasList `xml:"DEFAULT_GROUP_QUOTAS"`
 }

@@ -582,6 +582,15 @@ public:
     };
 
     /**
+     *  Returns the VN Template used to instantiate this VNET (if any)
+     *    @return the VN Template id or -1 if this vnet was directly created
+     */
+    int get_template_id() const
+    {
+        return template_id;
+    };
+
+    /**
      *  Returns the parent address range used to create this AR (if any)
      *    @param ar_id the id of the AR
      *    @return the parent AR id or -1 this vnet has no parent
@@ -827,6 +836,11 @@ private:
     int     parent_vid;
 
     /**
+     *  VN Template ID if this VNET was instantiated from one
+     */
+    int     template_id;
+
+    /**
      *  Security Groups
      */
     std::set<int> security_groups;
@@ -1008,6 +1022,7 @@ private:
                    const std::string&       _gname,
                    int                      _umask,
                    int                      _parent_vid,
+                   int                      _template_id,
                    const std::set<int>      &_cluster_ids,
                    std::unique_ptr<VirtualNetworkTemplate> _vn_template = 0);
 

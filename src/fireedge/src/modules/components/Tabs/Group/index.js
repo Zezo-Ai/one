@@ -24,6 +24,7 @@ import { getAvailableInfoTabs } from '@ModelsModule'
 import { BaseTab as Tabs } from '@modules/components/Tabs'
 import generateAccountingInfoTab from '@modules/components/Tabs/Accounting'
 import Info from '@modules/components/Tabs/Group/Info'
+import VLANRules from '@modules/components/Tabs/Group/VLANRules'
 import GroupUsersTab from '@modules/components/Tabs/Group/Users'
 import generateQuotasInfoTab from '@modules/components/Tabs/Quota'
 import generateShowbackInfoTab from '@modules/components/Tabs/Showback'
@@ -33,6 +34,7 @@ const getTabComponent = (tabName) =>
   ({
     info: Info,
     user: GroupUsersTab,
+    vlanrules: VLANRules,
     quota: generateQuotasInfoTab({ groups: true }),
     accounting: generateAccountingInfoTab({ groups: true }),
     showback: generateShowbackInfoTab({ groups: true }),

@@ -25,6 +25,7 @@
 #include <sstream>
 #include <cstring>
 #include <cstdio>
+#include <algorithm>
 
 using namespace std;
 
@@ -773,7 +774,7 @@ static bool restricted_values(const string& vname, const set<string>& vsubs,
         {
             if ( vattr->vector_value(sub, value) == 0 )
             {
-                rstrings.push_back(sub + value);
+                rstrings.push_back(sub + "=" + value);
             }
         }
     }

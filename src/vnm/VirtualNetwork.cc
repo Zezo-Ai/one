@@ -38,6 +38,7 @@ VirtualNetwork::VirtualNetwork(int                      _uid,
                                const string&            _gname,
                                int                      _umask,
                                int                      _pvid,
+                               int                      _template_id,
                                const set<int>           &_cluster_ids,
                                unique_ptr<VirtualNetworkTemplate> _vn_template):
     PoolObjectSQL(-1, NET, "", _uid, _gid, _uname, _gname, one_db::vn_table),
@@ -48,6 +49,7 @@ VirtualNetwork::VirtualNetwork(int                      _uid,
     vlan_id_automatic(false),
     outer_vlan_id_automatic(false),
     parent_vid(_pvid),
+    template_id(_template_id),
     ar_pool(-1),
     vrouters("VROUTERS"),
     updated("UPDATED_VMS"),
@@ -93,13 +95,13 @@ void VirtualNetwork::get_permissions(PoolObjectAuth& auths)
 void VirtualNetwork::parse_vlan_id(const char * id_name, const char * auto_name,
                                    string& id, bool& auto_id)
 {
-    string vis;
+    int int_id;
 
-    if ( PoolObjectSQL::get_template_attribute(id_name, vis) && !vis.empty() )
+    if ( PoolObjectSQL::get_template_attribute(id_name, int_id))
     {
-        erase_template_attribute(id_name, id);
+        id = to_string(int_id);
 
-        add_template_attribute(id_name, id);
+        replace_template_attribute(id_name, id);
 
         remove_template_attribute(auto_name);
 
@@ -208,13 +210,7 @@ int VirtualNetwork::insert(SqlDB * db, string& error_str)
     // Set a name if the VN has not got one (and is created via template)
     // ------------------------------------------------------------------------
 
-    obj_template->get("TEMPLATE_ID", value);
     obj_template->erase("TEMPLATE_ID");
-
-    if (!value.empty())
-    {
-        obj_template->add("TEMPLATE_ID", value);
-    }
 
     obj_template->get("NAME", name);
     obj_template->erase("NAME");
@@ -375,6 +371,8 @@ int VirtualNetwork::post_update_template(string& error, Template *_old_tmpl)
 {
     string new_bridge, new_br_type, new_vn_mad;
     string sg_str;
+
+    remove_template_attribute("TEMPLATE_ID");
 
     /* ---------------------------------------------------------------------- */
     /* Update Configuration Attributes (class & template)                     */
@@ -724,6 +722,15 @@ string& VirtualNetwork::to_xml_extended(string& xml, bool extended_and_check,
         os << "<PARENT_NETWORK_ID/>";
     }
 
+    if (template_id != -1)
+    {
+        os << "<TEMPLATE_ID>" << template_id << "</TEMPLATE_ID>";
+    }
+    else
+    {
+        os << "<TEMPLATE_ID/>";
+    }
+
     if (!vn_mad.empty())
     {
         os << "<VN_MAD>" << one_util::escape_xml(vn_mad) << "</VN_MAD>";
@@ -851,6 +858,7 @@ int VirtualNetwork::from_xml(const string &xml_str)
     xpath(int_outer_vlan_id_automatic, "/VNET/OUTER_VLAN_ID_AUTOMATIC", 0);
 
     xpath(parent_vid, "/VNET/PARENT_NETWORK_ID", -1);
+    xpath(template_id, "/VNET/TEMPLATE_ID", -1);
 
     vlan_id_automatic = int_vlan_id_automatic;
     outer_vlan_id_automatic = int_outer_vlan_id_automatic;
@@ -1285,8 +1293,6 @@ int VirtualNetwork::update_ar(
         error_msg = "Wrong AR definition. AR vector attribute is missing.";
         return -1;
     }
-
-    keep_restricted = keep_restricted && is_reservation();
 
     auto rc = ar_pool.update_ar(tmp_ars, keep_restricted, update_ids,
                                 update_attr, error_msg);

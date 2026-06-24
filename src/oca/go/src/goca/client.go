@@ -533,6 +533,10 @@ func (c *Client) GroupQuota(ctx context.Context, id int, quota string) (*Respons
 	return c.CallContext(ctx, "one.group.quota", id, quota)
 }
 
+func (c *Client) GroupVlan(ctx context.Context, id int, vlan string) (*Response, error) {
+	return c.CallContext(ctx, "one.group.vlan", id, vlan)
+}
+
 func (c *Client) GroupDefaultQuotaInfo(ctx context.Context) (*Response, error) {
 	return c.CallContext(ctx, "one.groupquota.info")
 }

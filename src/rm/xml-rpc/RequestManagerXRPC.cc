@@ -692,6 +692,7 @@ void RequestManagerXRPC::register_xml_methods()
 
     xmlrpc_c::methodPtr group_info(new GroupInfoXRPC());
     xmlrpc_c::methodPtr group_set_quota(new GroupSetQuotaXRPC());
+    xmlrpc_c::methodPtr group_set_vlan(new GroupSetVlanXRPC());
     xmlrpc_c::methodPtr grouppool_info(new GroupPoolInfoXRPC());
     xmlrpc_c::methodPtr group_get_default_quota(new GroupQuotaInfoXRPC());
     xmlrpc_c::methodPtr group_set_default_quota(new GroupQuotaUpdateXRPC());
@@ -700,6 +701,7 @@ void RequestManagerXRPC::register_xml_methods()
     RequestManagerRegistry.addMethod("one.group.delete",     group_delete);
     RequestManagerRegistry.addMethod("one.group.info",       group_info);
     RequestManagerRegistry.addMethod("one.group.quota",      group_set_quota);
+    RequestManagerRegistry.addMethod("one.group.vlan",       group_set_vlan);
     RequestManagerRegistry.addMethod("one.group.update",     group_update);
     RequestManagerRegistry.addMethod("one.group.addadmin",   group_add_admin);
     RequestManagerRegistry.addMethod("one.group.deladmin",   group_del_admin);

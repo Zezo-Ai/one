@@ -1388,6 +1388,146 @@ Request::ErrorCode SharedAPI::as_uid_gid(Template * tmpl, RequestAttributes& att
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
+bool SharedAPI::check_group_vlan(GroupVlans::VlanRule::Scope scope,
+                                 const string& value,
+                                 int vntemplate_id,
+                                 RequestAttributes& att,
+                                 string& error)
+{
+    if (att.is_admin())
+    {
+        return true;
+    }
+
+    GroupPool * gpool = Nebula::instance().get_gpool();
+
+    error.clear();
+
+    for (auto gid : att.group_ids)
+    {
+        if ( auto group = gpool->get_ro(gid) )
+        {
+            if (group->vlans.check(scope, value, vntemplate_id, error))
+            {
+                return true;
+            }
+
+            if (!error.empty())
+            {
+                return false;
+            }
+        }
+    }
+
+    return false;
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+bool SharedAPI::has_vntemplate_rules(int vntemplate_id, RequestAttributes& att)
+{
+    if (att.is_admin() || vntemplate_id == -1)
+    {
+        return false;
+    }
+
+    GroupPool * gpool = Nebula::instance().get_gpool();
+
+    for (auto gid : att.group_ids)
+    {
+        if ( auto group = gpool->get_ro(gid) )
+        {
+            if ( group->vlans.has_vntemplate_rules(vntemplate_id) )
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+Request::ErrorCode SharedAPI::validate_vlan_auth(Template * tmpl,
+                                                 int vntemplate_id,
+                                                 RequestAttributes& att)
+{
+    using VlanRule = GroupVlans::VlanRule;
+
+    bool avlan  = false;
+    bool aouter = false;
+    vector<pair<VlanRule::Scope, string>> vlan_requests;
+    vector<VectorAttribute*> ars;
+
+    tmpl->get("AUTOMATIC_VLAN_ID", avlan);
+    tmpl->get("AUTOMATIC_OUTER_VLAN_ID", aouter);
+
+    if ((avlan || aouter) && has_vntemplate_rules(vntemplate_id, att))
+    {
+        att.resp_msg = "Automatic selection of VLAN ID cannot be used with VLAN rules "
+                       "scoped to the VN Template";
+        return Request::AUTHORIZATION;
+    }
+
+    auto add_vlan_request = [&](VlanRule::Scope scope, const string& value)
+    {
+        if (!value.empty())
+        {
+            vlan_requests.emplace_back(scope, value);
+        }
+    };
+
+    auto add_template_vlan_request = [&](VlanRule::Scope scope, const string& attr)
+    {
+        string value;
+
+        if (tmpl->get(attr, value))
+        {
+            add_vlan_request(scope, value);
+        }
+    };
+
+    add_template_vlan_request(VlanRule::VLAN_ID, "VLAN_ID");
+    add_template_vlan_request(VlanRule::CVLAN, "CVLANS");
+    add_template_vlan_request(VlanRule::VLAN_TAGGED_ID, "VLAN_TAGGED_ID");
+    add_template_vlan_request(VlanRule::OUTER_VLAN_ID, "OUTER_VLAN_ID");
+
+    tmpl->get("AR", ars);
+
+    for (auto ar : ars)
+    {
+        add_vlan_request(VlanRule::VLAN_ID, ar->vector_value("VLAN_ID"));
+        add_vlan_request(VlanRule::CVLAN, ar->vector_value("CVLANS"));
+        add_vlan_request(VlanRule::VLAN_TAGGED_ID, ar->vector_value("VLAN_TAGGED_ID"));
+        add_vlan_request(VlanRule::OUTER_VLAN_ID, ar->vector_value("OUTER_VLAN_ID"));
+    }
+
+    for (const auto& vlan_request : vlan_requests)
+    {
+        string error;
+
+        if (!check_group_vlan(vlan_request.first,
+                              vlan_request.second,
+                              vntemplate_id,
+                              att,
+                              error))
+        {
+            att.resp_msg = error.empty() ?
+                           "User is not authorized to use the requested " +
+                           VlanRule::scope_to_str(vlan_request.first) : error;
+            return Request::AUTHORIZATION;
+        }
+    }
+
+    return Request::SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
 Request::ErrorCode SharedAPI::allocate_authorization(
         Template *          tmpl,
         RequestAttributes&  att,
@@ -1702,4 +1842,3 @@ Request::ErrorCode SharedAPI::check_name_unique(int oid, int new_uid, RequestAtt
 
     return Request::SUCCESS;
 }
-

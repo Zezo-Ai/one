@@ -20,6 +20,9 @@ import { ReactElement, useMemo } from 'react'
 // eslint-disable-next-line no-unused-vars
 import { FieldErrors, useFormContext } from 'react-hook-form'
 
+import { RESOURCE_NAMES, T, VirtualNetwork } from '@ConstantsModule'
+import { useViews } from '@FeaturesModule'
+import Configuration from '@modules/components/Forms/VnTemplate/InstantiateForm/Steps/ExtraConfiguration/configuration'
 import Addresses from '@modules/components/Forms/VnTemplate/InstantiateForm/Steps/ExtraConfiguration/addresses'
 import Context from '@modules/components/Forms/VnTemplate/InstantiateForm/Steps/ExtraConfiguration/context'
 import Security from '@modules/components/Forms/VnTemplate/InstantiateForm/Steps/ExtraConfiguration/security'
@@ -27,7 +30,6 @@ import { Translate } from '@modules/components/HOC'
 import { BaseTab as Tabs } from '@modules/components/Tabs'
 
 import { SCHEMA } from '@modules/components/Forms/VnTemplate/InstantiateForm/Steps/ExtraConfiguration/schema'
-import { T, VirtualNetwork } from '@ConstantsModule'
 import { Box } from '@mui/material'
 
 /**
@@ -43,14 +45,24 @@ import { Box } from '@mui/material'
 export const STEP_ID = 'extra'
 
 /** @type {TabType[]} */
-export const TABS = [Addresses, Security, Context]
+export const BASE_TABS = [Configuration(STEP_ID), Addresses, Security, Context]
 
-const Content = ({ isUpdate, oneConfig, adminGroup }) => {
+const Content = ({ isUpdate, vnTemplate, oneConfig, adminGroup }) => {
   const {
     formState: { errors },
   } = useFormContext()
 
+  const { getResourceView } = useViews()
+
   const totalErrors = Object.keys(errors[STEP_ID] ?? {}).length
+  const resource = RESOURCE_NAMES.VN_TEMPLATE
+  const instantiateTabs = getResourceView(resource)?.['instantiate-tabs'] ?? {}
+
+  const TABS = BASE_TABS.filter(({ id }) => {
+    const tab = instantiateTabs[id]
+
+    return tab && tab.enabled
+  })
 
   const tabs = useMemo(
     () =>
@@ -63,6 +75,7 @@ const Content = ({ isUpdate, oneConfig, adminGroup }) => {
             isUpdate={isUpdate}
             oneConfig={oneConfig}
             adminGroup={adminGroup}
+            data={vnTemplate}
           />
         ),
         error: getError?.(errors[STEP_ID]),
@@ -77,14 +90,22 @@ const Content = ({ isUpdate, oneConfig, adminGroup }) => {
   )
 }
 
+Content.propTypes = {
+  isUpdate: PropTypes.bool,
+  vnTemplate: PropTypes.object,
+  oneConfig: PropTypes.object,
+  adminGroup: PropTypes.bool,
+}
+
 /**
  * Optional configuration about Virtual network.
  *
  * @param {VirtualNetwork} data - Virtual network
  * @returns {object} Optional configuration step
  */
-const ExtraConfiguration = ({ data, oneConfig, adminGroup }) => {
+const ExtraConfiguration = ({ data, oneConfig, adminGroup, ...rest }) => {
   const isUpdate = data?.NAME !== undefined
+  const vnTemplate = rest?.dataTemplateExtended ?? {}
 
   return {
     id: STEP_ID,
@@ -92,14 +113,12 @@ const ExtraConfiguration = ({ data, oneConfig, adminGroup }) => {
     resolver: SCHEMA(isUpdate, oneConfig, adminGroup),
     optionsValidate: { abortEarly: false },
     content: (formProps) =>
-      Content({ ...formProps, isUpdate, oneConfig, adminGroup }),
+      Content({ ...formProps, vnTemplate, isUpdate, oneConfig, adminGroup }),
   }
 }
 
-Content.propTypes = {
+ExtraConfiguration.propTypes = {
   data: PropTypes.any,
-  setFormData: PropTypes.func,
-  isUpdate: PropTypes.bool,
   oneConfig: PropTypes.object,
   adminGroup: PropTypes.bool,
 }

@@ -94,7 +94,7 @@ const normalizeVlanTaggedIds = (value, originalValue) => {
  */
 
 /** @type {Field} Driver field */
-const DRIVER_FIELD = {
+const DRIVER_FIELD = (isInstantiate = false) => ({
   name: 'VN_MAD',
   type: INPUT_TYPES.TOGGLE,
   values: () =>
@@ -108,8 +108,9 @@ const DRIVER_FIELD = {
     .required()
     .default(() => drivers[0]),
   grid: { md: 12 },
+  fieldProps: { disabled: isInstantiate },
   notNull: true,
-}
+})
 
 /** @type {Field} Bridge switch linux field */
 const BRIDGE_SWITCH = {
@@ -146,7 +147,7 @@ const PHYDEV_SWITCH = {
   name: 'PHYDEV_SWITCH',
   label: T.PhysicalDeviceSwitch,
   tooltip: T.PhysicalDeviceSwitchConcept,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) =>
     [dot1Q, vxlan, openVSwitchVXLAN].includes(driver) && INPUT_TYPES.HIDDEN,
   type: INPUT_TYPES.SWITCH,
@@ -159,7 +160,7 @@ const PHYDEV_FIELD = {
   name: 'PHYDEV',
   label: T.PhysicalDevice,
   tooltip: T.PhysicalDeviceConcept,
-  dependOf: [PHYDEV_SWITCH.name, DRIVER_FIELD.name],
+  dependOf: [PHYDEV_SWITCH.name, DRIVER_FIELD().name],
   htmlType: ([phyDevSwitch, driver] = []) =>
     phyDevSwitch &&
     [bridge, fw, ovswitch].includes(driver) &&
@@ -168,7 +169,7 @@ const PHYDEV_FIELD = {
   validation: string()
     .trim()
     .default(() => undefined)
-    .when([DRIVER_FIELD.name, PHYDEV_SWITCH.name], {
+    .when([DRIVER_FIELD().name, PHYDEV_SWITCH.name], {
       is: (driver, phyDevSwitch) =>
         [dot1Q, vxlan, openVSwitchVXLAN].includes(driver) || !phyDevSwitch,
       then: (schema) => schema.required(),
@@ -182,7 +183,7 @@ const VLAN_TAGGED_ID_SWITCH = {
   name: 'VLAN_TAGGED_ID_SWITCH',
   label: T.VLANTaggedSwitch,
   tooltip: T.VLANTaggedSwitchConcept,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) =>
     ![bridge, fw, ovswitch].includes(driver) && INPUT_TYPES.HIDDEN,
   type: INPUT_TYPES.SWITCH,
@@ -197,14 +198,14 @@ const VLAN_TAGGED_ID = {
   tooltip: [T.VLANTaggedConcept],
   type: INPUT_TYPES.AUTOCOMPLETE,
   multiple: true,
-  dependOf: [DRIVER_FIELD.name, VLAN_TAGGED_ID_SWITCH.name],
+  dependOf: [DRIVER_FIELD().name, VLAN_TAGGED_ID_SWITCH.name],
   htmlType: ([driver, vlanTaggedSwitch] = []) =>
     (!vlanTaggedSwitch || ![bridge, fw, ovswitch].includes(driver)) &&
     INPUT_TYPES.HIDDEN,
   validation: array(string().trim())
     .transform(normalizeVlanTaggedIds)
     .default(() => undefined)
-    .when([DRIVER_FIELD.name, VLAN_TAGGED_ID_SWITCH.name], {
+    .when([DRIVER_FIELD().name, VLAN_TAGGED_ID_SWITCH.name], {
       is: (driver, vlanTaggedSwitch) =>
         [bridge, fw, ovswitch].includes(driver) && vlanTaggedSwitch,
       then: (schema) =>
@@ -230,7 +231,7 @@ const ENABLE_DPDK = {
   label: T.DPDK,
   tooltip: T.DPDKConcept,
   type: INPUT_TYPES.SWITCH,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) => ![ovswitch].includes(driver) && INPUT_TYPES.HIDDEN,
   validation: boolean(),
   grid: { md: 12 },
@@ -241,7 +242,7 @@ const FILTER_MAC_SPOOFING_FIELD = {
   name: 'FILTER_MAC_SPOOFING',
   label: T.MacSpoofingFilter,
   type: INPUT_TYPES.SWITCH,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) =>
     ![fw, vxlan, ovswitch, openVSwitchVXLAN].includes(driver) &&
     INPUT_TYPES.HIDDEN,
@@ -262,7 +263,7 @@ const FILTER_IP_SPOOFING_FIELD = {
   name: 'FILTER_IP_SPOOFING',
   label: T.IpSpoofingFilter,
   type: INPUT_TYPES.SWITCH,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) =>
     ![fw, vxlan, ovswitch, openVSwitchVXLAN].includes(driver) &&
     INPUT_TYPES.HIDDEN,
@@ -283,7 +284,7 @@ const MTU_FIELD = {
   name: 'MTU',
   label: T.MTU,
   tooltip: T.MTUConcept,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) =>
     ![dot1Q, vxlan, ovswitch, openVSwitchVXLAN].includes(driver) &&
     INPUT_TYPES.HIDDEN,
@@ -304,30 +305,29 @@ const AUTOMATIC_VLAN_FIELD = (isUpdate = false, isVnet = false) => ({
   name: 'AUTOMATIC_VLAN_ID',
   label: T.AutomaticVlanId,
   type: INPUT_TYPES.SWITCH,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) =>
     ![dot1Q, vxlan, ovswitch, openVSwitchVXLAN].includes(driver) &&
     INPUT_TYPES.HIDDEN,
-  validation: lazy((_, { context }) =>
-    boolean()
-      .yesOrNo()
-      .default(() => context?.VLAN_ID_AUTOMATIC === '1')
-      .when(DRIVER_FIELD.name, {
-        is: (driver) =>
-          ![dot1Q, vxlan, ovswitch, openVSwitchVXLAN].includes(driver),
-        then: (schema) => schema.strip(),
-      })
-  ),
+  validation: boolean()
+    .yesOrNo()
+    .default(() => false)
+    .when(DRIVER_FIELD().name, {
+      is: (driver) =>
+        driver !== undefined &&
+        ![dot1Q, vxlan, ovswitch, openVSwitchVXLAN].includes(driver),
+      then: (schema) => schema.strip(),
+    }),
   ...(isUpdate && isVnet && { fieldProps: { disabled: true } }),
   grid: { md: 12 },
 })
 
 /** @type {Field} VLAN ID field */
-const VLAN_ID_FIELD = {
+const VLAN_ID_FIELD = ({ isInstantiate = false, isVnet = false }) => ({
   name: 'VLAN_ID',
   label: T.VlanId,
   type: INPUT_TYPES.TEXT,
-  dependOf: [DRIVER_FIELD.name, AUTOMATIC_VLAN_FIELD().name],
+  dependOf: [DRIVER_FIELD().name, AUTOMATIC_VLAN_FIELD().name],
   htmlType: ([driver, automatic] = []) =>
     (automatic ||
       ![dot1Q, vxlan, ovswitch, openVSwitchVXLAN].includes(driver)) &&
@@ -335,9 +335,11 @@ const VLAN_ID_FIELD = {
   validation: string()
     .trim()
     .default(() => undefined)
-    .when([DRIVER_FIELD.name, AUTOMATIC_VLAN_FIELD().name], {
+    .when([DRIVER_FIELD().name, AUTOMATIC_VLAN_FIELD().name], {
       is: (driver, automatic) =>
-        [dot1Q, vxlan].includes(driver) && (automatic === 'NO' || !automatic),
+        (isInstantiate || isVnet) &&
+        [dot1Q, vxlan].includes(driver) &&
+        (automatic === 'NO' || !automatic),
       then: (schema) => schema.required(),
       otherwise: (schema) =>
         schema
@@ -346,21 +348,15 @@ const VLAN_ID_FIELD = {
           .afterSubmit((value) =>
             value === null || value === '' ? undefined : value
           ),
-    })
-    .when([DRIVER_FIELD.name, AUTOMATIC_VLAN_FIELD().name], {
-      is: (driver, automatic) =>
-        ![dot1Q, vxlan, ovswitch, openVSwitchVXLAN].includes(driver) ||
-        (automatic && automatic !== 'NO'),
-      then: (schema) => schema.strip(),
     }),
   grid: { sm: 6 },
-}
+})
 
 /** @type {Field} Q-in-Q network switch linux field */
 const Q_IN_Q_SWITCH = {
   name: 'Q_IN_Q_SWITCH',
   label: T.QinQ,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) =>
     ![dot1Q, ovswitch].includes(driver) && INPUT_TYPES.HIDDEN,
   type: INPUT_TYPES.SWITCH,
@@ -375,12 +371,12 @@ const CVLANS = {
   tooltip: [T.CVLANSConcept],
   type: INPUT_TYPES.AUTOCOMPLETE,
   multiple: true,
-  dependOf: [DRIVER_FIELD.name, Q_IN_Q_SWITCH.name],
+  dependOf: [DRIVER_FIELD().name, Q_IN_Q_SWITCH.name],
   htmlType: ([driver, QInQSwitch] = []) =>
     (!QInQSwitch || ![dot1Q, ovswitch].includes(driver)) && INPUT_TYPES.HIDDEN,
   validation: array(string().trim())
     .default(() => undefined)
-    .when([DRIVER_FIELD.name, Q_IN_Q_SWITCH.name], {
+    .when([DRIVER_FIELD().name, Q_IN_Q_SWITCH.name], {
       is: (driver, qinqSwitch) =>
         [dot1Q, ovswitch].includes(driver) && qinqSwitch,
       then: (schema) =>
@@ -398,7 +394,7 @@ const QINQ_TYPE = {
   tooltip: T.QinQTypeConcept,
   type: INPUT_TYPES.AUTOCOMPLETE,
   optionsOnly: true,
-  dependOf: [DRIVER_FIELD.name, Q_IN_Q_SWITCH.name],
+  dependOf: [DRIVER_FIELD().name, Q_IN_Q_SWITCH.name],
   htmlType: ([driver, QInQSwitch] = []) =>
     (!QInQSwitch || ![ovswitch].includes(driver)) && INPUT_TYPES.HIDDEN,
   values: arrayToOptions(['802.1ad', '802.1q']),
@@ -406,7 +402,7 @@ const QINQ_TYPE = {
     .trim()
     .notRequired()
     .default(() => undefined)
-    .when([DRIVER_FIELD.name, Q_IN_Q_SWITCH.name], {
+    .when([DRIVER_FIELD().name, Q_IN_Q_SWITCH.name], {
       is: (driver, qinqSwitch) => [ovswitch].includes(driver) && qinqSwitch,
       then: (schema) => schema.required(),
       otherwise: (schema) => schema.strip(),
@@ -418,14 +414,14 @@ const AUTOMATIC_OUTER_VLAN_ID_FIELD = {
   name: 'AUTOMATIC_OUTER_VLAN_ID',
   label: T.AutomaticOuterVlanId,
   type: INPUT_TYPES.SWITCH,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) =>
     ![openVSwitchVXLAN].includes(driver) && INPUT_TYPES.HIDDEN,
   validation: lazy((_, { context }) =>
     boolean()
       .yesOrNo()
       .default(() => context?.AUTOMATIC_OUTER_VLAN_ID === '1')
-      .when(DRIVER_FIELD.name, {
+      .when(DRIVER_FIELD().name, {
         is: (driver) => ![openVSwitchVXLAN].includes(driver),
         then: (schema) => schema.strip(),
       })
@@ -438,13 +434,13 @@ const OUTER_VLAN_ID_FIELD = {
   name: 'OUTER_VLAN_ID',
   label: T.OuterVlanId,
   type: INPUT_TYPES.TEXT,
-  dependOf: [AUTOMATIC_OUTER_VLAN_ID_FIELD.name, DRIVER_FIELD.name],
+  dependOf: [AUTOMATIC_OUTER_VLAN_ID_FIELD.name, DRIVER_FIELD().name],
   htmlType: ([automatic, driver] = []) =>
     (automatic || ![openVSwitchVXLAN].includes(driver)) && INPUT_TYPES.HIDDEN,
   validation: string()
     .trim()
     .default(() => undefined)
-    .when([DRIVER_FIELD.name, AUTOMATIC_OUTER_VLAN_ID_FIELD.name], {
+    .when([DRIVER_FIELD().name, AUTOMATIC_OUTER_VLAN_ID_FIELD.name], {
       is: (driver, automatic) =>
         [openVSwitchVXLAN].includes(driver) &&
         (automatic === 'NO' || !automatic),
@@ -461,13 +457,13 @@ const VXLAN_MODE_FIELD = {
   tooltip: T.VxlanModeConcept,
   type: INPUT_TYPES.AUTOCOMPLETE,
   optionsOnly: true,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) => ![vxlan].includes(driver) && INPUT_TYPES.HIDDEN,
   values: arrayToOptions(['evpn', 'multicast']),
   validation: string()
     .trim()
     .default(() => undefined)
-    .when(DRIVER_FIELD.name, {
+    .when(DRIVER_FIELD().name, {
       is: (driver) => ![vxlan].includes(driver),
       then: (schema) => schema.strip(),
     }),
@@ -480,14 +476,14 @@ const VXLAN_TEP_FIELD = {
   tooltip: T.VxlanTunnelEndpointConcept,
   type: INPUT_TYPES.AUTOCOMPLETE,
   optionsOnly: true,
-  dependOf: [DRIVER_FIELD.name, VXLAN_MODE_FIELD.name],
+  dependOf: [DRIVER_FIELD().name, VXLAN_MODE_FIELD.name],
   htmlType: ([driver, mode] = []) =>
     (mode !== 'evpn' || ![vxlan].includes(driver)) && INPUT_TYPES.HIDDEN,
   values: arrayToOptions(['dev', 'local_ip']),
   validation: string()
     .trim()
     .default(() => undefined)
-    .when([DRIVER_FIELD.name, VXLAN_MODE_FIELD.name], {
+    .when([DRIVER_FIELD().name, VXLAN_MODE_FIELD.name], {
       is: (driver, mode) => ![vxlan].includes(driver) || mode !== 'evpn',
       then: (schema) => schema.strip(),
     }),
@@ -499,14 +495,14 @@ const VXLAN_MC_FIELD = {
   label: T.VxlanMulticast,
   tooltip: T.VxlanMulticastConcept,
   type: INPUT_TYPES.TEXT,
-  dependOf: [DRIVER_FIELD.name, VXLAN_MODE_FIELD.name],
+  dependOf: [DRIVER_FIELD().name, VXLAN_MODE_FIELD.name],
   htmlType: ([driver, mode] = []) =>
     (mode !== 'multicast' || ![vxlan].includes(driver)) && INPUT_TYPES.HIDDEN,
   values: arrayToOptions(['dev', 'local_ip']),
   validation: string()
     .trim()
     .default(() => undefined)
-    .when([DRIVER_FIELD.name, VXLAN_MODE_FIELD.name], {
+    .when([DRIVER_FIELD().name, VXLAN_MODE_FIELD.name], {
       is: (driver, mode) => ![vxlan].includes(driver) || mode !== 'multicast',
       then: (schema) => schema.strip(),
     }),
@@ -518,7 +514,7 @@ const IP_LINK_CONF_FIELD = {
   tooltip: [T.IPLinkConfConcept],
   type: INPUT_TYPES.AUTOCOMPLETE,
   multiple: true,
-  dependOf: DRIVER_FIELD.name,
+  dependOf: DRIVER_FIELD().name,
   htmlType: (driver) => ![vxlan].includes(driver) && INPUT_TYPES.HIDDEN,
   validation: array(string().trim())
     .default(() => undefined)
@@ -533,13 +529,14 @@ const IP_LINK_CONF_FIELD = {
  * @param {object} oneConfig - Open Nebula configuration
  * @param {boolean} adminGroup - If the user belongs to oneadmin group
  * @param {boolean} isUpdate - User is updating vnet/template
+ * @param {boolean} isInstantiate - User is instantiating a template
  * @param {boolean} isVnet - User is creating/updating vnet
  * @returns {Array} Fields
  */
-const FIELDS = (oneConfig, adminGroup, isUpdate, isVnet) =>
+const FIELDS = (oneConfig, adminGroup, isUpdate, isInstantiate, isVnet) =>
   disableFields(
     [
-      DRIVER_FIELD,
+      DRIVER_FIELD(),
 
       PHYDEV_SWITCH,
       PHYDEV_FIELD,
@@ -554,7 +551,7 @@ const FIELDS = (oneConfig, adminGroup, isUpdate, isVnet) =>
       FILTER_IP_SPOOFING_FIELD,
 
       AUTOMATIC_VLAN_FIELD(isUpdate, isVnet),
-      VLAN_ID_FIELD,
+      VLAN_ID_FIELD({ isInstantiate, isVnet }),
       AUTOMATIC_OUTER_VLAN_ID_FIELD,
       OUTER_VLAN_ID_FIELD,
 
@@ -578,9 +575,54 @@ const FIELDS = (oneConfig, adminGroup, isUpdate, isVnet) =>
 /**
  * @param {object} oneConfig - Open Nebula configuration
  * @param {boolean} adminGroup - If the user belongs to oneadmin group
+ * @param {boolean} isInstantiate - User is instantiating vnet/template
+ * @param {boolean} isVnet - User is creating a vnet
+ * @returns {Array} Fields
+ */
+const FIELDS_INSTANTIATE = (oneConfig, adminGroup, isInstantiate, isVnet) =>
+  disableFields(
+    [
+      DRIVER_FIELD(isInstantiate),
+
+      AUTOMATIC_VLAN_FIELD(),
+      VLAN_ID_FIELD({ isInstantiate, isVnet }),
+      AUTOMATIC_OUTER_VLAN_ID_FIELD,
+      OUTER_VLAN_ID_FIELD,
+
+      VLAN_TAGGED_ID_SWITCH,
+      VLAN_TAGGED_ID,
+
+      Q_IN_Q_SWITCH,
+      CVLANS,
+      QINQ_TYPE,
+    ],
+    '',
+    oneConfig,
+    adminGroup,
+    RESTRICTED_ATTRIBUTES_TYPE.VNET
+  )
+
+/**
+ * Schema for vnet template and vnet creation form.
+ *
+ * @param {object} oneConfig - Open Nebula configuration
+ * @param {boolean} adminGroup - If the user belongs to oneadmin group
+ * @param {boolean} isVnet - If the user is creating a vnet
  * @returns {object} Schema
  */
-const SCHEMA = (oneConfig, adminGroup) =>
-  getObjectSchemaFromFields(FIELDS(oneConfig, adminGroup))
+const SCHEMA = (oneConfig, adminGroup, isVnet) =>
+  getObjectSchemaFromFields(FIELDS(oneConfig, adminGroup, false, isVnet))
 
-export { FIELDS, SCHEMA }
+/**
+ * Schema for vnet template instantiate from.
+ *
+ * @param {object} oneConfig - Open Nebula configuration
+ * @param {boolean} adminGroup - If the user belongs to oneadmin group
+ * @returns {object} Schema
+ */
+const SCHEMA_INSTANTIATE = (oneConfig, adminGroup) =>
+  getObjectSchemaFromFields(
+    FIELDS_INSTANTIATE(oneConfig, adminGroup, true, false)
+  )
+
+export { FIELDS, FIELDS_INSTANTIATE, SCHEMA, SCHEMA_INSTANTIATE }

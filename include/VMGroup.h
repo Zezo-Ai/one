@@ -67,15 +67,6 @@ public:
      */
     int from_xml(const std::string &xml_str) override;
 
-    /**
-     *  Returns a copy of the Template
-     *    @return A copy of the Template
-     */
-    Template * clone_template() const
-    {
-        return new Template(*obj_template);
-    };
-
     // -------------------------------------------------------------------------
     // Role Management
     // -------------------------------------------------------------------------

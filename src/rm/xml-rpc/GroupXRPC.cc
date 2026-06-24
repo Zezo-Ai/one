@@ -68,6 +68,21 @@ void GroupSetQuotaXRPC::request_execute(xmlrpc_c::paramList const& paramList,
     response(ec, oid, att);
 }
 
+/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+
+void GroupSetVlanXRPC::request_execute(xmlrpc_c::paramList const& paramList,
+                                       RequestAttributesXRPC& att)
+{
+    int oid = paramList.getInt(1);
+
+    auto ec = vlan(oid,                    // group_id
+                   paramList.getString(2), // vlan rules
+                   att);
+
+    response(ec, oid, att);
+}
+
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 

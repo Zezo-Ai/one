@@ -32,6 +32,7 @@ public class Group extends PoolElement{
     private static final String INFO            = METHOD_PREFIX + "info";
     private static final String DELETE          = METHOD_PREFIX + "delete";
     private static final String QUOTA           = METHOD_PREFIX + "quota";
+    private static final String VLAN            = METHOD_PREFIX + "vlan";
     private static final String UPDATE          = METHOD_PREFIX + "update";
     private static final String ADD_ADMIN       = METHOD_PREFIX + "addadmin";
     private static final String DEL_ADMIN       = METHOD_PREFIX + "deladmin";
@@ -126,6 +127,19 @@ public class Group extends PoolElement{
     }
 
     /**
+     * Sets the group VLAN rules contents.
+     *
+     * @param client XML-RPC Client.
+     * @param id The group id of the target group we want to modify.
+     * @param vlan_template New VLAN rules template contents.
+     * @return If successful the message contains the group id.
+     */
+    public static OneResponse vlan(Client client, int id, String vlan_template)
+    {
+        return client.call(VLAN, id, vlan_template);
+    }
+
+    /**
      * Replaces the template contents.
      *
      * @param client XML-RPC Client.
@@ -202,6 +216,17 @@ public class Group extends PoolElement{
     public OneResponse setQuota(String quota_template)
     {
         return setQuota(client, id, quota_template);
+    }
+
+    /**
+     * Sets the group VLAN rules contents.
+     *
+     * @param vlan_template New VLAN rules template contents.
+     * @return If successful the message contains the group id.
+     */
+    public OneResponse vlan(String vlan_template)
+    {
+        return vlan(client, id, vlan_template);
     }
 
     /**

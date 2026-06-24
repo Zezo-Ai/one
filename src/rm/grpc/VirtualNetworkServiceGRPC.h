@@ -256,12 +256,12 @@ public:
 
 /* ------------------------------------------------------------------------- */
 
-class VirtualNetworkRmARGRPC : public RequestGRPC, public VirtualNetworkRmARAPI
+class VirtualNetworkRmARGRPC : public RequestGRPC, public VirtualNetworkAPI
 {
 public:
     VirtualNetworkRmARGRPC() :
         RequestGRPC("one.vn.rm_ar", "/one.vn.VirtualNetworkService/RmAR"),
-        VirtualNetworkRmARAPI(static_cast<Request&>(*this))
+        VirtualNetworkAPI(static_cast<Request&>(*this))
     {}
 
     void request_execute(const google::protobuf::Message* _request,

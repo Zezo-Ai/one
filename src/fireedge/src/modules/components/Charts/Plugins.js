@@ -104,7 +104,7 @@ function tooltipPlugin({ dataset, tooltipClass, seriesColors, shiftX = 5, shiftY
   const tooltip = document.createElement("div");
   tooltip.className = tooltipClass;
 
-  let seriesIdx = null;  
+  let seriesIdx = null;
   let seriesLabel = "Series";
   let dataIdx = null;
   let over;

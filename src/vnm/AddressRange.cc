@@ -398,6 +398,14 @@ int AddressRange::update_attributes(
 
     if (keep_restricted && restricted_set)
     {
+        string rs_attr;
+
+        if (restricted_changed(vup, rs_attr))
+        {
+            error_msg = "AR includes a restricted attribute " + rs_attr;
+            return -1;
+        }
+
         remove_restricted(vup);
     }
 
@@ -2327,16 +2335,27 @@ set<string> AddressRange::restricted_attributes;
 
 bool AddressRange::check(string& rs_attr) const
 {
+    return check_restricted(attr, rs_attr);
+};
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+bool AddressRange::check_restricted(const VectorAttribute* va, string& rs_attr)
+{
     if (!restricted_set)
     {
         return false;
     }
 
-    const map<string, string>& ar_attrs = attr->value();
+    const map<string, string>& ar_attrs = va->value();
 
     for (auto it=ar_attrs.begin(); it != ar_attrs.end(); it++)
     {
-        if (restricted_attributes.count(it->first) > 0)
+        string ar_attr = "AR/" + it->first;
+
+        if (restricted_attributes.count(it->first) > 0 ||
+            restricted_attributes.count(ar_attr) > 0)
         {
             rs_attr = it->first;
             return true;
@@ -2345,6 +2364,40 @@ bool AddressRange::check(string& rs_attr) const
 
     return false;
 };
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+bool AddressRange::restricted_changed(const VectorAttribute* update,
+                                      string& rs_attr) const
+{
+    const map<string, string>& update_attrs = update->value();
+
+    for (const auto& it : update_attrs)
+    {
+        string ar_attr = "AR/" + it.first;
+
+        if (AddressRange::restricted_attributes.count(it.first) == 0 &&
+            AddressRange::restricted_attributes.count(ar_attr) == 0)
+        {
+            continue;
+        }
+
+        string current_value;
+
+        if (attr->vector_value(it.first, current_value) != 0 ||
+            current_value != it.second)
+        {
+            rs_attr = it.first;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
 
 void AddressRange::set_restricted_attributes(vector<const SingleAttribute *>& rattrs)
 {

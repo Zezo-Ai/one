@@ -23,6 +23,7 @@ type GroupServiceClient interface {
 	Info(ctx context.Context, in *InfoRequest, opts ...grpc.CallOption) (*shared.ResponseXML, error)
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*shared.ResponseID, error)
 	Quota(ctx context.Context, in *QuotaRequest, opts ...grpc.CallOption) (*shared.ResponseID, error)
+	Vlan(ctx context.Context, in *VlanRequest, opts ...grpc.CallOption) (*shared.ResponseID, error)
 	AddAdmin(ctx context.Context, in *AddAdminRequest, opts ...grpc.CallOption) (*shared.ResponseID, error)
 	DelAdmin(ctx context.Context, in *DelAdminRequest, opts ...grpc.CallOption) (*shared.ResponseID, error)
 	DefaultQuotaInfo(ctx context.Context, in *PoolInfoRequest, opts ...grpc.CallOption) (*shared.ResponseXML, error)
@@ -83,6 +84,15 @@ func (c *groupServiceClient) Quota(ctx context.Context, in *QuotaRequest, opts .
 	return out, nil
 }
 
+func (c *groupServiceClient) Vlan(ctx context.Context, in *VlanRequest, opts ...grpc.CallOption) (*shared.ResponseID, error) {
+	out := new(shared.ResponseID)
+	err := c.cc.Invoke(ctx, "/one.group.GroupService/Vlan", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *groupServiceClient) AddAdmin(ctx context.Context, in *AddAdminRequest, opts ...grpc.CallOption) (*shared.ResponseID, error) {
 	out := new(shared.ResponseID)
 	err := c.cc.Invoke(ctx, "/one.group.GroupService/AddAdmin", in, out, opts...)
@@ -137,6 +147,7 @@ type GroupServiceServer interface {
 	Info(context.Context, *InfoRequest) (*shared.ResponseXML, error)
 	Update(context.Context, *UpdateRequest) (*shared.ResponseID, error)
 	Quota(context.Context, *QuotaRequest) (*shared.ResponseID, error)
+	Vlan(context.Context, *VlanRequest) (*shared.ResponseID, error)
 	AddAdmin(context.Context, *AddAdminRequest) (*shared.ResponseID, error)
 	DelAdmin(context.Context, *DelAdminRequest) (*shared.ResponseID, error)
 	DefaultQuotaInfo(context.Context, *PoolInfoRequest) (*shared.ResponseXML, error)
@@ -163,6 +174,9 @@ func (UnimplementedGroupServiceServer) Update(context.Context, *UpdateRequest) (
 }
 func (UnimplementedGroupServiceServer) Quota(context.Context, *QuotaRequest) (*shared.ResponseID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Quota not implemented")
+}
+func (UnimplementedGroupServiceServer) Vlan(context.Context, *VlanRequest) (*shared.ResponseID, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Vlan not implemented")
 }
 func (UnimplementedGroupServiceServer) AddAdmin(context.Context, *AddAdminRequest) (*shared.ResponseID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddAdmin not implemented")
@@ -282,6 +296,24 @@ func _GroupService_Quota_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupService_Vlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VlanRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupServiceServer).Vlan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/one.group.GroupService/Vlan",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupServiceServer).Vlan(ctx, req.(*VlanRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GroupService_AddAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddAdminRequest)
 	if err := dec(in); err != nil {
@@ -395,6 +427,10 @@ var _GroupService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Quota",
 			Handler:    _GroupService_Quota_Handler,
+		},
+		{
+			MethodName: "Vlan",
+			Handler:    _GroupService_Vlan_Handler,
 		},
 		{
 			MethodName: "AddAdmin",

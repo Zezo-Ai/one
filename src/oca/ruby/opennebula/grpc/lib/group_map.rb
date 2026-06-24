@@ -39,6 +39,14 @@ module GRPCMappings
             stub.quota(req, options)
         end,
 
+        'group.vlan' => lambda do |one_auth, endpoint, *args, options|
+            stub = One::Group::GroupService::Stub.new(endpoint, :this_channel_is_insecure)
+            req  = One::Group::VlanRequest.new(:session_id => one_auth,
+                                               :oid        => args[0],
+                                               :vlan       => args[1])
+            stub.vlan(req, options)
+        end,
+
         'group.update' => lambda do |one_auth, endpoint, *args, options|
             stub = One::Group::GroupService::Stub.new(endpoint, :this_channel_is_insecure)
             req  = One::Group::UpdateRequest.new(:session_id => one_auth,

@@ -38,6 +38,10 @@ module Migrator
         bug7244
         feature7676
 
+        feature_7490
+
+        feature_7490_vnet_template_id
+
         log_time
 
         true
@@ -93,4 +97,33 @@ module Migrator
         end
     end
 
+    # VLAN ID rules
+    def feature_7490
+        create_table(:group_vlans)
+    end
+
+    # Move VN Template ID from the VNET template to a first-class VNET attribute
+    def feature_7490_vnet_template_id
+        @db.transaction do
+            @db[:network_pool].each do |row|
+                doc = nokogiri_doc(row[:body], 'network_pool')
+
+                template_id = doc.at_xpath('/VNET/TEMPLATE/TEMPLATE_ID')
+
+                next if template_id.nil?
+
+                if doc.at_xpath('/VNET/TEMPLATE_ID').nil?
+                    elem = doc.create_element('TEMPLATE_ID')
+
+                    elem.content = template_id.text
+
+                    doc.root.add_child(elem)
+                end
+
+                template_id.remove
+
+                @db[:network_pool].where(:oid => row[:oid]).update(:body => doc.root.to_s)
+            end
+        end
+    end
 end

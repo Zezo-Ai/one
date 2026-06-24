@@ -260,4 +260,37 @@ CommandParser::CmdParser.new(ARGV) do
 
         exit 0
     end
+
+    vlan_desc = <<-EOT.unindent
+        Set the VLAN rules for the group. If a path is not provided the
+        editor will be launched to modify the current rules.
+    EOT
+
+    command :vlan, vlan_desc, :groupid, [:file, nil] do
+        helper.perform_action(args[0], options, 'modified') do |group|
+            rc = group.info
+
+            if OpenNebula.is_error?(rc)
+                puts rc.message
+                exit(-1)
+            end
+
+            if args[1]
+                str = File.read(args[1])
+            else
+                group.delete_element('VLAN_RULES/ID')
+
+                current_rules = group.template_like_str('VLAN_RULES')
+
+                str = OpenNebulaHelper.editor_input(current_rules)
+            end
+
+            rc = group.set_vlan_rules(str)
+
+            if OpenNebula.is_error?(rc)
+                puts rc.message
+                exit(-1)
+            end
+        end
+    end
 end

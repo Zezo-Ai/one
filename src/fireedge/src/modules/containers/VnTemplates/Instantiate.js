@@ -45,13 +45,12 @@ export const InstantiateVnTemplate = () => {
 
   const { adminGroup, oneConfig } = useSystemData()
 
-  const { data: apiTemplateDataExtended, isError } =
-    VnTemplateAPI.useGetVNTemplateQuery(
-      { id: templateId },
-      { skip: templateId === undefined }
-    )
+  const { data, isError } = VnTemplateAPI.useGetVNTemplateQuery(
+    { id: templateId, extended: true },
+    { skip: templateId === undefined }
+  )
 
-  const dataTemplateExtended = _.cloneDeep(apiTemplateDataExtended)
+  // const dataTemplateExtended = _.cloneDeep(apiTemplateDataExtended)
 
   const onSubmit = async (template) => {
     try {
@@ -69,13 +68,13 @@ export const InstantiateVnTemplate = () => {
 
   return (
     <TranslateProvider>
-      {!dataTemplateExtended || _.isEmpty(oneConfig) ? (
+      {!data || _.isEmpty(oneConfig) ? (
         <SkeletonStepsForm />
       ) : (
         <VnTemplate.InstantiateForm
-          initialValues={dataTemplateExtended}
+          initialValues={data}
           stepProps={{
-            dataTemplateExtended,
+            data,
             oneConfig,
             adminGroup,
           }}

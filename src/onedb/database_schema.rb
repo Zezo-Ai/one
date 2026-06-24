@@ -144,6 +144,9 @@ class OneDBBacKEnd
                 "owner_u INTEGER, group_u INTEGER, other_u INTEGER, short_body MEDIUMTEXT, " <<
                 "body_json JSON",
             plan_pool: "cid INTEGER PRIMARY KEY, state INTEGER, body MEDIUMTEXT"
+        },
+        "7.4.0" => {
+            group_vlans: "group_oid INTEGER PRIMARY KEY, body MEDIUMTEXT"
         }
     }
 

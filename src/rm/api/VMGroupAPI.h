@@ -69,11 +69,6 @@ protected:
         request.auth_op(AuthRequest::CREATE);
     }
 
-    std::unique_ptr<Template> get_object_template() const override
-    {
-        return std::make_unique<Template>();
-    }
-
     Request::ErrorCode pool_allocate(std::unique_ptr<Template> tmpl,
                                      int&                       id,
                                      RequestAttributes&         att) override;

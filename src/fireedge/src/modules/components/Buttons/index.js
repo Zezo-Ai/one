@@ -17,3 +17,4 @@
 export * from '@modules/components/Buttons/AddressRangeActions'
 export * from '@modules/components/Buttons/ScheduleAction'
 export * from '@modules/components/Buttons/ConsoleAction'
+export * from '@modules/components/Buttons/VLANRuleActions'

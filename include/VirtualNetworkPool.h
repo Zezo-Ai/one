@@ -55,6 +55,8 @@ public:
      *    @param uname user name
      *    @param gname group name
      *    @param umask permissions umask
+     *    @param parent_vid parent network id, -1 if this is not a reservation
+     *    @param template_id VN Template id, -1 if directly created
      *    @param vn_template a VirtualNetworkTemplate describing the VNET
      *    @param oid the id assigned to the VM (output)
      *    @param cluster_ids the ids of the clusters this VNET will belong to
@@ -68,6 +70,7 @@ public:
             const std::string&          gname,
             int                         umask,
             int                         parent_vid,
+            int                         template_id,
             std::unique_ptr<VirtualNetworkTemplate> vn_template,
             int *                       oid,
             const std::set<int>         &cluster_ids,
@@ -447,7 +450,7 @@ public:
     PoolObjectSQL * create() override
     {
         std::set <int> empty;
-        return new VirtualNetwork(-1, -1, "", "", 0, -1, empty, 0);
+        return new VirtualNetwork(-1, -1, "", "", 0, -1, -1, empty, 0);
     };
 };
 

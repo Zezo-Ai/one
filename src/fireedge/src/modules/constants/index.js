@@ -192,6 +192,7 @@ export const RESOURCE_NAMES = {
   SEC_GROUP: 'security-group',
   USER: 'user',
   VDC: 'virtual-data-center',
+  VLAN_GROUP: 'vlan-group',
   VROUTER: 'vrouter',
   VROUTER_TEMPLATE: 'vrouter-template',
   VM_TEMPLATE: 'vm-template',
@@ -244,6 +245,7 @@ export * from '@modules/constants/system'
 export * from '@modules/constants/user'
 export * from '@modules/constants/userInput'
 export * from '@modules/constants/vdc'
+export * from '@modules/constants/vlanRule'
 export * from '@modules/constants/vm'
 export * from '@modules/constants/vmGroup'
 export * from '@modules/constants/vmTemplate'

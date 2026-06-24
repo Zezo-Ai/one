@@ -29,6 +29,7 @@ const string Group::INVALID_NAME_CHARS = " ";
 Group::Group(int id, const string& name):
     PoolObjectSQL(id, GROUP, name, -1, -1, "", "", one_db::group_table),
     quota(),
+    vlans(),
     users("USERS"),
     admins("ADMINS")
 {
@@ -53,7 +54,14 @@ int Group::select(SqlDB * db)
         return rc;
     }
 
-    return quota.select(oid, db->get_local_db());
+    rc = quota.select(oid, db->get_local_db());
+
+    if ( rc != 0 )
+    {
+        return rc;
+    }
+
+    return vlans.select(oid, db->get_local_db());
 }
 
 /* -------------------------------------------------------------------------- */
@@ -69,7 +77,14 @@ int Group::select(SqlDB * db, const string& name, int uid)
         return rc;
     }
 
-    return quota.select(oid, db->get_local_db());
+    rc = quota.select(oid, db->get_local_db());
+
+    if ( rc != 0 )
+    {
+        return rc;
+    }
+
+    return vlans.select(oid, db->get_local_db());
 }
 
 /* -------------------------------------------------------------------------- */
@@ -84,6 +99,7 @@ int Group::drop(SqlDB * db)
     if ( rc == 0 )
     {
         rc += quota.drop(db->get_local_db());
+        rc += vlans.drop(db->get_local_db());
     }
 
     return rc;
@@ -99,6 +115,11 @@ int Group::insert(SqlDB *db, string& error_str)
     if (rc == 0)
     {
         rc = quota.insert(oid, db->get_local_db(), error_str);
+    }
+
+    if (rc == 0)
+    {
+        rc = vlans.insert(oid, db->get_local_db(), error_str);
     }
 
     return rc;
@@ -235,9 +256,11 @@ string& Group::to_xml_extended(string& xml, bool extended) const
     if (extended)
     {
         string quota_xml;
+        string vlan_xml;
         string def_quota_xml;
 
         oss << quota.to_xml(quota_xml)
+            << vlans.to_xml(vlan_xml)
             << Nebula::instance().get_default_group_quota().to_xml(def_quota_xml);
     }
 

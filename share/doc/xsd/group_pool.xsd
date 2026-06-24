@@ -28,6 +28,22 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
+          <xs:element name="VLAN_RULES">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="ID" type="xs:integer"/>
+                <xs:element name="RULE" minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="ID" type="xs:string"/>
+                        <xs:element name="SCOPE" type="xs:string"/>
+                        <xs:element name="VNTEMPLATE" type="xs:string"/>
+                    </xs:sequence>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
         </xs:choice>
         <xs:element name="DEFAULT_GROUP_QUOTAS" minOccurs="1" maxOccurs="1">
           <xs:complexType>

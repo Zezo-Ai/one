@@ -43,11 +43,12 @@ const AR_SCHEMA = object({
  * @param {boolean} isUpdate - If `true`, the form is being updated
  * @param {object} oneConfig - Open Nebula configuration
  * @param {boolean} adminGroup - If the user belongs to oneadmin group
+ * @param {boolean} isVnet - User is creating a vnet
  * @returns {ObjectSchema} Extra configuration schema
  */
-export const SCHEMA = (isUpdate, oneConfig, adminGroup) => {
+export const SCHEMA = (isUpdate, oneConfig, adminGroup, isVnet) => {
   const schema = object({ SECURITY_GROUPS: array().ensure() })
-    .concat(CONFIGURATION_SCHEMA(oneConfig, adminGroup))
+    .concat(CONFIGURATION_SCHEMA(oneConfig, adminGroup, isVnet))
     .concat(CONTEXT_SCHEMA(oneConfig, adminGroup))
     .concat(QOS_SCHEMA(oneConfig, adminGroup))
 

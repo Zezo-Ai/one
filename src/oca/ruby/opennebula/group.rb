@@ -29,6 +29,7 @@ module OpenNebula
             :update         => "group.update",
             :delete         => "group.delete",
             :quota          => "group.quota",
+            :vlan           => "group.vlan",
             :add_admin      => "group.addadmin",
             :del_admin      => "group.deladmin",
         }
@@ -243,6 +244,20 @@ module OpenNebula
             return Error.new('ID not defined') if !@pe_id
 
             rc = @client.call(GROUP_METHODS[:quota],@pe_id, quota)
+            rc = nil if !OpenNebula.is_error?(rc)
+
+            return rc
+        end
+
+        # Sets the group VLAN rules
+        # @param vlan [String] a template (XML or txt) with the new VLAN rules
+        #
+        # @return [nil, OpenNebula::Error] nil in case of success, Error
+        #   otherwise
+        def set_vlan_rules(vlan)
+            return Error.new('ID not defined') if !@pe_id
+
+            rc = @client.call(GROUP_METHODS[:vlan],@pe_id, vlan)
             rc = nil if !OpenNebula.is_error?(rc)
 
             return rc

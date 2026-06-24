@@ -277,6 +277,14 @@ namespace one_db
     extern const char * scheduled_action_db_names;
 
     extern const char * scheduled_action_db_bootstrap;
+
+    /* ---------------------------------------------------------------------- */
+    /* VLAN rules tables                                                      */
+    /* ---------------------------------------------------------------------- */
+    extern const char * group_vlans_db_names;
+    extern const char * group_vlans_db_bootstrap;
+    extern const char * group_vlans_db_table;
+    extern const char * group_vlans_db_oid_column;
 }
 
 

@@ -45,4 +45,17 @@ const EditAdminsForm = (configProps) =>
 const EditUsersForm = (configProps) =>
   AsyncLoadForm({ formPath: 'Group/EditUsersForm' }, configProps)
 
-export { CreateForm, UpdateForm, EditAdminsForm, EditUsersForm }
+/**
+ * @param {ConfigurationProps} configProps - Configuration
+ * @returns {ReactElement|CreateStepsCallback} Asynchronous loaded form
+ */
+const AddVLANRuleForm = (configProps) =>
+  AsyncLoadForm({ formPath: 'Group/AddVLANRuleForm' }, configProps)
+
+export {
+  CreateForm,
+  UpdateForm,
+  EditAdminsForm,
+  EditUsersForm,
+  AddVLANRuleForm,
+}

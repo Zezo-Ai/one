@@ -416,4 +416,14 @@ namespace one_db
             "   body MEDIUMTEXT,"
             "   time INTEGER,"
             "   done INTEGER)";
+
+    /* ---------------------------------------------------------------------- */
+    /* VLAN rules tables                                                      */
+    /* ---------------------------------------------------------------------- */
+    const char * group_vlans_db_table = "group_vlans";
+    const char * group_vlans_db_names = "group_oid, body";
+    const char * group_vlans_db_oid_column = "group_oid";
+    const char * group_vlans_db_bootstrap =
+            "CREATE TABLE IF NOT EXISTS group_vlans ("
+            "group_oid INTEGER PRIMARY KEY, body MEDIUMTEXT)";
 }

@@ -81,3 +81,13 @@ info-tabs:
 
   cluster:
     enabled: true
+
+create-tabs:
+  address:
+    enabled: true
+  security:
+    enabled: true
+  context:
+    enabled: true
+  configuration:
+    enabled: true

@@ -44,6 +44,10 @@ protected:
                              const std::string& quota,
                              RequestAttributes& att);
 
+    Request::ErrorCode vlan(int oid,
+                            const std::string& vlan,
+                            RequestAttributes& att);
+
     Request::ErrorCode add_admin(int oid,
                                  int user_id,
                                  RequestAttributes& att);

@@ -238,3 +238,17 @@ func (gc *GroupController) QuotaContext(ctx context.Context, tpl string) error {
 	_, err := gc.c.Client.GroupQuota(ctx, gc.ID, tpl)
 	return err
 }
+
+// Vlan sets the group VLAN rules.
+// * tpl: The new VLAN rules template contents. Syntax can be the usual attribute=value or XML.
+func (gc *GroupController) Vlan(tpl string) error {
+	return gc.VlanContext(context.Background(), tpl)
+}
+
+// VlanContext sets the group VLAN rules.
+// * ctx: context for cancelation
+// * tpl: The new VLAN rules template contents. Syntax can be the usual attribute=value or XML.
+func (gc *GroupController) VlanContext(ctx context.Context, tpl string) error {
+	_, err := gc.c.Client.GroupVlan(ctx, gc.ID, tpl)
+	return err
+}

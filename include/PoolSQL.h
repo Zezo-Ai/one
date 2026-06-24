@@ -171,12 +171,10 @@ public:
     /**
      *  List the objects in the pool
      *   @param oids a vector with the oids of the objects.
-     *   @param table the name of the DB table.
      *
      *   @return 0 on success
      */
-    int list(
-            std::vector<int>&   oids)
+    int list(std::vector<int>& oids)
     {
         return search(oids, table.c_str(), "");
     }
@@ -188,8 +186,7 @@ public:
      *
      *    @return 0 on success.
      */
-    virtual int update(
-            PoolObjectSQL * objsql)
+    virtual int update(PoolObjectSQL * objsql)
     {
         return objsql->update(db);
     };

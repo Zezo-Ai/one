@@ -252,10 +252,10 @@ CommandParser::CmdParser.new(ARGV) do
                     end
 
                     extra_template = res.last
+                end
 
-                    if OneVNetHelper.add_ar_options_used?(options)
-                        extra_template << OpenNebulaHelper.create_ar(options)
-                    end
+                if OneVNetHelper.add_ar_options_used?(options)
+                    extra_template << OpenNebulaHelper.create_ar(options)
                 end
 
                 if c_i

@@ -58,10 +58,10 @@ const showEditor = ({ failedModule = '', error = '' } = {}) =>
           <textarea id="config-editor" style="padding: 5px; width: 85%; height: 65%;">${remotesConfig}</textarea>
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
             <button id="editor-reset-button" style="width: 100px; height: 40px; background: #e74c3c; border: none; border-radius: 5px; color: #fff; cursor: pointer;">
-              Reset 
+              Reset
             </button>
             <button id="editor-clearfallback-button" style="width: 150px; height: 40px; background: #0EADE1; border: none; border-radius: 5px; color: #fff; cursor: pointer;">
-             Clear fallback configuration 
+             Clear fallback configuration
             </button>
             <button id="editor-load-button" style="width: 100px; height: 40px; background: #2ecc71; border: none; border-radius: 5px; color: #fff; cursor: pointer;">
               ${success ? 'Continue' : 'Retry'}

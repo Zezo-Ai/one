@@ -19,6 +19,7 @@ import ExtraConfiguration, {
 import General, {
   STEP_ID as GENERAL_ID,
 } from '@modules/components/Forms/VnTemplate/InstantiateForm/Steps/General'
+import { VN_DRIVERS } from '@ConstantsModule'
 import { jsonToXml } from '@ModelsModule'
 import { createSteps } from '@UtilsModule'
 import { ObjectSchema, reach } from 'yup'
@@ -57,15 +58,39 @@ export const getUnknownVars = (fromAttributes = {}, schema) => {
   return unknown
 }
 
-const Steps = createSteps(() => [General, ExtraConfiguration].filter(Boolean), {
-  transformInitialValue: (vmTemplate, schema) => {
+const Steps = createSteps(() => [General, ExtraConfiguration], {
+  transformInitialValue: ({ TEMPLATE, ...vnTemplate } = {}, schema) => {
+    // Init switches of physical device and bridge
+    const phyDevSwitch = !TEMPLATE.PHYDEV
+    const bridgeSwitch = !!(
+      TEMPLATE.BRIDGE && !TEMPLATE.BRIDGE.startsWith('onebr')
+    )
+    const vlanTaggedSwitch = !!TEMPLATE.VLAN_TAGGED_ID
+    const QInQSwitch = !!TEMPLATE.CVLANS
+
     const initialValue = schema.cast(
       {
-        [GENERAL_ID]: vmTemplate?.TEMPLATE,
-        [EXTRA_ID]: vmTemplate?.TEMPLATE,
+        [GENERAL_ID]: { ...vnTemplate },
+        [EXTRA_ID]: {
+          ...TEMPLATE,
+          ...vnTemplate,
+          PHYDEV_SWITCH: phyDevSwitch,
+          BRIDGE_SWITCH: bridgeSwitch,
+          VLAN_TAGGED_ID_SWITCH: vlanTaggedSwitch,
+          Q_IN_Q_SWITCH: QInQSwitch,
+          VLAN_TAGGED_ID: TEMPLATE?.VLAN_TAGGED_ID?.split(','),
+          CVLANS: TEMPLATE?.CVLANS?.split(','),
+          IP_LINK_CONF: TEMPLATE?.IP_LINK_CONF?.split(','),
+          ENABLE_DPDK: TEMPLATE?.BRIDGE_TYPE === 'openvswitch_dpdk',
+        },
       },
-      { stripUnknown: true }
+      { stripUnknown: true, context: vnTemplate }
     )
+
+    initialValue[EXTRA_ID] = {
+      ...getUnknownVars(TEMPLATE, schema),
+      ...initialValue[EXTRA_ID],
+    }
 
     return initialValue
   },
@@ -76,6 +101,26 @@ const Steps = createSteps(() => [General, ExtraConfiguration].filter(Boolean), {
     Array.isArray(extraTemplate?.SECURITY_GROUPS) &&
       extraTemplate?.SECURITY_GROUPS?.length &&
       (extraTemplate.SECURITY_GROUPS = extraTemplate.SECURITY_GROUPS.join(','))
+
+    if (
+      extraTemplate.AUTOMATIC_VLAN_ID &&
+      extraTemplate.AUTOMATIC_VLAN_ID.toLowerCase() === 'yes'
+    ) {
+      extraTemplate.VLAN_ID = ' '
+    }
+
+    // Ensure that switches of physical device and bridge are not sent to the API
+    delete extraTemplate.PHYDEV_SWITCH
+    delete extraTemplate.BRIDGE_SWITCH
+    delete extraTemplate.VLAN_TAGGED_ID_SWITCH
+    delete extraTemplate.Q_IN_Q_SWITCH
+    delete extraTemplate.ENABLE_DPDK
+    ![VN_DRIVERS.ovswitch].includes(formData?.extraTemplate?.VN_MAD) &&
+      delete extraTemplate?.BRIDGE_TYPE
+
+    ![VN_DRIVERS.ovswitch_vxlan].includes(
+      formData?.extraTemplate?.OUTER_VLAN_ID
+    ) && delete extraTemplate?.OUTER_VLAN_ID
 
     const templateXML = jsonToXml({
       ...extraTemplate,

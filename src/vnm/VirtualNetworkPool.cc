@@ -128,6 +128,7 @@ int VirtualNetworkPool::allocate (
         const string&               gname,
         int                         umask,
         int                         pvid,
+        int                         template_id,
         unique_ptr<VirtualNetworkTemplate> vn_template,
         int *                       oid,
         const set<int>              &cluster_ids,
@@ -151,7 +152,7 @@ int VirtualNetworkPool::allocate (
         return *oid;
     }
 
-    VirtualNetwork vn {uid, gid, uname, gname, umask, pvid,
+    VirtualNetwork vn {uid, gid, uname, gname, umask, pvid, template_id,
                        cluster_ids, move(vn_template)};
 
     // Insert the VN in the DB

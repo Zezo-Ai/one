@@ -401,9 +401,16 @@ public:
             std::string&       error_msg);
 
     /**
-     *  Helper function to initialize restricte attributes of an AddressRange
+     *  Helper function to initialize restricted attributes of an AddressRange
      */
     static void set_restricted_attributes(std::vector<const SingleAttribute *>& ras);
+
+    /**
+     *  Checks for restricted attributes in a vector attribute, returns the
+     *  first one found.
+     */
+    static bool check_restricted(const VectorAttribute* va,
+                                 std::string& rs_attr);
 
     /**
      *  Get the security groups for this AR.
@@ -771,9 +778,6 @@ private:
     int reserve_addr_by_index(int vid, unsigned int rsize, unsigned int sindex,
                               AddressRange *rar);
 
-    /* ---------------------------------------------------------------------- */
-    /* Restricted Attributes functions                                        */
-    /* ---------------------------------------------------------------------- */
     /**
      *  Function to parse the IPv4 attribute ("IP") for IP4 and IP4_6 ARs
      *    @param error_msg if any
@@ -804,6 +808,9 @@ private:
      */
     int init_mac(bool reservation, std::string& error_msg);
 
+    /* ---------------------------------------------------------------------- */
+    /* Restricted Attributes functions                                        */
+    /* ---------------------------------------------------------------------- */
     /**
      *  Checks for restricted attributes, returns the first one found
      */
@@ -813,6 +820,11 @@ private:
      * Deletes all restricted attributes
      */
     void remove_restricted(VectorAttribute* va);
+
+    /**
+     * Checks if an update changes any restricted attribute
+     */
+    bool restricted_changed(const VectorAttribute* update, std::string& rs_attr) const;
 
     /**
      * Deletes all the attributes, except the restricted ones

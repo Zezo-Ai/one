@@ -39,6 +39,10 @@ class GroupService final : public one::group::GroupService::Service
                        const one::group::QuotaRequest* request,
                        one::ResponseID* response) override;
 
+    grpc::Status Vlan(grpc::ServerContext* context,
+                      const one::group::VlanRequest* request,
+                      one::ResponseID* response) override;
+
     grpc::Status Update(grpc::ServerContext* context,
                          const one::group::UpdateRequest* request,
                          one::ResponseID* response) override;
@@ -110,6 +114,21 @@ class GroupSetQuotaGRPC : public RequestGRPC, public GroupAPI
 public:
     GroupSetQuotaGRPC() :
         RequestGRPC("one.group.quota", "/one.group.GroupService/Quota"),
+        GroupAPI(static_cast<Request&>(*this))
+    {}
+
+    void request_execute(const google::protobuf::Message* _request,
+                         google::protobuf::Message*       _response,
+                         RequestAttributesGRPC& att) override;
+};
+
+/* ------------------------------------------------------------------------- */
+
+class GroupSetVlanGRPC : public RequestGRPC, public GroupAPI
+{
+public:
+    GroupSetVlanGRPC() :
+        RequestGRPC("one.group.vlan", "/one.group.GroupService/Vlan"),
         GroupAPI(static_cast<Request&>(*this))
     {}
 

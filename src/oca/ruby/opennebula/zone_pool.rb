@@ -39,6 +39,7 @@ module OpenNebula
         # Factory method to create Zone objects
         # @return [Zone] new Zone object
         def factory(element_xml)
+            require 'opennebula/zone'
             OpenNebula::Zone.new(element_xml,@client)
         end
 

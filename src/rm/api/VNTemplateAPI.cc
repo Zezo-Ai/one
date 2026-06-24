@@ -16,6 +16,9 @@
 
 #include "VNTemplateAPI.h"
 #include "VirtualNetworkPool.h"
+#include "GroupPool.h"
+#include "SharedAPI.h"
+#include "AddressRange.h"
 
 using namespace std;
 
@@ -81,13 +84,6 @@ Request::ErrorCode VNTemplateAPI::instantiate(int oid,
         return ec;
     }
 
-    ec = as_uid_gid(tmpl.get(), att);
-
-    if ( ec != Request::SUCCESS )
-    {
-        return ec;
-    }
-
     /* ---------------------------------------------------------------------- */
     /* Store the template attributes in the VN                                */
     /* ---------------------------------------------------------------------- */
@@ -98,6 +94,20 @@ Request::ErrorCode VNTemplateAPI::instantiate(int oid,
     if (!name.empty())
     {
         tmpl->set(new SingleAttribute("NAME", name));
+    }
+
+    ec = as_uid_gid(tmpl.get(), att);
+
+    if ( ec != Request::SUCCESS )
+    {
+        return ec;
+    }
+
+    ec = SharedAPI::validate_vlan_auth(tmpl.get(), oid, att);
+
+    if (ec != Request::SUCCESS)
+    {
+        return ec;
     }
 
     //--------------------------------------------------------------------------
@@ -114,7 +124,8 @@ Request::ErrorCode VNTemplateAPI::instantiate(int oid,
     }
 
     int rc = vnpool->allocate(att.uid, att.gid, att.uname, att.gname, att.umask,
-                              -1, std::move(tmpl), &net_id, cluster_ids, att.resp_msg);
+                              -1, oid, std::move(tmpl), &net_id, cluster_ids,
+                              att.resp_msg);
 
     if ( rc < 0 )
     {
@@ -153,16 +164,34 @@ Request::ErrorCode VNTemplateAPI::merge(Template* tmpl,
         return Request::SUCCESS;
     }
 
+    vector<unique_ptr<VectorAttribute>> user_ars;
+    uattrs.remove("AR", user_ars);
+
     if (!att.is_admin())
     {
         string aname;
 
+        for (const auto& uar : user_ars)
+        {
+            if (AddressRange::check_restricted(uar.get(), aname))
+            {
+                att.resp_msg ="Extra Template includes a restricted attribute AR/" + aname;
+
+                return Request::AUTHORIZATION;
+            }
+        }
+
         if (uattrs.check_restricted(aname, tmpl, true))
         {
-            att.resp_msg ="User Template includes a restricted attribute " + aname;
+            att.resp_msg ="Extra Template includes a restricted attribute " + aname;
 
             return Request::AUTHORIZATION;
         }
+    }
+
+    for (auto& uar : user_ars)
+    {
+        tmpl->set(uar.release());
     }
 
     tmpl->merge(&uattrs);

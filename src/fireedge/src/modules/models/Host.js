@@ -60,7 +60,7 @@ export const getAllocatedInfo = (host) => {
   const { RESERVED_CPU, RESERVED_MEM } = host?.TEMPLATE ?? {}
 
   const percentCpuUsed = (+CPU_USAGE * 100) / +MAX_CPU || 0
-  const percentCpuLabel = `${CPU_USAGE} / ${MAX_CPU} 
+  const percentCpuLabel = `${CPU_USAGE} / ${MAX_CPU}
     (${Math.round(isFinite(percentCpuUsed) ? percentCpuUsed : '--')}%)`
 
   const isMemUsageNegative = +MEM_USAGE < 0
@@ -69,7 +69,7 @@ export const getAllocatedInfo = (host) => {
   const totalMemBytes = prettyBytes(+MAX_MEM)
   const percentMemLabel = `${
     isMemUsageNegative ? '-' : ''
-  }${usedMemBytes} / ${totalMemBytes} 
+  }${usedMemBytes} / ${totalMemBytes}
       (${Math.round(isFinite(percentMemUsed) ? percentMemUsed : '--')}%)`
 
   return {
@@ -253,7 +253,7 @@ export const getNumaMemory = (numa) => {
   const totalMemBytes = prettyBytes(+TOTAL)
   const percentMemLabel = `${
     isMemUsageNegative ? '-' : ''
-  }${usedMemBytes} / ${totalMemBytes} 
+  }${usedMemBytes} / ${totalMemBytes}
       (${Math.round(isFinite(percentMemUsed) ? percentMemUsed : '--')}%)`
 
   return {

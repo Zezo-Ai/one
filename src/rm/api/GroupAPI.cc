@@ -82,6 +82,49 @@ Request::ErrorCode GroupAPI::quota(int oid,
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
+Request::ErrorCode GroupAPI::vlan(int oid,
+                                  const std::string& vlan,
+                                  RequestAttributes& att)
+{
+    Template vlan_tmpl;
+    int      rc;
+
+    if ( auto ec = basic_authorization(oid, att); ec != Request::SUCCESS )
+    {
+        return ec;
+    }
+
+    rc = vlan_tmpl.parse_str_or_xml(vlan, att.resp_msg);
+
+    if ( rc != 0 )
+    {
+        return Request::ACTION;
+    }
+
+    auto group = gpool->get(oid);
+
+    if ( group == nullptr )
+    {
+        att.resp_id = oid;
+
+        return Request::NO_EXISTS;
+    }
+
+    rc = group->vlans.set(&vlan_tmpl, att.resp_msg);
+
+    if ( rc != 0 )
+    {
+        return Request::ACTION;
+    }
+
+    gpool->update_vlans(group.get());
+
+    return Request::SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
 Request::ErrorCode GroupAPI::edit_admin(int oid,
                                         int user_id,
                                         RequestAttributes& att)

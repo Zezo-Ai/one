@@ -49,6 +49,11 @@ protected:
                              bool force,
                              RequestAttributes& att);
 
+    Request::ErrorCode update(int oid,
+                              const std::string& tmpl,
+                              int update_type,
+                              RequestAttributes& att) override;
+
     Request::ErrorCode update_ar(int oid,
                                  const std::string& str_tmpl,
                                  RequestAttributes& att);
@@ -109,6 +114,13 @@ protected:
                                  RequestAttributes& att);
 
     VirtualNetworkPool* vnpool;
+
+private:
+    Request::ErrorCode rm_ar_helper(int oid,
+                                    int ar_id,
+                                    bool force,
+                                    RequestAttributes& att);
+
 };
 
 /* -------------------------------------------------------------------------- */
@@ -138,6 +150,11 @@ protected:
                                      RequestAttributes& att,
                                      int cluster_id,
                                      const std::string& cluster_name) override;
+
+    Request::ErrorCode allocate_authorization(Template *obj_template,
+                                              RequestAttributes&  att,
+                                              PoolObjectAuth *cluster_perms) override;
+
     int add_to_cluster(
             Cluster* cluster,
             int id,
@@ -161,19 +178,6 @@ protected:
         request.auth_op(AuthRequest::USE_NO_LCK);
         request.leader_only(false);
         request.zone_disabled(true);
-    }
-};
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-class VirtualNetworkRmARAPI : public VirtualNetworkAPI
-{
-protected:
-    VirtualNetworkRmARAPI(Request &r)
-        : VirtualNetworkAPI(r)
-    {
-        request.auth_op(AuthRequest::ADMIN);
     }
 };
 

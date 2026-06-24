@@ -35,7 +35,7 @@ let generalFeatures
 
 export const STEP_ID = 'general'
 
-const Content = ({ vmTemplate, oneConfig, adminGroup }) => {
+const Content = ({ vnTemplate, oneConfig, adminGroup }) => {
   const theme = useTheme()
   const classes = useMemo(() => useStyles(theme), [theme])
   const { view, getResourceView } = useViews()
@@ -45,24 +45,24 @@ const Content = ({ vmTemplate, oneConfig, adminGroup }) => {
   const { features, dialogs } = getResourceView(resource)
 
   const sections = useMemo(() => {
-    const hypervisor = vmTemplate?.TEMPLATE?.HYPERVISOR
+    const hypervisor = vnTemplate?.TEMPLATE?.HYPERVISOR
     const dialog = dialogs?.instantiate_dialog
     const sectionsAvailable = getSectionsAvailable(dialog, hypervisor)
 
     generalFeatures = features
 
-    return SECTIONS(vmTemplate, features, oneConfig, adminGroup).filter(
+    return SECTIONS(vnTemplate, features, oneConfig, adminGroup).filter(
       ({ id, required }) => required || sectionsAvailable.includes(id)
     )
   }, [view])
 
   useEffect(() => {
-    if (vmTemplate?.TEMPLATE?.VCPU && features?.cpu_factor) {
+    if (vnTemplate?.TEMPLATE?.VCPU && features?.cpu_factor) {
       const oldValues = {
         ...getValues(),
       }
       oldValues.configuration.CPU = `${scaleVcpuByCpuFactor(
-        vmTemplate.TEMPLATE.VCPU,
+        vnTemplate.TEMPLATE.VCPU,
         features.cpu_factor
       )}`
 
@@ -87,23 +87,23 @@ const Content = ({ vmTemplate, oneConfig, adminGroup }) => {
 }
 
 Content.propTypes = {
-  vmTemplate: PropTypes.object,
+  vnTemplate: PropTypes.object,
   oneConfig: PropTypes.object,
   adminGroup: PropTypes.bool,
 }
 
 /**
- * Basic configuration about VM Template.
+ * Basic configuration about VN Template.
  *
- * @param {VmTemplate} vmTemplate - VM Template
+ * @param {VmTemplate} vnTemplate - VN Template
  * @returns {object} Basic configuration step
  */
-const BasicConfiguration = ({ data: vmTemplate, oneConfig, adminGroup }) => ({
+const BasicConfiguration = ({ data: vnTemplate, oneConfig, adminGroup }) => ({
   id: STEP_ID,
   label: T.Configuration,
-  resolver: () => SCHEMA(vmTemplate, generalFeatures),
+  resolver: () => SCHEMA(vnTemplate, generalFeatures),
   optionsValidate: { abortEarly: false },
-  content: (props) => Content({ ...props, vmTemplate, oneConfig, adminGroup }),
+  content: (props) => Content({ ...props, vnTemplate, oneConfig, adminGroup }),
 })
 
 export default BasicConfiguration

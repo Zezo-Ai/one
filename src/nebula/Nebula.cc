@@ -44,6 +44,7 @@
 #include "VMGroupPool.h"
 #include "VMTemplatePool.h"
 #include "VNTemplatePool.h"
+#include "GroupVlans.h"
 #include "ZonePool.h"
 
 #include "AclManager.h"
@@ -594,6 +595,7 @@ void Nebula::start(bool bootstrap_only)
             rc += DocumentPool::bootstrap(logdb);
             rc += UserQuotas::bootstrap(logdb);
             rc += GroupQuotas::bootstrap(logdb);
+            rc += GroupVlans::bootstrap(logdb);
             rc += SecurityGroupPool::bootstrap(logdb);
             rc += VirtualRouterPool::bootstrap(logdb);
             rc += VMGroupPool::bootstrap(logdb);

@@ -163,6 +163,14 @@ int GroupPool::update_quotas(Group * group)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
+int GroupPool::update_vlans(Group * group)
+{
+    return group->update_vlans(db);
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
 int GroupPool::drop(PoolObjectSQL * objsql, string& error_msg)
 {
     Group * group = static_cast<Group*>(objsql);
@@ -218,9 +226,13 @@ int GroupPool::dump(string& oss, const string& where, int sid, int eid, bool des
     ostringstream cmd;
 
     cmd << "SELECT " << one_db::group_table << ".body, "
-        << one_db::group_quotas_db_table << ".body" << " FROM " << one_db::group_table
+        << one_db::group_quotas_db_table << ".body, "
+        << one_db::group_vlans_db_table << ".body"
+        << " FROM " << one_db::group_table
         << " LEFT JOIN " << one_db::group_quotas_db_table << " ON "
-        << one_db::group_table << ".oid=" << one_db::group_quotas_db_table << ".group_oid";
+        << one_db::group_table << ".oid=" << one_db::group_quotas_db_table << ".group_oid"
+        << " LEFT JOIN " << one_db::group_vlans_db_table << " ON "
+        << one_db::group_table << ".oid=" << one_db::group_vlans_db_table << ".group_oid";
 
     if ( !where.empty() )
     {
@@ -241,7 +253,7 @@ int GroupPool::dump(string& oss, const string& where, int sid, int eid, bool des
 
     oss.append("<GROUP_POOL>");
 
-    string_cb cb(2);
+    string_cb cb(3);
 
     cb.set_callback(&oss);
 

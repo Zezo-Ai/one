@@ -21,6 +21,7 @@
 #include "GroupTemplate.h"
 #include "ObjectCollection.h"
 #include "QuotasSQL.h"
+#include "GroupVlans.h"
 #include "VMActions.h"
 
 
@@ -122,6 +123,11 @@ public:
     GroupQuotas quota;
 
     /**
+     *  VLAN rules for this group
+     */
+    GroupVlans vlans;
+
+    /**
      *  Writes/updates the Group quotas fields in the database.
      *    @param db pointer to the db
      *    @return 0 on success
@@ -129,6 +135,16 @@ public:
     int update_quotas(SqlDB *db)
     {
         return quota.update(oid, db->get_local_db());
+    }
+
+    /**
+     *  Writes/updates the Group VLAN rules fields in the database.
+     *    @param db pointer to the db
+     *    @return 0 on success
+     */
+    int update_vlans(SqlDB *db)
+    {
+        return vlans.update(oid, db->get_local_db());
     }
 
     /**
@@ -241,13 +257,6 @@ private:
      *    @return 0 on success
      */
     int select(SqlDB * db, const std::string& name, int uid) override;
-
-    /**
-     *  Reads the Group quotas from the database.
-     *    @param db pointer to the db
-     *    @return 0 on success
-     */
-    int select_quotas(SqlDB * db);
 
     /**
      *  Drops the group from the database

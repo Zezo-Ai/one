@@ -64,3 +64,13 @@ info-tabs:
 
   template:
     enabled: true
+
+instantiate-tabs:
+  address:
+    enabled: true
+  security:
+    enabled: true
+  context:
+    enabled: true
+  configuration:
+    enabled: true

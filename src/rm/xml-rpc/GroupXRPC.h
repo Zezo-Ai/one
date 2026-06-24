@@ -74,6 +74,23 @@ public:
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 
+class GroupSetVlanXRPC : public RequestXRPC, public GroupAPI
+{
+public:
+    GroupSetVlanXRPC():
+        RequestXRPC("one.group.vlan",
+                    "Sets group VLAN rules",
+                    "A:sis"),
+        GroupAPI(static_cast<Request&>(*this))
+    {}
+
+    void request_execute(xmlrpc_c::paramList const& _paramList,
+                         RequestAttributesXRPC&     att) override;
+};
+
+/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+
 class GroupUpdateXRPC : public RequestXRPC, public GroupAPI
 {
 public:

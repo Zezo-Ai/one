@@ -15,10 +15,13 @@
 /* -------------------------------------------------------------------------- */
 
 #include "VirtualNetworkAPI.h"
+#include "AddressRange.h"
 #include "IPAMManager.h"
 #include "VirtualMachinePool.h"
 #include "VirtualRouterPool.h"
 #include "LifeCycleManager.h"
+#include "GroupPool.h"
+#include "SharedAPI.h"
 
 using namespace std;
 
@@ -66,16 +69,70 @@ bool use_filter(RequestAttributes& att,
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 
+static Request::ErrorCode ar_restricted_authorization(
+        VirtualNetworkTemplate& tmpl,
+        RequestAttributes& att)
+{
+    if (att.is_admin())
+    {
+        return Request::SUCCESS;
+    }
+
+    vector<VectorAttribute *> ars;
+
+    tmpl.get("AR", ars);
+
+    for (auto ar : ars)
+    {
+        string aname;
+
+        if (AddressRange::check_restricted(ar, aname))
+        {
+            att.resp_msg = "AR includes a restricted attribute " + aname;
+
+            return Request::AUTHORIZATION;
+        }
+    }
+
+    return Request::SUCCESS;
+}
+
+/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+
 Request::ErrorCode VirtualNetworkAPI::add_ar(int oid,
                                              const std::string& str_tmpl,
                                              RequestAttributes& att)
 {
-    att.auth_op = AuthRequest::ADMIN;
-
     VirtualNetworkTemplate tmpl;
     unique_ptr<VirtualNetwork> vn;
 
+    if (auto vnet = vnpool->get_ro(oid))
+    {
+        if (vnet->get_template_id() == -1)
+        {
+            // Increase authorization level networks not created from VN Template
+            att.auth_op = AuthRequest::ADMIN;
+        }
+    }
+    else
+    {
+        att.resp_id = oid;
+        return Request::NO_EXISTS;
+    }
+
     if (auto ec = authorize(oid, str_tmpl, tmpl, vn, att); ec != Request::SUCCESS)
+    {
+        return ec;
+    }
+
+    if (auto ec = ar_restricted_authorization(tmpl, att); ec != Request::SUCCESS)
+    {
+        return ec;
+    }
+
+    if (auto ec = SharedAPI::validate_vlan_auth(&tmpl, vn->get_template_id(), att);
+        ec != Request::SUCCESS )
     {
         return ec;
     }
@@ -95,10 +152,10 @@ Request::ErrorCode VirtualNetworkAPI::add_ar(int oid,
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 
-Request::ErrorCode VirtualNetworkAPI::rm_ar(int oid,
-                                            int ar_id,
-                                            bool force,
-                                            RequestAttributes& att)
+Request::ErrorCode VirtualNetworkAPI::rm_ar_helper(int oid,
+                                                   int ar_id,
+                                                   bool force,
+                                                   RequestAttributes& att)
 {
     if (auto ec = basic_authorization(oid, att); ec != Request::SUCCESS)
     {
@@ -190,6 +247,105 @@ Request::ErrorCode VirtualNetworkAPI::rm_ar(int oid,
     return Request::SUCCESS;
 }
 
+/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+
+Request::ErrorCode VirtualNetworkAPI::rm_ar(int oid,
+                                            int ar_id,
+                                            bool force,
+                                            RequestAttributes& att)
+{
+    if (auto vnet = vnpool->get_ro(oid))
+    {
+        if (vnet->get_template_id() == -1)
+        {
+            // Increase authorization level networks not created from VN Template
+            // and for reservations
+            att.auth_op = AuthRequest::ADMIN;
+        }
+    }
+    else
+    {
+        att.resp_id = oid;
+        return Request::NO_EXISTS;
+    }
+
+    return rm_ar_helper(oid, ar_id, force, att);
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+Request::ErrorCode VirtualNetworkAPI::update(int oid,
+                                             const std::string& tmpl,
+                                             int update_type,
+                                             RequestAttributes& att)
+{
+    int rc;
+
+    if ( auto ec = basic_authorization(oid, att); ec != Request::SUCCESS )
+    {
+        return ec;
+    }
+
+    if ( update_type < 0 || update_type > 1 )
+    {
+        att.resp_msg = "Wrong update type";
+
+        return Request::RPC_API;
+    }
+
+    auto object = pool->get<VirtualNetwork>(oid);
+
+    if ( object == nullptr )
+    {
+        att.resp_id = oid;
+
+        return Request::NO_EXISTS;
+    }
+
+    VirtualNetworkTemplate vtmpl;
+
+    rc = vtmpl.parse_str_or_xml(tmpl, att.resp_msg);
+
+    if ( rc != 0 )
+    {
+        att.resp_msg = "Cannot update template. " + att.resp_msg;
+
+        return Request::INTERNAL;
+    }
+
+    if ( auto ec = SharedAPI::validate_vlan_auth(&vtmpl,
+                                                 object->get_template_id(),
+                                                 att);
+            ec != Request::SUCCESS )
+    {
+        return ec;
+    }
+
+    if (update_type == 0)
+    {
+        rc = object->replace_template(tmpl, !att.is_admin(), att.resp_msg);
+    }
+    else //if (update_type == 1)
+    {
+        rc = object->append_template(tmpl, !att.is_admin(), att.resp_msg);
+    }
+
+    if ( rc != 0 )
+    {
+        att.resp_msg = "Cannot update template. " + att.resp_msg;
+
+        return Request::INTERNAL;
+    }
+
+    pool->update(object.get());
+
+    extra_updates(object.get());
+
+    return Request::SUCCESS;
+}
+
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
@@ -201,6 +357,12 @@ Request::ErrorCode VirtualNetworkAPI::update_ar(int oid,
     unique_ptr<VirtualNetwork> vn;
 
     if (auto ec = authorize(oid, str_tmpl, tmpl, vn, att); ec != Request::SUCCESS)
+    {
+        return ec;
+    }
+
+    if (auto ec = SharedAPI::validate_vlan_auth(&tmpl, vn->get_template_id(), att);
+            ec != Request::SUCCESS )
     {
         return ec;
     }
@@ -400,7 +562,8 @@ Request::ErrorCode VirtualNetworkAPI::reserve(int oid,
         vtmpl->replace("NAME", name);
 
         rc = vnpool->allocate(att.uid, att.gid, att.uname, att.gname, att.umask,
-                              oid, std::move(vtmpl), &rid, cluster_ids, att.resp_msg);
+                              oid, -1, std::move(vtmpl), &rid, cluster_ids,
+                              att.resp_msg);
 
         if (rc < 0)
         {
@@ -525,7 +688,7 @@ Request::ErrorCode VirtualNetworkAPI::free_ar(int oid,
                                               int ar_id,
                                               RequestAttributes& att)
 {
-    return rm_ar(oid, ar_id, false, att);
+    return rm_ar_helper(oid, ar_id, false, att);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -941,6 +1104,9 @@ Request::ErrorCode VirtualNetworkAllocateAPI::allocate(const std::string& str_tm
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 
+/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+
 Request::ErrorCode VirtualNetworkAllocateAPI::pool_allocate(std::unique_ptr<Template> tmpl,
                                                             int& id,
                                                             RequestAttributes& att,
@@ -957,12 +1123,54 @@ Request::ErrorCode VirtualNetworkAllocateAPI::pool_allocate(std::unique_ptr<Temp
         cluster_ids.insert(cluster_id);
     }
 
+    if (cluster_ids.empty())
+    {
+        cluster_ids.insert(0);
+    }
+
     int rc = vnpool->allocate(att.uid, att.gid, att.uname, att.gname, att.umask, -1,
-                              std::move(vtmpl), &id, cluster_ids, att.resp_msg);
+                              -1, std::move(vtmpl), &id, cluster_ids, att.resp_msg);
 
     if (rc < 0)
     {
         return Request::INTERNAL;
+    }
+
+    return Request::SUCCESS;
+}
+
+/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+
+Request::ErrorCode VirtualNetworkAllocateAPI::allocate_authorization(
+        Template *obj_template,
+        RequestAttributes&  att,
+        PoolObjectAuth *cluster_perms)
+{
+    if ( auto ec = SharedAPI::allocate_authorization(obj_template, att, cluster_perms);
+         ec != Request::SUCCESS )
+    {
+        return ec;
+    }
+
+    if ( auto ec = SharedAPI::validate_vlan_auth(obj_template, -1, att);
+         ec != Request::SUCCESS )
+    {
+        return ec;
+    }
+
+    if (!att.is_admin())
+    {
+        string aname;
+
+        auto vtmpl = static_cast<VirtualNetworkTemplate *>(obj_template);
+
+        if (vtmpl->check_restricted(aname))
+        {
+            att.resp_msg = "VNET Template includes a restricted attribute " + aname;
+
+            return Request::AUTHORIZATION;
+        }
     }
 
     return Request::SUCCESS;

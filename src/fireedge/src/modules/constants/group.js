@@ -15,6 +15,8 @@
  * ------------------------------------------------------------------------- */
 // eslint-disable-next-line prettier/prettier, no-unused-vars
 import { VmQuota, NetworkQuota, DatastoreQuota, ImageQuota } from '@modules/constants/quota'
+// eslint-disable-next-line no-unused-vars
+import { VLANRule } from '@modules/constants/vlanRule'
 
 /**
  * @typedef Group
@@ -33,6 +35,7 @@ import { VmQuota, NetworkQuota, DatastoreQuota, ImageQuota } from '@modules/cons
  * VM: VmQuota,
  * IMAGE: ImageQuota|ImageQuota[]
  * }} [DEFAULT_GROUP_QUOTAS] - Default quotas
+ * @property {{ VLAN_RULES: VLANRule|VLANRule[] }} [VLAN_RULES] - VLAN Rules
  */
 
 export const GROUP_ACTIONS = {
@@ -43,4 +46,9 @@ export const GROUP_ACTIONS = {
   EDIT_ADMINS: 'edit_admins',
   ADD_USERS: 'add_users',
   REMOVE_USERS: 'remove_users',
+
+  // VLAN Rules
+  ADD_VLAN_RULE: 'add_vlan_rule',
+  UPDATE_VLAN_RULE: 'update_vlan_rule',
+  DELETE_VLAN_RULE: 'delete_vlan_rule',
 }

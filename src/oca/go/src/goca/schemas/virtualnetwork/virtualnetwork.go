@@ -44,6 +44,7 @@ type VirtualNetwork struct {
 	Bridge               string              `xml:"BRIDGE,omitempty"`
 	BridgeType           string              `xml:"BRIDGE_TYPE,omitempty"` // minOccurs=0
 	ParentNetworkID      string              `xml:"PARENT_NETWORK_ID,omitempty"`
+	TemplateID           string              `xml:"TEMPLATE_ID,omitempty"`
 	StateRaw             int                 `xml:"STATE,omitempty"`
 	VNMad                string              `xml:"VN_MAD"`
 	PhyDev               string              `xml:"PHYDEV,omitempty"`

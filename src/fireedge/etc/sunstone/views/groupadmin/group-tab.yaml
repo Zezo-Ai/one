@@ -53,3 +53,6 @@ info-tabs:
     enabled: true
     actions:
       get_showback: true
+
+  'VLAN Group':
+    enabled: true

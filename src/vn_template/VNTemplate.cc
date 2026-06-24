@@ -15,7 +15,6 @@
 /* ------------------------------------------------------------------------ */
 
 #include "VNTemplate.h"
-#include "VirtualNetwork.h"
 #include "OneDB.h"
 
 using namespace std;
@@ -52,9 +51,7 @@ VNTemplate::VNTemplate(int id,
 
 int VNTemplate::insert(SqlDB *db, string& error_str)
 {
-    string vn_mad, phydev, bridge, vlan_id, outer_id;
-    bool auto_id = false, auto_outer = false;
-    int rc;
+    string vn_mad;
 
     // ---------------------------------------------------------------------
     // Check always mandatory attributes
@@ -66,23 +63,6 @@ int VNTemplate::insert(SqlDB *db, string& error_str)
     if (vn_mad.empty())
     {
         goto error_vnmad;
-    }
-
-    get_template_attribute("PHYDEV", phydev);
-    get_template_attribute("BRIDGE", bridge);
-    get_template_attribute("AUTOMATIC_VLAN_ID", auto_id);
-
-    get_template_attribute("VLAN_ID", vlan_id);
-    get_template_attribute("AUTOMATIC_OUTER_VLAN_ID", auto_outer);
-
-    get_template_attribute("OUTER_VLAN_ID", outer_id);
-
-    rc = VirtualNetwork::parse_phydev_vlans(obj_template.get(), vn_mad, phydev,
-                                            bridge, auto_id, vlan_id, auto_outer, outer_id, error_str);
-
-    if (rc == -1)
-    {
-        return -1;
     }
 
     encrypt();

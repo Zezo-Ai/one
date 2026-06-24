@@ -29,7 +29,8 @@ import { Translate } from '@modules/components/HOC'
 
 import { STEP_ID as GENERAL_ID } from '@modules/components/Forms/VNetwork/CreateForm/Steps/General'
 import { SCHEMA } from '@modules/components/Forms/VNetwork/CreateForm/Steps/ExtraConfiguration/schema'
-import { T, VirtualNetwork } from '@ConstantsModule'
+import { T, VirtualNetwork, RESOURCE_NAMES } from '@ConstantsModule'
+import { useViews } from '@FeaturesModule'
 
 import { Box } from '@mui/material'
 
@@ -46,7 +47,13 @@ import { Box } from '@mui/material'
 export const STEP_ID = 'extra'
 
 /** @type {TabType[]} */
-export const TABS = [Configuration(STEP_ID), Addresses, Security, QoS, Context]
+export const BASE_TABS = [
+  Configuration(STEP_ID),
+  Addresses,
+  Security,
+  QoS,
+  Context,
+]
 
 const Content = ({ isUpdate, isVnet, oneConfig, adminGroup }) => {
   const {
@@ -54,9 +61,19 @@ const Content = ({ isUpdate, isVnet, oneConfig, adminGroup }) => {
     formState: { errors },
   } = useFormContext()
 
+  const { getResourceView } = useViews()
+
   const driver = useMemo(() => watch(`${GENERAL_ID}.VN_MAD`), [])
 
   const totalErrors = Object.keys(errors[STEP_ID] ?? {}).length
+  const resource = RESOURCE_NAMES.VNET
+  const createTabs = getResourceView(resource)?.['create-tabs'] ?? {}
+
+  const TABS = BASE_TABS.filter(({ id }) => {
+    const tab = createTabs[id]
+
+    return tab && tab.enabled
+  })
 
   const tabs = useMemo(
     () =>
@@ -98,7 +115,7 @@ const ExtraConfiguration = ({ data, oneConfig, adminGroup }) => {
   return {
     id: STEP_ID,
     label: T.AdvancedOptions,
-    resolver: SCHEMA(isUpdate, oneConfig, adminGroup),
+    resolver: SCHEMA(isUpdate, oneConfig, adminGroup, isVnet),
     optionsValidate: { abortEarly: false },
     content: (formProps) =>
       Content({ ...formProps, isUpdate, oneConfig, adminGroup, isVnet }),

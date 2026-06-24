@@ -16,6 +16,7 @@
 import { array, object, ObjectSchema } from 'yup'
 
 import { SCHEMA as CONTEXT_SCHEMA } from '@modules/components/Forms/VnTemplate/InstantiateForm/Steps/ExtraConfiguration/context/schema'
+import { SCHEMA_INSTANTIATE as CONFIGURATION_SCHEMA } from '@modules/components/Forms/Commons/VNetwork/Tabs/configuration/schema'
 
 /**
  * Map name attribute if not exists.
@@ -44,9 +45,9 @@ const AR_SCHEMA = object({
  * @returns {ObjectSchema} Extra configuration schema
  */
 export const SCHEMA = (isUpdate, oneConfig, adminGroup) => {
-  const schema = object({ SECURITY_GROUPS: array().ensure() }).concat(
-    CONTEXT_SCHEMA(oneConfig, adminGroup)
-  )
+  const schema = object({ SECURITY_GROUPS: array().ensure() })
+    .concat(CONTEXT_SCHEMA(oneConfig, adminGroup))
+    .concat(CONFIGURATION_SCHEMA(oneConfig, adminGroup))
 
   !isUpdate && schema.concat(AR_SCHEMA)
 

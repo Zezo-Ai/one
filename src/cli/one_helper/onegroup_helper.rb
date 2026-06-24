@@ -313,6 +313,26 @@ class OneGroupHelper < OpenNebulaHelper::OneHelper
 
         helper = OneQuotaHelper.new(@client)
         helper.format_quota(group_hash['GROUP'], default_quotas, group.id)
+
+        CLIHelper.print_header(str_h1 % 'VLAN RULES', false)
+
+        rules = [group_hash['GROUP']['VLAN_RULES']['RULE']].flatten rescue []
+        rules.compact!
+
+        CLIHelper::ShowTable.new(nil, self) do
+            column :VLAN_ID, 'VLAN Identifier range', :left, :size => 15 do |d|
+                d['ID']
+            end
+
+            column :SCOPE, 'Scope of the rule', :left, :size => 15 do |d|
+                d['SCOPE']
+            end
+
+            column :VNTEMPLATE, 'VN Template ID range', :left, :size => 15 do |d|
+                d['VNTEMPLATE'] || '-'
+            end
+        end.show(rules)
+        puts
     end
 
 end

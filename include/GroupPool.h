@@ -130,6 +130,13 @@ public:
     int update_quotas(Group * group);
 
     /**
+     * Update a particular Group's VLAN rules
+     *    @param group pointer to Group
+     *    @return 0 on success
+     */
+    int update_vlans(Group * group);
+
+    /**
      *  Drops the Group from the data base. The object mutex SHOULD be
      *  locked.
      * @param objsql a pointer to a Group object

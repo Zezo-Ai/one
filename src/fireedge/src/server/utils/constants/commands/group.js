@@ -26,6 +26,7 @@ const GROUP_UPDATE = 'group.update'
 const GROUP_ADDADMIN = 'group.addadmin'
 const GROUP_DELADMIN = 'group.deladmin'
 const GROUP_QUOTA = 'group.quota'
+const GROUP_VLAN = 'group.vlan'
 const GROUP_POOL_INFO = 'grouppool.info'
 const GROUP_QUOTA_INFO = 'groupquota.info'
 const GROUP_QUOTA_UPDATE = 'groupquota.update'
@@ -38,6 +39,7 @@ const Actions = {
   GROUP_ADDADMIN,
   GROUP_DELADMIN,
   GROUP_QUOTA,
+  GROUP_VLAN,
   GROUP_POOL_INFO,
   GROUP_QUOTA_INFO,
   GROUP_QUOTA_UPDATE,
@@ -135,6 +137,20 @@ module.exports = {
           default: -1,
         },
         template: {
+          from: postBody,
+          default: '',
+        },
+      },
+    },
+    [GROUP_VLAN]: {
+      // inspected
+      httpMethod: PUT,
+      params: {
+        id: {
+          from: resource,
+          default: -1,
+        },
+        vlanRule: {
           from: postBody,
           default: '',
         },

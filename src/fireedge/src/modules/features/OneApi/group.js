@@ -336,6 +336,15 @@ const groupApi = oneApi.injectEndpoints({
         return { params, command }
       },
     }),
+    vlanRuleGroup: builder.mutation({
+      query: (params) => {
+        const name = Actions.GROUP_VLAN
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      invalidatesTags: (_, __, { id }) => [{ type: GROUP, id }, GROUP_POOL],
+    }),
   }),
 })
 
@@ -356,6 +365,7 @@ const groupQueries = (({
   useRemoveAdminFromGroupMutation,
   useUpdateGroupQuotaMutation,
   useUpdateDefaultGroupQuotaMutation,
+  useVlanRuleGroupMutation,
 }) => ({
   // Queries
   useGetGroupQuery,
@@ -373,6 +383,7 @@ const groupQueries = (({
   useRemoveAdminFromGroupMutation,
   useUpdateGroupQuotaMutation,
   useUpdateDefaultGroupQuotaMutation,
+  useVlanRuleGroupMutation,
 }))(groupApi)
 
 export default groupQueries

@@ -116,6 +116,11 @@ export const PATH = {
       DETAIL: `/${RESOURCE_NAMES.SEC_GROUP}/:id`,
       CREATE: `/${RESOURCE_NAMES.SEC_GROUP}/create`,
     },
+    VLAN_GROUPS: {
+      LIST: `/${RESOURCE_NAMES.VLAN_GROUP}`,
+      DETAIL: `/${RESOURCE_NAMES.VLAN_GROUP}/:id`,
+      CREATE: `/${RESOURCE_NAMES.VLAN_GROUP}/create`,
+    },
   },
   INFRASTRUCTURE: {
     CLUSTERS: {

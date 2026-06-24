@@ -20,6 +20,7 @@
 #include "Request.h"
 #include "Nebula.h"
 #include "PoolObjectSQL.h"
+#include "GroupVlans.h"
 
 class Cluster;
 class DefaultQuotas;
@@ -190,6 +191,28 @@ protected:
      */
     static Request::ErrorCode as_uid_gid(Template * tmpl, RequestAttributes& att);
 
+    /**
+     * Check if a VLAN is authorized for a user
+     */
+    static bool check_group_vlan(GroupVlans::VlanRule::Scope scope,
+                                 const std::string& value,
+                                 int vntemplate_id,
+                                 RequestAttributes& att,
+                                 std::string& error);
+
+    /**
+     * Check if the user has VLAN rules scoped to a VN Template
+     */
+    static bool has_vntemplate_rules(int vntemplate_id,
+                                     RequestAttributes& att);
+
+    /**
+     * Validate VLAN authorization for a template
+     */
+    static Request::ErrorCode validate_vlan_auth(Template * tmpl,
+                                                 int vntemplate_id,
+                                                 RequestAttributes& att);
+
     /*************************************************************************/
     /* Virtual helpers, override in derived classes                          */
     /*************************************************************************/
@@ -199,7 +222,7 @@ protected:
      */
     virtual std::unique_ptr<Template> get_object_template() const
     {
-        return nullptr;
+        return std::make_unique<Template>();
     }
 
     /**

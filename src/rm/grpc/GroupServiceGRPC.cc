@@ -42,6 +42,13 @@ grpc::Status GroupService::Quota(grpc::ServerContext* context,
     return GroupSetQuotaGRPC().execute(context, request, response);
 }
 
+grpc::Status GroupService::Vlan(grpc::ServerContext* context,
+                                const one::group::VlanRequest* request,
+                                one::ResponseID* response)
+{
+    return GroupSetVlanGRPC().execute(context, request, response);
+}
+
 grpc::Status GroupService::Update(grpc::ServerContext* context,
                                   const one::group::UpdateRequest* request,
                                   one::ResponseID* response)
@@ -139,6 +146,23 @@ void GroupSetQuotaGRPC::request_execute(const google::protobuf::Message* _reques
     auto ec = quota(oid,
                     request->quota(),
                     att);
+
+    response(ec, oid, att);
+}
+
+/* ------------------------------------------------------------------------- */
+
+void GroupSetVlanGRPC::request_execute(const google::protobuf::Message* _request,
+                                       google::protobuf::Message*       _response,
+                                       RequestAttributesGRPC&           att)
+{
+    auto request = static_cast<const one::group::VlanRequest*>(_request);
+
+    int oid = request->oid();
+
+    auto ec = vlan(oid,
+                   request->vlan(),
+                   att);
 
     response(ec, oid, att);
 }

@@ -2396,7 +2396,9 @@ FIREEDGE_SUNSTONE_ETC_VIEW_USER="src/fireedge/etc/sunstone/views/user/vm-tab.yam
                                 src/fireedge/etc/sunstone/views/user/backup-tab.yaml \
                                 src/fireedge/etc/sunstone/views/user/sec-group-tab.yaml \
                                 src/fireedge/etc/sunstone/views/user/service-tab.yaml \
-                                src/fireedge/etc/sunstone/views/user/vnet-tab.yaml"
+                                src/fireedge/etc/sunstone/views/user/vnet-tab.yaml \
+                                src/fireedge/etc/sunstone/views/user/vnet-template-tab.yaml \
+                                src/fireedge/etc/sunstone/views/user/group-tab.yaml"
 
 FIREEDGE_SUNSTONE_ETC_VIEW_GROUPADMIN="src/fireedge/etc/sunstone/views/groupadmin/vm-tab.yaml \
                                 src/fireedge/etc/sunstone/views/groupadmin/vm-template-tab.yaml \
@@ -2743,8 +2745,8 @@ XSD_FILES="share/doc/xsd/acct.xsd \
            share/doc/xsd/user.xsd
            share/doc/xsd/user_pool.xsd
            share/doc/xsd/vdc.xsd
-           share/doc/xsd/vdc_pool.xsd
-           share/doc/xsd/vm.xsd
+           share/doc/xsd/vdc_pool.xsd \
+           share/doc/xsd/vm.xsd \
            share/doc/xsd/vm_group.xsd
            share/doc/xsd/vm_group_pool.xsd
            share/doc/xsd/vm_pool.xsd

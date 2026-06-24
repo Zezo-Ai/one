@@ -194,14 +194,14 @@ public:
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 
-class VirtualNetworkRmARXRPC: public RequestXRPC, public VirtualNetworkRmARAPI
+class VirtualNetworkRmARXRPC: public RequestXRPC, public VirtualNetworkAPI
 {
 public:
     VirtualNetworkRmARXRPC()
         : RequestXRPC("one.vn.rm_ar",
                       "Removes an Address Range from a Virtual Network",
                       "A:siib")
-        , VirtualNetworkRmARAPI(static_cast<Request&>(*this))
+        , VirtualNetworkAPI(static_cast<Request&>(*this))
     {}
 
     void request_execute(xmlrpc_c::paramList const& _paramList,
