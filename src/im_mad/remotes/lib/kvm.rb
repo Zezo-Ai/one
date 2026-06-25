@@ -462,29 +462,31 @@ class Domain < BaseDomain
         end
     end
 
-    # Get network information 
+    # Get network information
     def extract_network_attributes
         net_command    = "one-#{@vm[:id]} '{\"execute\":\"guest-network-get-interfaces\"}'"
         net_text, _e, s = KVM.virsh(:qemuga, net_command)
-        net_info = JSON.parse(net_text)['return']
+        return unless s.success?
+
+        net_info  = JSON.parse(net_text)['return']
         guest_ips = []
-        if s.success?
-            net_info.each do |info|
-                next if info['name'] == 'lo'
-                next unless info.keys.include? 'ip-addresses'
 
-                info['ip-addresses'].map do |ip|
-                    next if ['127.0.0.1', '::1'].include? ip['ip-address']
-                    next unless %w(ipv4 ipv6).include? ip['ip-address-type']
+        net_info.each do |info|
+            next if info['name'] == 'lo'
+            next unless info.keys.include? 'ip-addresses'
 
-                    guest_ips.append(ip['ip-address'])
-                end
+            info['ip-addresses'].map do |ip|
+                next if ['127.0.0.1', '::1'].include? ip['ip-address']
+                next unless %w(ipv4 ipv6).include? ip['ip-address-type']
+
+                guest_ips.append(ip['ip-address'])
             end
         end
 
         return if guest_ips.empty?
 
         @vm[:guest_ip_addresses] = guest_ips.join(',')
+    rescue StandardError
     end
 
     # Check if command should run on given VM (OS filters)
