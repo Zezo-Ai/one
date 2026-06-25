@@ -194,9 +194,7 @@ module OpenNebula
         #   was deleted or already missing, false and the error reasons if the
         #   target VM could not be checked or the deletion failed
         def delete_sched_action(sched_id)
-            found_vm     = nil
-            error        = nil
-            sched_id     = sched_id.to_i
+            sched_id = sched_id.to_i
 
             nodes.each do |node|
                 vm_id = node['deploy_id']
@@ -225,28 +223,25 @@ module OpenNebula
 
                 next unless has_sched_action
 
-                found_vm = vm_id
+                rc = vm.sched_action_delete(sched_id)
 
-                rc    = vm.sched_action_delete(sched_id)
-                error = OpenNebula.is_error?(rc)
-
-                if error
+                if OpenNebula.is_error?(rc)
                     msg = "Role #{name} : VM #{vm_id} error deleting sched " \
                           "action #{sched_id}; #{rc.message}"
 
                     Log.error LOG_COMP, msg, @service.id
                     @service.log_error(msg)
+
+                    return [false, msg]
                 else
                     msg = "Role #{name} : sched action #{sched_id} " \
                           "deleted from VM #{vm_id}"
 
                     Log.debug LOG_COMP, msg, @service.id
+
+                    return [true, msg]
                 end
-
-                break
             end
-
-            return [!error, msg] if found_vm
 
             [true, "Sched action:#{sched_id} not found on Role:#{name}"]
         end
