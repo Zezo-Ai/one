@@ -72,8 +72,8 @@ export const getDeployMode = (datastore = {}) => {
  */
 export const getDatastoreCapacityInfo = ({ TOTAL_MB, USED_MB } = {}) => {
   const percentOfUsed = (+USED_MB * 100) / +TOTAL_MB || 0
-  const usedBytes = prettyBytes(+USED_MB, 'MB')
-  const totalBytes = prettyBytes(+TOTAL_MB, 'MB')
+  const usedBytes = prettyBytes(+USED_MB, 'MB', 2)
+  const totalBytes = prettyBytes(+TOTAL_MB, 'MB', 2)
   const percentLabel = `${usedBytes} / ${totalBytes} (${Math.round(
     percentOfUsed
   )}%)`
