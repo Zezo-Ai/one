@@ -17,6 +17,7 @@
 #--------------------------------------------------------------------------- #
 require 'securerandom'
 require 'pathname'
+require 'shellwords'
 require 'opennebula'
 require 'rexml/document'
 require 'rexml/xpath'
@@ -226,6 +227,10 @@ module TransferManager
             nice_cmd(cmd)
         end
 
+        def confined_cmd_arg(cmd)
+            "bash -c #{Shellwords.escape(cmd)}\n"
+        end
+
         # Confine the datastore command in a systemd slice.
         #  @param[String] cmd is the command to execute
         #  @param[String] vm_dir_path used to set IO limits on the system ds
@@ -276,7 +281,7 @@ module TransferManager
                  systemctl --user daemon-reload
                 ) #{FD}> #{spath}/.lock
 
-                #{SYSTEMD_RUN} #{env_opts} --slice=#{sname} #{cmd}
+                #{SYSTEMD_RUN} #{env_opts} --slice=#{sname} #{confined_cmd_arg(cmd)}
             EOS
         end
 
@@ -294,7 +299,7 @@ module TransferManager
 
             rcmd << "#{NICE} -n #{nice} " if nice != -1
             rcmd << "#{IONICE} -c2 -n#{ionice} " if ionice != -1
-            rcmd << cmd
+            rcmd << confined_cmd_arg(cmd)
         end
 
         # Converts datastore XML into a hash.
