@@ -1737,16 +1737,20 @@ void VirtualMachineDisks::delete_non_persistent_snapshots(Template &vm_quotas,
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-long long VirtualMachineDisks::backup_size(Template &ds_quotas, bool do_volatile)
+long long VirtualMachineDisks::backup_size(Template &ds_quotas,
+                                           const vector<int>& disk_ids)
 {
     long long size = 0;
 
-    vector<int> ids;
-    backup_disk_ids(do_volatile, ids);
-
-    for (int id : ids)
+    for (int id : disk_ids)
     {
         auto disk = get_disk(id);
+
+        if (disk == nullptr)
+        {
+            continue;
+        }
+
         long long disk_size = 0;
 
         disk->vector_value("SIZE", disk_size);
@@ -1808,6 +1812,8 @@ bool VirtualMachineDisks::backup_increment(bool do_volatile)
 
 void VirtualMachineDisks::backup_disk_ids(bool do_volatile, std::vector<int>& ids)
 {
+    ids.clear();
+
     for (const auto disk : *this)
     {
         string type = disk->vector_value("TYPE");

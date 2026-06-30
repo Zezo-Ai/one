@@ -658,6 +658,11 @@ public:
         _backup_disk_ids.add(id);
     }
 
+    bool has_backup_disk(int id) const
+    {
+        return _backup_disk_ids.size() > 0 && _backup_disk_ids.contains(id);
+    }
+
 private:
 
     // -------------------------------------------------------------------------

@@ -15,6 +15,7 @@
 /* -------------------------------------------------------------------------- */
 #include <time.h>
 #include <stdio.h>
+#include <algorithm>
 
 #include "Nebula.h"
 #include "LifeCycleManager.h"
@@ -1341,15 +1342,29 @@ void LifeCycleManager::trigger_attach_success(int vid)
         {
             vm->log("LCM", Log::INFO, "VM Disk successfully attached.");
 
-            vm->clear_attach_disk();
-
-            // Reset incremental backup pointer. After attach a new full backup
-            // is needed.
-            if ( vm->backups().configured() )
+            //Reset incremental backup pointer. After attach a new full backup
+            //maybe needed
+            if (vm->backups().configured())
             {
-                vm->backups().last_increment_id(-1);
-                vm->backups().incremental_backup_id(-1);
+                int disk_id = -1;
+
+                vector<int> disk_ids;
+
+                if (auto disk = vm->get_attach_disk())
+                {
+                    disk_id = disk->get_disk_id();
+                }
+
+                vm->backup_disk_ids(disk_ids);
+
+                if (find(disk_ids.begin(), disk_ids.end(), disk_id) != disk_ids.end())
+                {
+                    vm->backups().last_increment_id(-1);
+                    vm->backups().incremental_backup_id(-1);
+                }
             }
+
+            vm->clear_attach_disk();
 
             if ( vm->get_lcm_state() == VirtualMachine::HOTPLUG )
             {
@@ -1386,7 +1401,7 @@ void LifeCycleManager::trigger_attach_failure(int vid)
         if ( vm->get_lcm_state() == VirtualMachine::HOTPLUG ||
              vm->get_lcm_state() == VirtualMachine::HOTPLUG_PROLOG_POWEROFF )
         {
-            vmpool->delete_attach_disk(std::move(vm));
+            vmpool->delete_attach_disk(std::move(vm), false);
 
             vm = vmpool->get(vid);
 
@@ -1432,7 +1447,7 @@ void LifeCycleManager::trigger_detach_success(int vid)
         if ( vm->get_lcm_state() == VirtualMachine::HOTPLUG ||
              vm->get_lcm_state() == VirtualMachine::HOTPLUG_EPILOG_POWEROFF )
         {
-            vmpool->delete_attach_disk(std::move(vm));
+            vmpool->delete_attach_disk(std::move(vm), true);
 
             vm = vmpool->get(vid);
 
@@ -2926,6 +2941,15 @@ static int create_backup_image(VirtualMachine * vm, string& msg)
         itmp->add("BACKUP_JOB_ID", backups.backup_job_id());
     }
 
+    vector<int> configured_disk_ids;
+
+    backups.get_disk_ids(configured_disk_ids);
+
+    if (!configured_disk_ids.empty())
+    {
+        itmp->add("BACKUP_SELECTED_DISKS", "YES");
+    }
+
     int rc = ipool->allocate(vm->get_uid(),
                              vm->get_gid(),
                              vm->get_uname(),
@@ -2985,6 +3009,10 @@ void LifeCycleManager::trigger_backup_success(int vid)
         int keep_last      = backups.keep_last();
         Backups::Mode mode = backups.mode();
 
+        vector<int> backup_disk_ids;
+
+        vm->backup_disk_ids(backup_disk_ids);
+
         long long reserved_sz = vm->backup_size(ds_deltas);
         long long real_sz     = 0;
 
@@ -3043,10 +3071,6 @@ void LifeCycleManager::trigger_backup_success(int vid)
 
             if (auto image = ipool->get(image_id))
             {
-                vector<int> backup_disk_ids;
-
-                vm->get_disks().backup_disk_ids(backups.do_volatile(), backup_disk_ids);
-
                 for (auto id : backup_disk_ids)
                 {
                     image->add_backup_disk(id);

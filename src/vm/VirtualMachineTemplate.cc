@@ -215,6 +215,7 @@ std::map<std::string, std::vector<std::string>> VirtualMachineTemplate::UPDATECO
             "BACKUP_VOLATILE",
             "INCREMENT_MODE",
             "MODE",
+            "DISK_IDS",
             "INTERACTIVE"
         }
     }
@@ -240,9 +241,16 @@ static void copy_vector_values(const Template *old_tmpl, Template *new_tmpl,
 
     for (const auto& vname : vnames)
     {
-        const string& vval = old_attr->vector_value(vname);
+        string vval;
 
-        if (!vval.empty())
+        if (old_attr->vector_value(vname, vval) != 0)
+        {
+            continue;
+        }
+
+        bool keep_empty = name == string("BACKUP_CONFIG") && vname == "DISK_IDS";
+
+        if (!vval.empty() || keep_empty)
         {
             new_vattr->replace(vname, vval);
         }
@@ -333,4 +341,3 @@ void VirtualMachineTemplate::update_quota_attributes()
         add("RUNNING_PCI_NIC", pci_nic);
     }
 }
-

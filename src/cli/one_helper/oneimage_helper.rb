@@ -370,6 +370,9 @@ class OneImageHelper < OpenNebulaHelper::OneHelper
             CLIHelper.print_header(str_h1 % 'BACKUP INFORMATION', false)
             puts format(str, 'VM', vms[0])
 
+            disk_ids = image.retrieve_elements('BACKUP_DISK_IDS/ID')
+            puts format(str, 'DISK IDS', disk_ids.join(',')) if disk_ids
+
             if image.has_elements?('/IMAGE/BACKUP_INCREMENTS/INCREMENT')
                 puts format(str, 'TYPE', 'INCREMENTAL')
 

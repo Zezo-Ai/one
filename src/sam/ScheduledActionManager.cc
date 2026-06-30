@@ -433,7 +433,7 @@ void ScheduledActionManager::backup_jobs()
 
             bool bck_vol = false;
 
-            if (bj->get_template_attribute("BACKUP_VOLATILE", bck_vol))
+            if (!bj->get_template_attribute("BACKUP_VOLATILE", bck_vol))
             {
                 bck_vol = backups.do_volatile();
             }
@@ -446,7 +446,11 @@ void ScheduledActionManager::backup_jobs()
 
             bj->get_backup_config(tmpl);
 
-            if ( backups.parse(&tmpl, inc, true, err) != 0 )
+            vector<int> disk_ids;
+
+            vm->backup_disk_ids(bck_vol, disk_ids);
+
+            if ( backups.parse(&tmpl, inc, true, disk_ids, err) != 0 )
             {
                 bj->set_template_error_message(err);
 

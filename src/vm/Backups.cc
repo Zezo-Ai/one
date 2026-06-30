@@ -14,6 +14,9 @@
 /* limitations under the License.                                             */
 /* -------------------------------------------------------------------------- */
 
+#include <algorithm>
+#include <iterator>
+
 #include "Backups.h"
 #include "Attribute.h"
 #include "ObjectXML.h"
@@ -54,7 +57,89 @@ Backups::Mode Backups::mode() const
 
     return str_to_mode(mode_s);
 }
+
 /* -------------------------------------------------------------------------- */
+
+int Backups::parse_disk_ids(const string& value, vector<int>& disk_ids,
+                            string& error_str)
+{
+    disk_ids.clear();
+
+    if (value.empty())
+    {
+        return 0;
+    }
+
+    for (const auto& token : one_util::split(value, ',', false))
+    {
+        int id;
+
+        if (!one_util::str_cast(token, id) || id < 0)
+        {
+            error_str = "Invalid DISK_IDS value: " + value;
+            return -1;
+        }
+
+        disk_ids.push_back(id);
+    }
+
+    sort(disk_ids.begin(), disk_ids.end());
+    disk_ids.erase(unique(disk_ids.begin(), disk_ids.end()), disk_ids.end());
+
+    return 0;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void Backups::set_disk_ids(const vector<int>& disk_ids)
+{
+    if (disk_ids.empty())
+    {
+        config.erase("DISK_IDS");
+
+        return;
+    }
+
+    config.replace("DISK_IDS", one_util::join(disk_ids, ','));
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool Backups::del_disk_id(int id)
+{
+    vector<int> disk_ids;
+
+    get_disk_ids(disk_ids);
+
+    auto last = remove(disk_ids.begin(), disk_ids.end(), id);
+
+    if (last == disk_ids.end())
+    {
+        return false;
+    }
+
+    disk_ids.erase(last, disk_ids.end());
+    set_disk_ids(disk_ids);
+
+    return true;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void Backups::get_disk_ids(vector<int>& disk_ids) const
+{
+    string sattr;
+
+    disk_ids.clear();
+
+    if (!config.get("DISK_IDS", sattr) || sattr.empty())
+    {
+        return;
+    }
+
+    one_util::split(sattr, ',', disk_ids);
+}
+
 /* -------------------------------------------------------------------------- */
 
 std::string& Backups::to_xml(std::string& xml) const
@@ -117,14 +202,23 @@ int Backups::from_xml(const ObjectXML* xml)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string& error_str)
+int Backups::parse(Template *tmpl,
+                   bool can_increment,
+                   bool append,
+                   const vector<int>& eligible_ids,
+                   std::string& error_str)
 {
     vector<Attribute *> cfg_a;
 
-    int    iattr;
-    bool   battr;
+    int  iattr;
+    bool battr;
     string sattr;
-    bool   intattr;
+
+    bool volatile_changed = false;
+    bool disk_ids_changed = false;
+
+    vector<int> disk_ids;
+    vector<int> current_disk_ids;
 
     if ( tmpl->remove("BACKUP_CONFIG", cfg_a) == 0 )
     {
@@ -136,13 +230,7 @@ int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string&
     if ( cfg == 0 )
     {
         error_str = "Internal error parsing BACKUP_CONFIG attribute.";
-
-        for (auto &i : cfg_a)
-        {
-            delete i;
-        }
-
-        return -1;
+        goto error_parse;
     }
 
     /* ---------------------------------------------------------------------- */
@@ -169,11 +257,45 @@ int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string&
 
     if (cfg->vector_value("BACKUP_VOLATILE", battr) == 0)
     {
+        volatile_changed = battr != do_volatile();
         config.replace("BACKUP_VOLATILE", battr);
     }
     else if (!append)
     {
+        volatile_changed = do_volatile();
         config.replace("BACKUP_VOLATILE", "NO");
+    }
+
+    get_disk_ids(current_disk_ids);
+
+    if (cfg->vector_value("DISK_IDS", sattr) == 0)
+    {
+        if (parse_disk_ids(sattr, disk_ids, error_str) != 0)
+        {
+            goto error_parse;
+        }
+
+        for (int id : disk_ids)
+        {
+            if (find(eligible_ids.begin(), eligible_ids.end(), id) == eligible_ids.end())
+            {
+                error_str = "Invalid DISK_IDS, disk " + to_string(id) +
+                            " cannot be backed up";
+                goto error_parse;
+            }
+        }
+
+        set_disk_ids(disk_ids);
+
+        disk_ids_changed = disk_ids != current_disk_ids;
+    }
+    else if (!append)
+    {
+        disk_ids.clear();
+
+        set_disk_ids(disk_ids);
+
+        disk_ids_changed = !current_disk_ids.empty();
     }
 
     sattr = cfg->vector_value("FS_FREEZE");
@@ -240,9 +362,16 @@ int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string&
         }
     }
 
-    if (cfg->vector_value("INTERACTIVE", intattr) == 0)
+    if (can_increment && (disk_ids_changed || volatile_changed))
     {
-        config.replace("INTERACTIVE", intattr);
+        // The effective disk set defines the incremental backup chain.
+        config.replace("INCREMENTAL_BACKUP_ID", -1);
+        config.replace("LAST_INCREMENT_ID", -1);
+    }
+
+    if (cfg->vector_value("INTERACTIVE", battr) == 0)
+    {
+        config.replace("INTERACTIVE", battr);
     }
     else if (!append)
     {
@@ -255,13 +384,7 @@ int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string&
     if (interactive() && mode() == INCREMENT && sattr == "SNAPSHOT")
     {
         error_str = "Interactive backups do not support SNAPSHOT increment mode.";
-
-        for (auto &i : cfg_a)
-        {
-            delete i;
-        }
-
-        return -1;
+        goto error_parse;
     }
 
     for (auto &i : cfg_a)
@@ -270,4 +393,12 @@ int Backups::parse(Template *tmpl, bool can_increment, bool append, std::string&
     }
 
     return 0;
+
+error_parse:
+    for (auto &i : cfg_a)
+    {
+        delete i;
+    }
+
+    return -1;
 }

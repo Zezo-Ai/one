@@ -24,6 +24,7 @@
 #include "SchedulerManager.h"
 #include "HostPool.h"
 
+#include <algorithm>
 #include <sstream>
 
 using namespace std;
@@ -952,11 +953,33 @@ int VirtualMachinePool::calculate_showback(
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void VirtualMachinePool::delete_attach_disk(std::unique_ptr<VirtualMachine> vm)
+void VirtualMachinePool::delete_attach_disk(std::unique_ptr<VirtualMachine> vm,
+                                            bool update_backups)
 {
     VirtualMachineDisk * disk = nullptr;
+    vector<int> backup_disk_ids;
+
+    if (update_backups && vm->backups().configured())
+    {
+        vm->backup_disk_ids(backup_disk_ids);
+    }
 
     disk = vm->delete_attach_disk();
+
+    if (disk != nullptr && update_backups && vm->backups().configured())
+    {
+        auto& backups = vm->backups();
+        int disk_id = disk->get_disk_id();
+
+        if (find(backup_disk_ids.begin(), backup_disk_ids.end(), disk_id) !=
+            backup_disk_ids.end())
+        {
+            backups.last_increment_id(-1);
+            backups.incremental_backup_id(-1);
+        }
+
+        backups.del_disk_id(disk_id);
+    }
 
     int uid  = vm->get_uid();
     int gid  = vm->get_gid();
@@ -1170,4 +1193,3 @@ void VirtualMachinePool::delete_attach_nic(std::unique_ptr<VirtualMachine> vm)
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
-

@@ -15,6 +15,7 @@
 /* -------------------------------------------------------------------------- */
 
 #include "BackupJob.h"
+#include "Backups.h"
 #include "OneDB.h"
 #include "NebulaUtil.h"
 #include "Nebula.h"
@@ -447,9 +448,11 @@ void BackupJob::get_backup_config(Template &tmpl)
     /*  - FS_FREEZE                                                           */
     /*  - MODE                                                                */
     /*  - INCREMENT_MODE                                                      */
+    /*  - DISK_IDS                                                            */
     /* ---------------------------------------------------------------------- */
     static vector<string> CONFIG_ATTRIBUTES = { "KEEP_LAST", "BACKUP_VOLATILE",
-                                                "FS_FREEZE", "MODE", "INCREMENT_MODE"
+                                                "FS_FREEZE", "MODE", "INCREMENT_MODE",
+                                                "DISK_IDS"
                                               };
 
     string tmp_str;
@@ -611,6 +614,19 @@ int BackupJob::parse(string& error)
          iattr >= MIN_PRIO && iattr <= MAX_PRIO )
     {
         _priority = iattr;
+    }
+
+    if (erase_template_attribute("DISK_IDS", sattr) != 0)
+    {
+        vector<int> ids;
+
+        if (Backups::parse_disk_ids(sattr, ids, error) != 0)
+        {
+            return -1;
+        }
+
+        // Preserve explicit empty DISK_IDS to override VM disk selection.
+        add_template_attribute("DISK_IDS", one_util::join(ids, ','));
     }
 
     // -------------------------------------------------------------------------

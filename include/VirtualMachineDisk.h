@@ -855,9 +855,10 @@ public:
     /**
      * Returns upper limit of the disk size needed to do a VM backup
      *  @param ds_quota The Datastore quota
-     *  @param do_volatile consider volatile disks to compute size
+     *  @param disk_ids effective disk IDs to include
      */
-    long long backup_size(Template &ds_quota, bool do_volatile);
+    long long backup_size(Template &ds_quota,
+                          const std::vector<int>& disk_ids);
 
     /**
      *  Returns true if all disks support incremental backups. This requires
@@ -871,6 +872,7 @@ public:
      *  Returns list of disk IDs, ready for backup
      *
      *  @param do_volatile consider volatile disks
+     *  @param ids output list of eligible disks.
      */
     void backup_disk_ids(bool do_volatile, std::vector<int>& ids);
 

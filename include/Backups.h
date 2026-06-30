@@ -19,6 +19,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 #include "ObjectCollection.h"
 #include "Template.h"
@@ -39,6 +40,7 @@ class ObjectXML;
  *     <LAST_BRIDGE> The bridge used to export the active backups(*)
  *     <LAST_BACKUP_ID> ID of the active backup(*)
  *     <LAST_BACKUP_SIZE> SIZE of the active backup(*)
+ *     <DISK_IDS> Comma separated list of disk IDs to backup
  *     <ACTIVE_FLATTEN> if true current chain is being flatten
  *     <INTERACTIVE> if true backup is being performed interactively
  *   <BACKUP_IDS>
@@ -97,6 +99,14 @@ public:
         return mode;
     };
 
+    /**
+     * Parse DISK_IDS as a comma-separated list of non-negative disk IDs.
+     * Empty string is valid and means all disks.
+     */
+    static int parse_disk_ids(const std::string& value,
+                              std::vector<int>& disk_ids,
+                              std::string& error_str);
+
     // *************************************************************************
     // Inititalization functions
     // *************************************************************************
@@ -137,10 +147,15 @@ public:
      * @param tmpl Template to parse, the root element must be BACKUP_CONFIG
      * @param can_increment VM disks support incremental backup
      * @param append Only append new values from tmpl
+     * @param eligible_disk_ids VM disk IDs eligible for backup
      * @param error_str Returns the error reason, if any
      * @return 0 success, -1 error
      */
-    int parse(Template *tmpl, bool can_increment, bool append, std::string& error_str);
+    int parse(Template *tmpl,
+              bool can_increment,
+              bool append,
+              const std::vector<int>& eligible_disk_ids,
+              std::string& error_str);
 
     /**
      *  @return true if Backup includes configuration attributes
@@ -213,6 +228,10 @@ public:
     {
         config.replace("INTERACTIVE", interactive);
     }
+
+    void set_disk_ids(const std::vector<int>& ids);
+
+    bool del_disk_id(int id);
 
     /* ---------------------------------------------------------------------- */
 
@@ -320,6 +339,8 @@ public:
 
         return i;
     }
+
+    void get_disk_ids(std::vector<int>& ids) const;
 
     /* ---------------------------------------------------------------------- */
 

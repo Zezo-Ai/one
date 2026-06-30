@@ -27,6 +27,7 @@
 #include "NebulaLog.h"
 #include "Backups.h"
 
+#include <algorithm>
 #include <time.h>
 #include <set>
 #include <sstream>
@@ -1877,9 +1878,41 @@ public:
     // ------------------------------------------------------------------------
     // Backup related functions
     // ------------------------------------------------------------------------
+    void backup_disk_ids(std::vector<int>& disk_ids)
+    {
+        std::vector<int> configured_ids;
+
+        _backups.get_disk_ids(configured_ids);
+
+        disks.backup_disk_ids(_backups.do_volatile(), disk_ids);
+
+        if (configured_ids.empty())
+        {
+            return;
+        }
+
+        auto last = std::remove_if(disk_ids.begin(), disk_ids.end(),
+                [&configured_ids](int id)
+                {
+                    return std::find(configured_ids.begin(), configured_ids.end(), id) ==
+                           configured_ids.end();
+                });
+
+        disk_ids.erase(last, disk_ids.end());
+    }
+
+    void backup_disk_ids(bool do_volatile, std::vector<int>& disk_ids)
+    {
+        disks.backup_disk_ids(do_volatile, disk_ids);
+    }
+
     long long backup_size(Template &ds_quota)
     {
-        return disks.backup_size(ds_quota, _backups.do_volatile());
+        std::vector<int> disk_ids;
+
+        backup_disk_ids(disk_ids);
+
+        return disks.backup_size(ds_quota, disk_ids);
     }
 
     Backups& backups()

@@ -2369,8 +2369,6 @@ int TransferManager::backup_transfer_commands(
     // -------------------------------------------------------------------------
     // Setup & Transfer script
     // -------------------------------------------------------------------------
-    VirtualMachineDisks& disks = vm->get_disks();
-
     if (!vm->hasHistory())
     {
         return -1;
@@ -2387,7 +2385,6 @@ int TransferManager::backup_transfer_commands(
 
     Backups& backups = vm->backups();
 
-    bool do_volatile = backups.do_volatile();
     int  job_id      = backups.backup_job_id();
 
     // -------------------------------------------------------------------------
@@ -2395,7 +2392,7 @@ int TransferManager::backup_transfer_commands(
     // -------------------------------------------------------------------------
     std::vector<int> disk_ids;
 
-    disks.backup_disk_ids(do_volatile, disk_ids);
+    vm->backup_disk_ids(disk_ids);
 
     //BACKUP(.tm_mad_system) tm_mad host:remote_dir DISK_ID:...:DISK_ID deploy_id bj_id vmid dsid
     xfr << "BACKUP" << tm_mad_system

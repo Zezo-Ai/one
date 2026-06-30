@@ -894,6 +894,9 @@ int VirtualMachine::insert(SqlDB * db, string& error_str)
     vector<Template *> quotas;
     ostringstream oss;
 
+    bool do_volatile = false;
+    vector<int> disk_ids;
+
     //Decrypt attributes before parsing them
     decrypt();
 
@@ -1174,11 +1177,22 @@ int VirtualMachine::insert(SqlDB * db, string& error_str)
     }
 
     // ------------------------------------------------------------------------
-    // Parse the backup attribute. It assumes volatile disks will take part of
-    // the backups
+    // Parse the backup attribute using BACKUP_VOLATILE to determine the
+    // eligible disk set.
     // ------------------------------------------------------------------------
-    rc = _backups.parse(user_obj_template.get(), disks.backup_increment(true),
-                        false, error_str);
+
+    if (auto backup_conf = user_obj_template->get("BACKUP_CONFIG"))
+    {
+        backup_conf->vector_value("BACKUP_VOLATILE", do_volatile);
+    }
+
+    backup_disk_ids(do_volatile, disk_ids);
+
+    rc = _backups.parse(user_obj_template.get(),
+                        disks.backup_increment(do_volatile),
+                        false,
+                        disk_ids,
+                        error_str);
 
     if ( rc != 0 )
     {
@@ -3400,14 +3414,19 @@ int VirtualMachine::updateconf(VirtualMachineTemplate* tmpl, string &err,
     }
 
     // -------------------------------------------------------------------------
-    // Parse backup configuration (if not doing a backup). Uses current value of
-    // BACKUP_VOLATILE attribute.
+    // Parse backup configuration. Uses current value of BACKUP_VOLATILE attribute.
     // -------------------------------------------------------------------------
     VectorAttribute * backup_conf = tmpl->get("BACKUP_CONFIG");
 
-    if ( backup_conf != nullptr && lcm_state != BACKUP && lcm_state != BACKUP_POWEROFF)
+    if ( backup_conf != nullptr )
     {
         bool do_volatile = _backups.do_volatile();
+
+        if (backup_conf->vector_value("BACKUP_VOLATILE", do_volatile) != 0 && !append)
+        {
+            do_volatile = false;
+        }
+
         bool increment = disks.backup_increment(do_volatile) &&
                          !has_snapshots();
 
@@ -3433,7 +3452,11 @@ int VirtualMachine::updateconf(VirtualMachineTemplate* tmpl, string &err,
 
         backup_conf = nullptr;
 
-        if ( _backups.parse(tmpl, increment, append, err) != 0 )
+        vector<int> disk_ids;
+
+        backup_disk_ids(do_volatile, disk_ids);
+
+        if ( _backups.parse(tmpl, increment, append, disk_ids, err) != 0 )
         {
             NebulaLog::log("ONE", Log::ERROR, err);
             return -1;

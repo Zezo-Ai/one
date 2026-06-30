@@ -623,6 +623,29 @@ Request::ErrorCode ImageAPI::restore(int oid,
         return Request::INTERNAL;
     }
 
+    int disk_id = -1;
+    bool disk_restore = tmpl.get("DISK_ID", disk_id) && disk_id >= 0;
+
+    if (auto img = ipool->get_ro(oid))
+    {
+        bool selected_disks = false;
+
+        img->get_template_attribute("BACKUP_SELECTED_DISKS", selected_disks);
+
+        if (selected_disks && !disk_restore)
+        {
+            att.resp_msg = "Cannot restore a VM from a selected disk backup";
+            return Request::ACTION;
+        }
+
+        if (disk_restore && !img->has_backup_disk(disk_id))
+        {
+            att.resp_msg = "Cannot restore disk " + to_string(disk_id) +
+                           ", it is not part of the backup";
+            return Request::ACTION;
+        }
+    }
+
     tmpl.replace("USERNAME", att.uname);
 
     rc = imagem->restore_image(oid, ds_id, tmpl.to_xml(txml), att.resp_msg);

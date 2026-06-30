@@ -407,8 +407,11 @@ public:
      * Images and updates usage quotas
      *
      * @param vm unique_ptr to VM, will be release in the method
+     * @param update_backups true to sync backup config and reset incremental
+     * chain if the detached disk was part of the effective backup disk set
      */
-    void delete_attach_disk(std::unique_ptr<VirtualMachine> vm);
+    void delete_attach_disk(std::unique_ptr<VirtualMachine> vm,
+                            bool update_backups);
 
     /**
      * Deletes the NIC that was in the process of being attached/detached
