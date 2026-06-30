@@ -20,6 +20,7 @@ import io
 import platform
 import sys
 from dataclasses import replace
+from typing import Any
 
 import yaml
 from pulp import COIN_CMD, COINMP_DLL, GLPK_CMD
@@ -27,6 +28,7 @@ from xsdata.formats.dataclass.parsers import XmlParser
 
 from lib.mapper.ilp_optimizer import ILPOptimizer
 from lib.mapper.model import (
+    Allocation,
     Capacity,
     DStoreCapacity,
     DStoreRequirement,
@@ -76,8 +78,13 @@ class OptimizerParser:
         "config",
         "mode",
         "_plan_id",
-        "used_host_dstores",
-        "used_shared_dstores",
+        "_system_local_dstore_hosts",
+        "_system_local_dstore_attrs",
+        "_system_shared_dstore_attrs",
+        "_image_dstore_attrs",
+        "_curr_alloc",
+        "_used_local_dstores",
+        "_used_shared_dstores",
     )
 
     def __init__(self, stdin_data: bytes, mode: str):
@@ -89,7 +96,73 @@ class OptimizerParser:
         self.config = self._load_config(mode)
         self.mode = mode
         self._plan_id = -1
-        self.used_host_dstores, self.used_shared_dstores = {}, {}
+
+        # The required attributes of the datastores.
+        # Dict {dstore id: dstore attrs} for system local datastores.
+        local_dstore_attrs: dict[int, dict[str, Any]] = {}
+        # Dict {dstore id: dstore attrs} for system shared datastores.
+        shared_dstore_attrs: dict[int, dict[str, Any]] = {}
+        # Dict {dstore id: dstore attrs} for image datastores.
+        image_dstore_attrs: dict[int, dict[str, Any]] = {}
+        for data in self.scheduler_driver_action.datastore_pool.datastore:
+            attrs: dict[str, Any] = {}
+            for item in data.template.children:
+                if item.qname.upper() == "TYPE":
+                    attrs["TYPE"] = item.text.upper()
+                elif item.qname.upper() == "SHARED":
+                    attrs["SHARED"] = item.text.upper()
+                elif item.qname.upper() == "TM_MAD":
+                    attrs["TM_MAD"] = item.text.upper()
+                elif item.qname.upper() == "LIMIT_MB":
+                    attrs["LIMIT_MB"] = int(item.text.upper())
+                elif item.qname.upper() == "DS_MIGRATE":
+                    attrs["DS_MIGRATE"] = item.text.upper() == "YES"
+            if (type_ := attrs.get("TYPE")) == "SYSTEM_DS":
+                if (shared := attrs.get("SHARED")) == "YES":
+                    attrs["TOTAL_MB"] = data.total_mb
+                    attrs["USED_MB"] = data.used_mb
+                    attrs["CLUSTERS"] = data.clusters.id
+                    shared_dstore_attrs[data.id] = attrs
+                elif shared == "NO":
+                    local_dstore_attrs[data.id] = attrs
+            elif type_ == "IMAGE_DS":
+                attrs["TOTAL_MB"] = data.total_mb
+                attrs["USED_MB"] = data.used_mb
+                attrs["CLUSTERS"] = data.clusters.id
+                image_dstore_attrs[data.id] = attrs
+        self._system_local_dstore_attrs = local_dstore_attrs
+        self._system_shared_dstore_attrs = shared_dstore_attrs
+        self._image_dstore_attrs = image_dstore_attrs
+
+        # The hosts assiciated to the system local datastores.
+        # Dict {dstore id: host ids} for system local datastores.
+        local_dstore_hosts: defaultdict[int, set[int]] = defaultdict(set)
+        for host_data in self.scheduler_driver_action.host_pool.host:
+            host_id = host_data.id
+            for dstore_data in host_data.host_share.datastores.ds:
+                if dstore_data.id in local_dstore_attrs:
+                    local_dstore_hosts[dstore_data.id].add(host_id)
+        self._system_local_dstore_hosts = local_dstore_hosts
+
+        # Currently used hosts and datastores.
+        curr_alloc: dict[int, int] = {}
+        used_local_dstores: dict[int, int] = {}
+        used_shared_dstores: dict[int, int] = {}
+        for data in self.scheduler_driver_action.vm_pool.vm:
+            if vm_hist := data.history_records.history:
+                vm_id = int(data.id)
+                last_rec = max(vm_hist, key=lambda item: int(item.seq))
+                if (host_id := last_rec.hid) is not None:
+                    curr_alloc[vm_id] = int(host_id)
+                if (dstore_id := last_rec.ds_id) is not None:
+                    dstore_id_ = int(dstore_id)
+                    if dstore_id_ in local_dstore_attrs:
+                        used_local_dstores[vm_id] = dstore_id_
+                    elif dstore_id_ in shared_dstore_attrs:
+                        used_shared_dstores[vm_id] = dstore_id_
+        self._curr_alloc = curr_alloc
+        self._used_local_dstores = used_local_dstores
+        self._used_shared_dstores = used_shared_dstores
 
     @property
     def plan_id(self) -> int:
@@ -219,18 +292,33 @@ class OptimizerParser:
             vm_reqs_dict[vm_req.id] = replace(
                 vm_reqs_dict[vm_req.id], host_ids=new_host_ids
             )
+
+        migrations = allowed_migrations if allowed_migrations != -1 else None
+
+        used_local_dstores = self._used_local_dstores
+        used_shared_dstores = self._used_shared_dstores
+        curr_placement: list[Allocation] = []
+        for vm_id, host_id in self._curr_alloc.items():
+            if (dstore_id := used_local_dstores.get(vm_id)) is not None:
+                alloc = Allocation(vm_id, host_id, dstore_id, "local")
+            elif (dstore_id := used_shared_dstores.get(vm_id)) is not None:
+                alloc = Allocation(vm_id, host_id, dstore_id, "shared")
+            else:
+                alloc = Allocation(vm_id, host_id)
+            curr_placement.append(alloc)
+
         return ILPOptimizer(
-            current_placement=self._parse_current_placement(),
-            used_host_dstores=self.used_host_dstores,
-            used_shared_dstores=self.used_shared_dstores,
+            current_placement=curr_placement,
             vm_requirements=list(vm_reqs_dict.values()),
             vm_groups=vmg,
             host_capacities=self._parse_host_capacities(),
-            dstore_capacities=self._parse_datastore_capacities(),
+            dstore_capacities=self._parse_shared_dstore_capacities(),
+            image_dstore_capacities=self._parse_image_dstore_capacities(),
             vnet_capacities=self._parse_vnet_capacities(),
             criteria=criteria,
             preemptive=False,
-            allowed_migrations=allowed_migrations if allowed_migrations != -1 else None,
+            allowed_migrations=migrations,
+            allowed_storage_migrations=migrations,
             solver=self.config["SOLVER"],
         )
 
@@ -241,7 +329,7 @@ class OptimizerParser:
         }
         for vm_req in self.scheduler_driver_action.requirements.vm:
             if vm := vm_pool.get(vm_req.id):
-                storage = self._build_vm_storage(vm, vm_req)
+                sys_storage, img_storage = self._build_vm_storage(vm, vm_req)
                 cpu_current = float(vm.monitoring.cpu or 0)
                 cpu_forecast = float(vm.monitoring.cpu_forecast or 0)
                 net_current = float(vm.monitoring.nettx_bw or 0) + float(
@@ -278,7 +366,8 @@ class OptimizerParser:
                     memory=int(vm.template.memory),
                     cpu_ratio=float(vm.template.cpu),
                     cpu_usage=cpu_usage,
-                    storage=storage,
+                    storage=sys_storage,
+                    image_storage=img_storage,
                     disk_usage=disk_usage,
                     pci_devices=self._build_pci_devices_requirements(
                         vm.template.pci
@@ -288,7 +377,6 @@ class OptimizerParser:
                     nic_matches={nic.id: nic.vnets.id for nic in vm_req.nic},
                     net_usage=net_usage,
                 )
-                self._build_used_dstores(vm)
         return vm_requirements
 
     def _parse_vm_groups(self) -> list[VMGroup]:
@@ -408,7 +496,7 @@ class OptimizerParser:
                         idx += 1
         # List of VMGroups that conatin only required VMs
         result, idx = [], 0
-        current_placement = self._parse_current_placement()
+        current_placement = self._curr_alloc
         for vm_group in vmg:
             target_hosts = affined_hosts if vm_group.affined else anti_affined_hosts
             new_group = VMGroup(idx, vm_group.affined, set())
@@ -462,8 +550,8 @@ class OptimizerParser:
                     )
                     / 100,
                 ),
-                disks=self._build_disk_capacity(host),
-                disk_io=Capacity(total=self._build_disk_io_capacity(host), usage=0.0),
+                dstores=self._parse_local_dstore_capacities(host),
+                # disk_io=Capacity(total=self._build_disk_io_capacity(host), usage=0.0),
                 net=Capacity(total=self._build_net_capacity(host), usage=0.0),
                 pci_devices=self._build_pci_devices(host.host_share.pci_devices.pci),
                 cluster_id=int(host.cluster_id),
@@ -471,27 +559,47 @@ class OptimizerParser:
             for host in self.scheduler_driver_action.host_pool.host
         ]
 
-    def _parse_datastore_capacities(self) -> list[DStoreCapacity]:
-        shared_dstore_ids = self.get_ds_map()[0]
-        return [
-            DStoreCapacity(
-                id=int(store.id),
-                size=Capacity(
-                    total=next(
-                        (
-                            int(c.text)
-                            for c in store.template.children
-                            if c.qname.upper() == "LIMIT_MB"
-                        ),
-                        store.total_mb,
-                    ),
-                    usage=store.used_mb,
-                ),
-                cluster_ids=store.clusters.id,
-            )
-            for store in self.scheduler_driver_action.datastore_pool.datastore
-            if int(store.id) in shared_dstore_ids
-        ]
+    def _parse_local_dstore_capacities(self, host) -> dict[int, Capacity]:
+        # Returns the capacities of the host system local datastores.
+        local_dstore_ids = set(self._system_local_dstore_attrs)
+        local_dstore_attrs = self._system_local_dstore_attrs
+        caps: dict[int, Capacity] = {}
+        for data in host.host_share.datastores.ds:
+            if data.id not in local_dstore_ids:
+                continue
+            if (
+                (attrs := local_dstore_attrs.get(data.id))
+                and (limit := attrs.get("LIMIT_MB")) is not None
+            ):
+                total_size = int(limit)
+            else:
+                total_size = data.total_mb
+            cap = Capacity(total=total_size, usage=data.used_mb)
+            caps[data.id] = cap
+        return caps
+
+    def _parse_dstore_capacities(
+            self, all_attrs: dict[int, dict[str, Any]]
+        ) -> list[DStoreCapacity]:
+        # Returns the capacities of the system shared datastores.
+        caps: list[DStoreCapacity] = []
+        for id_, attrs in all_attrs.items():
+            if (limit := attrs.get("LIMIT_MB")) is not None:
+                total_size = limit
+            else:
+                total_size = attrs["TOTAL_MB"]
+            size = Capacity(total=total_size, usage=attrs["USED_MB"])
+            cluster_ids = attrs["CLUSTERS"]
+            cap = DStoreCapacity(id=id_, size=size, cluster_ids=cluster_ids)
+            caps.append(cap)
+
+        return caps
+
+    def _parse_shared_dstore_capacities(self) -> list[DStoreCapacity]:
+        return self._parse_dstore_capacities(self._system_shared_dstore_attrs)
+
+    def _parse_image_dstore_capacities(self) -> list[DStoreCapacity]:
+        return self._parse_dstore_capacities(self._image_dstore_attrs)
 
     def _parse_vnet_capacities(self) -> list[VNetCapacity]:
         return [
@@ -623,89 +731,131 @@ class OptimizerParser:
     def _sanity_check(value):
         return max(0, min(1, value))
 
+    def _find_datastores(self, vm_req) -> dict[str, Any]:
+        # Finds datastore candidates according to the VM requirements.
+        local_dstore_ids: defaultdict[int, list[int]] = defaultdict(list)
+        shared_dstore_ids: list[int] = []
+
+        local_dstore_hosts = self._system_local_dstore_hosts
+        local_dstore_attrs = self._system_local_dstore_attrs
+        shared_dstore_attrs = self._system_shared_dstore_attrs
+        used_local_dstores = self._used_local_dstores
+        used_shared_dstores = self._used_shared_dstores
+        vm_id = int(vm_req.id)
+        host_ids = set(vm_req.hosts.id)
+
+        if (curr_dstore_id := used_local_dstores.get(vm_id)) is not None:
+            # VM already allocated to a local datastore.
+            curr_dstore_attrs = local_dstore_attrs.get(curr_dstore_id) or {}
+            if curr_dstore_attrs.get("DS_MIGRATE"):
+                dstore_ids = vm_req.datastores.id
+            else:
+                dstore_ids = [curr_dstore_id]
+
+            for dstore_id in dstore_ids:
+                if (
+                    # The datastore is among the local datastores.
+                    dstore_id in local_dstore_attrs
+                    # There are hosts associated to the datastore.
+                    and (match_host_ids := local_dstore_hosts.get(dstore_id))
+                ):
+                    for host_id in host_ids & match_host_ids:
+                        local_dstore_ids[host_id].append(dstore_id)
+
+        elif (curr_dstore_id := used_shared_dstores.get(vm_id)) is not None:
+            # VM already allocated to a shared datastore.
+            curr_dstore_attrs = shared_dstore_attrs.get(curr_dstore_id) or {}
+            tm_mad = curr_dstore_attrs.get("TM_MAD")
+            if curr_dstore_attrs.get("DS_MIGRATE"):
+                dstore_ids = vm_req.datastores.id
+            else:
+                dstore_ids = [curr_dstore_id]
+
+            for dstore_id in dstore_ids:
+                if (
+                    # The datastore is among the shared datastores.
+                    (attrs := shared_dstore_attrs.get(dstore_id)) is not None
+                    # The datastore has the same driver.
+                    and attrs.get("TM_MAD") == tm_mad
+                ):
+                    shared_dstore_ids.append(dstore_id)
+
+        else:
+            # VM not allocated to any datastore.
+            for dstore_id in vm_req.datastores.id:
+                if match_host_ids := local_dstore_hosts.get(dstore_id):
+                    # Local datastore with the associated hosts.
+                    for host_id in host_ids & match_host_ids:
+                        local_dstore_ids[host_id].append(dstore_id)
+                elif dstore_id in shared_dstore_attrs:
+                    # Shared datastore.
+                    shared_dstore_ids.append(dstore_id)
+
+        return {
+            "local_dstore_ids": dict(local_dstore_ids),
+            "shared_dstore_ids": shared_dstore_ids
+        }
+
     def _build_vm_storage(self, vm, vm_req):
-        storage_map = self.get_ds_map()
-        ds_req = {}
-        for req_id, disk in enumerate(vm.template.disk):
-            disk_attrs = {e.qname.upper(): e.text for e in disk.any_element}
-            snapshot_size = int(disk_attrs.get("DISK_SNAPSHOT_TOTAL_SIZE", 0))
-            disk_size = int(disk_attrs.get("SIZE", 0))
-            size = snapshot_size + disk_size
-            system_ds_usage = 0
-            image_ds_usage = 0
-            # Volatile
-            if disk_attrs.get("TYPE") in ("SWAP", "FS"):
-                system_ds_usage += size
+        sys_storage: dict[int, DStoreRequirement] = {}
+        img_storage: dict[int, int] = {}
+
+        sys_size = 0
+        volatiles = {"SWAP", "FS"}
+        for attr in vm.template.disk:
+            disk = {e.qname.upper(): e.text for e in attr.any_element}
+
+            if not disk:
+                continue
+
+            size_ = disk.get("SIZE")
+            if size_ is None:
+                continue
+            size = int(size_)
+
+            snapshoot_size = disk.get("DISK_SNAPSHOT_TOTAL_SIZE")
+            if snapshoot_size is not None:
+                size += int(snapshoot_size)
+
+            if disk.get("TYPE", "").upper() in volatiles:
+                # Is volatile.
+                sys_size += size
             else:
-                clone_attr = disk_attrs.get("CLONE")
-                if clone_attr is None:
-                    host_ds, share_ds, allow = self._build_dstores(
-                        vm_req, storage_map
-                    )
-                    ds_req[req_id] = DStoreRequirement(
-                        id=req_id,
-                        vm_id=int(vm.id),
-                        size=0,
-                        allow_host_dstores=allow,
-                        host_dstore_ids=host_ds,
-                        shared_dstore_ids=share_ds,
-                    )
+                dstore_id_ = disk.get("DATASTORE_ID")
+                if dstore_id_ is None:
                     continue
-                st = (
-                    disk_attrs.get("CLONE_TARGET")
-                    if clone_attr.upper() == "YES"
-                    else disk_attrs.get("LN_TARGET")
-                )
+                dstore_id = int(dstore_id_)
+
+                img_storage.setdefault(dstore_id, 0)
+
+                clone = disk.get("CLONE")
+                if clone is None:
+                    continue
+
+                if clone.upper() == "YES":
+                    st = disk.get("CLONE_TARGET")
+                else:
+                    st = disk.get("LN_TARGET")
+                if st is not None:
+                    st = st.upper()
+
                 if st == "SELF":
-                    image_ds_usage += size
+                    img_storage[dstore_id] += size
                 elif st == "SYSTEM":
-                    system_ds_usage += size
-            if (
-                int(vm.template.memory) > 0
-                and self.config["MEMORY_SYSTEM_DS_SCALE"] >= 0
-            ):
-                system_ds_usage += (
-                    int(vm.template.memory) * self.config["MEMORY_SYSTEM_DS_SCALE"]
-                )
-            ds_id = (
-                int(disk_attrs["DATASTORE_ID"])
-                if disk_attrs.get("DATASTORE_ID")
-                else None
-            )
-            # image DS req
-            if image_ds_usage > 0:
-                ds_req[req_id] = DStoreRequirement(
-                    id=req_id,
-                    vm_id=int(vm.id),
-                    size=int(image_ds_usage),
-                    allow_host_dstores=False,
-                    host_dstore_ids=None,
-                    shared_dstore_ids=[ds_id],
-                )
-            # system DS req
-            else:
-                host_ds, share_ds, allow = self._build_dstores(
-                    vm_req, storage_map
-                )
-                ds_req[req_id] = DStoreRequirement(
-                    id=req_id,
-                    vm_id=int(vm.id),
-                    size=int(system_ds_usage),
-                    allow_host_dstores=allow,
-                    host_dstore_ids=host_ds,
-                    shared_dstore_ids=share_ds,
-                )
-        if not vm.template.disk and vm_req.datastores.id:
-            host_ds, share_ds, allow = self._build_dstores(vm_req, storage_map)
-            ds_req[0] = DStoreRequirement(
-                id=0,
-                vm_id=int(vm.id),
-                size=0,
-                allow_host_dstores=allow,
-                host_dstore_ids=host_ds,
-                shared_dstore_ids=share_ds,
-            )
-        return ds_req
+                    sys_size += size
+
+        memory = int(vm.template.memory)
+        factor = self.config["MEMORY_SYSTEM_DS_SCALE"]
+        if memory > 0 and factor >= 0:
+            sys_size += int(memory * factor)
+
+        kwa = self._find_datastores(vm_req)
+        req = DStoreRequirement(id=0, vm_id=int(vm.id), size=sys_size, **kwa)
+        sys_storage = {0: req}
+        if self.mode.upper() != "PLACE":
+            img_storage.clear()
+
+        return sys_storage, img_storage
 
     def _build_dstores(self, vm_req, storage_map):
         host_disks, share_ds = defaultdict(set), []
@@ -742,7 +892,7 @@ class OptimizerParser:
             all_shared, _, host_ds = self.get_ds_map()
             if ds_id in host_ds.keys():
                 # NOTE: These are host disks, not datastores.
-                self.used_host_dstores[vm.id, 0] = 0
+                self.used_local_dstores[vm.id, 0] = 0
             # Shared system ds or image ds
             elif ds_id in all_shared:
                 self.used_shared_dstores[vm.id, 0] = ds_id

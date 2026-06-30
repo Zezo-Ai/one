@@ -1,7 +1,9 @@
-from dataclasses import dataclass, field
-import enum
 from collections.abc import Collection
-from typing import Optional, Union
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Literal, Optional, Union
+
+_MISSING_ID = -1
 
 
 # @dataclass(frozen=True, slots=True)
@@ -9,9 +11,11 @@ from typing import Optional, Union
 class Allocation:
     vm_id: int
     host_id: int
-    host_dstore_ids: dict[int, int]
-    shared_dstore_ids: dict[int, int]
-    nics: dict[int, int]
+    # local_dstore_ids: dict[int, int]
+    # shared_dstore_ids: dict[int, int]
+    dstore_id: int = _MISSING_ID
+    dstore_type: Optional[Literal["local", "shared"]] = None
+    nics: dict[int, int] = field(default_factory=dict)
 
 
 # TODO: Check if `.max_*` and `.total_*` are properly understood.
@@ -33,7 +37,7 @@ class PCIDevice:
     vendor_id: str
     device_id: str
     class_id: str
-    vm_id: int = -1
+    vm_id: int = _MISSING_ID
 
 
 # @dataclass(frozen=True, slots=True)
@@ -42,9 +46,10 @@ class HostCapacity:
     id: int
     memory: Capacity
     cpu: Capacity
-    # The IDs (keys) and capacities (values) for each disk of a host.
-    disks: dict[int, Capacity] = field(default_factory=dict)
-    disk_io: Optional[Capacity] = None
+    # The IDs (keys) and capacities (values) for each local datastore of
+    # a host.
+    dstores: dict[int, Capacity] = field(default_factory=dict)
+    # disk_io: Optional[Capacity] = None
     net: Optional[Capacity] = None
     pci_devices: list[PCIDevice] = field(default_factory=list)
     cluster_id: int = 0
@@ -66,7 +71,7 @@ class VNetCapacity:
     cluster_ids: list[int] = field(default_factory=list)
 
 
-class VMState(enum.Enum):
+class VMState(Enum):
     PENDING = 'pending'
     RESCHED = 'resched'
     RUNNING = 'running'
@@ -97,12 +102,10 @@ class DStoreRequirement:
     id: int
     vm_id: int
     size: int
-    # Whether a local disk of the assigned host can be used.
-    allow_host_dstores: bool = True
-    # The IDs of the matching host disks.
-    # Dict {host ID: list of IDs of the matching disks}. If `None`, all
-    # host disks are considered matching.
-    host_dstore_ids: Optional[dict[int, list[int]]] = None
+    # The IDs of the matching host local datastores.
+    # Dict {host ID: list of IDs of the matching datastores}. If `None`,
+    # all local datastores are considered matching.
+    local_dstore_ids: Optional[dict[int, list[int]]] = None
     # The IDs of the matching shared datastores.
     shared_dstore_ids: list[int] = field(default_factory=list)
 
@@ -114,8 +117,8 @@ class DStoreMatches:
     # The ID or index of the datastore requirement.
     requirement: int
     # The IDs of the hosts (keys), each with the list of IDs of suitable
-    # disks (values).
-    host_dstores: dict[int, list[int]]
+    # local datastores from that host (values).
+    local_dstores: dict[int, list[int]]
     # The IDs of the shared datastores with suitable storage.
     shared_dstores: list[int]
 
@@ -135,7 +138,18 @@ class VMRequirements:
     memory: int
     cpu_ratio: float
     cpu_usage: float = float('nan')
+    # System storage requirements.
+    # Dict {requirement ID: requirement}.
+    # NOTE: At the moment, only one system storage requirement is
+    # expected per VM, but the optimizer is designed to support multiple
+    # requirements.
     storage: dict[int, DStoreRequirement] = field(default_factory=dict)
+    # Image storage requirements.
+    # Dict {image datastore ID: size}.
+    # NOTE: These requirements are needed for the initial placement, to
+    # check if there is enough space in the image datastore to start the
+    # VM, when `LN_TARGET` or `CLONE_TARGET` is `SELF`.
+    image_storage: dict[int, int] = field(default_factory=dict)
     # Read and write operations.
     disk_usage: float = float('nan')
     pci_devices: list[PCIDeviceRequirement] = field(default_factory=list)
@@ -165,47 +179,48 @@ class VMRequirements:
         var_name = 'free' if free else 'total'
         matches: list[DStoreMatches] = []
         for req_id, req in self.storage.items():
-            host_dstore_ids: dict[int, list[int]] = {}
-            shared_dstore_ids: list[int] = []
-            if req.allow_host_dstores:
-                # Host disks used as system datastores.
-                if req.host_dstore_ids is None:
-                    # No constraints. All host disks are considered.
-                    for host_cap in host_capacities:
-                        disk_matches: list[int] = []
-                        for disk_id, disk_cap in host_cap.disks.items():
-                            if getattr(disk_cap, var_name) >= req.size:
-                                disk_matches.append(disk_id)
-                        if disk_matches:
-                            host_dstore_ids[host_cap.id] = disk_matches
-                else:
-                    # Only specified hosts and their disks are
-                    # considered.
-                    host_caps = {cap.id: cap for cap in host_capacities}
-                    for host_id, disk_ids in req.host_dstore_ids.items():
-                        if host_id not in host_caps:
-                            continue
-                        disk_caps = host_caps[host_id].disks
-                        disk_matches: list[int] = []
-                        for disk_id in disk_ids:
-                            disk_cap = disk_caps[disk_id]
-                            if getattr(disk_cap, var_name) >= req.size:
-                                disk_matches.append(disk_id)
-                        if disk_matches:
-                            host_dstore_ids[host_id] = disk_matches
+            # Host datastores used as local system datastores.
+            dstore_matches: list[int]
+            local_dstore_ids: dict[int, list[int]] = {}
+            if req.local_dstore_ids is None:
+                # No constraints. All host datastores are considered.
+                for host_cap in host_capacities:
+                    dstore_matches = []
+                    for dstore_id, dstore_cap in host_cap.dstores.items():
+                        if getattr(dstore_cap, var_name) >= req.size:
+                            dstore_matches.append(dstore_id)
+                    if dstore_matches:
+                        local_dstore_ids[host_cap.id] = dstore_matches
             else:
-                # Shared datastores.
-                dstore_caps = {cap.id: cap for cap in dstore_capacities}
-                for dstore_id in req.shared_dstore_ids:
-                    dstore_cap = dstore_caps[dstore_id]
-                    # NOTE: This check is probably redundant.
-                    if getattr(dstore_cap.size, var_name) >= req.size:
-                        shared_dstore_ids.append(dstore_id)
+                # Only specified hosts and their datastores are
+                # considered.
+                host_caps = {cap.id: cap for cap in host_capacities}
+                for host_id, dstore_ids in req.local_dstore_ids.items():
+                    if host_id not in host_caps:
+                        continue
+                    dstore_caps = host_caps[host_id].dstores
+                    dstore_matches = []
+                    for dstore_id in dstore_ids:
+                        dstore_cap = dstore_caps[dstore_id]
+                        if getattr(dstore_cap, var_name) >= req.size:
+                            dstore_matches.append(dstore_id)
+                    if dstore_matches:
+                        local_dstore_ids[host_id] = dstore_matches
+
+            # Shared datastores.
+            shared_dstore_caps = {cap.id: cap for cap in dstore_capacities}
+            shared_dstore_ids: list[int] = []
+            for dstore_id in req.shared_dstore_ids:
+                shared_dstore_cap = shared_dstore_caps[dstore_id]
+                # NOTE: This check is probably redundant.
+                if getattr(shared_dstore_cap.size, var_name) >= req.size:
+                    shared_dstore_ids.append(dstore_id)
+
             # Matches.
             match_ = DStoreMatches(
                 vm_id=vm_id,
                 requirement=req_id,
-                host_dstores=host_dstore_ids,
+                local_dstores=local_dstore_ids,
                 shared_dstores=shared_dstore_ids
             )
             matches.append(match_)
@@ -258,7 +273,7 @@ class VMGroup:
                 all_host_ids.append(vm_req.host_ids)
             all_nic_matches += vm_req.nic_matches.values()
         group_req = VMRequirements(
-            id=-1,
+            id=_MISSING_ID,
             state=None,
             memory=memory,
             cpu_ratio=cpu_ratio,
@@ -311,7 +326,7 @@ def _match_pci_devices(
         pcids = {
             pcid.short_address: pcid
             for pcid in host_capacity.pci_devices
-            if pcid.vm_id == -1
+            if pcid.vm_id == _MISSING_ID
         }
     else:
         pcids = {
@@ -372,8 +387,8 @@ def _find_host_matches(
     host_caps = {host_cap.id: host_cap for host_cap in host_capacities}
 
     if vm_requirements.state is VMState.PENDING:
-        # # TODO: Consider additional filtering when shared VNets are not
-        # # allowed.
+        # TODO: Consider additional filtering when shared VNets are not
+        # allowed.
         # if not vm_requirements.share_vnets:
         #     all_nic_matches: set[int] = set()
         #     for vnet_ids in vm_requirements.nic_matches.values():
@@ -384,8 +399,8 @@ def _find_host_matches(
         # Filter according to NICs. A VM can be allocated to a host only
         # if the cluster of that host can support all NIC requirements.
         # TODO: Test filtering according to NIC requirements.
-        # TODO: Consider using a similar approach for disks when there
-        # is no appropriate shared storage.
+        # TODO: Consider using a similar approach for datastores when
+        # there is no appropriate shared storage.
         vnet_caps = {vnet_cap.id: vnet_cap for vnet_cap in vnet_capacities}
         cluster_ids: list[set[int]] = []
         for vnet_ids in vm_requirements.nic_matches.values():

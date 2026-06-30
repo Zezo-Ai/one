@@ -44,8 +44,11 @@ def main():
     placement = optimizer._opt_placement
 
     # Serialize Optimizer response
-    serializer = OptimizerSerializer(parser)
-    scheduler_output, logs = serializer.build_optimizer_output(opt_placement=placement)
+    serializer = OptimizerSerializer(parser.plan_id)
+    scheduler_output, logs = serializer.build_optimizer_output(
+        curr_placement=optimizer._curr_placement,
+        opt_placement=placement
+    )
     xml_output = serializer.render(scheduler_output)
     sys.stdout.write(xml_output)
 

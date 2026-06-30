@@ -15,124 +15,100 @@
 # limitations under the License.                                             #
 # -------------------------------------------------------------------------- #
 
-from collections import defaultdict
-from typing import Union
+from collections.abc import Mapping
+from typing import Optional, Union
 
 from xsdata.formats.dataclass.context import XmlContext
 from xsdata.formats.dataclass.serializers import XmlSerializer
 from xsdata.formats.dataclass.serializers.config import SerializerConfig
 
+from lib.mapper.model import Allocation
 from lib.models.plan import Plan
 from lib.models.scheduler_driver_action import SchedulerDriverAction
 
 
-class OptimizerSerializer:
-    __slots__ = ("xml_serializer", "parser")
+def _get_operations(
+        next: Optional[Allocation], previous: Mapping[int, Allocation]
+) -> list[str]:
+    if next is None:
+        return ["NOOP_DEPLOY"]
 
-    def __init__(self, parser):
+    prev = previous.get(next.vm_id)
+
+    if prev is None:
+        return ["deploy"]
+
+    opers: list[str] = []
+    if next.host_id != prev.host_id:
+        opers.append("migrate_host")
+    if next.dstore_id != prev.dstore_id:
+        opers.append("migrate_ds")
+
+    return opers or ["NOOP_RUN"]
+
+
+class OptimizerSerializer:
+    __slots__ = ("xml_serializer", "plan_id")
+
+    def __init__(self, plan_id):
         xml_config = SerializerConfig(indent="  ", xml_declaration=False)
         xml_context = XmlContext()
         self.xml_serializer = XmlSerializer(context=xml_context, config=xml_config)
-        self.parser = parser
+        self.plan_id = plan_id
 
     def render(self, output: Union[Plan, SchedulerDriverAction]) -> str:
         return self.xml_serializer.render(output)
 
     def build_optimizer_output(
         self,
+        curr_placement: dict,
         opt_placement: dict,
     ) -> tuple[Plan, list]:
         logs = []
         actions = []
         for vm_id, alloc in opt_placement.items():
-            operation = self._get_operation(alloc)
-            if operation == "NOOP_DEPLOY":
-                logs.append(
-                    (vm_id, "ERROR", "Cannot allocate the VM following the constraints")
+            for operation in _get_operations(alloc, curr_placement):
+                if operation == "NOOP_DEPLOY":
+                    msg = "Cannot allocate the VM following the constraints"
+                    logs.append((vm_id, "ERROR", msg))
+                    continue
+
+                if operation == "NOOP_RUN":
+                    msg = "VM already allocated on optimal host"
+                    logs.append((vm_id, "INFO", msg))
+                    continue
+
+                # Migration or Deploy
+                if operation == "migrate_host":
+                    dstore_id = curr_placement[vm_id].dstore_id
+                else:
+                    # Operation is either `"deploy"` or `"migrate_ds"`.
+                    dstore_id = alloc.dstore_id
+
+                if operation.startswith("migrate_"):
+                    operation = "migrate"
+
+                actions.append(
+                    Plan.Action(
+                        vm_id=alloc.vm_id,
+                        operation=operation,
+                        host_id=alloc.host_id,
+                        ds_id=dstore_id,
+                        nic=[
+                            Plan.Action.Nic(nic_id, network_id)
+                            for nic_id, network_id in alloc.nics.items()
+                        ],
+                    )
                 )
-                continue
-            elif operation == "NOOP_RUN":
-                logs.append((vm_id, "INFO", "VM already allocated on optimal host"))
-                continue
-            # Migration or Deploy
-            ds_id, shared = self._get_vm_ds(alloc)
-            actions.append(
-                Plan.Action(
-                    vm_id=vm_id,
-                    operation=operation,
-                    host_id=getattr(alloc, "host_id", None),
-                    ds_id=ds_id,
-                    nic=[
-                        Plan.Action.Nic(nic_id, network_id)
-                        for nic_id, network_id in getattr(alloc, "nics", {}).items()
-                    ],
-                )
-            )
-            datastore_info = (
-                f"using system datastore {ds_id}"
-                if shared
-                # TODO: Check if this works well when ID is zero.
-                else (f"using host datastore {ds_id}" if ds_id else "without datastore")
-            )
-            logs.append(
-                (
-                    vm_id,
-                    "INFO",
-                    f"Placing VM in host '{alloc.host_id}' {datastore_info}",
-                )
-            )
-        plan = Plan(id=self.parser.plan_id, action=actions)
+                if alloc.dstore_type == "local":
+                    dstore_info = f"using host datastore {dstore_id}"
+                elif alloc.dstore_type == "shared":
+                    dstore_info = f"using system datastore {dstore_id}"
+                else:
+                    dstore_info = "without datastore"
+
+                msg = f"Placing VM in host '{alloc.host_id}' {dstore_info}"
+                logs.append((alloc.vm_id, "INFO", msg))
+
+        plan = Plan(id=self.plan_id, action=actions)
         return plan, logs
-
-    def _get_vm_ds(self, alloc) -> tuple[int, bool]:
-        # NOTE: It is probably redundant to call the method
-        # ``OptimizerParser.get_ds_map`` once for each VM. It would
-        # probably be enough calling it once, maybe just from the
-        # parser.
-        shared_ds, _, local = self.parser.get_ds_map()
-        if alloc.shared_dstore_ids:
-            # NOTE: This can contain both system shared datastores and
-            # image datastores. We need the system shared datastore.
-            for _ds in alloc.shared_dstore_ids.values():
-                if shared_ds and _ds in shared_ds:
-                    return _ds, True
-        elif alloc.host_dstore_ids:
-            # NOTE: The VM can only have one host datastore.
-
-            # TODO: Optimize this so that mappings are built only once.
-            # Mapping: host ID -> set of local dstore IDs.
-            host_storage: defaultdict[int, set[int]] = defaultdict(set)
-            for local_dstore_id, host_ids in local.items():
-                for host_id in host_ids:
-                    host_storage[host_id].add(local_dstore_id)
-            # Mapping: VM ID -> set of dstore IDs.
-            vm_storage: dict[int, set[int]] = {}
-            for vm_req in self.parser.scheduler_driver_action.requirements.vm:
-                vm_storage[vm_req.id] = set(vm_req.datastores.id)
-            # Matching datastore IDs:
-            # TODO: Consider optimization in the case of large sets.
-            # Iterate over the smaller and return the first element that
-            # appears in the larger set (e.g.
-            # `match_ = next(id for id in smaller if id in larger)`).
-            matches = host_storage[alloc.host_id] & vm_storage[alloc.vm_id]
-            match_ = matches.pop()  # next(iter(matches))
-            return match_, False
-
-        sys_ds = self.parser.get_system_ds(alloc.host_id)
-        return sys_ds, False
-
-    def _get_operation(self, alloc) -> str:
-        initial_placement = self.parser._parse_current_placement()
-        if alloc:
-            placement = initial_placement.get(int(alloc.vm_id))
-            if placement is None:
-                return "deploy"
-            if placement == int(alloc.host_id):
-                return "NOOP_RUN"
-            if placement != int(alloc.host_id):
-                return "migrate"
-        else:
-            # TODO: not implemented
-            # if placement is not None:
-            #     return "poweroff"
-            return "NOOP_DEPLOY"

@@ -13,7 +13,7 @@ class Mapper(abc.ABC):
     @abc.abstractmethod
     def __init__(
         self,
-        current_placement: Mapping[int, int],
+        current_placement: Collection[Allocation],
         vm_requirements: Collection[VMRequirements],
         host_capacities: Collection[HostCapacity],
         criteria: Any,

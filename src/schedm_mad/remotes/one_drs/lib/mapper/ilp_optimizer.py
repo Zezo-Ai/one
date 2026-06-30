@@ -1,11 +1,10 @@
 """Integer Linear Programming Optimizer for OpenNebula Mapper."""
 
 from collections import defaultdict as ddict
-from collections.abc import Collection, Mapping
+from collections.abc import Callable, Collection, Mapping
 from itertools import chain, combinations
-from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 
-import pulp
 from pulp import (
     LpAffineExpression as LinExpr,
     LpMaximize as _MAX,
@@ -16,6 +15,7 @@ from pulp import (
     LpSolver as Solver,
     LpStatus as _STATUS,
     LpVariable as Var,
+    getSolver as _get_solver,
     lpSum as sum_,
     value
 )
@@ -32,9 +32,8 @@ from .model import (
     VMGroup,
     VMRequirements,
     VMState,
-    VNetCapacity
+    VNetCapacity,
 )
-
 
 # TODO: Consider using grouping instead of inverse matching for all
 # relations. It might be slower, but the code might be simpler.
@@ -44,8 +43,9 @@ from .model import (
 
 class ILPOptimizer(Mapper):
     __slots__ = (
+        "_curr_placement",
         "_curr_alloc",
-        "_used_host_dstores",
+        "_used_local_dstores",
         "_used_shared_dstores",
         "_vm_reqs",
         "_affined_vms",
@@ -53,6 +53,7 @@ class ILPOptimizer(Mapper):
         "_anti_affined_vm_groups",
         "_host_caps",
         "_dstore_caps",
+        "_img_dstore_caps",
         "_vnet_caps",
         "_criteria",
         "_migrations",
@@ -73,20 +74,25 @@ class ILPOptimizer(Mapper):
         "_x_pend_vmg",
         "_y",
         "_z",
-        "_x_next_dstore_host",
-        "_x_next_dstore_shared",
+        "_xs_next_local",
+        "_xs_next_shared",
         "_x_vnet",
         "_balance",
         "_x_migr",
+        "_xs_migr",
         "_n_migr",
+        "_ns_migr",
         "_n_migr_ub",
+        "_ns_migr_ub",
         "_max_n_migr_vms",
+        "_max_ns_migr_vms",
         "_opt_placement",
     )
 
     if TYPE_CHECKING:
+        _curr_placement: dict[int, Allocation]
         _curr_alloc: dict[int, int]
-        _used_host_dstores: dict[tuple[int, int], tuple[int, int]]
+        _used_local_dstores: dict[tuple[int, int], tuple[int, int]]
         _used_shared_dstores: dict[tuple[int, int], int]
         _vm_reqs: dict[int, VMRequirements]
         _affined_vms: dict[int, int]
@@ -94,6 +100,7 @@ class ILPOptimizer(Mapper):
         _anti_affined_vm_groups: dict[int, VMGroup]
         _host_caps: dict[int, HostCapacity]
         _dstore_caps: dict[int, DStoreCapacity]
+        _img_dstore_caps: dict[int, DStoreCapacity]
         _vnet_caps: dict[int, VNetCapacity]
         _criteria: Optional[Union[str, Mapping, Callable]]
         _migrations: bool
@@ -114,53 +121,62 @@ class ILPOptimizer(Mapper):
         _x_pend_vmg: dict[tuple[int, Literal[-1]], Var]
         _y: dict[int, Var]
         _z: dict[tuple[int, int, int, str], Var]
-        _x_next_dstore_host: dict[tuple[int, int, int, int], Union[Var, float]]
-        _x_next_dstore_shared: dict[tuple[int, int, int], Union[Var, float]]
+        _xs_next_local: dict[tuple[int, int, int, int], Union[Var, float]]
+        _xs_next_shared: dict[tuple[int, int, int], Union[Var, float]]
         _x_vnet: dict[tuple[int, int, int], Var]
         _balance: dict[str, Var]
         _x_migr: dict[tuple[int, int], Union[Var, float]]
+        _xs_migr: dict[tuple[int, ...], Union[Var, float]]
         _n_migr: dict[int, Union[LinExpr, float]]
+        _ns_migr: dict[tuple[int, int], Union[LinExpr, float]]
         _n_migr_ub: Optional[int]
+        _ns_migr_ub: Optional[int]
         _max_n_migr_vms: int
+        _max_ns_migr_vms: int
         _opt_placement: dict[int, Optional[Allocation]]
 
     def __init__(
         self,
-        # VM-host allocations: {vm_id: host_id}.
-        current_placement: Mapping[int, int],
-        # Local host datastores already assigned to VMs:
-        # {(vm_id, dstore_req_id): disk_id}.
-        used_host_dstores: Mapping[tuple[int, int], int],
-        # Shared datastores already assigned to VMs:
-        # {(vm_id, dstore_req_id): dstore_id}.
-        used_shared_dstores: Mapping[tuple[int, int], int],
+        # VM-host-datastore-NICs allocations.
+        current_placement: Collection[Allocation],
         vm_requirements: Collection[VMRequirements],
         vm_groups: Collection[VMGroup],
         host_capacities: Collection[HostCapacity],
         dstore_capacities: Collection[DStoreCapacity],
+        image_dstore_capacities: Collection[DStoreCapacity],
         vnet_capacities: Collection[VNetCapacity],
         criteria: Any,
         # migrations: Optional[bool] = None,
         allowed_migrations: Optional[int] = None,
+        allowed_storage_migrations: Optional[int] = 0,
         balance_constraints: Optional[Mapping[str, float]] = None,
         preemptive: bool = False,
         **kwargs
     ) -> None:
         # Capturing the inputs.
+        self._curr_placement = {cpa.vm_id: cpa for cpa in current_placement}
 
-        # Current VM ID -> host ID allcations.
-        self._curr_alloc = dict(current_placement)
-
+        # Current VM placements to hosts and datastores.
+        # Current VM ID -> host ID allocations.
+        curr_alloc: dict[int, int] = {}
+        self._curr_alloc = curr_alloc
         # Current VM ID and storage requirement index -> host ID and
-        # local disk ID allocations.
-        self._used_host_dstores = {
-            (vm_id, dstore_req_id): (current_placement[vm_id], disk_id)
-            for (vm_id, dstore_req_id), disk_id in used_host_dstores.items()
-        }
-
+        # local datastore ID allocations. Assumtion: a single
+        # requirement per VM, i.e. a VM uses at most one datastore.
+        used_local_dstores: dict[tuple[int, int], tuple[int, int]] = {}
+        self._used_local_dstores = used_local_dstores
         # Current VM ID and storage requirement index -> shared
-        # datastore ID allocations.
-        self._used_shared_dstores = dict(used_shared_dstores)
+        # datastore ID allocations. Assumtion: a single requirement per
+        # VM, i.e. a VM uses at most one datastore.
+        used_shared_dstores: dict[tuple[int, int], int] = {}
+        self._used_shared_dstores = used_shared_dstores
+        for alloc in current_placement:
+            vm_id = alloc.vm_id
+            curr_alloc[vm_id] = alloc.host_id
+            if alloc.dstore_type == "local":
+                used_local_dstores[vm_id, 0] = (alloc.host_id, alloc.dstore_id)
+            elif alloc.dstore_type == "shared":
+                used_shared_dstores[vm_id, 0] = alloc.dstore_id
 
         # VM requirements.
         self._vm_reqs = all_vm_reqs = {
@@ -191,60 +207,6 @@ class ILPOptimizer(Mapper):
         self._affined_vm_groups = affined_vm_groups
         self._anti_affined_vm_groups = anti_affined_vm_groups
 
-        # Host capacities.
-        self._host_caps = all_host_caps = {
-            host_cap.id: host_cap for host_cap in host_capacities
-        }
-
-        # Shared datastore capacities. Transformed to match only one
-        # cluster.
-        # Datastore ID -> used storage.
-        used_storage: dict[int, int] = {}
-        for (vm_id, req_id), dstore_id in self._used_shared_dstores.items():
-            if dstore_id not in used_storage:
-                used_storage[dstore_id] = 0
-            used_storage[dstore_id] += all_vm_reqs[vm_id].storage[req_id].size
-        all_dstore_caps: dict[int, DStoreCapacity]
-        self._dstore_caps = all_dstore_caps = {}
-        for dstore_cap in dstore_capacities:
-            dstore_id = dstore_cap.id
-            used = used_storage.get(dstore_id, 0)
-            all_dstore_caps[dstore_id] = DStoreCapacity(
-                id=dstore_id,
-                size=Capacity(dstore_cap.size.free + used, used),
-                cluster_ids=dstore_cap.cluster_ids
-            )
-
-        # VNet capacities.
-        self._vnet_caps = {
-            vnet_cap.id: vnet_cap for vnet_cap in vnet_capacities
-        }
-
-        # Balance constraints.
-        balanced_vars = {
-            'cpu_usage', 'cpu_ratio', 'memory', 'disk_usage', 'net_usage'
-        }
-        if balance_constraints is None:
-            self._balance_constraints = {}
-        else:
-            self._balance_constraints = dict(balance_constraints)
-        if not self._balance_constraints.keys() <= balanced_vars:
-            names = self._balance_constraints.keys() - balanced_vars
-            raise ValueError(f"'balance_constraints' {names} are not allowed")
-
-        # Mapping criteria.
-        balance_criteria = {f'{name}_balance' for name in balanced_vars}
-        if isinstance(criteria, Mapping):
-            self._criteria: dict[str, float] = {}
-            for var_name, var_weight in criteria.items():
-                if var_name not in balance_criteria:
-                    raise ValueError(f"'criteria' cannot be '{var_name}'")
-                self._criteria[var_name[:-8]] = float(var_weight)
-        elif criteria in balance_criteria:
-            self._criteria = {criteria[:-8]: 1.0}
-        else:
-            self._criteria = criteria
-
         # Whether migrations are allowed.
         # TODO: Add `migrations` as a parameter.
         migrations = None
@@ -253,6 +215,7 @@ class ILPOptimizer(Mapper):
         else:
             self._migrations = bool(migrations)
         self._n_migr_ub = allowed_migrations
+        self._ns_migr_ub = 0 if all_waiting else allowed_storage_migrations
 
         # Whether preemptive scheduling is allowed.
         if preemptive:
@@ -265,8 +228,83 @@ class ILPOptimizer(Mapper):
         # Whether to use a narrow problem definition (i.e. with free
         # host resources and pending VMs).
         self._narrow = free = (
-            all_waiting and not preemptive and not self._migrations
+            all_waiting
+            and not preemptive
+            and not self._migrations
+            # and self._ns_migr_ub == 0
         )
+
+        # Host capacities.
+        self._host_caps = all_host_caps = {
+            host_cap.id: host_cap for host_cap in host_capacities
+        }
+
+        # Shared datastore capacities. Transformed to match only one
+        # cluster when `self._narrow` is `False`.
+        # Datastore ID -> storage capacity.
+        all_dstore_caps: dict[int, DStoreCapacity]
+        if free:
+            self._dstore_caps = all_dstore_caps = {
+                dstore_cap.id: dstore_cap for dstore_cap in dstore_capacities
+            }
+        else:
+            used_storage: dict[int, int] = {}
+            for (vm_id, req_id), dstore_id in used_shared_dstores.items():
+                if dstore_id not in used_storage:
+                    used_storage[dstore_id] = 0
+                size = all_vm_reqs[vm_id].storage[req_id].size
+                used_storage[dstore_id] += size
+
+            self._dstore_caps = all_dstore_caps = {}
+            for dstore_cap in dstore_capacities:
+                dstore_id = dstore_cap.id
+                used = used_storage.get(dstore_id, 0)
+                all_dstore_caps[dstore_id] = DStoreCapacity(
+                    id=dstore_id,
+                    size=Capacity(dstore_cap.size.free + used, used),
+                    cluster_ids=dstore_cap.cluster_ids
+                )
+
+        # Image datastore capacities.
+        # Datastore ID -> storage capacity.
+        self._img_dstore_caps = {
+            dstore_cap.id: dstore_cap for dstore_cap in image_dstore_capacities
+        }
+
+        # VNet capacities.
+        self._vnet_caps = {
+            vnet_cap.id: vnet_cap for vnet_cap in vnet_capacities
+        }
+
+        # Balance constraints.
+        balanced_vars = {
+            'cpu_usage',
+            'cpu_ratio',
+            'memory',
+            'space',
+            'disk_usage',
+            'net_usage'
+        }
+        if balance_constraints is None:
+            self._balance_constraints = {}
+        else:
+            self._balance_constraints = dict(balance_constraints)
+        if not self._balance_constraints.keys() <= balanced_vars:
+            names = self._balance_constraints.keys() - balanced_vars
+            raise ValueError(f"'balance_constraints' {names} are not allowed")
+
+        # Mapping criteria.
+        balance_criteria = {f'{name}_balance' for name in balanced_vars}
+        if isinstance(criteria, Mapping):
+            self._criteria = {}
+            for var_name, var_weight in criteria.items():
+                if var_name not in balance_criteria:
+                    raise ValueError(f"'criteria' cannot be '{var_name}'")
+                self._criteria[var_name[:-8]] = float(var_weight)
+        elif criteria in balance_criteria:
+            self._criteria = {criteria[:-8]: 1.0}
+        else:
+            self._criteria = criteria
 
         # Model.
         name = kwargs.pop('name', 'opennebula-scheduling-problem')
@@ -276,7 +314,7 @@ class ILPOptimizer(Mapper):
         if solver is None or isinstance(solver, Solver):
             self._solver = solver
         else:
-            self._solver = pulp.getSolver(solver, **kwargs)
+            self._solver = _get_solver(solver, **kwargs)
 
         # Matching VMs and hosts.
         # Host and PCI device matches for the VMs inside affined VM groups.
@@ -374,14 +412,15 @@ class ILPOptimizer(Mapper):
         # the given address, that belong to the given host will be used
         # to satisfy the specified requirement of the VM.
         self._z = {}
-        # Dict {(vm_id, vm_dstore_req_id, host_id, host_disk_id): x},
+        # Dict {(vm_id, vm_dstore_req_id, host_id, host_dstore_id): x},
         # where x is a decision variable that determines whether a
-        # local disk of the host will be used for the requirement of VM.
-        self._x_next_dstore_host = {}
-        # Dict {(vm_id, vm_dstore_req_id, datastore_id): x}, where x is
-        # a decision variable that determines whether the cluster
+        # local datastore of the host will be used for the requirement
+        # of a VM.
+        self._xs_next_local = {}
+        # Dict {(vm_id, vm_dstore_req_id, dstore_id): x}, where x is a
+        # decision variable that determines whether the cluster
         # datastore will be used for the VM.
-        self._x_next_dstore_shared = {}
+        self._xs_next_shared = {}
         # Dict {(vm_id, nic_id, vnet_id): x}, where x is a  decision
         # variable that denotes if the VM NIC will be connected to the
         # VNet.
@@ -393,11 +432,20 @@ class ILPOptimizer(Mapper):
         # Dict {(VM ID, host ID): m} that shows if a VM is going to
         # migrate to a particular host (m = 1) or not (m = 0).
         self._x_migr: dict[tuple[int, int], Union[Var, float]] = {}
+        # Dict {(VM ID, ...): m} that shows if a VM disk is going to
+        # migrate to a particular datastore (m = 1) or not (m = 0).
+        self._xs_migr: dict[tuple[int, ...], Union[Var, float]] = {}
         # Dict {VM ID: n} that shows if a VM is going to migrate at all
-        # (n = 1) or not (n = 0).
+        # from one host to another (n = 1) or not (n = 0).
         self._n_migr: dict[int, Union[LinExpr, float]] = {}
-        # Maximal possible number of migrations for all VMs.
+        # Dict {(VM ID, vm_dstore_req_id): n} that shows if a VM disk is
+        # going to migrate at all from one datastore to another (n = 1)
+        # or not (n = 0).
+        self._ns_migr: dict[tuple[int, int], Union[LinExpr, float]] = {}
+        # Maximal possible number of host migrations for all VMs.
         self._max_n_migr_vms: int = 0
+        # Maximal possible number of datastore migrations for all VMs.
+        self._max_ns_migr_vms: int = 0
         # Optimization result with {VM ID: Allocation} placements.
         self._opt_placement: dict[int, Optional[Allocation]] = {}
 
@@ -409,8 +457,8 @@ class ILPOptimizer(Mapper):
         x_pend_vmg = self._x_pend_vmg
         y = self._y
         z = self._z
-        x_next_dstore_host = self._x_next_dstore_host
-        x_next_dstore_shared = self._x_next_dstore_shared
+        xs_next_local = self._xs_next_local
+        xs_next_shared = self._xs_next_shared
         used_shared_dstores = self._used_shared_dstores
         x_vnet = self._x_vnet
         vm_reqs = self._vm_reqs
@@ -450,10 +498,16 @@ class ILPOptimizer(Mapper):
                 x_pend[vm_id, -1] = 0.0
 
         # TODO: If there is no cluster storage for a VM and that VM also
-        # cannot use any disk of a host, then `x_next[vm_id, host_id]`
-        # should be `0.0`. If there is no storage of a VM at all, then
-        # `x_pend[vm_id, -1]` should be `1.0`. This might be especially
-        # problematic to implement for affined VM groups.
+        # cannot use any local datastore of a host, then
+        # `x_next[vm_id, host_id]` should be `0.0`. If there is no
+        # storage of a VM at all, then `x_pend[vm_id, -1]` should be
+        # `1.0`. This might be especially problematic to implement for
+        # affined VM groups.
+
+        # TODO: If there is no image storage for a pending VM to start,
+        # then `x_pend[vm_id, -1]` should be `1.0`. Consider affined VM
+        # groups carefully.
+
         for vm_id, host_caps in vm_host_matches.items():
             if not host_caps:
                 # TODO: In this case, the check
@@ -503,6 +557,7 @@ class ILPOptimizer(Mapper):
             pcid_match_idx = (vm_id, req_idx, host_id, pcid_address)
             z[pcid_match_idx] = Var(name=z_name, cat="Binary")
 
+        keep_shared_dstore = self._ns_migr_ub == 0
         for dstore_match in self._dstore_matches:
             vm_id = dstore_match.vm_id
             req_id = dstore_match.requirement
@@ -510,21 +565,21 @@ class ILPOptimizer(Mapper):
                 continue
             # if self._vm_reqs[vm_id].storage[req_id].size == 0:
             #     continue
-            if (vm_id, req_id) in used_shared_dstores:
+            if keep_shared_dstore and (vm_id, req_id) in used_shared_dstores:
                 dstore_id = used_shared_dstores[vm_id, req_id]
                 if dstore_id in set(dstore_match.shared_dstores):
-                    x_next_dstore_shared[vm_id, req_id, dstore_id] = 1.0
+                    xs_next_shared[vm_id, req_id, dstore_id] = 1.0
                     continue
-            for host_id, disk_ids in dstore_match.host_dstores.items():
-                for disk_id in disk_ids:
-                    x_name_idx = f"{vm_id}_{req_id}_{host_id}_{disk_id}"
-                    x_name = f"x_dstore_host_{x_name_idx}"
-                    x_var = Var(name=x_name, cat="Binary")
-                    x_next_dstore_host[vm_id, req_id, host_id, disk_id] = x_var
+            for host_id, dstore_ids in dstore_match.local_dstores.items():
+                for dstore_id in dstore_ids:
+                    xs_name_idx = f"{vm_id}_{req_id}_{host_id}_{dstore_id}"
+                    xs_name = f"x_dstore_host_{xs_name_idx}"
+                    xs_var = Var(name=xs_name, cat="Binary")
+                    xs_next_local[vm_id, req_id, host_id, dstore_id] = xs_var
             for dstore_id in dstore_match.shared_dstores:
-                x_name = f"x_dstore_shared_{vm_id}_{req_id}_{dstore_id}"
-                x_var = Var(name=x_name, cat="Binary")
-                x_next_dstore_shared[vm_id, req_id, dstore_id] = x_var
+                xs_name = f"x_dstore_shared_{vm_id}_{req_id}_{dstore_id}"
+                xs_var = Var(name=xs_name, cat="Binary")
+                xs_next_shared[vm_id, req_id, dstore_id] = xs_var
 
         for vm_id, vm_req in self._vm_reqs.items():
             if vm_req.state is not VMState.PENDING:
@@ -543,17 +598,18 @@ class ILPOptimizer(Mapper):
         x_all = x_next | x_pend
         y = self._y
         z = self._z
-        x_next_dstore_host = self._x_next_dstore_host
-        x_next_dstore_shared = self._x_next_dstore_shared
+        xs_next_local = self._xs_next_local
+        xs_next_shared = self._xs_next_shared
         attr_name = 'free' if self._narrow else 'total'
         affined_vms = self._affined_vms
         vm_host_matches = self._vm_host_matches
         all_vm_reqs = self._vm_reqs
         all_vnet_caps = self._vnet_caps
         all_dstore_caps = self._dstore_caps
+        img_dstore_caps = self._img_dstore_caps
         all_host_caps = self._host_caps
         prev_alloc = self._curr_alloc
-        used_host_dstores = self._used_host_dstores
+        used_local_dstores = self._used_local_dstores
         model = self._model
 
         # Each VM must be allocated to exactly one host, including the
@@ -585,7 +641,7 @@ class ILPOptimizer(Mapper):
                     for vm_req in vm_reqs
                 )
                 <= getattr(host_cap.memory, attr_name) * y[host_id],
-                f"mem_constraint_for_host_{host_id}",
+                f"mem_constraint_for_host_{host_id}"
             )
 
         # The number of CPU cores demanded by all VMs allocated to a
@@ -601,7 +657,7 @@ class ILPOptimizer(Mapper):
                     for vm_req in vm_reqs
                 )
                 <= getattr(host_cap.cpu, attr_name) * y[host_id],
-                f"cpu_ratio_constraint_for_host_{host_id}",
+                f"cpu_ratio_constraint_for_host_{host_id}"
             )
 
         # No VM can be allocated to the host that is not committed
@@ -613,12 +669,12 @@ class ILPOptimizer(Mapper):
             if (vm_id, host_id) not in x_next_affined_idx:
                 model += (
                     x_next_var <= y[host_id],
-                    f"vm_{vm_id}_to_committed_host_{host_id}",
+                    f"vm_{vm_id}_to_committed_host_{host_id}"
                 )
         for (vmg_id, host_id), x_next_var in x_next_vmg.items():
             model += (
                 x_next_var <= y[host_id],
-                f"vm_group_{vmg_id}_to_committed_host_{host_id}",
+                f"vm_group_{vmg_id}_to_committed_host_{host_id}"
             )
 
         # Pending VMs that belong to affined VM groups can either remain
@@ -631,7 +687,7 @@ class ILPOptimizer(Mapper):
             ):
                 model += (
                     x_next[vm_id, host_id] <= x_next_vmg[vmg_id, host_id],
-                    f"vm_{vm_id}_to_host_{host_id}_with_group_{vmg_id}",
+                    f"vm_{vm_id}_to_host_{host_id}_with_group_{vmg_id}"
                 )
 
         # No two anti-affined VMs can be allocated to the same host.
@@ -649,7 +705,7 @@ class ILPOptimizer(Mapper):
                         x_next[l_vm_id, host_id] + x_next[r_vm_id, host_id]
                         <= 1,
                         f"vms_{l_vm_id}_and_{r_vm_id}_from_group_{vmg_id}_"
-                        f"anti_affined_on_host_{host_id}",
+                        f"anti_affined_on_host_{host_id}"
                     )
 
         # Grouping `z`-variables.
@@ -695,87 +751,111 @@ class ILPOptimizer(Mapper):
 
         # A VM can use the local storage of a host for a storage
         # requirement only if it is allocated to that host.
-        x_vars = x_next_dstore_host
-        for (vm_id, req_id, host_id, disk_id), x_var in x_vars.items():
+        for idx, xs_var in xs_next_local.items():
+            vm_id, req_id, host_id, dstore_id = idx
             model += (
-                x_var <= x_next[vm_id, host_id],
+                xs_var <= x_next[vm_id, host_id],
                 f"vm_{vm_id}_requirement_{req_id}_to_host_{host_id}_local_"
-                f"storage_disk_{disk_id}_constraint"
+                f"datastore_{dstore_id}_constraint"
             )
 
-        # If a VM that is already scheduled uses a host disk for a
-        # storage requirement and does not migrate, the used disk
-        # remains the same.
-        x_vars = x_next_dstore_host
-        resched_state = VMState.RESCHED
-        for vm_id, vm_req in self._vm_reqs.items():
-            if all_vm_reqs[vm_id].state is not resched_state:
-                continue
-            for req_id in vm_req.storage:
-                if (vm_id, req_id) not in used_host_dstores:
+        if self._ns_migr_ub == 0:
+            # If a VM that is already scheduled uses a local host
+            # datastore for a storage requirement and does not migrate,
+            # the used datastore remains the same.
+            # NOTE: This constraint is probably redundant because the
+            # number of storage migrations is already bound to 0.
+            resched_state = VMState.RESCHED
+            for vm_id, vm_req in self._vm_reqs.items():
+                if all_vm_reqs[vm_id].state is not resched_state:
                     continue
-                prev_host_id, prev_disk_id = used_host_dstores[vm_id, req_id]
-                # NOTE: This is probably redundant.
-                if prev_host_id != prev_alloc.get(vm_id, -1):
-                    continue
-                idx = (vm_id, req_id, prev_host_id, prev_disk_id)
-                model += (
-                    x_next_dstore_host[idx] >= x_next[vm_id, prev_host_id],
-                    f"vm_{vm_id}_requirement_{req_id}_remains_on_"
-                    f"{prev_host_id}_disk_{prev_disk_id}_no_migration"
-                )
+                for req_id in vm_req.storage:
+                    if (vm_id, req_id) not in used_local_dstores:
+                        continue
+                    # Current host ID and current datastore ID.
+                    host_id, dstore_id = used_local_dstores[vm_id, req_id]
+                    # NOTE: This is probably redundant.
+                    if host_id != prev_alloc.get(vm_id, -1):
+                        continue
+                    model += (
+                        xs_next_local[vm_id, req_id, host_id, dstore_id]
+                        >= x_next[vm_id, host_id],
+                        f"vm_{vm_id}_requirement_{req_id}_remains_on_"
+                        f"{host_id}_datastore_{dstore_id}_no_migration"
+                    )
 
-        # Grouping `x_dstore` variables by VM requirements.
-        x_dstore_req: ddict[tuple[int, int], LinExpr] = ddict(LinExpr)
-        x_next_dstore = chain(
-            x_next_dstore_host.items(), x_next_dstore_shared.items()
-        )
-        for (vm_id, req_id, *_), x_var in x_next_dstore:
-            x_dstore_req[vm_id, req_id] += x_var
+        # Grouping `xs` variables by VM requirements.
+        xs_dstore_req: ddict[tuple[int, int], LinExpr] = ddict(LinExpr)
+        xs_next = chain(xs_next_local.items(), xs_next_shared.items())
+        for (vm_id, req_id, *_), xs_var in xs_next:
+            xs_dstore_req[vm_id, req_id] += xs_var
         # NOTE: This part takes into account VMs without matches.
         for vm_id, vm_req in all_vm_reqs.items():
             for req_id in vm_req.storage:
-                if (vm_id, req_id) not in x_dstore_req:
-                    x_dstore_req[vm_id, req_id] = LinExpr()
+                if (vm_id, req_id) not in xs_dstore_req:
+                    xs_dstore_req[vm_id, req_id] = LinExpr()
 
         # A VM can use exactly one datastore for each storage
         # requirement if it is allocated.
         # TODO: Check what happens if a VM is left pending.
-        for (vm_id, req_id), req_sum in x_dstore_req.items():
+        for (vm_id, req_id), req_sum in xs_dstore_req.items():
             model += (
                 req_sum == 1 - x_pend[vm_id, -1],
                 f"vm_{vm_id}_requirement_{req_id}_single_datastore_constraint"
             )
 
-        # Grouping by hosts and their disks.
-        host_disk_usage: ddict[tuple[int, int], LinExpr] = ddict(LinExpr)
-        x_vars = x_next_dstore_host
-        for (vm_id, req_id, host_id, disk_id), x_var in x_vars.items():
+        # Grouping by hosts and their local datastores.
+        local_dstore_req: ddict[tuple[int, int], LinExpr] = ddict(LinExpr)
+        for idx, xs_var in xs_next_local.items():
+            vm_id, req_id, host_id, dstore_id = idx
             req_size = all_vm_reqs[vm_id].storage[req_id].size
-            host_disk_usage[host_id, disk_id] += x_var * req_size
+            local_dstore_req[host_id, dstore_id] += xs_var * req_size
 
         # The local storage demanded by all VMs allocated to a host
         # datastore cannot exceed the size of that host datastore.
-        for (host_id, disk_id), s_var in host_disk_usage.items():
-            disk_cap = all_host_caps[host_id].disks[disk_id]
+        for (host_id, dstore_id), req_sum in local_dstore_req.items():
+            dstore_cap = all_host_caps[host_id].dstores[dstore_id]
             model += (
-                s_var <= getattr(disk_cap, attr_name) * y[host_id],
-                f"storage_constraint_for_host_{host_id}_disk_{disk_id}",
+                req_sum <= getattr(dstore_cap, attr_name) * y[host_id],
+                f"storage_constraint_for_host_{host_id}_datastore_{dstore_id}"
             )
 
         # Grouping by shared datastores.
-        sum_shared_dstore: ddict[int, LinExpr] = ddict(LinExpr)
-        for (vm_id, req_id, dstore_id), x_var in x_next_dstore_shared.items():
+        shared_dstore_req: ddict[int, LinExpr] = ddict(LinExpr)
+        for (vm_id, req_id, dstore_id), xs_var in xs_next_shared.items():
             req_size = all_vm_reqs[vm_id].storage[req_id].size
-            sum_shared_dstore[dstore_id] += x_var * req_size
+            shared_dstore_req[dstore_id] += xs_var * req_size
 
         # The storage demanded by all VMs allocated to a shared
         # datastore cannot exceed the size of that datastore.
-        for dstore_id, s_var in sum_shared_dstore.items():
+        for dstore_id, req_sum in shared_dstore_req.items():
             dstore_cap = all_dstore_caps[dstore_id].size
             model += (
-                s_var <= getattr(dstore_cap, attr_name),
-                f"storage_constraint_for_datastore_{dstore_id}",
+                req_sum <= getattr(dstore_cap, attr_name),
+                f"storage_constraint_for_datastore_{dstore_id}"
+            )
+
+        # Grouping by image datastores (pending VMs only).
+        img_dstore_req: ddict[int, LinExpr] = ddict(LinExpr)
+        for vm_id, vm_req in all_vm_reqs.items():
+            if not vm_req.image_storage:
+                continue
+            if vm_req.state is not VMState.PENDING:
+                continue
+            placed = 1 - x_pend[vm_id, -1]
+            for dstore_id, size in vm_req.image_storage.items():
+                img_dstore_req[dstore_id] += placed * size
+
+        # The storage demanded by all pending VMs associated to an image
+        # datastore cannot exceed the free space of that datastore.
+        for dstore_id, req_sum in img_dstore_req.items():
+            if dstore_id in img_dstore_caps:
+                dstore_free_space = img_dstore_caps[dstore_id].size.free
+            else:
+                dstore_free_space = 0.0
+            model += (
+                req_sum <= dstore_free_space,
+                f"image_storage_constraint_for_datastore_{dstore_id}"
             )
 
         # x_vnet[vm_id, nic_id, vnet_id]
@@ -836,17 +916,43 @@ class ILPOptimizer(Mapper):
         # A storage requirement of a VM can be satisfied with a
         # datastore only if that VM is allocated to a host that is a
         # part of a cluster which corresponds to that datastore.
-        for (vm_id, req_id, dstore_id), x_var in x_next_dstore_shared.items():
+        for (vm_id, req_id, dstore_id), xs_var in xs_next_shared.items():
             # TODO: Try to make this more efficient.
             x_cluster_sum = LinExpr()
             for cluster_id in all_dstore_caps[dstore_id].cluster_ids:
                 if (alloc := (vm_id, cluster_id)) in x_cluster:
                     x_cluster_sum += x_cluster[alloc]
             model += (
-                x_var <= x_cluster_sum,
+                xs_var <= x_cluster_sum,
                 f"vm_{vm_id}_requirement_{req_id}_datastore_{dstore_id}_"
                 "cluster_constraint"
             )
+
+        # Dict {VM ID: set of cluster IDs} that shows which clusters can
+        # satisfy all image storage requirements of a pending VM.
+        vm_cluster_matches: dict[int, set[int]] = {}
+        for vm_id, vm_req in all_vm_reqs.items():
+            if vm_req.state is not VMState.PENDING:
+                continue
+            all_cluster_ids: list[set[int]] = []
+            for dstore_id in vm_req.image_storage:
+                cluster_ids = set(img_dstore_caps[dstore_id].cluster_ids)
+                all_cluster_ids.append(cluster_ids)
+            if all_cluster_ids:
+                vm_cluster_matches[vm_id] = set.intersection(*all_cluster_ids)
+
+        # An image storage requirement of a pending VM can be satisfied
+        # with an image datastore only if that VM is allocated to a host
+        # that is a part of a cluster which corresponds to that
+        # datastore.
+        for (vm_id, cluster_id), x_cluster_sum in x_cluster.items():
+            if vm_id not in vm_cluster_matches:
+                continue
+            if cluster_id not in vm_cluster_matches[vm_id]:
+                model += (
+                    x_cluster_sum == 0,
+                    f"vm_{vm_id}_cluster_{cluster_id}_exclusion_constraint"
+                )
 
         # A NIC requirement of a VM can be satisfied with a VNet only if
         # that VM is allocated to a host that is a part of a cluster
@@ -867,6 +973,13 @@ class ILPOptimizer(Mapper):
                 f"max_number_of_migrations_{self._n_migr_ub}_constraint"
             )
 
+        if self._ns_migr_ub is not None:
+            model += (
+                sum_(self._ns_migr.values()) <= self._ns_migr_ub,
+                f"max_number_of_storage_migrations_{self._ns_migr_ub}_"
+                f"constraint"
+            )
+
         for var_name, bound in self._balance_constraints.items():
             if var_name not in self._balance:
                 self._add_balance_variable(name=var_name)
@@ -884,7 +997,9 @@ class ILPOptimizer(Mapper):
         x_migr = self._x_migr
         n_migr = self._n_migr
 
-        # VMs that can migrate are the VMs that are both:
+        # VM migrations across hosts.
+        # VMs that can migrate from one host to another are the VMs that
+        # are both:
         # 1. Currently allocated
         # 2. Requested for (re)scheduling
         # This should be an empty set for a narrow problem.
@@ -894,20 +1009,167 @@ class ILPOptimizer(Mapper):
             # Hosts where the VM can migrate to.
             host_ids = {host_cap.id for host_cap in vm_host_matches[vm_id]}
             host_ids.discard(prev_alloc[vm_id])
+            self._max_n_migr_vms += len(host_ids)
             for host_id in host_ids:
                 x_migr[vm_id, host_id] = migr = x_next[vm_id, host_id]
                 vm_n_migr += migr
-                self._max_n_migr_vms += 1
+
+        # VM migrations across datastores.
+        # TODO: Try to optimize this part.
+        # VMs that can migrate from one local datastore to another are
+        # the VMs that are both:
+        # 1. Currently allocated
+        # 2. Requested for (re)scheduling
+        used_local_dstores = self._used_local_dstores
+        used_shared_dstores = self._used_shared_dstores
+        xs_migr = self._xs_migr
+        ns_migr = self._ns_migr
+
+        # VM migrations across local datastores.
+        for ls_idx, xs_var in self._xs_next_local.items():
+            vm_id, req_id, host_id, dstore_id = ls_idx
+            req_idx = (vm_id, req_id)
+            # ls_alloc = (host_id, dstore_id)
+            # if used_local_dstores.get(req_idx) in {None, ls_alloc}:
+            if (
+                (ls_alloc := used_local_dstores.get(req_idx)) is None
+                or ls_alloc[1] == dstore_id
+            ):
+                # Filtering out non-allocated VM requirements and the
+                # currently-used host local datastore from the potential
+                # migration options.
+                # TODO: Decide if a migration to another host and its
+                # datastore with the same ID as the current datastore
+                # will count as a datastore migration, in addition to
+                # being counted as a host migration. Consider how that
+                # impacts penalization.
+                continue
+            xs_migr[ls_idx] = xs_var
+            if req_idx not in ns_migr:
+                ns_migr[req_idx] = LinExpr()
+            ns_migr[req_idx] += xs_var
+            self._max_ns_migr_vms += 1
+
+        # VM migrations across shared datastores.
+        for ss_idx, xs_var in self._xs_next_shared.items():
+            vm_id, req_id, dstore_id = ss_idx
+            req_idx = (vm_id, req_id)
+            if used_shared_dstores.get(req_idx) in {None, dstore_id}:
+                # Filtering out non-allocated VM requirements and the
+                # currently-used shared datastore from the potential
+                # migration options.
+                continue
+            xs_migr[ss_idx] = xs_var
+            if req_idx not in ns_migr:
+                ns_migr[req_idx] = LinExpr()
+            ns_migr[req_idx] += xs_var
+            self._max_ns_migr_vms += 1
+
+    def _add_dstore_space_variable(self, name: str) -> Var:
+        model = self._model
+        all_vm_reqs = self._vm_reqs
+        all_host_caps = self._host_caps
+        all_dstores = self._dstore_caps
+        max_dstore_load = Var(name=f"max_dstore_load_{name}", lowBound=0)
+        self._balance[name] = max_dstore_load
+
+        # NOTE: The same code already exists in `self._add_constraints`.
+        # Grouping by hosts and their local datastores.
+        local_dstore_req: ddict[tuple[int, int], LinExpr] = ddict(LinExpr)
+        for idx, xs_var in self._xs_next_local.items():
+            vm_id, req_id, host_id, dstore_id = idx
+            req_size = all_vm_reqs[vm_id].storage[req_id].size
+            local_dstore_req[host_id, dstore_id] += xs_var * req_size
+
+        # NOTE: The same code already exists in `self._add_constraints`.
+        # Grouping by shared datastores.
+        shared_dstore_req: ddict[int, LinExpr] = ddict(LinExpr)
+        for (vm_id, req_id, dstore_id), xs_var in self._xs_next_shared.items():
+            req_size = all_vm_reqs[vm_id].storage[req_id].size
+            shared_dstore_req[dstore_id] += xs_var * req_size
+
+        if self._narrow:
+            for (host_id, dstore_id), req_sum in local_dstore_req.items():
+                req_sum += all_host_caps[host_id].dstores[dstore_id].usage
+            # NOTE: The capacities of the shared datastores are
+            # corrected to match the specific cluster.
+            for dstore_id, req_sum in shared_dstore_req.items():
+                req_sum += all_dstores[dstore_id].size.usage
+
+        for (host_id, dstore_id), req_sum in local_dstore_req.items():
+            total = all_host_caps[host_id].dstores[dstore_id].total
+            if total != 0.0:
+                model += (
+                    req_sum / total <= max_dstore_load,
+                    f"max_{name}_load_for_local_host_{host_id}_datastore_"
+                    f"{dstore_id}"
+                )
+
+        for dstore_id, req_sum in shared_dstore_req.items():
+            total = all_dstores[dstore_id].size.total
+            if total != 0.0:
+                model += (
+                    req_sum / total <= max_dstore_load,
+                    f"max_{name}_load_for_shared_datastore_{dstore_id}"
+                )
+
+        return max_dstore_load
+
+    def _add_dstore_usage_variable(self, name: str) -> Var:
+        model = self._model
+        all_vm_reqs = self._vm_reqs
+        max_dstore_load = Var(name=f"max_dstore_load_{name}", lowBound=0)
+        self._balance[name] = max_dstore_load
+
+        # TODO: Consider NaN disk usage values.
+        # NOTE: Similar code already exists in `self._add_constraints`.
+        # Grouping by hosts and their local datastores.
+        local_dstore_usage: ddict[tuple[int, int], LinExpr] = ddict(LinExpr)
+        for idx, xs_var in self._xs_next_local.items():
+            vm_id, _, host_id, dstore_id = idx
+            # NOTE: This is fine for 1 disk per VM.
+            usage = all_vm_reqs[vm_id].disk_usage
+            local_dstore_usage[host_id, dstore_id] += xs_var * usage
+
+        # NOTE: Similar code already exists in `self._add_constraints`.
+        # Grouping by shared datastores.
+        shared_dstore_usage: ddict[int, LinExpr] = ddict(LinExpr)
+        for (vm_id, _, dstore_id), xs_var in self._xs_next_shared.items():
+            # NOTE: This is fine for 1 disk per VM.
+            usage = all_vm_reqs[vm_id].disk_usage
+            shared_dstore_usage[dstore_id] += xs_var * usage
+
+        # NOTE: Currently, disk usage is not suitable for the initial
+        # placement.
+        total = sum(vm_req.disk_usage for vm_req in all_vm_reqs.values())
+        if total != 0.0:
+            for (host_id, dstore_id), usage_sum in local_dstore_usage.items():
+                model += (
+                    usage_sum / total <= max_dstore_load,
+                    f"max_{name}_load_for_local_host_{host_id}_datastore_"
+                    f"{dstore_id}"
+                )
+
+            for dstore_id, usage_sum in shared_dstore_usage.items():
+                model += (
+                    usage_sum / total <= max_dstore_load,
+                    f"max_{name}_load_for_shared_datastore_{dstore_id}"
+                )
+
+        return max_dstore_load
 
     def _add_balance_variable(self, name: str) -> Var:
         model = self._model
+
+        if name == 'space':
+            return self._add_dstore_space_variable(name=name)
+        if name == 'disk_usage':
+            return self._add_dstore_usage_variable(name=name)
 
         if name.startswith('cpu_'):
             var_name = 'cpu'
         elif name == 'memory':
             var_name = 'memory'
-        elif name == 'disk_usage':
-            var_name = 'disk_io'
         elif name == 'net_usage':
             var_name = 'net'
         else:
@@ -918,7 +1180,7 @@ class ILPOptimizer(Mapper):
         max_host_load = Var(name=f"max_host_load_{name}", lowBound=0)
         self._balance[name] = max_host_load
 
-        var_sum = {}
+        var_sum: dict[int, LinExpr] = {}
         for host_id, vm_reqs in self._host_vm_matches.items():
             var_sum[host_id] = sum_(
                 getattr(vm_req, name) * x_next[vm_req.id, host_id]
@@ -932,7 +1194,7 @@ class ILPOptimizer(Mapper):
             if total != 0.0:
                 model += (
                     var / total <= max_host_load,
-                    f"max_{name}_load_for_host_{host_id}",
+                    f"max_{name}_load_for_host_{host_id}"
                 )
 
         return max_host_load
@@ -956,6 +1218,9 @@ class ILPOptimizer(Mapper):
         pend_penalty = 1.1 * n_pend_vms
         n_migr_vms = sum_(self._n_migr.values())
         migr_penalty = n_migr_vms / (self._max_n_migr_vms * 2 + 1)
+        if self._ns_migr_ub != 0:
+            ns_migr_vms = sum_(self._ns_migr.values())
+            migr_penalty += ns_migr_vms / (self._max_ns_migr_vms * 2 + 1)
         self._model.sense = _MIN
         self._model += obj + pend_penalty + migr_penalty * 0.01
 
@@ -990,6 +1255,9 @@ class ILPOptimizer(Mapper):
             # CAVEAT: A very large divisor might be problematic.
             n_migr_vms = sum_(self._n_migr.values())
             migr_penalty = n_migr_vms / (self._max_n_migr_vms * 2 + 1)
+            if self._ns_migr_ub != 0:
+                ns_migr_vms = sum_(self._ns_migr.values())
+                migr_penalty += ns_migr_vms / (self._max_ns_migr_vms * 2 + 1)
             model += n_hosts + pend_penalty + migr_penalty
         else:
             raise NotImplementedError()
@@ -1006,11 +1274,24 @@ class ILPOptimizer(Mapper):
         vm_host_matches = self._vm_host_matches
         x_pend = self._x_pend
         x_next = self._x_next
-        x_next_dstore_shared = self._x_next_dstore_shared
-        x_next_dstore_host = self._x_next_dstore_host
-        x_next_dstore_shared = self._x_next_dstore_shared
+        xs_next_shared = self._xs_next_shared
+        xs_next_local = self._xs_next_local
+        xs_next_shared = self._xs_next_shared
         x_vnet = self._x_vnet
         opt_placement = self._opt_placement
+
+        # Searching for the local datastore.
+        vm_local_dstores: dict[tuple[int, int], int] = {}
+        for (vm_id, req_id, _, dstore_id), xs_var in xs_next_local.items():
+            if round(value(xs_var)):
+                vm_local_dstores[vm_id, req_id] = dstore_id
+
+        # Searching for the shared datastore.
+        vm_shared_dstores: dict[tuple[int, int], int] = {}
+        for (vm_id, req_id, dstore_id), xs_var in xs_next_shared.items():
+            if round(value(xs_var)):
+                vm_shared_dstores[vm_id, req_id] = dstore_id
+
         for vm_id, vm_req in self._vm_reqs.items():
             # VM is not allocated.
             if round(value(x_pend[vm_id, -1])):
@@ -1033,29 +1314,29 @@ class ILPOptimizer(Mapper):
                         if round(value(x_vnet[vm_id, nic_id, vnet_id])):
                             nics[nic_id] = vnet_id
                             break
+
+            # Searching for the datastore.
+            dstore_id: int
+            dstore_type: Optional[Literal['local', 'shared']]
+            if (vm_id, 0) in vm_local_dstores:
+                dstore_id = vm_local_dstores[vm_id, 0]
+                dstore_type = "local"
+            elif (vm_id, 0) in vm_shared_dstores:
+                dstore_id = vm_shared_dstores[vm_id, 0]
+                dstore_type = "shared"
+            else:
+                # NOTE: This case should probably never happen.
+                dstore_id = -1
+                dstore_type = None
+
             # Adding the allocation for the VM.
             opt_placement[vm_id] = Allocation(
                 vm_id=vm_id,
                 host_id=host_id,
-                host_dstore_ids={},
-                shared_dstore_ids={},
+                dstore_id=dstore_id,
+                dstore_type=dstore_type,
                 nics=nics
             )
-
-        # TODO: Optimize this part.
-        # Searching for the host datastore.
-        for (vm_id, req_id, _, disk_id), var in x_next_dstore_host.items():
-            vm_placement = opt_placement[vm_id]
-            # NOTE: The other condition is probably redundant.
-            if round(value(var)) and vm_placement is not None:
-                vm_placement.host_dstore_ids[req_id] = disk_id
-
-        # Searching for the shared datastore.
-        for (vm_id, req_id, ds_id), var in x_next_dstore_shared.items():
-            vm_placement = opt_placement[vm_id]
-            # NOTE: The other condition is probably redundant.
-            if round(value(var)) and vm_placement is not None:
-                vm_placement.shared_dstore_ids[req_id] = ds_id
 
     def _optimize(self) -> None:
         self._add_variables()
