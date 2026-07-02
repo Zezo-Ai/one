@@ -49,6 +49,16 @@ class OptimizerParser:
     # pulp ships the CBC solver under a per-architecture folder; map the
     # Linux uname -m value to pulp's folder name
     ARCH_MAP = {"x86_64": "i64", "aarch64": "arm64"}
+    DATASTORE_TYPE = {
+        # Standard datastore for disk images.
+        0: "IMAGE_DS",
+        # System datastore for disks of running VMs.
+        1: "SYSTEM_DS",
+        # File datastore for context, kernel, initrd files.
+        2: "FILE_DS",
+        # Backup datastore for VMs.
+        3: "BACKUP_DS"
+    }
     DEFAULT_CONFIG = {
         "DEFAULT_SCHED": {
             "SOLVER": "CBC",
@@ -105,19 +115,17 @@ class OptimizerParser:
         # Dict {dstore id: dstore attrs} for image datastores.
         image_dstore_attrs: dict[int, dict[str, Any]] = {}
         for data in self.scheduler_driver_action.datastore_pool.datastore:
-            attrs: dict[str, Any] = {}
+            type_ = self.DATASTORE_TYPE[data.type_value]
+            tm_mad = data.tm_mad.upper()
+            attrs: dict[str, Any] = {"TYPE": type_, "TM_MAD": tm_mad}
             for item in data.template.children:
-                if item.qname.upper() == "TYPE":
-                    attrs["TYPE"] = item.text.upper()
-                elif item.qname.upper() == "SHARED":
+                if item.qname.upper() == "SHARED":
                     attrs["SHARED"] = item.text.upper()
-                elif item.qname.upper() == "TM_MAD":
-                    attrs["TM_MAD"] = item.text.upper()
                 elif item.qname.upper() == "LIMIT_MB":
                     attrs["LIMIT_MB"] = int(item.text.upper())
                 elif item.qname.upper() == "DS_MIGRATE":
                     attrs["DS_MIGRATE"] = item.text.upper() == "YES"
-            if (type_ := attrs.get("TYPE")) == "SYSTEM_DS":
+            if type_ == "SYSTEM_DS":
                 if (shared := attrs.get("SHARED")) == "YES":
                     attrs["TOTAL_MB"] = data.total_mb
                     attrs["USED_MB"] = data.used_mb
