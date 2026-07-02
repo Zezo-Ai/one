@@ -16,7 +16,9 @@
 # limitations under the License.                                             #
 #--------------------------------------------------------------------------- #
 
+require 'json'
 require 'rexml/document'
+require 'shellwords'
 
 require_relative 'backup'
 require_relative 'datastore'
@@ -58,6 +60,7 @@ module TransferManager
                 @vm   = vm_xml
                 @vmid = @vm.elements['TEMPLATE/VMID'].text
                 @id   = disk_xml.elements['DISK_ID'].text.to_i
+                @size = disk_xml.elements['SIZE'].text.to_i
 
                 imageid = disk_xml.elements['IMAGE_ID'].text
                 is_persistent = disk_xml.elements['PERSISTENT']&.text&.downcase == 'yes'
@@ -100,6 +103,9 @@ module TransferManager
                             :mode => :full
                         }
                     end
+
+                interactive = bc.elements['INTERACTIVE']&.text if bc
+                @interactive = interactive&.casecmp('YES')&.zero? || false
             end
 
             def qual(lv)
@@ -120,6 +126,10 @@ module TransferManager
                 expo_cmd    = ''
                 snap_clup   = ''
                 backup_util = '/var/tmp/one/tm/lib/backup_lvmthin.rb'
+
+                if @interactive
+                    return backup_cmds_interactive(backup_dir, ds, live, backup_util)
+                end
 
                 # Supported configurations
                 # Legend: (T)hin, (F)at
@@ -208,6 +218,134 @@ module TransferManager
                     :export_clup   => '',
                     :cleanup       => snap_clup
                 }
+            end
+
+            def backup_cmds_interactive(backup_dir, ds, live, backup_util)
+                snap_cmd  = ''
+                expo_cmd  = ''
+                snap_clup = ''
+
+                # Supported configurations
+                # Legend: (T)hin, (F)at
+                # |      | Live | Poweroff |
+                # | Full |    T |       TF |
+                # | Incr |    T |        T |
+                # rubocop:disable Style/GuardClause
+                if @vm_backup_config[:mode] == :full
+                    ddst = "#{backup_dir}/disk.#{@id}.0"
+                    orig = nil
+
+                    if live
+                        # Full, live, non-thin: UNSUPPORTED
+                        return unless @is_thin
+
+                        snapshot = "#{@lvname}_one_backup"
+                        orig = path(snapshot)
+
+                        snap_cmd << lvm_lock_sh(
+                            "sudo lvcreate -s -n #{snapshot} #{qual(@lvname)}"
+                        )
+                        snap_clup << lvm_lock_sh("sudo lvremove -y #{qual(snapshot)}")
+                    else
+                        orig = path(@lvname)
+                    end
+
+                    expo_cmd << ds.cmd_confinement(<<~EOF, backup_dir)
+                        #{lvm_lock_sh("sudo lvchange -K -ay #{orig}").strip}
+                        #{write_exports(
+                            backup_dir,
+                            :source   => orig,
+                            :target   => ddst,
+                            :exporter => 'lvm',
+                            :format   => 'qcow2',
+                            :mode     => 'full',
+                            :size     => @size
+                        )}
+                    EOF
+                elsif @vm_backup_config[:last_increment] == -1
+                    # First interactive incremental backup (initial full backup)
+                    return unless @is_thin
+
+                    incid     = 0
+                    dexp      = "#{backup_dir}/disk.#{@id}.#{incid}"
+                    snap_curr = "#{@lvname}_#{INC_SNAP_PREFIX}#{incid}"
+                    snap_path = path(snap_curr)
+
+                    snap_cmd << lvm_lock_sh(<<~EOF)
+                        sudo lvremove -y #{qual(snap_curr)} || true
+                        sudo lvcreate -s -n #{snap_curr} #{qual(@lvname)}
+                        #{@pool.adjust_sh if @pool}
+                    EOF
+
+                    expo_cmd << ds.cmd_confinement(<<~EOF, backup_dir)
+                        #{lvm_lock_sh("sudo lvchange -K -ay #{snap_path}").strip}
+                        #{write_exports(
+                            backup_dir,
+                            :source   => snap_path,
+                            :target   => dexp,
+                            :exporter => 'lvm',
+                            :format   => 'qcow2',
+                            :mode     => 'full',
+                            :size     => @size
+                        )}
+                    EOF
+
+                    snap_clup << lvm_lock_sh("sudo lvchange -K -an #{snap_path}")
+                else
+                    # Interactive incremental backup
+                    return unless @is_thin
+
+                    incid     = @vm_backup_config[:last_increment] + 1
+                    dinc      = "#{backup_dir}/disk.#{@id}.#{incid}"
+                    snap_curr = "#{@lvname}_#{INC_SNAP_PREFIX}#{incid}"
+                    snap_prev = "#{@lvname}_#{INC_SNAP_PREFIX}" \
+                                "#{@vm_backup_config[:last_increment]}"
+                    snap_path = path(snap_curr)
+
+                    snap_cmd << lvm_lock_sh(<<~EOF)
+                        sudo lvchange --refresh #{qual(@poolname)}
+                        sudo lvremove -y #{qual(snap_curr)} || true
+                        sudo lvcreate -s -n #{snap_curr} #{qual(@lvname)}
+                        #{@pool.adjust_sh if @pool}
+                    EOF
+
+                    expo_cmd << ds.cmd_confinement(
+                        "ruby #{backup_util} --interactive #{qual(@lvname)} " \
+                        "#{qual(snap_prev)} #{qual(snap_curr)} #{dinc} " \
+                        "#{@id} #{@size}\n",
+                        backup_dir
+                    )
+
+                    snap_clup << lvm_lock_sh("sudo lvchange -K -an #{snap_path}")
+                    snap_clup << lvm_lock_sh("sudo lvremove -y #{qual(snap_prev)}")
+                end
+
+                {
+                    :snapshot      => snap_cmd,
+                    :export        => expo_cmd,
+                    :snapshot_clup => snap_clup,
+                    :export_clup   => '',
+                    :cleanup       => snap_clup,
+                    :start_onebex  => true
+                }
+            end
+
+            def write_exports(backup_dir, data)
+                exports_path = "#{backup_dir}/interactive_exports.json"
+                json_data    = Shellwords.escape(JSON.generate(data))
+
+                <<~EOF
+                    ruby -rjson - #{exports_path} #{@id} #{json_data} <<'RUBY'
+                        path, disk_id, data = ARGV
+                        content = File.exist?(path) ? File.read(path) : ''
+                        exports = content.empty? ? {} : JSON.parse(content)
+                        exports[disk_id.to_s] = JSON.parse(data)
+
+                        File.open(path, 'w') do |f|
+                            f.write(JSON.pretty_generate(exports))
+                        end
+                    RUBY
+                EOF
             end
 
             # Process:

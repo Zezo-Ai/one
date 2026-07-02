@@ -18,13 +18,11 @@ require 'fileutils'
 require 'pathname'
 require 'rexml/document'
 require 'json'
-require 'net/http'
-require 'uri'
-require 'yaml'
 
 require_relative 'kvm'
 require_relative 'backup_command'
 require_relative 'backup_image'
+require_relative 'onebex'
 
 # ------------------------------------------------------------------------------
 # This class represents a KVM domain, includes information about the associated
@@ -78,15 +76,6 @@ class KVMDomain
         interactive = interactive.text.casecmp('YES').zero? if interactive
 
         @interactive = interactive || false
-
-        if @interactive
-            conf_file = File.expand_path('../../etc/onebex/onebex-server.conf', __dir__)
-            conf      = YAML.load_file(conf_file)
-
-            @onebex_uri = URI("http://#{conf[:host]}:#{conf[:port]}")
-
-            @onebex_timeout = conf[:onebex_timeout].to_i
-        end
 
         @vm_dir  = Pathname.new(vm_dir)
         @tmp_dir = @vm_dir.join('tmp')
@@ -1124,99 +1113,12 @@ class KVMDomain
     # Start OneBEX server for interactive backups
     #---------------------------------------------------------------------------
     def onebex(exports)
-        File.open("#{@bck_dir}/interactive_exports.json", 'w') do |f|
-            f.write(JSON.pretty_generate(exports))
-        end
-
-        onebex_start unless onebex_running?
-
-        onebex_export
-
-        onebex_export_finish?
-    end
-
-    def onebex_get(path)
-        uri = @onebex_uri + path
-
-        Net::HTTP.start(uri.host, uri.port, :open_timeout => 2, :read_timeout => 5) do |http|
-            http.get(uri.request_uri)
-        end
-    end
-
-    def onebex_status
-        JSON.parse(onebex_get("/status?VM_ID=#{@vid}").body)
-    end
-
-    def onebex_running?
-        onebex_get('/').code.to_i == 200
-    rescue StandardError
-        false
-    end
-
-    def onebex_start
-        return if onebex_running?
-
-        onebex_server = File.expand_path('../../onebex/onebex-server.rb', __dir__)
-        cmd('nohup ruby', "#{onebex_server} >/dev/null 2>&1 &")
-
-        onebex_ready?
-    end
-
-    def onebex_ready?(timeout = 60)
-        started_at = Time.now
-        error      = nil
-
-        until Time.now - started_at > timeout
-            begin
-                return true if onebex_running?
-            rescue StandardError => e
-                error = e.message
-            end
-
-            sleep 1
-        end
-
-        raise "Timeout waiting for OneBEX server to start for VM #{@vid}: #{error}"
-    end
-
-    def onebex_export
-        uri = @onebex_uri + '/export'
-
-        req = Net::HTTP::Post.new(uri)
-
-        req['Content-Type'] = 'application/json'
-        req.body = JSON.generate(
-            :VM_ID => @vid,
-            :DS_ID => @ds_id
+        TransferManager::OneBEX.start(
+            :vm_id          => @vid,
+            :ds_id          => @ds_id,
+            :backup_dir     => @bck_dir,
+            :exports        => exports
         )
-
-        res = Net::HTTP.start(uri.host, uri.port) {|http| http.request(req) }
-
-        raise "Error starting OneBEX export: #{res.body}" unless res.code.to_i == 200
-
-        true
-    end
-
-    def onebex_export_finish?
-        started_at = Time.now
-        error = nil
-
-        until Time.now - started_at > @onebex_timeout
-            begin
-                status = onebex_status
-            rescue StandardError => e
-                error = e.message
-                raise "Error checking interactive backup status for VM #{@vid}: #{error}"
-            end
-
-            return true unless status['STATUS'] == 'executing'
-
-            error = nil
-
-            sleep 1
-        end
-
-        raise "Timeout waiting for external backup server to finish for VM #{@vid}: #{error}"
     end
 
 end

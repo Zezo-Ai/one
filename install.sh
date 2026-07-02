@@ -1424,6 +1424,7 @@ TM_FILES="src/tm_mad/tm_common.sh"
 TM_LIB_FILES="src/tm_mad/lib/kvm.rb \
               src/tm_mad/lib/ceph.rb \
               src/tm_mad/lib/lvm.rb \
+              src/tm_mad/lib/onebex.rb \
               src/tm_mad/lib/shell.rb \
               src/tm_mad/lib/tm_action.rb \
               src/tm_mad/lib/backup_command.rb \
@@ -1885,7 +1886,8 @@ ONEBEX_APP_FILES="src/onebex/app/routes.rb \
 ONEBEX_CONFIG_FILES="src/onebex/config/environment.rb"
 
 ONEBEX_EXPORTERS_FILES="src/onebex/exporters/registry.rb \
-                        src/onebex/exporters/nbd.rb"
+                        src/onebex/exporters/nbd.rb \
+                        src/onebex/exporters/lvm.rb"
 
 ONEBEX_ETC_FILES="src/onebex/etc/onebex-server.conf"
 

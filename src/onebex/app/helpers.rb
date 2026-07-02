@@ -28,6 +28,7 @@ module OneBEX
                 registry = OneBEX::Exporters::Registry.new
 
                 registry.register('nbd', OneBEX::Exporters::NBD)
+                registry.register('lvm', OneBEX::Exporters::LVM)
 
                 registry
             end

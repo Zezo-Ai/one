@@ -40,6 +40,7 @@ require 'fileutils'
 require 'tempfile'
 require 'open3'
 require 'rexml/document'
+require 'json'
 require 'English'
 require 'CommandManager'
 require 'DriverLogger'
@@ -163,12 +164,31 @@ end
 
 # --- Main ---
 
-def main(origin_lv, from_snap_lv, to_snap_lv, output_file)
-    delta_file = Tempfile.new(['thin_delta', '.xml'])
+def write_exports(exports_path, disk_id, data)
+    exports = if File.exist?(exports_path) && !File.empty?(exports_path)
+                  JSON.parse(File.read(exports_path))
+              else
+                  {}
+              end
+
+    exports[disk_id.to_s] = data
+
+    File.open(exports_path, 'w') do |f|
+        f.write(JSON.pretty_generate(exports))
+    end
+end
+
+def main(origin_lv, from_snap_lv, to_snap_lv, output_file, opts = {})
+    interactive       = opts[:interactive]
+    interactive_ready = false
+    activated         = false
+
+    delta_file      = Tempfile.new(['thin_delta', '.xml'])
     delta_file_path = delta_file.path
 
     # Activate LV
     LocalCommand.run("sudo lvchange -K -ay #{to_snap_lv}")
+    activated = true
 
     # LVM metadata
     vg_name   = LVMHelper.get_lv_attr('vg_name', origin_lv)
@@ -180,6 +200,36 @@ def main(origin_lv, from_snap_lv, to_snap_lv, output_file)
     to_id   = LVMHelper.get_lv_attr('thin_id', to_snap_lv)
 
     source_dev = LVMHelper.get_mapper_path(to_snap_lv)
+
+    if interactive
+        disk_id = opts[:disk_id]
+        size    = opts[:size]
+
+        if disk_id.to_s.empty? || size.to_s.empty?
+            raise 'Invalid disk id or size for interactive LVM export'
+        end
+
+        exports_path = File.join(File.dirname(output_file), 'interactive_exports.json')
+
+        write_exports(
+            exports_path,
+            disk_id,
+            :source   => source_dev,
+            :target   => output_file,
+            :exporter => 'lvm',
+            :format   => 'qcow2',
+            :mode     => 'incremental',
+            :size     => size.to_i,
+            :from_id  => from_id,
+            :to_id    => to_id,
+            :tpool    => tpool_dev,
+            :tmeta    => tmeta_dev
+        )
+
+        interactive_ready = true
+
+        return
+    end
 
     # Reserve and release snapshot metadata
     begin
@@ -216,22 +266,41 @@ def main(origin_lv, from_snap_lv, to_snap_lv, output_file)
     OpenNebula::DriverLogger.log_info "LVM Thin Backup completed successfully: #{output_file}"
 ensure
     # Deactivate LV
-    LocalCommand.run("sudo lvchange -an #{to_snap_lv}", nil, nil, nil, nil)
+    if activated && (!interactive || !interactive_ready)
+        LocalCommand.run("sudo lvchange -an #{to_snap_lv}", nil, nil, nil, nil)
+    end
 
     # Cleanup
-    delta_file.close
-    delta_file.unlink
+    if delta_file
+        delta_file.close
+        delta_file.unlink
+    end
 end
 
 # --- Entry ---
 if __FILE__ == $PROGRAM_NAME
-    if ARGV.length != 4
+    interactive = ARGV.first == '--interactive'
+    ARGV.shift if interactive
+
+    expected_args = interactive ? 6 : 4
+
+    if ARGV.length != expected_args
         puts "Usage: #{$PROGRAM_NAME} <origin_lv> <from_snap> <to_snap> <qcow2_output>"
+        puts "       #{$PROGRAM_NAME} --interactive <origin_lv> <from_snap> " \
+             '<to_snap> <qcow2_output> <disk_id> <size_mib>'
         exit 1
     end
 
     begin
-        main(*ARGV)
+        main(
+            ARGV[0],
+            ARGV[1],
+            ARGV[2],
+            ARGV[3],
+            :interactive => interactive,
+            :disk_id     => ARGV[4],
+            :size        => ARGV[5]
+        )
     rescue StandardError => e
         OpenNebula::DriverLogger.report "LVM Thin Backup failed: #{e.message}"
         OpenNebula::DriverLogger.report e.backtrace.join("\n")

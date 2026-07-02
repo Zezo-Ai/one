@@ -22,6 +22,7 @@ require 'rexml/document'
 require_relative 'kvm'
 require_relative 'shell'
 require_relative 'backup_qcow2'
+require_relative 'onebex'
 
 module TransferManager
 
@@ -50,8 +51,11 @@ module TransferManager
 
             snap_clup = ''
             expo_clup = ''
+            onebex_cmd = ''
 
             xml_vm = REXML::Document.new(@xml).root
+            vm_id  = xml_vm.elements['ID'].text
+            ds_id  = File.basename(File.dirname(@vm_dir.to_s))
 
             bk_img_id_elem = xml_vm.elements['BACKUPS/BACKUP_IDS/ID']
             bk_img_id      = bk_img_id_elem&.text&.strip
@@ -79,6 +83,14 @@ module TransferManager
                 expo_cmd  << cmds[:export].to_s
                 snap_clup << cmds[:snapshot_clup].to_s
                 expo_clup << cmds[:export_clup].to_s
+
+                next unless cmds[:start_onebex]
+
+                onebex_cmd = TransferManager::OneBEX.start_sh(
+                    :vm_id      => vm_id,
+                    :ds_id      => ds_id,
+                    :backup_dir => backup_dir
+                )
             end
 
             freeze, thaw =
@@ -120,6 +132,8 @@ module TransferManager
                 [ -d #{backup_dir} ] || mkdir -p #{backup_dir}
 
                 #{expo_cmd}
+
+                #{onebex_cmd}
 
                 cd #{backup_dir}
 
