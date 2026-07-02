@@ -80,7 +80,7 @@ Request::ErrorCode ImageAPI::clone(int source_id,
 {
     long long       avail, size;
     int             ds_id_orig;
-    string          ds_name, ds_data, ds_mad, tm_mad;
+    string          ds_name, ds_data, ds_mad, tm_mad, source_bridge_list;
     bool            ds_check;
 
     Image::DiskType disk_type;
@@ -211,6 +211,8 @@ Request::ErrorCode ImageAPI::clone(int source_id,
             return Request::ACTION;
         }
 
+        ds->get_template_attribute("BRIDGE_LIST", source_bridge_list);
+
         ds->get_permissions(ds_perms_orig);
     }
 
@@ -262,6 +264,15 @@ Request::ErrorCode ImageAPI::clone(int source_id,
         return Request::AUTHORIZATION;
     }
 
+    string extra_data;
+
+    if (!source_bridge_list.empty())
+    {
+        extra_data = "<SOURCE_BRIDGE_LIST>"
+                   + one_util::xml_escape(source_bridge_list)
+                   + "</SOURCE_BRIDGE_LIST>";
+    }
+
     int rc = ipool->allocate(att.uid,
                              att.gid,
                              att.uname,
@@ -275,7 +286,7 @@ Request::ErrorCode ImageAPI::clone(int source_id,
                              Datastore::IMAGE_DS,
                              ds_mad,
                              tm_mad,
-                             "",
+                             extra_data,
                              source_id,
                              &new_id,
                              att.resp_msg);

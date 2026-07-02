@@ -19,6 +19,16 @@
 ###############################################################################
 # This script is used to copy a VM image (SRC) to the image repository as DST
 # Several SRC types are supported
+#
+# Execution depends on the source and destination datastore BRIDGE_LISTs:
+# - No BRIDGE_LISTs: copy/convert locally in the frontend.
+# - Source BRIDGE_LIST: copy SRC from one source bridge host to the frontend.
+#   Convert locally, then copy to the destination bridge host or locally.
+# - Destination BRIDGE_LIST: run the whole copy/convert in one destination
+#   bridge host.
+# - Source and destination BRIDGE_LISTs: copy SRC from one source bridge host to
+#   the frontend, convert in the frontend, and copy the result to one destination
+#   bridge host.
 ###############################################################################
 
 # -------- Set up the environment to source common tools & conf ------------
@@ -40,7 +50,6 @@ DRV_ACTION=`cat -`
 ID=$1
 
 XPATH="${DRIVER_PATH}/../xpath.rb -b $DRV_ACTION"
-
 unset i XPATH_ELEMENTS
 
 while IFS= read -r -d '' element; do
@@ -52,6 +61,7 @@ done < <($XPATH     /DS_DRIVER_ACTION_DATA/DATASTORE/BASE_PATH \
                     /DS_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/NFS_AUTO_HOST \
                     /DS_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/NFS_AUTO_PATH \
                     /DS_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/NFS_AUTO_OPTS \
+                    /DS_DRIVER_ACTION_DATA/SOURCE_BRIDGE_LIST \
                     /DS_DRIVER_ACTION_DATA/IMAGE/PATH)
 
 unset i
@@ -63,35 +73,90 @@ ANFS_ENABLE="${XPATH_ELEMENTS[i++]}"
 ANFS_HOST="${XPATH_ELEMENTS[i++]}"
 ANFS_PATH="${XPATH_ELEMENTS[i++]}"
 ANFS_OPTS="${XPATH_ELEMENTS[i++]}"
+SRC_BRIDGE_LIST="${XPATH_ELEMENTS[i++]}"
 SRC="${XPATH_ELEMENTS[i++]}"
 
 set_up_datastore "$DS_BASE_PATH" "$RESTRICTED_DIRS" "$SAFE_DIRS"
 
 DST=`generate_image_path`
 
-# ------------ Check if format conversion is required -------------
+function copy_command
+{
+    local SRC_PATH=$1
+    local DST_PATH=$2
+    local SETUP_NFS=$3
 
-if [ "$DRIVER" = 'qcow2' ] || [ "$DRIVER" = 'raw' ]; then
-    CP_CMD=$(cat <<EOF
-    `autonfs_tmpsetup_command "$DS_BASE_PATH" "$ANFS_ENABLE" "$ANFS_HOST" "$ANFS_PATH" "$ANFS_OPTS"`
-    $QEMU_IMG convert -O $DRIVER $SRC $DST
+    local NFS_CMD=""
+
+    if [ "$SETUP_NFS" = "yes" ]; then
+        NFS_CMD=`autonfs_tmpsetup_command "$DS_BASE_PATH" "$ANFS_ENABLE" "$ANFS_HOST" "$ANFS_PATH" "$ANFS_OPTS"`
+    fi
+
+    if [ "$DRIVER" = 'qcow2' ] || [ "$DRIVER" = 'raw' ]; then
+        cat <<EOF
+    $NFS_CMD
+    $QEMU_IMG convert -O $DRIVER $SRC_PATH $DST_PATH
 EOF
-)
-else
-    CP_CMD=$(cat <<EOF
-    `autonfs_tmpsetup_command "$DS_BASE_PATH" "$ANFS_ENABLE" "$ANFS_HOST" "$ANFS_PATH" "$ANFS_OPTS"`
-    cp -f $SRC $DST
+    else
+        cat <<EOF
+    $NFS_CMD
+    cp -f $SRC_PATH $DST_PATH
 EOF
-)
-fi
+    fi
+}
 
 # ------------ Copy the image to the repository -------------
 
-if [ -n "$BRIDGE_LIST" ]; then
-    log "Copying remotely local image $SRC to the image repository"
-    DST_HOST=`get_destination_host $ID`
+if [ -n "$SRC_BRIDGE_LIST" ]; then
+    log "Copying remotely local image $SRC through frontend to the image repository"
 
-    CMD=$(cat <<EOF
+    DST_BRIDGE_LIST="$BRIDGE_LIST"
+
+    BRIDGE_LIST="$SRC_BRIDGE_LIST"
+    SRC_HOST=`get_destination_host $ID`
+    BRIDGE_LIST="$DST_BRIDGE_LIST"
+
+    TMP_SRC=`mktemp`
+    trap 'rm -f "$TMP_SRC"; [ -n "$TMP_DST" ] && rm -f "$TMP_DST"' EXIT
+
+    multiline_exec_and_log "set -e -o pipefail; $SSH $SRC_HOST \"$DD if=$SRC bs=${DD_BLOCK_SIZE:-64k}\" > $TMP_SRC" \
+        "Error copying $SRC from $SRC_HOST to frontend"
+
+    if [ -n "$BRIDGE_LIST" ]; then
+        DST_HOST=`get_destination_host $ID`
+
+        TMP_DST=`mktemp`
+
+        CP_CMD=$(copy_command "$TMP_SRC" "$TMP_DST" "no")
+
+        exec_and_log "$CP_CMD" "Error converting $SRC in frontend"
+
+        CMD=$(cat <<EOF
+        set -e -o pipefail
+        mkdir -p $DS_BASE_PATH
+        `autonfs_tmpsetup_command "$DS_BASE_PATH" "$ANFS_ENABLE" "$ANFS_HOST" "$ANFS_PATH" "$ANFS_OPTS"`
+EOF
+)
+
+        ssh_exec_and_log "$DST_HOST" "$CMD" "Error setting up $DST in $DST_HOST"
+
+        multiline_exec_and_log "set -e -o pipefail; $SSH $DST_HOST \"$DD of=$DST bs=${DD_BLOCK_SIZE:-64k} conv=sparse\" < $TMP_DST" \
+            "Error copying $TMP_DST to $DST in $DST_HOST"
+    else
+        CP_CMD=$(copy_command "$TMP_SRC" "$DST" "yes")
+
+        mkdir -p "$DS_BASE_PATH"
+        exec_and_log "$CP_CMD" "Error copying $SRC to $DST"
+    fi
+else
+    CP_CMD=$(copy_command "$SRC" "$DST" "yes")
+
+    if [ -n "$BRIDGE_LIST" ]; then
+        log "Copying remotely local image $SRC to the image repository"
+
+        HOST=`get_destination_host $ID`
+
+        CMD=$(cat <<EOF
         set -e -o pipefail
         mkdir -p $DS_BASE_PATH
 
@@ -99,11 +164,12 @@ if [ -n "$BRIDGE_LIST" ]; then
 EOF
 )
 
-    ssh_exec_and_log "$DST_HOST" "${CMD}" "Error copying $SRC to $DST in $DST_HOST"
-else
-    log "Copying local image $SRC to the image repository"
-    mkdir -p "$DS_BASE_PATH"
-    exec_and_log "$CP_CMD" "Error copying $SRC to $DST"
+        ssh_exec_and_log "$HOST" "${CMD}" "Error copying $SRC to $DST in $HOST"
+    else
+        log "Copying local image $SRC to the image repository"
+        mkdir -p "$DS_BASE_PATH"
+        exec_and_log "$CP_CMD" "Error copying $SRC to $DST"
+    fi
 fi
 
 echo "$DST $DRIVER"
