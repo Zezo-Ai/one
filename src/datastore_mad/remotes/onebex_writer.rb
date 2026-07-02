@@ -36,7 +36,6 @@ $LOAD_PATH << RUBY_LIB_LOCATION
 $LOAD_PATH << File.dirname(__FILE__)
 
 require 'socket'
-require 'fileutils'
 
 bind_addr = ARGV[0]
 port      = ARGV[1].to_i
@@ -68,7 +67,7 @@ begin
         raise StandardError, 'Missing destination path'
     end
 
-    FileUtils.touch(to)
+    File.open(to, 'wb') {}
 
     server = TCPServer.new(bind_addr, port)
     socket = nil

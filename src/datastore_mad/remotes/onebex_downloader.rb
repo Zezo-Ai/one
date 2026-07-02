@@ -36,10 +36,14 @@ $LOAD_PATH << RUBY_LIB_LOCATION
 $LOAD_PATH << File.dirname(__FILE__)
 
 require 'shellwords'
+require 'tempfile'
+require 'tmpdir'
 
 # onebex://DST_DS_ID:PORT
 onebex_url = ARGV[0]
 to         = ARGV[1]
+tmp_to_file = nil
+tmp_qcow2_file = nil
 
 begin
     if to.nil? || to.empty?
@@ -58,22 +62,62 @@ begin
     baddr   = ENV.fetch('ONE_BEX_WRITER_ADDR', '0.0.0.0')
     writer  = File.expand_path('onebex_writer.rb', __dir__)
 
-    raw_to = "#{to}.raw"
+    tmp_dir = to == '-' ? Dir.tmpdir : File.dirname(File.expand_path(to))
+
+    tmp_to_file = Tempfile.create(['onebex-', '.img'], tmp_dir)
+    tmp_to      = tmp_to_file.path
 
     command = [
         writer,
         baddr,
         port.to_s,
-        raw_to
+        tmp_to
     ].shelljoin
+
+    tmp_to_s = Shellwords.escape(tmp_to)
+
+    if to == '-'
+        tmp_qcow2_file = Tempfile.create(['onebex-qcow2-', '.img'], tmp_dir)
+        tmp_qcow2      = tmp_qcow2_file.path
+        tmp_qcow2_s    = Shellwords.escape(tmp_qcow2)
+
+        raw_command = 'qemu-img convert -f raw -O qcow2 ' \
+                      "#{tmp_to_s} #{tmp_qcow2_s} && " \
+                      "dd if=#{tmp_qcow2_s} bs=64K status=none && " \
+                      "rm -f #{tmp_to_s} #{tmp_qcow2_s}"
+
+        qcow2_command = "dd if=#{tmp_to_s} bs=64K status=none && " \
+                        "rm -f #{tmp_to_s} #{tmp_qcow2_s}"
+
+        unsupported_command = "rm -f #{tmp_to_s} #{tmp_qcow2_s}; " \
+                              'echo "Unsupported OneBEX image format: $fmt" >&2; ' \
+                              'exit 1'
+    else
+        to_s = Shellwords.escape(to)
+
+        raw_command = "rm -f #{to_s} && " \
+                      'qemu-img convert -f raw -O qcow2 ' \
+                      "#{tmp_to_s} #{to_s} && " \
+                      "rm -f #{tmp_to_s}"
+
+        qcow2_command = "mv #{tmp_to_s} #{to_s}"
+
+        unsupported_command = 'echo "Unsupported OneBEX image format: $fmt" >&2; ' \
+                              'exit 1'
+    end
 
     clean_command = [
         'sh',
         '-c',
-        "rm -f #{Shellwords.escape(to)} && " \
-        'qemu-img convert -f raw -O qcow2 ' \
-        "#{Shellwords.escape(raw_to)} #{Shellwords.escape(to)} && " \
-        "rm -f #{Shellwords.escape(raw_to)}"
+        "fmt=$(qemu-img info #{tmp_to_s} 2>/dev/null | " \
+        "grep -Po '(?<=^file format: )\\w+' || :); " \
+        'if [ "$fmt" = raw ]; then ' \
+        "#{raw_command}; " \
+        'elif [ "$fmt" = qcow2 ]; then ' \
+        "#{qcow2_command}; " \
+        'else ' \
+        "#{unsupported_command}; " \
+        'fi'
     ].shelljoin
 
     puts "command=#{Shellwords.escape(command)}"
@@ -81,4 +125,7 @@ begin
 rescue StandardError => e
     STDERR.puts e.message
     exit(-1)
+ensure
+    tmp_to_file.close if tmp_to_file
+    tmp_qcow2_file.close if tmp_qcow2_file
 end
