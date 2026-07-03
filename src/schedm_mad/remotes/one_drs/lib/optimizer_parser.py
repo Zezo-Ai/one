@@ -368,6 +368,21 @@ class OptimizerParser:
                     if self.mode.upper() == "OPTIMIZE"
                     else disk_current
                 )
+
+                host_ids = set(vm_req.hosts.id)
+                if (
+                    self.mode.upper() == "OPTIMIZE"
+                    and vm.user_template is not None
+                ):
+                    for item in vm.user_template.any_element:
+                        if (
+                            item.qname.upper() == "ONEDRS_BLOCKED"
+                            and (item.text or "").upper() == "YES"
+                        ):
+                            curr_host_id = self._curr_alloc.get(vm.id)
+                            host_ids &= {curr_host_id}
+                            break
+
                 vm_requirements[int(vm_req.id)] = VMRequirements(
                     id=int(vm_req.id),
                     state=self._map_vm_state(vm.state, vm.lcm_state),
@@ -380,7 +395,7 @@ class OptimizerParser:
                     pci_devices=self._build_pci_devices_requirements(
                         vm.template.pci
                     ),
-                    host_ids=set(vm_req.hosts.id),
+                    host_ids=host_ids,
                     share_vnets=not self.config["DIFFERENT_VNETS"],
                     nic_matches={nic.id: nic.vnets.id for nic in vm_req.nic},
                     net_usage=net_usage,
