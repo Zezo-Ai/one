@@ -2251,6 +2251,8 @@ Bash symbols must be escaped on STDIN passing'
                     exp = OneTemplateHelper::FLOAT_EXP
                 end
 
+                noanswer = false
+
                 loop do
                     print header
                     answer = STDIN.readline.chop
@@ -2289,6 +2291,8 @@ Bash symbols must be escaped on STDIN passing'
                     header += "Float in the range [#{min}..#{max}]: "
                 end
 
+                noanswer = false
+
                 loop do
                     print header
                     answer = STDIN.readline.chop
@@ -2315,6 +2319,8 @@ Bash symbols must be escaped on STDIN passing'
                 puts
 
                 header += 'Please type the selection number: '
+
+                noanswer = false
 
                 loop do
                     print header
