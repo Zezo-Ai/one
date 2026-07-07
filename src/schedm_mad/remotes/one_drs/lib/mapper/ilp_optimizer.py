@@ -600,6 +600,7 @@ class ILPOptimizer(Mapper):
         z = self._z
         xs_next_local = self._xs_next_local
         xs_next_shared = self._xs_next_shared
+        n_migr = self._n_migr
         attr_name = 'free' if self._narrow else 'total'
         affined_vms = self._affined_vms
         vm_host_matches = self._vm_host_matches
@@ -980,6 +981,18 @@ class ILPOptimizer(Mapper):
                 f"constraint"
             )
 
+        # A VM cannot change both host and datastore during one
+        # optimization process.
+        for (vm_id, req_id), s_migr in self._ns_migr.items():
+            # NOTE: This check is probably redundant.
+            if vm_id not in n_migr:
+                continue
+            model += (
+                n_migr[vm_id] + s_migr <= 1,
+                f"host_and_storage_migrations_exclustion_for_vm_{vm_id}_"
+                f"requirement_{req_id}_constraint"
+            )
+
         for var_name, bound in self._balance_constraints.items():
             if var_name not in self._balance:
                 self._add_balance_variable(name=var_name)
@@ -1217,10 +1230,11 @@ class ILPOptimizer(Mapper):
         n_pend_vms = sum_(self._x_pend.values())
         pend_penalty = 1.1 * n_pend_vms
         n_migr_vms = sum_(self._n_migr.values())
-        migr_penalty = n_migr_vms / (self._max_n_migr_vms * 2 + 1)
+        max_n_migr_vms = self._max_n_migr_vms
         if self._ns_migr_ub != 0:
-            ns_migr_vms = sum_(self._ns_migr.values())
-            migr_penalty += ns_migr_vms / (self._max_ns_migr_vms * 2 + 1)
+            n_migr_vms += sum_(self._ns_migr.values())
+            max_n_migr_vms += self._max_ns_migr_vms
+        migr_penalty = n_migr_vms / (max_n_migr_vms * 2 + 1)
         self._model.sense = _MIN
         self._model += obj + pend_penalty + migr_penalty * 0.01
 
@@ -1237,27 +1251,30 @@ class ILPOptimizer(Mapper):
             n_hosts = sum_(self._y.values())
             # Pending penalty. Leaving a VM unallocated should not
             # decrease the objective value. One unallocated VM might
-            # decrease the number of used hosts at most by 1.
-            # However, it is penalized by 1.1.
+            # decrease the number of used hosts at most by 1. However,
+            # it is penalized by 1.1.
             n_pend_vms = sum_(self._x_pend.values())
             pend_penalty = 1.1 * n_pend_vms
-            # Migration penalty. The ties among the objective values
-            # of the solutions are resolved in favor of the one with
-            # the lowest number of migrations. However, that should
-            # not prevent the migrations that reduce the number of
-            # used hosts. One additional migration might decrease
-            # the number of used hosts by 1 or not at all. If it
-            # does, it should happen. That is why the total penalty
-            # for all migrations should be < 1.
+            # Migration penalty. The ties among the objective values of
+            # the solutions are resolved in favor of the one with the
+            # lowest number of migrations. However, that should not
+            # prevent the migrations that reduce the number of used
+            # hosts. One additional host migration might decrease the
+            # number of used hosts by 1 or not at all. If it does, it
+            # should happen. That is why the total penalty for all
+            # migrations should be < 1.
+            # NOTE: One additional storage migration might decrease the
+            # number of used hosts by more than 1.
             # CAVEAT: It is probably *not* a good idea to use just
             # `self._max_n_migr * number` because `self._max_n_migr`
             # might be zero.
             # CAVEAT: A very large divisor might be problematic.
             n_migr_vms = sum_(self._n_migr.values())
-            migr_penalty = n_migr_vms / (self._max_n_migr_vms * 2 + 1)
+            max_n_migr_vms = self._max_n_migr_vms
             if self._ns_migr_ub != 0:
-                ns_migr_vms = sum_(self._ns_migr.values())
-                migr_penalty += ns_migr_vms / (self._max_ns_migr_vms * 2 + 1)
+                n_migr_vms += sum_(self._ns_migr.values())
+                max_n_migr_vms += self._max_ns_migr_vms
+            migr_penalty = n_migr_vms / (max_n_migr_vms * 2 + 1)
             model += n_hosts + pend_penalty + migr_penalty
         else:
             raise NotImplementedError()
