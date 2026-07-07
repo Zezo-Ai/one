@@ -67,7 +67,7 @@ void Monitor::start()
         NebulaLog::init_log_system(log_system,
                                    clevel,
                                    log_file.c_str(),
-                                   ios_base::ate,
+                                   ios_base::app,
                                    "one_monitor");
     }
     else

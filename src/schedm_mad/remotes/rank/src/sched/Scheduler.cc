@@ -158,7 +158,7 @@ SchedulerTemplate Scheduler::parse_config()
     NebulaLog::init_log_system(log_system,
                                clevel,
                                log_file.c_str(),
-                               ios_base::ate,
+                               ios_base::app,
                                "place");
 
     NebulaLog::log("SCHED", Log::INFO, "Init Scheduler Log system");
