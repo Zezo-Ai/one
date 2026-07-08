@@ -37,6 +37,7 @@ $LOAD_PATH << RUBY_LIB_LOCATION
 
 require 'base64'
 require 'date'
+require 'rexml/document'
 
 require_relative '../../tm/lib/backup'
 require_relative '../../tm/lib/tm_action'
@@ -52,9 +53,13 @@ begin
 
     exit(0) if image.snapshots.size <= image.keep_last
 
+    doc     = REXML::Document.new(action).root
+    backend = doc.elements['DATASTORE/TEMPLATE/RESTIC_BACKEND']&.text&.upcase || 'SFTP'
+    host    = backend == 'S3' ? :frontend : :hypervisor
+
     rds = Restic.new action, :prefix    => 'DATASTORE/',
-                             :repo_type => :local,
-                             :host_type => :hypervisor
+                             :repo_type => :auto,
+                             :host_type => host
     rds.resticenv_rb
 rescue StandardError => e
     STDERR.puts e.full_message
@@ -70,12 +75,16 @@ def reconstruct_chains(rds, image, disks)
         script << image.class.reconstruct_chain(disk_paths)
     end
 
-    rc = TransferManager::Action.ssh 'reconstruct_chains',
-                                     :host     => "#{rds.user}@#{rds.sftp}",
-                                     :forward  => true,
-                                     :cmds     => script.join("\n"),
-                                     :nostdout => true,
-                                     :nostderr => false
+    rc = if rds.backend == :s3
+             LocalCommand.run '/bin/bash -s', nil, script.join("\n")
+         else
+             TransferManager::Action.ssh 'reconstruct_chains',
+                                         :host     => "#{rds.user}@#{rds.sftp}",
+                                         :forward  => true,
+                                         :cmds     => script.join("\n"),
+                                         :nostdout => true,
+                                         :nostderr => false
+         end
 
     raise StandardError, "Unable to rebase qcow2 images: #{rc.stderr}" if rc.code != 0
 end
@@ -133,12 +142,16 @@ def flatten_chains(rds, image, paths, snapshot)
         echo "$SNAP $SIZE"
     EOS
 
-    rc = TransferManager::Action.ssh 'flatten_chains',
-                                     :host     => "#{rds.user}@#{rds.sftp}",
-                                     :forward  => true,
-                                     :cmds     => script.join("\n"),
-                                     :nostdout => false,
-                                     :nostderr => false
+    rc = if rds.backend == :s3
+             LocalCommand.run '/bin/bash -s', nil, script.join("\n")
+         else
+             TransferManager::Action.ssh 'flatten_chains',
+                                         :host     => "#{rds.user}@#{rds.sftp}",
+                                         :forward  => true,
+                                         :cmds     => script.join("\n"),
+                                         :nostdout => false,
+                                         :nostderr => false
+         end
 
     raise StandardError, "Unable to flatten increments: #{rc.stderr}" if rc.code != 0
 

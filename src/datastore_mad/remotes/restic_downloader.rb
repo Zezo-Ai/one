@@ -37,6 +37,7 @@ $LOAD_PATH << File.dirname(__FILE__)
 
 require 'opennebula'
 require 'pathname'
+require 'rexml/document'
 require 'securerandom'
 
 require_relative '../tm/lib/backup'
@@ -76,17 +77,27 @@ begin
 
     raise StandardError, rc.message if OpenNebula.is_error?(rc)
 
+    ds_doc  = REXML::Document.new(backup_ds.to_xml).root
+    backend = ds_doc.elements['TEMPLATE/RESTIC_BACKEND']&.text&.upcase || 'SFTP'
+
     repo_id = if !bj_id.empty?
                   Restic.mk_repo_id(bj_id)
               else
                   vm_id
               end
+
     #---------------------------------------------------------------------------
     # Pull from Restic, then post-process qcow2 disks.
     #---------------------------------------------------------------------------
-    rds = Restic.new backup_ds.to_xml, :repo_id   => repo_id,
-                                       :repo_type => :local,
-                                       :host_type => :hypervisor
+    rds = if backend == 'S3'
+              Restic.new backup_ds.to_xml, :repo_id   => repo_id,
+                                           :repo_type => :auto,
+                                           :host_type => :frontend
+          else
+              Restic.new backup_ds.to_xml, :repo_id   => repo_id,
+                                           :repo_type => :local,
+                                           :host_type => :hypervisor
+          end
 rescue StandardError => e
     STDERR.puts e.full_message
     exit(-1)
@@ -96,7 +107,8 @@ end
 
 begin
     tmp_dir    = "#{rds.tmp_dir}/#{SecureRandom.uuid}"
-    paths      = rds.pull_chain(snaps, disk_index, rds.sftp, tmp_dir)
+    pull_host  = rds.backend == :sftp ? rds.sftp : nil
+    paths      = rds.pull_chain(snaps, disk_index, pull_host, tmp_dir)
     disk_paths = paths[:disks][:by_index][disk_index].map {|d| Pathname.new(d) }
     tmp_path   = "#{tmp_dir}/#{disk_paths.last.basename}"
 
@@ -111,12 +123,16 @@ begin
             rm #{disk_paths.map {|d| "#{tmp_dir}/#{d.basename}" }.join(' ')}
         EOS
 
-        rc = TransferManager::Action.ssh('prepare_image',
-                                         :host     => "#{rds.user}@#{rds.sftp}",
-                                         :forward  => true,
-                                         :cmds     => script,
-                                         :nostdout => false,
-                                         :nostderr => false)
+        rc = if rds.backend == :s3
+                 LocalCommand.run '/bin/bash -s', nil, script
+             else
+                 TransferManager::Action.ssh('prepare_image',
+                                             :host     => "#{rds.user}@#{rds.sftp}",
+                                             :forward  => true,
+                                             :cmds     => script,
+                                             :nostdout => false,
+                                             :nostderr => false)
+             end
 
         raise StandardError, "Unable to prepare image: #{rc.stderr}" if rc.code != 0
     elsif disk_paths.size == 1
@@ -134,21 +150,32 @@ begin
             #{TransferManager::BackupImage.merge_chain(disk_paths, :workdir => tmp_dir)}
         EOS
 
-        rc = TransferManager::Action.ssh('prepare_image',
-                                         :host     => "#{rds.user}@#{rds.sftp}",
-                                         :forward  => true,
-                                         :cmds     => script.join("\n"),
-                                         :nostdout => true,
-                                         :nostderr => false)
+        rc = if rds.backend == :s3
+                 LocalCommand.run '/bin/bash -s', nil, script.join("\n")
+             else
+                 TransferManager::Action.ssh('prepare_image',
+                                             :host     => "#{rds.user}@#{rds.sftp}",
+                                             :forward  => true,
+                                             :cmds     => script.join("\n"),
+                                             :nostdout => true,
+                                             :nostderr => false)
+             end
 
         raise StandardError, "Unable to prepare image: #{rc.stderr}" if rc.code != 0
     end
 
     # Return shell code snippets according to the downloader's interface.
-    STDOUT.puts <<~EOS
-        command="ssh #{SSH_OPTS} '#{rds.user}@#{rds.sftp}' cat '#{tmp_path}'"
-        clean_command="ssh #{SSH_OPTS} '#{rds.user}@#{rds.sftp}' rm -rf '#{tmp_dir}/'"
-    EOS
+    if rds.backend == :s3
+        STDOUT.puts <<~EOS
+            command="cat '#{tmp_path}'"
+            clean_command="rm -rf '#{tmp_dir}/'"
+        EOS
+    else
+        STDOUT.puts <<~EOS
+            command="ssh #{SSH_OPTS} '#{rds.user}@#{rds.sftp}' cat '#{tmp_path}'"
+            clean_command="ssh #{SSH_OPTS} '#{rds.user}@#{rds.sftp}' rm -rf '#{tmp_dir}/'"
+        EOS
+    end
 rescue StandardError => e
     STDERR.puts e.full_message
     exit(-1)
