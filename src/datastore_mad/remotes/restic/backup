@@ -65,11 +65,9 @@ begin
 
     bridge_host = vm_xml.elements['BACKUPS/BACKUP_CONFIG/LAST_BRIDGE']&.text
     vm_host     = bridge_host || dir[0]
-    backend     = ds_xml.elements['TEMPLATE/RESTIC_BACKEND']&.text&.upcase || 'SFTP'
-    repo_type   = backend == 'S3' ? :auto : :sftp
 
     rds = Restic.new ds_xml.to_s, :create_repo => true,
-                                  :repo_type   => repo_type,
+                                  :repo_type   => :sftp,
                                   :host_type   => :hypervisor,
                                   :repo_id     => repo_id
     rds.resticenv_rb
@@ -157,24 +155,13 @@ rcmd = rds.restic "backup '#{vm_dir}'/disk.* '#{vm_dir}'/vm.xml",
                   'json' => nil,
                   'tag' => "one-#{vm_id}"
 
-env_vars = ['SSH_AUTH_SOCK', 'RESTIC_PASSWORD', 'GOMAXPROCS']
-
-if rds.backend == :s3
-    env_vars.concat [
-        'AWS_ACCESS_KEY_ID',
-        'AWS_SECRET_ACCESS_KEY',
-        'AWS_DEFAULT_REGION',
-        'AWS_REGION'
-    ]
-end
-
 script = <<~EOS
     set -e -o pipefail; shopt -qs failglob
 
     #{rds.resticenv_sh}
     BKNAME=$(ls #{vm_dir}/disk.* | head -n 1)
 
-    RC=`#{ds.cmd_confinement(rcmd, vm_dir, env_vars)}`
+    RC=`#{ds.cmd_confinement(rcmd, vm_dir, ['SSH_AUTH_SOCK', 'RESTIC_PASSWORD', 'GOMAXPROCS'])}`
 
     INFO=`echo "$RC" | jq -r '.snapshot_id + " " + (.total_bytes_processed|tostring) | select ( . != " null" )'`
 

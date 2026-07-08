@@ -30,7 +30,7 @@ require_relative '../../tm/lib/tm_action'
 # This class abstracts the interface with a Restic repo
 class Restic
 
-    attr_reader :backend, :doc, :path, :repo_type, :sftp, :tmp_dir, :sparsify, :user
+    attr_reader :doc, :path, :sftp, :tmp_dir, :sparsify, :user
 
     RESTIC_BIN_PATHS = {
         :frontend => "#{ENV['ONE_LOCATION']&.then {|p| "#{p}/var" } || '/var/lib/one'}" \
@@ -48,14 +48,17 @@ class Restic
             :host_type   => :frontend,
             :prefix      => '',
             :repo_id     => nil,
-            :repo_type   => :auto
+            :repo_type   => :sftp
         }.merge!(opts)
 
         @doc   = REXML::Document.new(action).root
         prefix = @options[:prefix]
 
         @ds_id = @doc.elements["#{prefix}ID"].text
-        @backend = parse_backend(prefix)
+
+        @user = safe_get("#{prefix}TEMPLATE/RESTIC_SFTP_USER", 'oneadmin')
+        @sftp = @doc.elements["#{prefix}TEMPLATE/RESTIC_SFTP_SERVER"].text
+        base  = @doc.elements["#{prefix}BASE_PATH"].text
 
         if @options[:repo_id].nil?
             img_bj = @doc.elements['IMAGE/TEMPLATE/BACKUP_JOB_ID']&.text
@@ -77,58 +80,20 @@ class Restic
             @repo_id = @options[:repo_id]
         end
 
-        @repo_type = parse_repo_type
+        @path = if @repo_id.nil?
+                    Pathname.new(base).cleanpath.to_s
+                else
+                    Pathname.new("#{base}/#{@repo_id}").cleanpath.to_s
+                end
 
-        case @backend
-        when :sftp
-            @user = safe_get("#{prefix}TEMPLATE/RESTIC_SFTP_USER", 'oneadmin')
-            @sftp = @doc.elements["#{prefix}TEMPLATE/RESTIC_SFTP_SERVER"].text
-            base  = @doc.elements["#{prefix}BASE_PATH"].text
-
-            @path = if @repo_id.nil?
-                        Pathname.new(base).cleanpath.to_s
-                    else
-                        Pathname.new("#{base}/#{@repo_id}").cleanpath.to_s
-                    end
-
-            @repo = case @repo_type
-                    when :sftp
-                        "sftp:#{@user}@#{@sftp}:#{@path}"
-                    when :local
-                        @path
-                    else
-                        raise StandardError, 'Unknown Restic repo type'
-                    end
-        when :s3
-            @s3_access_key_id = safe_get("#{prefix}TEMPLATE/RESTIC_S3_ACCESS_KEY_ID", nil)
-            @s3_secret_access_key = safe_get("#{prefix}TEMPLATE/RESTIC_S3_SECRET_ACCESS_KEY", nil)
-            @s3_region = safe_get("#{prefix}TEMPLATE/RESTIC_S3_REGION", 'us-east-1')
-            @s3_bucket = safe_get("#{prefix}TEMPLATE/RESTIC_S3_BUCKET", nil)
-            @s3_endpoint = safe_get(
-                "#{prefix}TEMPLATE/RESTIC_S3_ENDPOINT",
-                's3.amazonaws.com'
-            ).sub(%r{/*\z}, '')
-            @s3_force_path_style = safe_get(
-                "#{prefix}TEMPLATE/RESTIC_S3_FORCE_PATH_STYLE",
-                'no'
-            ).downcase == 'yes'
-            @s3_cacert = safe_get("#{prefix}TEMPLATE/RESTIC_S3_CACERT", nil)
-            @s3_insecure_tls = safe_get(
-                "#{prefix}TEMPLATE/RESTIC_S3_INSECURE_TLS",
-                'no'
-            ).downcase == 'yes'
-
-            raise StandardError, 'Missing RESTIC_S3_ACCESS_KEY_ID' if @s3_access_key_id.nil?
-            raise StandardError, 'Missing RESTIC_S3_SECRET_ACCESS_KEY' if @s3_secret_access_key.nil?
-            raise StandardError, 'Missing RESTIC_S3_BUCKET' if @s3_bucket.nil?
-
-            @path = @repo_id.to_s
-
-            endpoint = @s3_endpoint.start_with?('s3:') ? @s3_endpoint : "s3:#{@s3_endpoint}"
-            @repo = [endpoint, @s3_bucket, @path].reject(&:empty?).join('/')
-        else
-            raise StandardError, 'Unknown Restic backend'
-        end
+        @repo = case @options[:repo_type]
+                when :sftp
+                    "sftp:#{@user}@#{@sftp}:#{@path}"
+                when :local
+                    @path
+                else
+                    raise StandardError, 'Unknown Restic repo type'
+                end
 
         @restic_bin = RESTIC_BIN_PATHS[@options[:host_type]]
 
@@ -178,17 +143,8 @@ class Restic
 
         # Add connectins and compression options if different from defaults
         if cmd.match(/^backup|^restore|^dump/)
-            if @backend == :sftp && @conns != 5
-                opts['option'] = [opts['option'], "sftp.connections=#{@conns}"].compact
-            end
+            opts['option']      = "sftp.connections=#{@conns}" if @conns != 5
             opts['compression'] = @comp if @comp != 'auto'
-        end
-
-        if @backend == :s3
-            s3_options = restic_s3_options
-            opts['option'] = [opts['option'], *s3_options].compact unless s3_options.empty?
-            opts['cacert'] = @s3_cacert unless @s3_cacert.nil? || @s3_cacert.empty?
-            opts['insecure-tls'] = nil if @s3_insecure_tls
         end
 
         %("$RESTIC_BIN" #{opts_to_str(opts)} '--repo=#{@repo}' #{cmd})
@@ -199,7 +155,6 @@ class Restic
         env << %(export RESTIC_BIN="#{restic_bin}")
         env << %(export RESTIC_PASSWORD='#{@passwd}')
         env << %(export GOMAXPROCS="#{@maxproc}") unless @maxproc == -1
-        env.concat(backend_env_sh)
 
         env.join("\n")
     end
@@ -208,7 +163,6 @@ class Restic
         ENV['RESTIC_BIN']      = restic_bin
         ENV['RESTIC_PASSWORD'] = @passwd
         ENV['GOMAXPROCS']      = @maxproc.to_s unless @maxproc == -1
-        backend_env_rb
     end
 
     def [](xpath)
@@ -237,7 +191,7 @@ class Restic
     # @param rhost [String] hostname/IP of a node to run restic commands on
     #
     # @return [Hash] data struct containing snapshot's details
-    def query_snapshot(snap, rhost = default_rhost)
+    def query_snapshot(snap, rhost = @sftp)
         script = <<~EOS
             set -e -o pipefail; shopt -qs failglob
             #{resticenv_sh}
@@ -267,7 +221,7 @@ class Restic
     # @param wdir [String, nil] directory to pull artifacts into (optional)
     #
     # @return [Hash] data structure containing all discovered paths
-    def pull_chain(snaps, index, rhost = default_rhost, wdir = nil)
+    def pull_chain(snaps, index, rhost = @sftp, wdir = nil)
         paths = parse_paths(snaps, rhost, /^disk\.#{index}\./)
         pull_disks(paths[:disks], rhost, wdir)
         paths
@@ -282,7 +236,7 @@ class Restic
     # @param rhost [String] hostname/IP of a node to run restic commands on
     #
     # @return [Hash, Hash] document contents and data struct containing all discovered paths
-    def read_document(snap, path_filter, rhost = default_rhost)
+    def read_document(snap, path_filter, rhost = @sftp)
         paths    = parse_paths([snap], rhost)
         document = read_other(snap, paths[:other], rhost, path_filter)
         [document, paths]
@@ -297,7 +251,7 @@ class Restic
     # @param wdir [String, nil] directory to pull artifacts into (optional)
     #
     # @return [Hash] data structure containing all discovered paths
-    def pull_snapshots(snaps, rhost = default_rhost, wdir = nil)
+    def pull_snapshots(snaps, rhost = @sftp, wdir = nil)
         paths = parse_paths(snaps, rhost)
         pull_disks(paths[:disks], rhost, wdir)
         pull_other(snaps.last, paths[:other], rhost, wdir)
@@ -312,7 +266,7 @@ class Restic
     # @param rhost [String] hostname/IP of a node to run restic commands on
     #
     # @return [nil]
-    def remove_snapshots(snaps, rhost = default_rhost, opts = {})
+    def remove_snapshots(snaps, rhost = @sftp, opts = {})
         options = {
             :retries => 60,
             :delay   => 5 # seconds
@@ -352,13 +306,13 @@ class Restic
     # @param rhost [String] hostname/IP of a node to run restic commands on
     #
     # @return [Object] RC struct
-    def run_action(name, script, rhost = default_rhost)
+    def run_action(name, script, rhost = @sftp)
         case @options[:host_type]
         when :frontend
             # NOTE: The rhost param is ignored when running on a FE.
             LocalCommand.run '/bin/bash -s', nil, script
         when :hypervisor
-            host = if @repo_type == :local
+            host = if @options[:repo_type] == :local
                        "#{@user}@#{rhost}"
                    else
                        rhost
@@ -388,6 +342,9 @@ class Restic
             :retries => 60,
             :delay   => 5
         }.merge!(opts)
+
+        options[:retries] = options[:retries].to_i
+        options[:delay]   = options[:delay].to_i
 
         rc = nil
         options[:retries].times do
@@ -578,75 +535,8 @@ class Restic
         default
     end
 
-    def parse_backend(prefix)
-        value = safe_get("#{prefix}TEMPLATE/RESTIC_BACKEND", 'SFTP').upcase
-
-        case value
-        when 'SFTP'
-            :sftp
-        when 'S3'
-            :s3
-        else
-            raise StandardError, "Unknown RESTIC_BACKEND: #{value}"
-        end
-    end
-
-    def parse_repo_type
-        return @options[:repo_type] unless @options[:repo_type] == :auto
-
-        case @backend
-        when :sftp
-            @options[:host_type] == :frontend ? :sftp : :local
-        when :s3
-            :s3
-        else
-            raise StandardError, 'Unknown Restic backend'
-        end
-    end
-
-    def default_rhost
-        @backend == :sftp ? @sftp : nil
-    end
-
-    def backend_env_sh
-        case @backend
-        when :s3
-            [
-                %(export AWS_ACCESS_KEY_ID='#{@s3_access_key_id}'),
-                %(export AWS_SECRET_ACCESS_KEY='#{@s3_secret_access_key}'),
-                %(export AWS_DEFAULT_REGION='#{@s3_region}'),
-                %(export AWS_REGION='#{@s3_region}')
-            ]
-        else
-            []
-        end
-    end
-
-    def backend_env_rb
-        return unless @backend == :s3
-
-        ENV['AWS_ACCESS_KEY_ID']     = @s3_access_key_id
-        ENV['AWS_SECRET_ACCESS_KEY'] = @s3_secret_access_key
-        ENV['AWS_DEFAULT_REGION']    = @s3_region
-        ENV['AWS_REGION']            = @s3_region
-    end
-
-    def restic_s3_options
-        options = []
-        options << 's3.bucket-lookup=path' if @s3_force_path_style
-        options
-    end
-
     def opts_to_str(opts = {})
-        opt_values = opts.to_a.flat_map do |key, value|
-            if value.is_a?(Array)
-                value.map {|v| [key, v] }
-            else
-                [[key, value]]
-            end
-        end
-
-        opt_values.map do |kv|
+        opts.to_a.map do |kv|
             "'--#{kv.compact.join('=').delete(%("'))}'" # paranoid about shell injection
         end.join(' ')
     end

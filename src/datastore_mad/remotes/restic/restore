@@ -42,7 +42,6 @@ $LOAD_PATH << RUBY_LIB_LOCATION
 require 'base64'
 require 'opennebula'
 require 'opennebula/server_cipher_auth'
-require 'rexml/document'
 
 require 'CommandManager'
 
@@ -63,13 +62,9 @@ _request_id = ARGV[0]
 begin
     action = Base64.decode64 daction64
 
-    doc     = REXML::Document.new(action).root
-    backend = doc.elements['DATASTORE/TEMPLATE/RESTIC_BACKEND']&.text&.upcase || 'SFTP'
-    host    = backend == 'S3' ? :frontend : :hypervisor
-
     rds = Restic.new action, :prefix    => 'DATASTORE/',
-                             :repo_type => :auto,
-                             :host_type => host
+                             :repo_type => :local,
+                             :host_type => :hypervisor
     rds.resticenv_rb
 
     image = TransferManager::BackupImage.new action

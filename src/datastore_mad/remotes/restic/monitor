@@ -38,62 +38,24 @@ $LOAD_PATH << RUBY_LIB_LOCATION
 VERSION_FILE = File.join File.dirname(__FILE__), '..', '..', 'VERSION'
 
 require 'base64'
-require 'opennebula'
 require 'rexml/document'
 
 require 'CommandManager'
 require 'HostSyncManager'
 
 daction64 = STDIN.read
-ds_id = ARGV[0]
-TOTAL_MB_DEFAULT = 1048576 # Default maximum 1TB
-
-def s3_used_mb(ds_id)
-    image_pool = OpenNebula::ImagePool.new(OpenNebula::Client.new)
-    rc = image_pool.info_all
-
-    raise StandardError, rc.message if OpenNebula.is_error?(rc)
-
-    image_pool.inject(0) do |sum, image|
-        next sum unless image['DATASTORE_ID'].to_i == ds_id.to_i
-        next sum unless image['TYPE'].to_i == 6 # BACKUP
-
-        sum + image['SIZE'].to_i
-    end
-end
+_ds_id    = ARGV[0]
 
 begin
     action = Base64.decode64 daction64
 
-    doc     = REXML::Document.new(action).root
-    backend = doc.elements['DATASTORE/TEMPLATE/RESTIC_BACKEND']&.text&.upcase || 'SFTP'
-
-    one_version = File.open(VERSION_FILE, &:gets).strip
-
-    if backend == 'S3'
-        restic_bin     = "#{VMDIR}/remotes/datastore/restic/restic"
-        installed_ver  = "#{VMDIR}/remotes/VERSION"
-        total_mb_value = doc.elements['DATASTORE/TEMPLATE/TOTAL_MB']&.text
-        total_mb       = (total_mb_value || TOTAL_MB_DEFAULT).to_i
-
-        version_ok = File.executable?(restic_bin) &&
-                     File.file?(installed_ver) &&
-                     one_version == File.open(installed_ver, &:gets).strip
-
-        raise StandardError, 'Restic frontend binary is missing or outdated' unless version_ok
-
-        used_mb = s3_used_mb(ds_id)
-        free_mb = [total_mb - used_mb, 0].max
-
-        STDOUT.puts "USED_MB=#{used_mb}"
-        STDOUT.puts "TOTAL_MB=#{total_mb}"
-        STDOUT.puts "FREE_MB=#{free_mb}"
-        exit(0)
-    end
+    doc = REXML::Document.new(action).root
 
     base_path   = doc.elements['DATASTORE/BASE_PATH'].text
     sftp_server = doc.elements['DATASTORE/TEMPLATE/RESTIC_SFTP_SERVER'].text
     sftp_user   = doc.elements['DATASTORE/TEMPLATE/RESTIC_SFTP_USER']&.text || 'oneadmin'
+
+    one_version = File.open(VERSION_FILE, &:gets).strip
 
     script = <<~EOS
         set -e -o pipefail; shopt -qs failglob

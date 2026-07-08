@@ -36,7 +36,6 @@ require 'load_opennebula_paths'
 $LOAD_PATH << RUBY_LIB_LOCATION
 
 require 'base64'
-require 'rexml/document'
 
 require_relative '../../tm/lib/backup'
 require_relative 'restic'
@@ -48,13 +47,9 @@ begin
 
     image = TransferManager::BackupImage.new action
 
-    doc     = REXML::Document.new(action).root
-    backend = doc.elements['DATASTORE/TEMPLATE/RESTIC_BACKEND']&.text&.upcase || 'SFTP'
-    host    = backend == 'S3' ? :frontend : :hypervisor
-
     rds = Restic.new action, :prefix    => 'DATASTORE/',
-                             :repo_type => :auto,
-                             :host_type => host
+                             :repo_type => :local,
+                             :host_type => :hypervisor
     rds.resticenv_rb
 
     rds.remove_snapshots image.snapshots # NOTE: ONE database is updated later in oned
