@@ -28,14 +28,12 @@ import {
 
 import { Typography, Box } from '@mui/material'
 import {
-  Form,
-  PATH,
+  ServiceTemplate,
   TranslateProvider,
   DefaultFormStepper,
   SkeletonStepsForm,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
-const { ServiceTemplate } = Form
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
 
@@ -73,6 +71,7 @@ export function InstantiateServiceTemplate() {
       instances = 1,
       SCHED_ACTION = [],
       userInputsRole = {},
+      ...mergeTemplate
     } = jsonTemplate
 
     const {
@@ -82,23 +81,31 @@ export function InstantiateServiceTemplate() {
     } = apiTemplateData
 
     // eslint-disable-next-line camelcase
-    const formatRoles = roles?.map(({ vm_template_id_content, ...role }) => ({
-      ...role,
-      ...(SCHED_ACTION?.length > 0
-        ? {
-            template_contents: {
-              ...role?.template_contents,
-              ...SCHED_ACTION,
-            },
-          }
-        : {}),
-      ...(userInputsRole?.[role?.name] && {
-        user_inputs_values: userInputsRole?.[role?.name],
-      }),
-    }))
+    const formatRoles = roles?.map(({ vm_template_id_content, ...role }) => {
+      const roleTemplateContents = role?.template_contents ?? {}
+      const roleSchedActions = [].concat(
+        roleTemplateContents?.SCHED_ACTION ?? []
+      )
+      const schedActions = [].concat(SCHED_ACTION ?? []).filter(Boolean)
+
+      return {
+        ...role,
+        ...(schedActions.length > 0
+          ? {
+              template_contents: {
+                ...roleTemplateContents,
+                SCHED_ACTION: [...roleSchedActions, ...schedActions],
+              },
+            }
+          : {}),
+        ...(userInputsRole?.[role?.name] && {
+          user_inputs_values: userInputsRole?.[role?.name],
+        }),
+      }
+    })
 
     const formattedTemplate = {
-      ...jsonTemplate,
+      ...mergeTemplate,
       roles: formatRoles,
     }
 
@@ -146,7 +153,7 @@ export function InstantiateServiceTemplate() {
                 </Typography>
               </Box>
             )}
-            <ServiceTemplate.InstantiateForm
+            <ServiceTemplate.Forms.InstantiateForm
               initialValues={dataTemplate}
               stepProps={{
                 dataTemplate,
@@ -155,7 +162,7 @@ export function InstantiateServiceTemplate() {
               fallback={<SkeletonStepsForm />}
             >
               {(config) => <DefaultFormStepper {...config} />}
-            </ServiceTemplate.InstantiateForm>
+            </ServiceTemplate.Forms.InstantiateForm>
           </>
         )}
       </TranslateProvider>

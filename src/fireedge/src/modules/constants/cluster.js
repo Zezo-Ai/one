@@ -100,92 +100,92 @@ export const PLAN_STATE = {
 export const PROVISION_STATES = {
   PENDING: {
     name: 'PENDING',
-    color: COLOR.info.light,
+    color: 'default',
     finalState: false,
   },
   INIT: {
     name: 'INIT',
-    color: COLOR.info.light,
+    color: 'information',
     finalState: false,
   },
   INIT_FAILURE: {
     name: 'INIT_FAILURE',
-    color: COLOR.error.dark,
+    color: 'error',
     finalState: true,
   },
   PLANNING: {
     name: 'PLANNING',
-    color: COLOR.info.light,
+    color: 'information',
     finalState: false,
   },
   PLANNING_FAILURE: {
     name: 'PLANNING_FAILURE',
-    color: COLOR.error.dark,
+    color: 'error',
     finalState: true,
   },
   APPLYING: {
     name: 'APPLYING',
-    color: COLOR.info.light,
+    color: 'information',
     finalState: false,
   },
   APPLYING_FAILURE: {
     name: 'APPLYING_FAILURE',
-    color: COLOR.error.dark,
+    color: 'error',
     finalState: true,
   },
   CONFIGURING_ONE: {
     name: 'CONFIGURING_ONE',
-    color: COLOR.info.light,
+    color: 'information',
     finalState: false,
   },
   CONFIGURING_ONE_FAILURE: {
     name: 'CONFIGURING_ONE_FAILURE',
-    color: COLOR.error.dark,
+    color: 'error',
     finalState: true,
   },
   CONFIGURING_PROVISION: {
     name: 'CONFIGURING_PROVISION',
-    color: COLOR.info.light,
+    color: 'information',
     finalState: false,
   },
   CONFIGURING_PROVISION_FAILURE: {
     name: 'CONFIGURING_PROVISION_FAILURE',
-    color: COLOR.error.dark,
+    color: 'error',
     finalState: true,
   },
   RUNNING: {
     name: 'RUNNING',
-    color: COLOR.success.light,
+    color: 'success',
     finalState: true,
   },
   SCALING: {
     name: 'SCALING',
-    color: COLOR.info.light,
+    color: 'information',
     finalState: false,
   },
   SCALING_FAILURE: {
     name: 'SCALING_FAILURE',
-    color: COLOR.error.dark,
+    color: 'error',
     finalState: true,
   },
   DEPROVISIONING_ONE: {
     name: 'DEPROVISIONING_ONE',
-    color: COLOR.info.light,
+    color: 'information',
     finalState: false,
   },
   DEPROVISIONING_ONE_FAILURE: {
     name: 'DEPROVISIONING_ONE_FAILURE',
-    color: COLOR.error.dark,
+    color: 'error',
     finalState: true,
   },
   DEPROVISIONING: {
     name: 'DEPROVISIONING',
-    color: COLOR.info.light,
+    color: 'information',
     finalState: false,
   },
   DONE: {
     name: 'DONE',
-    color: COLOR.success.light,
+    color: 'success',
     finalState: true,
   },
 }
@@ -211,5 +211,9 @@ export const CLUSTER_CLOUD_OPERATIONS = {
   DELETEHOST: {
     name: 'DELETEHOST',
     text: 'DeletingHostCluster',
+  },
+  RETRY: {
+    name: 'RETRY',
+    text: 'RetryingCluster',
   },
 }

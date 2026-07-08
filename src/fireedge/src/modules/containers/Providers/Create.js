@@ -21,14 +21,12 @@ import { useGeneralApi, ProviderAPI, DriverAPI } from '@FeaturesModule'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  PATH,
-  Form,
+  Provider,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
-const { Provider } = Form
 
 /**
  * Displays the creation or modification form to a Provider.
@@ -81,7 +79,7 @@ export function CreateProvider() {
       {!drivers || (providerId && !dataTemplate) ? (
         <SkeletonStepsForm />
       ) : (
-        <Provider.CreateForm
+        <Provider.Forms.CreateForm
           initialValues={dataTemplate}
           stepProps={{
             dataTemplate,
@@ -91,7 +89,7 @@ export function CreateProvider() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </Provider.CreateForm>
+        </Provider.Forms.CreateForm>
       )}
     </TranslateProvider>
   )

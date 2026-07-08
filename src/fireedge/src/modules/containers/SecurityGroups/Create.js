@@ -16,18 +16,16 @@
 import { ReactElement } from 'react'
 import { useHistory, useLocation } from 'react-router'
 
-import { jsonToXml } from '@ModelsModule'
+import { jsonToXml } from '@UtilsModule'
 import { SecurityGroupAPI, useGeneralApi } from '@FeaturesModule'
 
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  SecurityGroup,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
-const { SecurityGroup } = Form
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation or modification form to a VM Template.
@@ -68,14 +66,14 @@ export function CreateSecurityGroup() {
       {secID && !data ? (
         <SkeletonStepsForm />
       ) : (
-        <SecurityGroup.CreateForm
+        <SecurityGroup.Forms.CreateForm
           onSubmit={onSubmit}
           fallback={<SkeletonStepsForm />}
           initialValues={data}
           stepProps={data}
         >
-          {(config) => <DefaultFormStepper {...config} />}
-        </SecurityGroup.CreateForm>
+          {(config) => <DefaultFormStepper {...config} update={!!secID} />}
+        </SecurityGroup.Forms.CreateForm>
       )}{' '}
     </TranslateProvider>
   )

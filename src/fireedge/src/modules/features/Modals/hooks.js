@@ -15,6 +15,7 @@
  * ------------------------------------------------------------------------- */
 /* eslint-disable jsdoc/require-jsdoc */
 import { useDispatch, useSelector, shallowEqual } from 'react-redux'
+import { v4 as uuidv4 } from 'uuid'
 
 import * as actions from '@modules/features/Modals/actions'
 import { ModalsSlice } from '@modules/features/Modals/slice'
@@ -28,7 +29,8 @@ export const useModalsApi = () => {
   const dispatch = useDispatch()
 
   return {
-    showModal: (modal) => dispatch(actions.showModal(modal)),
+    showModal: (modal = {}) =>
+      dispatch(actions.showModal({ id: uuidv4(), ...modal })),
     hideModal: (id) => dispatch(actions.hideModal(id)),
   }
 }

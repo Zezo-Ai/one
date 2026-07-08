@@ -13,207 +13,198 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
-import { Chip, Stack } from '@mui/material'
-import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
 
 import {
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  ServiceTemplatesTable,
-  ServiceTemplateTabs,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { RESOURCE_NAMES, T } from '@ConstantsModule'
-import { ServiceTemplateAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
+  List,
+  Table,
+  ServiceTemplateCard,
+  ResourceContainer,
+} from '@ComponentsV2Module'
+import { T, TABLE_VIEW_MODE, RESOURCE_NAMES } from '@ConstantsModule'
+import {
+  useFunctionalityApi,
+  useFunctionality,
+  useViews,
+} from '@FeaturesModule'
+import { ReactElement, useMemo, useCallback } from 'react'
+import { getActionsAvailable, timeFromMilliseconds } from '@UtilsModule'
+import { DetailsDrawer } from '@modules/containers/ServiceTemplates/Details'
+import { servicetemplateTable } from '@ModelsModule'
 
 /**
- * Displays a list of Service Templates with a split pane between
- * the list and selected row(s).
+ * Displays a list of VM Templates with a split pane between the list and selected row(s).
  *
- * @returns {ReactElement} Service Templates list and selected row(s)
+ * @returns {ReactElement} VM Templates list and selected row(s)
  */
 export function ServiceTemplates() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = ServiceTemplatesTable.Actions({
-    selectedRows,
-    setSelectedRows,
-  })
-  const { zone } = useGeneral()
+  const {
+    searchExpression,
+    sortExpression,
+    filterExpression,
+    selectedItems,
+    containerView,
+  } = useFunctionality()
+  const { getResourceView } = useViews()
+  const resourceView = getResourceView(RESOURCE_NAMES.SERVICE_TEMPLATE)
+
+  const availableActions = useMemo(
+    () =>
+      getActionsAvailable(getResourceView(RESOURCE_NAMES.VM_TEMPLATE)?.actions),
+    [getResourceView]
+  )
+
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = servicetemplateTable.useData()
+
+  const filterOptions = useMemo(
+    () => servicetemplateTable.filterOptions(data, resourceView?.filters),
+    [data, resourceView?.filters]
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((template) => {
+          const {
+            ID,
+            NAME,
+            GNAME,
+            UNAME,
+            TEMPLATE: { BODY: { registration_time: REGTIME = 0 } = {} } = {},
+          } = template
+
+          return [
+            ID,
+            NAME,
+            REGTIME && timeFromMilliseconds(+REGTIME).toRelative(),
+            UNAME,
+            GNAME,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    const filteredByFilters = servicetemplateTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
+
+    return servicetemplateTable.sortData(filteredByFilters, sortExpression)
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
+
+  const selectedTemplates = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(ID)) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () => Object.fromEntries(selectedItems.map((id) => [id, true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+  const handleSelect = (ID) =>
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === ID ? [] : [ID]
+    )
+  const handleDeselect = (ID) =>
+    setSelectedItems(selectedItems.filter((id) => id !== ID))
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <ServiceTemplatesTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            template: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
-
-          return <InfoTabs {...propsInfo} />
-        }}
+    <ResourceContainer
+      resourceName={T.Templates}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={servicetemplateTable.sortOptions()}
+      filterOptions={filterOptions}
+      searchPlaceholder={T.SearchTemplates}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => ID) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={servicetemplateTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => row.ID}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map(
+                  ({
+                    NAME,
+                    ID,
+                    GNAME,
+                    UNAME,
+                    TEMPLATE: {
+                      BODY: { registration_time: REGTIME = 0 } = {},
+                    } = {},
+                    LABELS,
+                  }) => (
+                    <ServiceTemplateCard
+                      key={ID}
+                      NAME={NAME}
+                      ID={ID}
+                      GNAME={GNAME}
+                      UNAME={UNAME}
+                      REGTIME={REGTIME}
+                      LABELS={LABELS}
+                      isSelected={selectedItems?.includes(ID)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(ID)
+                            ? selectedItems.filter((id) => id !== ID)
+                            : [...(selectedItems ?? []), ID]
+                        )
+                      }
+                      onClick={() => handleSelect(ID)}
+                    />
+                  )
+                )}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedTemplates={selectedTemplates}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        actions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a Service Template.
- *
- * @param {object} template - Service Template to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Service Template
- * @param {Function} [unselect] - Function to unselect a Service Template
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Service Template details
- */
-const InfoTabs = memo(({ template, gotoPage, unselect, selectedRows }) => {
-  const [get, { data: lazyData, isFetching }] =
-    ServiceTemplateAPI.useLazyGetServiceTemplateQuery()
-  const id = template?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.SERVICE_TEMPLATE}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <ServiceTemplateTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  template: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

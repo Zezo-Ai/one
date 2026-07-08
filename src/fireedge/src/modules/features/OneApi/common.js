@@ -14,7 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Draft, ThunkAction } from '@reduxjs/toolkit'
-import { xmlToJson } from '@ModelsModule'
+import { xmlToJson } from '@UtilsModule'
 
 import userApi from '@modules/features/OneApi/user'
 import groupApi from '@modules/features/OneApi/group'
@@ -44,7 +44,13 @@ export const updateResourceOnPool =
     if (!isUpdateOnPool(draft, resourceId)) return
 
     const index = draft.findIndex(({ ID }) => +ID === +resourceId)
-    index !== -1 && (draft[index] = resourceFromQuery)
+    if (index === -1) return
+
+    draft[index] = {
+      ...resourceFromQuery,
+      ...(resourceFromQuery?.LABELS === undefined &&
+        draft[index]?.LABELS !== undefined && { LABELS: draft[index].LABELS }),
+    }
   }
 
 /**
@@ -59,7 +65,7 @@ export const removeResourceOnPool =
   (draft) => {
     if (!isUpdateOnPool(draft, resourceId)) return
 
-    draft.filter(({ ID }) => +ID !== +resourceId)
+    return draft.filter(({ ID }) => +ID !== +resourceId)
   }
 
 /**
@@ -154,6 +160,7 @@ export const updatePermissionOnResource =
       : draft
 
     if (updatePool && !resource) return
+    resource.PERMISSIONS ??= {}
 
     Object.entries(permissions)
       .filter(([_, value]) => value !== '-1')
@@ -188,13 +195,17 @@ export const updatePermissionOnResource =
  * } - The users and groups or the user and group by id
  */
 export const selectOwnershipFromState = (state, { userId, groupId } = {}) => {
-  const { data: users } = userApi.endpoints.getUsers.select()(state)
-  const { data: groups } = groupApi.endpoints.getGroups.select()(state)
+  const { data: users = [] } = userApi.endpoints.getUsers.select()(state)
+  const { data: groups = [] } = groupApi.endpoints.getGroups.select()(state)
+  const hasUserId = userId !== undefined && userId !== null
+  const hasGroupId = groupId !== undefined && groupId !== null
 
-  if (!userId && !groupId) return { users, groups }
+  if (!hasUserId && !hasGroupId) return { users, groups }
 
-  const user = users.find(({ ID }) => +ID === +userId)
-  const group = groups.find(({ ID }) => +ID === +groupId)
+  const user = hasUserId ? users.find(({ ID }) => +ID === +userId) : undefined
+  const group = hasGroupId
+    ? groups.find(({ ID }) => +ID === +groupId)
+    : undefined
 
   return { user, group }
 }
@@ -207,11 +218,13 @@ export const selectOwnershipFromState = (state, { userId, groupId } = {}) => {
  * @param {string} [params.id] - The id of the resource
  * @param {string} [params.user] - The user id to update
  * @param {string} [params.group] - The group id to update
+ * @param {string} [params.userName] - The user name to update
+ * @param {string} [params.groupName] - The group name to update
  * @returns {function(Draft):ThunkAction} - Dispatches the action
  */
 export const updateOwnershipOnResource = (
   state,
-  { id: resourceId, user: userId, group: groupId } = {}
+  { id: resourceId, user: userId, group: groupId, userName, groupName } = {}
 ) => {
   const { user, group } = selectOwnershipFromState(state, { userId, groupId })
 
@@ -224,11 +237,15 @@ export const updateOwnershipOnResource = (
 
     if (updatePool && !resource) return
 
-    user?.ID > -1 && (resource.UID = user.ID)
-    user?.NAME !== undefined && (resource.UNAME = user.NAME)
+    if (+userId > -1) resource.UID = user?.ID ?? userId
+    if (user?.NAME !== undefined || userName !== undefined) {
+      resource.UNAME = user?.NAME ?? userName
+    }
 
-    group?.ID > -1 && (resource.GID = group.ID)
-    group?.NAME !== undefined && (resource.GNAME = group.NAME)
+    if (+groupId > -1) resource.GID = group?.ID ?? groupId
+    if (group?.NAME !== undefined || groupName !== undefined) {
+      resource.GNAME = group?.NAME ?? groupName
+    }
   }
 }
 

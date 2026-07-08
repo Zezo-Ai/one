@@ -13,49 +13,15 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { STYLE_BUTTONS, T } from '@ConstantsModule'
+import { T } from '@ConstantsModule'
+import { SubmitButton } from '@ComponentsV2Module'
 import { css } from '@emotion/css'
-import {
-  ButtonToTriggerForm,
-  SubmitButton,
-  Translate,
-  VmTemplatesTable,
-} from '@ComponentsModule'
-import { styled, useTheme } from '@mui/material'
+import { VmTemplatesTable } from '@ResourcesModule'
+import { useTheme } from '@mui/material'
 import { Plus as AddIcon, Settings as SettingsIcon } from 'iconoir-react'
 import PropTypes from 'prop-types'
 import { memo, ReactElement, useMemo } from 'react'
-
-const StyledIcon = styled('span')(({ theme }) => ({
-  marginRight: theme.spacing(1),
-  display: 'inline-flex',
-}))
-
-/**
- * Content Button.
- *
- * @param {object} props - Props
- * @param {string} props.text - Text
- * @param {ReactElement} props.icon - Icon
- * @returns {ReactElement} Dashboard Button Instantiate
- */
-export const ContentButton = memo(({ icon: Icon, text = '' }) => (
-  <>
-    {Icon && (
-      <StyledIcon>
-        <Icon />
-      </StyledIcon>
-    )}
-    <Translate word={text} />
-  </>
-))
-
-ContentButton.propTypes = {
-  text: PropTypes.string,
-  icon: PropTypes.any,
-}
-
-ContentButton.displayName = 'ContentButton'
+import { useModalsApi } from '@FeaturesModule'
 
 /**
  * Dashboard Button.
@@ -72,9 +38,6 @@ export const DashboardButton = memo(
     access && (
       <SubmitButton
         onClick={action}
-        importance={STYLE_BUTTONS.IMPORTANCE.SECONDARY}
-        size={STYLE_BUTTONS.SIZE.MEDIUM}
-        type={STYLE_BUTTONS.TYPE.OUTLINED}
         label={text}
         startIcon={<SettingsIcon />}
       />
@@ -133,28 +96,29 @@ DashboardCreateVM.displayName = 'DashboardCreateVM'
  * @returns {ReactElement} Dashboard Button Instantiate
  */
 export const DashboardButtonInstantiate = memo(
-  ({ access = false, action, text = '' }) =>
-    access && (
-      <ButtonToTriggerForm
-        buttonProps={{
-          importance: STYLE_BUTTONS.IMPORTANCE.MAIN,
-          size: STYLE_BUTTONS.SIZE.MEDIUM,
-          type: STYLE_BUTTONS.TYPE.FILLED,
-          label: <ContentButton icon={AddIcon} text={text} />,
-        }}
-        options={[
-          {
-            isConfirmDialog: true,
-            dialogProps: {
-              title: T.Instantiate,
-              children: <DashboardCreateVM action={action} />,
-              fixedWidth: true,
-              fixedHeight: true,
-            },
-          },
-        ]}
-      />
+  ({ access = false, action, text = '' }) => {
+    const { showModal } = useModalsApi()
+    const showInstantiateVmForm = () =>
+      showModal({
+        isConfirmDialog: true,
+        dialogProps: {
+          title: T.Instantiate,
+          children: <DashboardCreateVM action={action} />,
+          fixedWidth: true,
+          fixedHeight: true,
+        },
+      })
+
+    return (
+      access && (
+        <SubmitButton
+          startIcon={AddIcon}
+          label={text}
+          onClick={showInstantiateVmForm}
+        />
+      )
     )
+  }
 )
 
 DashboardButtonInstantiate.propTypes = {

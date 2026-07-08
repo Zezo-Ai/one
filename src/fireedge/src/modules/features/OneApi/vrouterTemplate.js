@@ -20,6 +20,10 @@ import {
 import { Actions as VMTEMPLATE_ACTIONS } from 'server/utils/constants/commands/template'
 
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 
 import {
   ONE_RESOURCES,
@@ -30,7 +34,7 @@ import {
   removeResourceOnPool,
   updateTemplateOnResource,
 } from '@modules/features/OneApi/common'
-import { FilterFlag, VmVrTemplate } from '@ConstantsModule'
+import { FilterFlag, RESOURCE_NAMES, VmVrTemplate } from '@ConstantsModule'
 
 const { TEMPLATE } = ONE_RESOURCES
 const { TEMPLATE_POOL } = ONE_RESOURCES_POOL
@@ -52,24 +56,28 @@ const vrouterTemplatesApi = oneApi.injectEndpoints({
         const name = VMTEMPLATE_ACTIONS.TEMPLATE_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) =>
-        [
+      transformResponse: (data, meta) =>
+        withResourceLabels(
           [data?.VMTEMPLATE_POOL?.VMTEMPLATE]
             ?.flat()
             ?.filter((template) => template?.TEMPLATE?.VROUTER === 'YES') ?? [],
-        ].flat(),
+          RESOURCE_NAMES.VROUTER_TEMPLATE,
+          meta
+        ),
       providesTags: (vrouterVrTemplates) =>
-        vrouterVrTemplates
-          ? [
-              ...vrouterVrTemplates.map(({ ID }) => ({
-                type: TEMPLATE_POOL,
-                id: `${ID}`,
-              })),
-              TEMPLATE_POOL,
-            ]
-          : [TEMPLATE_POOL],
+        withProfileLabelsTags(
+          vrouterVrTemplates
+            ? [
+                ...vrouterVrTemplates.map(({ ID }) => ({
+                  type: TEMPLATE_POOL,
+                  id: `${ID}`,
+                })),
+                TEMPLATE_POOL,
+              ]
+            : [TEMPLATE_POOL]
+        ),
     }),
     getVrTemplate: builder.query({
       /**
@@ -105,7 +113,8 @@ const vrouterTemplatesApi = oneApi.injectEndpoints({
           .catch((error) => ({ error })),
 
       transformResponse: (data) => data?.VMTEMPLATE ?? {},
-      providesTags: (_, __, { id }) => [{ type: TEMPLATE, id }],
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: TEMPLATE, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

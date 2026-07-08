@@ -16,7 +16,7 @@
 import { ReactElement } from 'react'
 import { useParams, Redirect } from 'react-router-dom'
 
-import { TranslateProvider, BackupTabs } from '@ComponentsModule'
+import { TranslateProvider, BackupTabs } from '@ResourcesModule'
 
 /**
  * Displays the detail information about a Virtual Machine.

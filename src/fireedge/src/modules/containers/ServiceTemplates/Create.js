@@ -29,14 +29,12 @@ import {
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  PATH,
-  Form,
+  ServiceTemplate,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
-const { ServiceTemplate } = Form
 
 /**
  * Displays the creation or modification form to a VM Template.
@@ -99,7 +97,7 @@ export function CreateServiceTemplate() {
       {templateId && !dataTemplate ? (
         <SkeletonStepsForm />
       ) : (
-        <ServiceTemplate.CreateForm
+        <ServiceTemplate.Forms.CreateForm
           initialValues={dataTemplate}
           stepProps={{
             dataTemplate,
@@ -107,8 +105,8 @@ export function CreateServiceTemplate() {
           onSubmit={onSubmit}
           fallback={<SkeletonStepsForm />}
         >
-          {(config) => <DefaultFormStepper {...config} />}
-        </ServiceTemplate.CreateForm>
+          {(config) => <DefaultFormStepper {...config} update={!!templateId} />}
+        </ServiceTemplate.Forms.CreateForm>
       )}
     </TranslateProvider>
   )

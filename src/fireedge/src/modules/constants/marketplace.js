@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 import * as ACTIONS from '@modules/constants/actions'
 import * as STATES from '@modules/constants/states'
-import { COLOR } from '@modules/constants/color'
 // eslint-disable-next-line no-unused-vars
 import { Permissions } from '@modules/constants/common'
 
@@ -48,12 +47,12 @@ export const MARKETPLACE_STATES = [
   {
     // 0
     name: STATES.ENABLED,
-    color: COLOR.success.main,
+    color: 'success',
   },
   {
     // 1
     name: STATES.DISABLED,
-    color: COLOR.debug.main,
+    color: 'disabled',
   },
 ]
 
@@ -77,27 +76,27 @@ export const MARKETPLACE_APP_STATES = [
   {
     // 0
     name: STATES.INIT,
-    color: COLOR.info.main,
+    color: 'information',
   },
   {
     // 1
     name: STATES.READY,
-    color: COLOR.success.main,
+    color: 'success',
   },
   {
     // 2
     name: STATES.LOCKED,
-    color: COLOR.debug.main,
+    color: 'disabled',
   },
   {
     // 3
     name: STATES.ERROR,
-    color: COLOR.error.main,
+    color: 'error',
   },
   {
     // 4
     name: STATES.DISABLED,
-    color: COLOR.debug.light,
+    color: 'disabled',
   },
 ]
 

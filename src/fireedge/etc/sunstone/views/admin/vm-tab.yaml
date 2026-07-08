@@ -97,21 +97,21 @@ info-tabs:
   storage:
     enabled: true
     actions:
-      disk-attach:
-        enabled: true
+      disk-attach-image: true
+      disk-attach-volatile: true
       disk-detach: true
+      disk-resize: true
+      disk-saveas: true
       disk-snapshot-create: true
       disk-snapshot-delete: true
       disk-snapshot-rename: true
       disk-snapshot-revert: true
-      disk-resize: true
-      disk-saveas:
-        enabled: true
 
   network:
     enabled: true
     actions:
       nic-attach: true
+      nic-attach-alias: true
       nic-detach: true
       nic-update: true
       sg-attach: true
@@ -132,6 +132,10 @@ info-tabs:
 
   backup:
     enabled: true
+    actions:
+      backup-configure: true
+      backup-create: true
+      backup-restore: true
 
   history:
     enabled: true

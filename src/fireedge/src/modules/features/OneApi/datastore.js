@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Datastore, Permission } from '@ConstantsModule'
+import { Datastore, Permission, RESOURCE_NAMES } from '@ConstantsModule'
 import {
   ONE_RESOURCES,
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import {
   removeResourceOnPool,
   updateNameOnResource,
@@ -31,6 +35,11 @@ import { Actions, Commands } from 'server/utils/constants/commands/datastore'
 
 const { DATASTORE } = ONE_RESOURCES
 const { DATASTORE_POOL } = ONE_RESOURCES_POOL
+const datastoreDetailAndPoolTags = (id) => [
+  { type: DATASTORE, id },
+  { type: DATASTORE_POOL, id: `${id}` },
+  DATASTORE_POOL,
+]
 
 const datastoreApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -39,10 +48,14 @@ const datastoreApi = oneApi.injectEndpoints({
         const name = Actions.DATASTORE_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { command, params }
+        return { command, params, needStateInMeta: true }
       },
-      transformResponse: (data) =>
-        [data?.DATASTORE_POOL?.DATASTORE ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.DATASTORE_POOL?.DATASTORE ?? []].flat(),
+          RESOURCE_NAMES.DATASTORE,
+          meta
+        ),
       providesTags: (datastores) => {
         const tags = datastores
           ? [
@@ -54,7 +67,7 @@ const datastoreApi = oneApi.injectEndpoints({
             ]
           : [DATASTORE_POOL]
 
-        return tags
+        return withProfileLabelsTags(tags)
       },
     }),
     getDatastore: builder.query({
@@ -71,10 +84,16 @@ const datastoreApi = oneApi.injectEndpoints({
         const name = Actions.DATASTORE_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.DATASTORE ?? {},
-      providesTags: (_, __, { id }) => [{ type: DATASTORE, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          data?.DATASTORE ?? {},
+          RESOURCE_NAMES.DATASTORE,
+          meta
+        ),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: DATASTORE, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled
@@ -153,7 +172,10 @@ const datastoreApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: DATASTORE, id }],
+      invalidatesTags: (_, __, { id }) => [
+        { type: DATASTORE, id },
+        { type: DATASTORE_POOL, id: `${id}` },
+      ],
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchDatastore = dispatch(
@@ -204,7 +226,7 @@ const datastoreApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: DATASTORE, id }],
+      invalidatesTags: (_, __, { id }) => datastoreDetailAndPoolTags(id),
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchDatastore = dispatch(
@@ -215,7 +237,18 @@ const datastoreApi = oneApi.injectEndpoints({
             )
           )
 
-          queryFulfilled.catch(patchDatastore.undo)
+          const patchDatastores = dispatch(
+            datastoreApi.util.updateQueryData(
+              'getDatastores',
+              undefined,
+              updatePermissionOnResource(params)
+            )
+          )
+
+          queryFulfilled.catch(() => {
+            patchDatastore.undo()
+            patchDatastores.undo()
+          })
         } catch {}
       },
     }),
@@ -237,18 +270,30 @@ const datastoreApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: DATASTORE, id }],
+      invalidatesTags: (_, __, { id }) => datastoreDetailAndPoolTags(id),
       async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
         try {
+          const updateOwnership = updateOwnershipOnResource(getState(), params)
           const patchDatastore = dispatch(
             datastoreApi.util.updateQueryData(
               'getDatastore',
               { id: params.id },
-              updateOwnershipOnResource(getState(), params)
+              updateOwnership
             )
           )
 
-          queryFulfilled.catch(patchDatastore.undo)
+          const patchDatastores = dispatch(
+            datastoreApi.util.updateQueryData(
+              'getDatastores',
+              undefined,
+              updateOwnership
+            )
+          )
+
+          queryFulfilled.catch(() => {
+            patchDatastore.undo()
+            patchDatastores.undo()
+          })
         } catch {}
       },
     }),
@@ -311,7 +356,7 @@ const datastoreApi = oneApi.injectEndpoints({
 
         return { params: { id, enable: true }, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: DATASTORE, id }, DATASTORE_POOL],
+      invalidatesTags: (_, __, id) => datastoreDetailAndPoolTags(id),
     }),
     disableDatastore: builder.mutation({
       /**
@@ -327,7 +372,7 @@ const datastoreApi = oneApi.injectEndpoints({
 
         return { params: { id, enable: false }, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: DATASTORE, id }, DATASTORE_POOL],
+      invalidatesTags: (_, __, id) => datastoreDetailAndPoolTags(id),
     }),
   }),
 })

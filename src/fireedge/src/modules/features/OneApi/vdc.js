@@ -20,6 +20,10 @@ import {
 import { Actions, Commands } from 'server/utils/constants/commands/vdc'
 
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 
 import {
   ONE_RESOURCES,
@@ -33,7 +37,13 @@ import {
 } from '@modules/features/OneApi/common'
 
 /* eslint-disable no-unused-vars */
-import { VDCCluster, VDCDatastore, VDCHost, VDCVnet } from '@ConstantsModule'
+import {
+  RESOURCE_NAMES,
+  VDCCluster,
+  VDCDatastore,
+  VDCHost,
+  VDCVnet,
+} from '@ConstantsModule'
 /* eslint-enable no-unused-vars */
 
 const { VDC } = ONE_RESOURCES
@@ -52,19 +62,26 @@ const vdcApi = oneApi.injectEndpoints({
         const name = Actions.VDC_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { command }
+        return { command, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.VDC_POOL?.VDC ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.VDC_POOL?.VDC ?? []].flat(),
+          RESOURCE_NAMES.VDC,
+          meta
+        ),
       providesTags: (vdcs) =>
-        vdcs
-          ? [
-              ...vdcs.map(({ ID }) => ({
-                type: VDC_POOL,
-                id: `${ID}`,
-              })),
-              VDC_POOL,
-            ]
-          : [VDC_POOL],
+        withProfileLabelsTags(
+          vdcs
+            ? [
+                ...vdcs.map(({ ID }) => ({
+                  type: VDC_POOL,
+                  id: `${ID}`,
+                })),
+                VDC_POOL,
+              ]
+            : [VDC_POOL]
+        ),
     }),
     getVDC: builder.query({
       /**
@@ -80,10 +97,12 @@ const vdcApi = oneApi.injectEndpoints({
         const name = Actions.VDC_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.VDC ?? {},
-      providesTags: (_, __, { id }) => [{ type: VDC, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(data?.VDC ?? {}, RESOURCE_NAMES.VDC, meta),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: VDC, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

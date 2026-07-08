@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 import * as ACTIONS from '@modules/constants/actions'
 import * as STATES from '@modules/constants/states'
-import { COLOR } from '@modules/constants/color'
 
 /**
  * @typedef ZoneServer
@@ -45,12 +44,12 @@ export const ZONE_STATES = [
   {
     // 0
     name: STATES.ENABLED,
-    color: COLOR.success.main,
+    color: 'success',
   },
   {
     // 1
     name: STATES.DISABLED,
-    color: COLOR.debug.main,
+    color: 'information',
   },
 ]
 

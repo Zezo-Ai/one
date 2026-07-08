@@ -21,14 +21,10 @@ import { VnTemplateAPI, useGeneralApi, useSystemData } from '@FeaturesModule'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  PATH,
-  Form,
   TranslateProvider,
-} from '@ComponentsModule'
-
-import { T } from '@ConstantsModule'
-const { VnTemplate } = Form
-
+  VnTemplate,
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 const _ = require('lodash')
 
 /**
@@ -38,28 +34,34 @@ const _ = require('lodash')
  */
 export const InstantiateVnTemplate = () => {
   const history = useHistory()
-  const { state: { ID: templateId, NAME: templateName } = {} } = useLocation()
+  const { state: { ID: templateId, NAME: templateName, returnTo } = {} } =
+    useLocation()
 
-  const { enqueueInfo } = useGeneralApi()
+  const { enqueueSuccess } = useGeneralApi()
   const [instantiate] = VnTemplateAPI.useInstantiateVNTemplateMutation()
 
   const { adminGroup, oneConfig } = useSystemData()
 
-  const { data, isError } = VnTemplateAPI.useGetVNTemplateQuery(
-    { id: templateId, extended: true },
-    { skip: templateId === undefined }
-  )
+  const { data: apiTemplateDataExtended, isError } =
+    VnTemplateAPI.useGetVNTemplateQuery(
+      { id: templateId, extended: true },
+      { skip: templateId === undefined }
+    )
 
-  // const dataTemplateExtended = _.cloneDeep(apiTemplateDataExtended)
+  const dataTemplateExtended = _.cloneDeep(apiTemplateDataExtended)
 
   const onSubmit = async (template) => {
     try {
       await instantiate(template).unwrap()
-      history.push(PATH.NETWORK.VN_TEMPLATES.LIST)
+      history.push(returnTo ?? PATH.NETWORK.VN_TEMPLATES.LIST)
 
       const templateInfo = `#${templateId} ${templateName}`
-      enqueueInfo(T.InfoVNTemplateInstantiated, [templateInfo])
+      enqueueSuccess(T.InfoVNTemplateInstantiated, [templateInfo])
     } catch {}
+  }
+
+  const handleCancel = () => {
+    history.push(returnTo ?? PATH.NETWORK.VN_TEMPLATES.LIST)
   }
 
   if (!templateId || isError) {
@@ -68,21 +70,27 @@ export const InstantiateVnTemplate = () => {
 
   return (
     <TranslateProvider>
-      {!data || _.isEmpty(oneConfig) ? (
+      {!dataTemplateExtended || _.isEmpty(oneConfig) ? (
         <SkeletonStepsForm />
       ) : (
-        <VnTemplate.InstantiateForm
-          initialValues={data}
+        <VnTemplate.Forms.InstantiateForm
+          initialValues={dataTemplateExtended}
           stepProps={{
-            data,
+            data: dataTemplateExtended,
+            dataTemplateExtended,
             oneConfig,
             adminGroup,
           }}
           onSubmit={onSubmit}
           fallback={<SkeletonStepsForm />}
         >
-          {(config) => <DefaultFormStepper {...config} />}
-        </VnTemplate.InstantiateForm>
+          {(config) => (
+            <DefaultFormStepper
+              {...config}
+              {...(returnTo && { onCancel: handleCancel })}
+            />
+          )}
+        </VnTemplate.Forms.InstantiateForm>
       )}
     </TranslateProvider>
   )

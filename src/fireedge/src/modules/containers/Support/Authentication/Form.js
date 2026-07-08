@@ -14,19 +14,15 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { useEffect, ReactElement, useMemo } from 'react'
+import { SubmitButton, Text } from '@ComponentsV2Module'
 import PropTypes from 'prop-types'
 
-import { Box, Stack, Typography, useTheme } from '@mui/material'
+import { Box, Stack, useTheme } from '@mui/material'
 import { useForm, FormProvider } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 
-import {
-  FormWithSchema,
-  SubmitButton,
-  Translate,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { T, STYLE_BUTTONS } from '@ConstantsModule'
+import { FormWithSchema } from '@ResourcesModule'
+import { T, STYLE_BUTTONS, TEXT_VARIANTS, TEXT_WEIGHTS } from '@ConstantsModule'
 import { css } from '@emotion/css'
 
 import {
@@ -80,45 +76,48 @@ export const Form = ({ onSubmit, error, isLoading }) => {
   }, [error])
 
   return (
-    <TranslateProvider>
-      <Box
-        component="form"
-        onSubmit={handleSubmit(onSubmit)}
-        width="100%"
-        flexDirection="column"
-        flexShrink={0}
-        justifyContent={{ sm: 'center' }}
-        sx={{ opacity: isLoading ? 0.7 : 1 }}
-      >
-        <FormProvider {...methods}>
-          <FormWithSchema cy="login" fields={fields} />
-        </FormProvider>
-        <Stack direction="row-reverse" gap={1} my={2}>
-          <SubmitButton
-            data-cy="login-button"
-            isSubmitting={isLoading}
-            sx={{ textTransform: 'uppercase' }}
-            importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-            size={STYLE_BUTTONS.SIZE.MEDIUM}
-            type={STYLE_BUTTONS.TYPE.FILLED}
-            label={T.SignIn}
+    <Box
+      component="form"
+      onSubmit={handleSubmit(onSubmit)}
+      width="100%"
+      flexDirection="column"
+      flexShrink={0}
+      justifyContent={{ sm: 'center' }}
+      sx={{ opacity: isLoading ? 0.7 : 1 }}
+    >
+      <FormProvider {...methods}>
+        <FormWithSchema cy="login" fields={fields} />
+      </FormProvider>
+      <Stack direction="row-reverse" gap={1} my={2}>
+        <SubmitButton
+          data-cy="login-button"
+          isSubmitting={isLoading}
+          sx={{ textTransform: 'uppercase' }}
+          type={STYLE_BUTTONS.TYPE.PRIMARY}
+          label={T.SignIn}
+        />
+      </Stack>
+      <Stack>
+        <Text
+          variant={TEXT_VARIANTS.BODY_MEDIUM}
+          weight={TEXT_WEIGHTS.REGULAR}
+          sx={{ alignSelf: 'center' }}
+          value={T.Or}
+        />
+        <a
+          href="https://opennebula.io/buy-support"
+          className={classes.links}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Text
+            variant={TEXT_VARIANTS.BODY_MEDIUM}
+            weight={TEXT_WEIGHTS.BOLD}
+            value={T.GetAnAccount}
           />
-        </Stack>
-        <Stack>
-          <Typography alignSelf="center">
-            <Translate word={T.Or} />
-          </Typography>
-          <a
-            href="https://opennebula.io/buy-support"
-            className={classes.links}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Translate word={T.GetAnAccount} />
-          </a>
-        </Stack>
-      </Box>
-    </TranslateProvider>
+        </a>
+      </Stack>
+    </Box>
   )
 }
 

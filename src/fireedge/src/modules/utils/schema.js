@@ -115,7 +115,6 @@ import {
  * - Render the current selected value inside selector input
  * - **Only for select inputs.**
  * @property {ReactElement} [Table]
- * - Table component. One of table defined in: `@modules/components/Tables`
  * - **Only for table inputs.**
  * @property {boolean|DependOfCallback} [singleSelect]
  * If `true`, the table component only will allows to select one row

@@ -13,283 +13,211 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+
+import { List, Table, ResourceContainer } from '@ComponentsV2Module'
+import { VirtualMachine } from '@ResourcesModule'
+import { T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-  VmsTable,
-  VmTabs,
-} from '@ComponentsModule'
-import { RESOURCE_NAMES, T, VM } from '@ConstantsModule'
-import {
-  setSelectedIds,
-  useGeneral,
-  useGeneralApi,
-  VmAPI,
+  useFunctionalityApi,
+  useFunctionality,
+  useViews,
 } from '@FeaturesModule'
-import { ButtonClearErrors } from '@modules/containers/VirtualMachines/ButtonClearErrors'
-import CustomGlobalActions from '@modules/containers/VirtualMachines/CustomGlobalActions'
-import { Chip, Stack } from '@mui/material'
+import { ReactElement, useMemo, useCallback } from 'react'
+import { DetailsDrawer } from '@modules/containers/VirtualMachines/Details'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import {
-  memo,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
-import { useDispatch } from 'react-redux'
+  getHypervisor,
+  getIps,
+  getLastHistory,
+  getVMLocked,
+  getVirtualMachineState,
+  getVirtualMachineType,
+  vmsTable,
+} from '@ModelsModule'
+import { prettyBytes, timeFromMilliseconds } from '@UtilsModule'
 
 /**
- * Displays a list of VMs with a split pane between the list and selected row(s).
+ * Displays a list of VM Templates with a split pane between the list and selected row(s).
  *
- * @returns {ReactElement} VMs list and selected row(s)
+ * @returns {ReactElement} VM Templates list and selected row(s)
  */
 export function VirtualMachines() {
-  const [dismissError] = VmAPI.useUpdateUserTemplateMutation()
-  const dispatch = useDispatch()
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = VmsTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
-  const refetchRef = useRef(null)
+  const {
+    searchExpression,
+    sortExpression,
+    filterExpression,
+    selectedItems,
+    containerView,
+  } = useFunctionality()
+  const { getResourceView } = useViews()
 
-  const handleRefetch = useCallback((refresh) => {
-    refetchRef.current = refresh
-  }, [])
+  const viewConfig = useMemo(
+    () => getResourceView(VirtualMachine.RID),
+    [getResourceView]
+  )
 
-  const handleUseRefetch = useCallback(() => {
-    if (typeof refetchRef.current === 'function') {
-      refetchRef.current()
-    }
-  }, [])
+  const { setSelectedItems } = useFunctionalityApi()
 
-  useEffect(() => {
-    const selectedIds = selectedRows.map((row) => row.original.ID)
-    dispatch(setSelectedIds(selectedIds))
-  }, [selectedRows, dispatch])
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = vmsTable.useData()
 
-  const handleDismissError = useCallback(
-    async (id, xml) => dismissError({ id, template: xml, replace: 0 }),
-    []
+  const filterOptions = useMemo(
+    () => vmsTable.filterOptions(data, viewConfig?.filters),
+    [data, viewConfig?.filters]
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((vm) => {
+          const { ID, NAME, GNAME, UNAME, STIME, TEMPLATE = {} } = vm
+          const { CPU = 1, MEMORY = 0, VCPU = 1 } = TEMPLATE
+          const state = getVirtualMachineState(vm)
+
+          return [
+            ID,
+            NAME,
+            state?.name,
+            `${CPU}/${VCPU || CPU}`,
+            prettyBytes(MEMORY, 'MB'),
+            UNAME,
+            GNAME,
+            STIME && timeFromMilliseconds(+STIME).toRelative(),
+            getVMLocked(vm),
+            getVMLocked(vm) && T.Locked,
+            getVirtualMachineType(vm),
+            getIps(vm).join(),
+            getLastHistory(vm)?.HOSTNAME,
+            getHypervisor(vm),
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    const filteredByFilters = vmsTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
+
+    return vmsTable.sortData(filteredByFilters, sortExpression)
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
+
+  const selectedVms = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(ID)) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () => Object.fromEntries(selectedItems.map((id) => [id, true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+  const handleSelect = (ID) =>
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === ID ? [] : [ID]
+    )
+  const handleDeselect = (ID) =>
+    setSelectedItems(selectedItems.filter((id) => id !== ID))
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
   )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={VmAPI.useUpdateUserTemplateMutation}
-        zone={zone}
-        actions={actions}
-        handleDismissError={handleDismissError}
-        customGlobalActions={(props) => (
-          <CustomGlobalActions
-            selectedRows={props.selectedRows}
-            onSelectedRowsChange={props.onSelectedRowsChange}
-            actions={props.actions}
-          />
-        )}
-        table={(props) => (
-          <VmsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-            handleRefetch={handleRefetch}
-          />
-        )}
-        simpleGroupsTags={(props) => {
-          const propsSimpleGroups = {
-            tags: props.selectedRows,
-            handleElement: props.handleElement,
-            onDelete: props.handleUnselectRow,
-          }
-          props.moreThanOneSelected &&
-            props.handleDismissError &&
-            (propsSimpleGroups.handleDismissError = props.handleDismissError)
-
-          return <GroupedTags {...propsSimpleGroups} />
-        }}
-        info={(props) => {
-          const propsInfo = {
-            vm: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.selectedRows && (propsInfo.tags = props.tags)
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
-          propsInfo.handleUseRefetch = handleUseRefetch
-          props.moreThanOneSelected &&
-            props.handleDismissError &&
-            (propsInfo.handleDismissError = props.handleDismissError)
-
-          return <InfoTabs {...propsInfo} />
-        }}
+    <ResourceContainer
+      resourceName={T.VirtualMachines}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={vmsTable.sortOptions()}
+      filterOptions={filterOptions}
+      searchPlaceholder={`${T.Search} ${T.VirtualMachines}`}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => ID) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={vmsTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => row.ID}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map(
+                  ({
+                    NAME,
+                    ID,
+                    GNAME,
+                    UNAME,
+                    STIME,
+                    LOCK = false,
+                    STATE,
+                    LCM_STATE,
+                    LABELS,
+                    ...vm
+                  }) => (
+                    <VirtualMachine.Card
+                      key={ID}
+                      NAME={NAME}
+                      ID={ID}
+                      GNAME={GNAME}
+                      UNAME={UNAME}
+                      STIME={STIME}
+                      LOCK={LOCK}
+                      STATE={STATE}
+                      LCM_STATE={LCM_STATE}
+                      LABELS={LABELS}
+                      HYPERVISOR={getHypervisor(vm)}
+                      isSelected={selectedItems?.includes(ID)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(ID)
+                            ? selectedItems.filter((id) => id !== ID)
+                            : [...(selectedItems ?? []), ID]
+                        )
+                      }
+                      onClick={() => handleSelect(ID)}
+                    />
+                  )
+                )}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedVms={selectedVms}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        viewConfig={viewConfig}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a VM.
- *
- * @param {VM} vm - VM to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a VM
- * @param {Function} [unselect] - Function to unselect a VM
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} VM details
- */
-const InfoTabs = memo(
-  ({
-    vm,
-    gotoPage,
-    unselect,
-    handleDismissError,
-    tags,
-    selectedRows,
-    handleUseRefetch,
-  }) => {
-    const [getVm, { data: lazyData, isFetching }] = VmAPI.useLazyGetVmQuery()
-    const id = vm?.ID ?? lazyData?.ID
-    const { isFullMode } = useGeneral()
-    const { setFullMode } = useGeneralApi()
-
-    useEffect(() => {
-      !isFullMode && gotoPage()
-    }, [])
-
-    return (
-      <Stack overflow="auto">
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          gap={1}
-          mx={1}
-          mb={1}
-        >
-          <Stack direction="row">
-            {isFullMode && (
-              <SubmitButton
-                data-cy="detail-back"
-                icon={<NavArrowLeft />}
-                tooltip={Tr(T.Back)}
-                isSubmitting={isFetching}
-                onClick={() => unselect()}
-              />
-            )}
-          </Stack>
-
-          <ButtonClearErrors
-            tags={tags}
-            handleDismissError={handleDismissError}
-          />
-
-          <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-            {isFullMode && (
-              <GlobalLabel
-                selectedRows={selectedRows}
-                type={RESOURCE_NAMES?.VM}
-              />
-            )}
-            <SubmitButton
-              data-cy="detail-full-mode"
-              icon={isFullMode ? <Collapse /> : <Expand />}
-              tooltip={Tr(T.FullScreen)}
-              isSubmitting={isFetching}
-              onClick={() => {
-                setFullMode(!isFullMode)
-              }}
-            />
-            <SubmitButton
-              data-cy="detail-refresh"
-              icon={<RefreshDouble />}
-              tooltip={Tr(T.Refresh)}
-              isSubmitting={isFetching}
-              onClick={async () => {
-                await getVm({ id })
-                handleUseRefetch && (await handleUseRefetch())
-              }}
-            />
-            {typeof unselect === 'function' && (
-              <SubmitButton
-                data-cy="unselect"
-                icon={<Cancel />}
-                tooltip={Tr(T.Close)}
-                onClick={() => unselect()}
-              />
-            )}
-          </Stack>
-        </Stack>
-        <VmTabs id={id} />
-      </Stack>
-    )
-  }
-)
-
-InfoTabs.propTypes = {
-  selectedRows: PropTypes.array,
-  vm: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-  handleDismissError: PropTypes.func,
-  handleUseRefetch: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-  handleDismissError,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <ButtonClearErrors tags={tags} handleDismissError={handleDismissError} />
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-  handleDismissError: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

@@ -21,7 +21,7 @@
  * @returns {string} Input string modified
  */
 export const upperCaseFirst = (input) =>
-  input?.charAt(0)?.toUpperCase() + input.substring(1)
+  input ? input?.charAt(0)?.toUpperCase() + input.substring(1) : input
 
 /**
  * Transform into a lower case with spaces between words, then capitalize the string.
@@ -34,6 +34,7 @@ export const upperCaseFirst = (input) =>
  * @example // "TESTString" => "Test string"
  */
 export const sentenceCase = (input) => {
+  if (typeof input !== 'string') return input
   const sentence = input
     ?.replace(/[-_]([A-Za-z])/g, ' $1')
     ?.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
@@ -76,3 +77,33 @@ export const toSnakeCase = (input) => sentenceCase(input).replace(/\s/g, '_')
  */
 export const stringToBoolean = (str) =>
   ['yes', 'true'].includes(String(str).toLowerCase()) || +str === 1
+
+/**
+ * Extract numeric characters from a value.
+ *
+ * @param {string|number} value - Value to clean
+ * @param {number} length - Maximum number of digits to return
+ * @returns {string} Digits-only string
+ */
+export const getDigits = (value = '', length) => {
+  const digits = `${value}`.replace(/\D/g, '')
+
+  return length == null ? digits : digits.slice(0, length)
+}
+
+/**
+ * Convert a value to a lower-case string.
+ *
+ * @param {string|number} value - Value to normalize
+ * @returns {string} Lower-case string
+ */
+export const toLowerCaseString = (value) => `${value ?? ''}`.toLowerCase()
+
+/**
+ * Compare resource IDs regardless of numeric/string source type.
+ *
+ * @param {string|number} a - First ID
+ * @param {string|number} b - Second ID
+ * @returns {boolean} True when both IDs are equivalent
+ */
+export const isSameId = (a, b) => `${a ?? ''}` === `${b ?? ''}`

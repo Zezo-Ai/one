@@ -56,8 +56,6 @@ export const useGeneralApi = () => {
     setUpdateDialog: (updateDialog) =>
       dispatch(actions.setUpdateDialog(updateDialog)),
     setFullMode: (fullMode) => dispatch(actions.setFullMode(fullMode)),
-    setSecondTitle: (resourceName) =>
-      dispatch(actions.setSecondTitle(resourceName)),
     setTableViewMode: (tableViewMode) =>
       dispatch(actions.setTableViewMode(tableViewMode)),
 
@@ -94,31 +92,40 @@ export const useGeneralApi = () => {
           options,
         })
       ),
-    enqueueSuccess: (message, values) =>
+    enqueueSuccess: (message, values, urgent = false) =>
       dispatch(
         actions.enqueueSnackbar({
           key: generateKey(),
           message,
           values,
-          options: { variant: 'success' },
+          options: { variant: 'success', urgent },
         })
       ),
-    enqueueError: (message, values) =>
+    enqueueWarning: (message, values, urgent = true) =>
       dispatch(
         actions.enqueueSnackbar({
           key: generateKey(),
           message,
           values,
-          options: { variant: 'error' },
+          options: { variant: 'warning', urgent },
         })
       ),
-    enqueueInfo: (message, values) =>
+    enqueueError: (message, values, urgent = true) =>
       dispatch(
         actions.enqueueSnackbar({
           key: generateKey(),
           message,
           values,
-          options: { variant: 'info' },
+          options: { variant: 'error', urgent },
+        })
+      ),
+    enqueueInfo: (message, values, urgent = false) =>
+      dispatch(
+        actions.enqueueSnackbar({
+          key: generateKey(),
+          message,
+          values,
+          options: { variant: 'information', urgent },
         })
       ),
   }

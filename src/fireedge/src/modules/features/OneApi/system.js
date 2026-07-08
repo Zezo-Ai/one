@@ -23,6 +23,7 @@ import {
   Commands as SunstoneCommands,
 } from 'server/routes/api/sunstone/routes'
 import { AuthSlice } from '@modules/features/Auth/slice'
+import { PROFILE_LABELS } from '@modules/features/OneApi/labels'
 import { oneApi } from '@modules/features/OneApi/oneApi'
 import { ONE_RESOURCES } from '@modules/features/OneApi/resources'
 const { actions } = AuthSlice
@@ -93,6 +94,12 @@ const systemApi = oneApi.injectEndpoints({
         return { command }
       },
       providesTags: [{ type: SYSTEM, id: 'default-labels' }],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(oneApi.util.invalidateTags([PROFILE_LABELS]))
+        } catch {}
+      },
       keepUnusedDataFor: 600,
     }),
     getSunstoneViews: builder.query({

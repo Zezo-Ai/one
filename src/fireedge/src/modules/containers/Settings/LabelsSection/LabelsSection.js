@@ -14,16 +14,40 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { ReactElement } from 'react'
-import { TranslateProvider, NestedLabelTable } from '@ComponentsModule'
+import { ReactElement, useMemo } from 'react'
+import {
+  TranslateProvider,
+  Settings as SettingsResource,
+} from '@ResourcesModule'
+import { Box, useTheme } from '@mui/material'
+import { css } from '@emotion/css'
+
+const styles = ({ palette, spacing }) => ({
+  labelsSection: css({
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
+    minHeight: 0,
+    paddingTop: spacing(5),
+    paddingBottom: spacing(4),
+    color: palette.text.body,
+  }),
+})
 
 /**
  * Section to change labels.
  *
  * @returns {ReactElement} Settings configuration UI
  */
-export const Settings = () => (
-  <TranslateProvider>
-    <NestedLabelTable />
-  </TranslateProvider>
-)
+export const Settings = () => {
+  const theme = useTheme()
+  const classes = useMemo(() => styles(theme), [theme])
+
+  return (
+    <TranslateProvider>
+      <Box className={classes.labelsSection}>
+        <SettingsResource.NestedLabelTable />
+      </Box>
+    </TranslateProvider>
+  )
+}

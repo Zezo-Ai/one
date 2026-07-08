@@ -13,30 +13,24 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+
+import { List, ResourceContainer, Table } from '@ComponentsV2Module'
+import { RESOURCE_NAMES, T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-  VnTabs,
-  VnsTable,
-} from '@ComponentsModule'
-import { RESOURCE_NAMES, T, VirtualNetwork } from '@ConstantsModule'
-import { VnAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  useFunctionality,
+  useFunctionalityApi,
+  useViews,
+} from '@FeaturesModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+import { getActionsAvailable } from '@UtilsModule'
+import { DetailsDrawer } from '@modules/containers/VirtualNetworks/Details'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { ReactElement, memo, useEffect, useState } from 'react'
+  getLeasesInfo,
+  getVirtualNetworkState,
+  getVNManager,
+  vnTable,
+} from '@ModelsModule'
+import { VirtualNetwork } from '@ResourcesModule'
 
 /**
  * Displays a list of Virtual Networks with a split pane between the list and selected row(s).
@@ -44,172 +38,171 @@ import { ReactElement, memo, useEffect, useState } from 'react'
  * @returns {ReactElement} Virtual Networks list and selected row(s)
  */
 export function VirtualNetworks() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = VnsTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const {
+    searchExpression,
+    sortExpression,
+    filterExpression,
+    selectedItems,
+    containerView,
+  } = useFunctionality()
+  const { getResourceView } = useViews()
+  const resourceView = getResourceView(RESOURCE_NAMES.VNET)
+
+  const availableActions = useMemo(
+    () => getActionsAvailable(resourceView?.actions),
+    [resourceView?.actions]
+  )
+
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = vnTable.useData()
+
+  const filterOptions = useMemo(
+    () => vnTable.filterOptions(data, resourceView?.filters),
+    [data, resourceView?.filters]
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((vnet) => {
+          const { CLUSTERS, GNAME, ID, LOCK, NAME, TEMPLATE, UNAME } = vnet
+          const state = getVirtualNetworkState(vnet)
+          const leases = getLeasesInfo(vnet)
+          const cluster = [CLUSTERS?.ID ?? []].flat()[0]
+
+          return [
+            ID,
+            NAME,
+            UNAME,
+            GNAME,
+            getVNManager(vnet),
+            state?.name,
+            cluster,
+            leases?.percentLabel,
+            LOCK && T.Locked,
+            TEMPLATE?.LABELS,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    const filteredByFilters = vnTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
+
+    return vnTable.sortData(filteredByFilters, sortExpression)
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
+
+  const selectedResources = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () =>
+      Object.fromEntries((selectedItems ?? []).map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(selectedItems.filter((itemId) => itemId !== id))
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={VnAPI.useUpdateVNetMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <VnsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            useUpdateMutation={props.useUpdateMutation}
-            onRowClick={props.resourcesBackButtonClick}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            vnet: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.VirtualNetworks}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={vnTable.sortOptions()}
+      filterOptions={filterOptions}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={vnTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((vnet) => {
+                  const { ID } = vnet
+                  const id = String(ID)
 
-          return <InfoTabs {...propsInfo} />
-        }}
+                  return (
+                    <VirtualNetwork.Card
+                      key={id}
+                      vnet={vnet}
+                      isSelected={selectedItems?.includes(id)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter((itemId) => itemId !== id)
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+
+      <DetailsDrawer
+        selectedResources={selectedResources}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        actions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a Virtual Network.
- *
- * @param {VirtualNetwork} vnet - Virtual Network to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Virtual Network
- * @param {Function} [unselect] - Function to unselect
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Virtual Network details
- */
-const InfoTabs = memo(({ vnet, gotoPage, unselect, selectedRows }) => {
-  const [get, { data: lazyData, isFetching }] = VnAPI.useLazyGetVNetworkQuery()
-  const id = vnet?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.VNET}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <VnTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  vnet: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

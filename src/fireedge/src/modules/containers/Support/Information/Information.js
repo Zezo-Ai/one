@@ -17,15 +17,19 @@ import { ReactElement } from 'react'
 import {
   Box,
   Paper,
-  Typography,
   ListItem,
   ListItemIcon,
   ListItemText,
   useTheme,
 } from '@mui/material'
+import { Text } from '@ComponentsV2Module'
 
-import { Translate, TranslateProvider } from '@ComponentsModule'
-import { SUPPORT_WEBSITE, T } from '@ConstantsModule'
+import {
+  SUPPORT_WEBSITE,
+  T,
+  TEXT_VARIANTS,
+  TEXT_WEIGHTS,
+} from '@ConstantsModule'
 
 import { Check as CheckIcon } from 'iconoir-react'
 
@@ -56,9 +60,11 @@ const generateSubscriptionBenefits = () => {
         <CheckIcon />
       </ListItemIcon>
       <ListItemText>
-        <Typography>
-          <Translate word={text} />
-        </Typography>
+        <Text
+          variant={TEXT_VARIANTS.BODY_MEDIUM}
+          weight={TEXT_WEIGHTS.REGULAR}
+          value={text}
+        />
       </ListItemText>
     </ListItem>
   ))
@@ -73,41 +79,46 @@ export const Settings = () => {
   const theme = useTheme()
 
   return (
-    <TranslateProvider>
-      <Paper
-        variant="outlined"
-        sx={{ display: 'flex', flexDirection: 'column' }}
-      >
-        <Box mt="0.5rem" p="1rem">
-          <Typography
-            sx={{
-              paddingBottom: theme.spacing(1),
+    <Paper variant="outlined" sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Box mt="0.5rem" p="1rem">
+        <Text
+          variant={TEXT_VARIANTS.BODY_MEDIUM}
+          weight={TEXT_WEIGHTS.REGULAR}
+          value={T.SupportInformation}
+          sx={{
+            paddingBottom: theme.spacing(1),
+          }}
+        />
+        {generateSubscriptionBenefits()}
+        <Box
+          sx={{
+            paddingTop: theme.spacing(1),
+          }}
+        >
+          <Text
+            component="span"
+            variant={TEXT_VARIANTS.BODY_MEDIUM}
+            weight={TEXT_WEIGHTS.BOLD}
+            value={T.MoreInformation}
+          />
+          <a
+            href={SUPPORT_WEBSITE}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              color: theme.palette.primary.dark,
+              textDecoration: 'none',
             }}
           >
-            <Translate word={T.SupportInformation} />
-          </Typography>
-          {generateSubscriptionBenefits()}
-          <Typography
-            sx={{
-              paddingTop: theme.spacing(1),
-              fontWeight: theme.typography.fontWeightBold,
-            }}
-          >
-            <Translate word={T.MoreInformation} />
-            <a
-              href={SUPPORT_WEBSITE}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                color: theme.palette.primary.dark,
-                textDecoration: 'none',
-              }}
-            >
-              <Translate word={T.ClickHere.toLowerCase()} />
-            </a>
-          </Typography>
+            <Text
+              component="span"
+              variant={TEXT_VARIANTS.BODY_MEDIUM}
+              weight={TEXT_WEIGHTS.BOLD}
+              value={T.ClickHere.toLowerCase()}
+            />
+          </a>
         </Box>
-      </Paper>
-    </TranslateProvider>
+      </Box>
+    </Paper>
   )
 }

@@ -15,21 +15,16 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement } from 'react'
 import { useHistory, useLocation } from 'react-router'
-
 import { useGeneralApi, VnTemplateAPI, useSystemData } from '@FeaturesModule'
-
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
   TranslateProvider,
-} from '@ComponentsModule'
-
-import { T } from '@ConstantsModule'
+  VnTemplate,
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
-const { VnTemplate } = Form
 
 /**
  * Displays the creation or modification form to a Virtual Network.
@@ -54,10 +49,10 @@ export const CreateVnTemplate = () => {
     try {
       if (!vnetId) {
         const newVnetId = await allocate({ template: xml }).unwrap()
-        enqueueSuccess(T.SuccessVNetTemplateCreated, newVnetId)
+        enqueueSuccess(T.SuccessVNetTemplateCreated, String(newVnetId))
       } else {
         await update({ id: vnetId, template: xml }).unwrap()
-        enqueueSuccess(T.SuccessVNetTemplateUpdated, [vnetId, NAME])
+        enqueueSuccess(T.SuccessVNetTemplateUpdated, [String(vnetId), NAME])
       }
 
       history.push(PATH.NETWORK.VN_TEMPLATES.LIST)
@@ -67,7 +62,7 @@ export const CreateVnTemplate = () => {
   return (
     <TranslateProvider>
       {!_.isEmpty(oneConfig) && ((vnetId && data) || !vnetId) ? (
-        <VnTemplate.CreateForm
+        <VnTemplate.Forms.CreateForm
           initialValues={data}
           stepProps={{
             data,
@@ -77,8 +72,8 @@ export const CreateVnTemplate = () => {
           onSubmit={onSubmit}
           fallback={<SkeletonStepsForm />}
         >
-          {(config) => <DefaultFormStepper {...config} />}
-        </VnTemplate.CreateForm>
+          {(config) => <DefaultFormStepper {...config} update={!!vnetId} />}
+        </VnTemplate.Forms.CreateForm>
       ) : (
         <SkeletonStepsForm />
       )}

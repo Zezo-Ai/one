@@ -14,11 +14,12 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-export * from '@modules/features/SupportAuth'
-export * from '@modules/features/Persistent'
-export * from '@modules/features/OneApi'
-export * from '@modules/features/Guacamole'
-export * from '@modules/features/General'
-export * from '@modules/features/Modals'
 export * from '@modules/features/Auth'
+export * from '@modules/features/Functionality'
+export * from '@modules/features/General'
+export * from '@modules/features/Guacamole'
+export * from '@modules/features/Modals'
+export * from '@modules/features/OneApi'
+export * from '@modules/features/Persistent'
+export * from '@modules/features/SupportAuth'
 export * from '@modules/features/middleware'

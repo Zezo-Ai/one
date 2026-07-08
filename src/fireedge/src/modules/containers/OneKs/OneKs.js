@@ -14,203 +14,215 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 /* eslint-disable react/prop-types */
+
+import { List, ResourceContainer, Table } from '@ComponentsV2Module'
+import { RESOURCE_NAMES, TABLE_VIEW_MODE, T } from '@ConstantsModule'
 import {
-  GlobalLabel,
-  MultipleTags,
-  OneKSTable,
-  OneKsTabs,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { Kubernete, RESOURCE_NAMES, T } from '@ConstantsModule'
-import { OneKsAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  OneKsAPI,
+  useFunctionality,
+  useFunctionalityApi,
+  useGeneral,
+  useViews,
+} from '@FeaturesModule'
+import { getVirtualOneKsState } from '@ModelsModule'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
+  getTableSortOptions,
+  sortTableData,
+  timeFromMilliseconds,
+} from '@UtilsModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+import { DetailsDrawer } from '@modules/containers/OneKs/Details'
+import { OneKs as OneKsResource } from '@ResourcesModule'
+
+const getDocument = (data) => data?.DOCUMENT ?? data ?? {}
+
+const toId = (id) => String(id)
+
+const formatTime = (time) =>
+  +time > 0 ? timeFromMilliseconds(+time).toFormat('ff') : '-'
+
+const columns = [
+  { header: T.ID, accessorKey: 'ID' },
+  { header: T.Name, accessorKey: 'NAME' },
+  {
+    header: T.State,
+    id: 'STATE',
+    accessorFn: (row) => getVirtualOneKsState(row)?.name ?? '',
+  },
+  {
+    header: T.KubernetesVersion,
+    id: 'VERSION',
+    accessorFn: (row) => row?.TEMPLATE?.CLUSTER_BODY?.kubernetes_version ?? '',
+  },
+  {
+    header: T.NodeGroups,
+    id: 'NODEGROUPS',
+    accessorFn: (row) => row?.TEMPLATE?.CLUSTER_BODY?.node_groups?.length ?? 0,
+  },
+  {
+    header: T.CreationTime,
+    id: 'CREATED',
+    accessorFn: (row) =>
+      formatTime(row?.TEMPLATE?.CLUSTER_BODY?.registration_time),
+  },
+]
 
 /**
- * Displays a list of Kubernetes with a split pane between the list and selected row(s).
+ * Displays a list of Kubernetes clusters with a split pane between the list
+ * and selected row(s).
  *
  * @returns {ReactElement} OneKs list and selected row(s)
  */
 export function OneKs() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-
-  const actions = OneKSTable.Actions({ selectedRows, setSelectedRows })
   const { zone } = useGeneral()
+  const { searchExpression, sortExpression, selectedItems, containerView } =
+    useFunctionality()
+
+  const { getResourceView } = useViews()
+  const availableActions = useMemo(
+    () => getResourceView(RESOURCE_NAMES.ONEKS)?.actions ?? {},
+    [getResourceView]
+  )
+
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = OneKsAPI.useGetOneKsClustersQuery(
+    { zone },
+    {
+      selectFromResult: (result) => ({
+        ...result,
+        data: result?.data?.map(getDocument),
+      }),
+    }
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+
+    const filteredData = search
+      ? data?.filter((cluster) => {
+          const { ID, NAME, UNAME, GNAME, TEMPLATE = {} } = cluster
+          const { CLUSTER_BODY = {} } = TEMPLATE
+          const state = getVirtualOneKsState(cluster)
+          const registrationTime = CLUSTER_BODY?.registration_time
+
+          return [
+            ID,
+            NAME,
+            state?.name,
+            CLUSTER_BODY?.kubernetes_version,
+            CLUSTER_BODY?.node_groups?.length,
+            registrationTime && formatTime(registrationTime),
+            registrationTime &&
+              timeFromMilliseconds(+registrationTime).toRelative(),
+            UNAME,
+            GNAME,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    return sortTableData(filteredData, sortExpression, columns)
+  }, [data, searchExpression, sortExpression])
+
+  const selectedData = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(toId(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () => Object.fromEntries(selectedItems.map((id) => [id, true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+  const handleSelect = (ID) => {
+    const id = toId(ID)
+
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+  const handleDeselect = (ID) =>
+    setSelectedItems(selectedItems.filter((id) => id !== toId(ID)))
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <OneKSTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            kubernetes: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
-
-          return <InfoTabs {...propsInfo} />
-        }}
+    <ResourceContainer
+      resourceName="Kubernetes"
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={getTableSortOptions(columns)}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => toId(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={columns}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => toId(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((cluster) => (
+                  <OneKsResource.Card
+                    key={cluster?.ID}
+                    data={cluster}
+                    isSelected={selectedItems?.includes(toId(cluster?.ID))}
+                    onCheck={() =>
+                      setSelectedItems(
+                        selectedItems?.includes(toId(cluster?.ID))
+                          ? selectedItems.filter(
+                              (id) => id !== toId(cluster?.ID)
+                            )
+                          : [...(selectedItems ?? []), toId(cluster?.ID)]
+                      )
+                    }
+                    onClick={() => handleSelect(cluster?.ID)}
+                  />
+                ))}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedData={selectedData}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        availableActions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a Kubernetes.
- *
- * @param {Kubernete} Kubernetes - Kubernetes data to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Cluster
- * @param {Function} [unselect] - Function to unselect a Cluster
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Cluster details
- */
-const InfoTabs = memo(({ kubernetes, gotoPage, unselect, selectedRows }) => {
-  const [get, { data: lazyData, isFetching }] =
-    OneKsAPI.useLazyGetOneKsClusterQuery()
-  const id = kubernetes?.ID ?? lazyData?.DOCUMENT?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack>
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.CLUSTER}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id, expand: true })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <OneKsTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  cluster: PropTypes.object.isRequired,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = memo(
-  ({ tags = [], handleElement = true, onDelete = () => undefined }) => (
-    <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-      <MultipleTags
-        limitTags={10}
-        tags={tags?.map((props) => {
-          const { original, id, toggleRowSelected, gotoPage } = props
-          const clickElement = handleElement
-            ? {
-                onClick: gotoPage,
-                onDelete: () => onDelete(id) || toggleRowSelected(false),
-              }
-            : {}
-
-          return (
-            <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-          )
-        })}
-      />
-    </Stack>
-  )
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

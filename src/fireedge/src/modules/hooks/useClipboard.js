@@ -14,7 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /** @enum {string} Clipboard state */
 export const CLIPBOARD_STATUS = {
@@ -47,38 +47,30 @@ const { INIT, ERROR, COPIED } = CLIPBOARD_STATUS
 const useClipboard = ({ tooltipDelay = 2000 } = {}) => {
   const isMounted = useRef(true)
   const [state, setState] = useState()
-  const isCopied = useMemo(() => state === COPIED, [state])
+  const [copiedText, setCopiedText] = useState()
 
   useEffect(() => () => (isMounted.current = false), [])
+
+  const isCopied = useCallback(
+    (text) => copiedText === String(text),
+    [copiedText]
+  )
 
   const copy = useCallback(
     async (text) => {
       try {
-        if (window.isSecureContext) {
-          // Use the Async Clipboard API when available.
-          // Requires a secure browsing context (i.e. HTTPS)
-
-          !navigator?.clipboard && setState(ERROR)
-          await navigator.clipboard.writeText(String(text))
-        } else {
-          const textArea = document.createElement('textarea')
-          textArea.value = String(text)
-          textArea.style.opacity = 0
-          document.body.appendChild(textArea)
-          textArea.focus()
-          textArea.select()
-          document.execCommand('copy')
-          document.body.removeChild(textArea)
-        }
-
+        await navigator.clipboard.writeText(String(text))
+        setCopiedText(String(text))
         setState(COPIED)
-
         if (+tooltipDelay > 0) {
           setTimeout(() => {
-            isMounted.current && setState(INIT)
+            if (isMounted.current) {
+              setState(INIT)
+              setCopiedText(undefined)
+            }
           }, +tooltipDelay)
         }
-      } catch (error) {
+      } catch {
         setState(ERROR)
       }
     },

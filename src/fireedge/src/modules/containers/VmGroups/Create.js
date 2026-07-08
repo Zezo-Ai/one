@@ -18,16 +18,13 @@ import { useHistory, useLocation } from 'react-router'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  PATH,
-  Form,
+  VmGroup,
   TranslateProvider,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 import { VmGroupAPI, useGeneralApi } from '@FeaturesModule'
-import { jsonToXml } from '@ModelsModule'
+import { jsonToXml, isDevelopment } from '@UtilsModule'
 import { isEqual } from 'lodash'
-import { isDevelopment } from '@UtilsModule'
-import { T } from '@ConstantsModule'
-const { VmGroup } = Form
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Compares two role objects while ignoring the ID property of the original role.
@@ -205,14 +202,14 @@ export function CreateVmGroup() {
       {templateId && !data ? (
         <SkeletonStepsForm />
       ) : (
-        <VmGroup.CreateForm
+        <VmGroup.Forms.CreateForm
           onSubmit={onSubmit}
           initialValues={data}
           stepProps={data}
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </VmGroup.CreateForm>
+        </VmGroup.Forms.CreateForm>
       )}
     </TranslateProvider>
   )

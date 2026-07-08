@@ -21,11 +21,9 @@ import {
   TranslateProvider,
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-} from '@ComponentsModule'
-import { jsonToXml } from '@ModelsModule'
+  MarketplaceApp,
+} from '@ResourcesModule'
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
-const { MarketplaceApp } = Form
 
 /**
  * Displays the creation or modification form to a Marketplace App.
@@ -40,20 +38,15 @@ export function CreateMarketplaceApp() {
   const [create] = MarketplaceAppAPI.useAllocateAppMutation()
   const [importApp] = MarketplaceAppAPI.useImportAppMutation()
 
-  const handleTriggerSubmit = async ({ type, ...restOfData }) => {
+  const handleTriggerSubmit = async ({ resource, ...restOfData }) => {
     try {
       const createApp = {
-        [RESOURCE_NAMES.IMAGE]: async () => {
-          const { id: imageId, marketId, vmname, image } = restOfData
-          const xml = jsonToXml({ ORIGIN_ID: imageId, NAME: vmname, ...image })
-
-          return await create({ id: marketId, template: xml })
-        },
+        [RESOURCE_NAMES.IMAGE]: async () => await create(restOfData),
         [RESOURCE_NAMES.VM]: async () =>
-          await importApp({ resource: 'vm', ...restOfData }),
+          await importApp({ resource, ...restOfData }),
         [RESOURCE_NAMES.VM_TEMPLATE]: async () =>
-          await importApp({ resource: 'vm-template', ...restOfData }),
-      }[String(type).toLowerCase()]
+          await importApp({ resource, ...restOfData }),
+      }[resource]
 
       const response = await createApp?.()
       response && enqueueSuccess(T.SuccessMarketplaceAppCreated)
@@ -63,13 +56,13 @@ export function CreateMarketplaceApp() {
 
   return (
     <TranslateProvider>
-      <MarketplaceApp.CreateForm
+      <MarketplaceApp.Forms.CreateForm
         initialValues={{ type: resourceName, id: ID }}
         onSubmit={handleTriggerSubmit}
         fallback={<SkeletonStepsForm />}
       >
         {(config) => <DefaultFormStepper {...config} />}
-      </MarketplaceApp.CreateForm>
+      </MarketplaceApp.Forms.CreateForm>
     </TranslateProvider>
   )
 }

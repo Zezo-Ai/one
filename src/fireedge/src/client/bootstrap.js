@@ -119,7 +119,7 @@ const showEditor = ({ failedModule = '', error = '' } = {}) =>
             'UtilsModule',
             'ConstantsModule',
             'ContainersModule',
-            'ComponentsModule',
+            'ResourcesModule',
             'FeaturesModule',
             'ProvidersModule',
             'ModelsModule',

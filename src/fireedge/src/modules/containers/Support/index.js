@@ -14,6 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 export * from '@modules/containers/Support/Authentication'
+export * from '@modules/containers/Support/Create'
+export * from '@modules/containers/Support/Details'
 export * from '@modules/containers/Support/Documentation'
 export * from '@modules/containers/Support/Information'
 export * from '@modules/containers/Support/Support'

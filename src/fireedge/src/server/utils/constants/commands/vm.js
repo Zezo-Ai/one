@@ -55,6 +55,7 @@ const VM_SCHED_DELETE = 'vm.scheddelete'
 const VM_BACKUP = 'vm.backup'
 const VM_POOL_INFO = 'vmpool.info'
 const VM_POOL_INFO_EXTENDED = 'vmpool.infoextended'
+const VM_POOL_INFOSET = 'vmpool.infoset'
 const VM_POOL_MONITORING = 'vmpool.monitoring'
 const VM_POOL_ACCOUNTING = 'vmpool.accounting'
 const VM_POOL_SHOWBACK = 'vmpool.showback'
@@ -100,6 +101,7 @@ const Actions = {
   VM_BACKUP,
   VM_POOL_INFO,
   VM_POOL_INFO_EXTENDED,
+  VM_POOL_INFOSET,
   VM_POOL_MONITORING,
   VM_POOL_ACCOUNTING,
   VM_POOL_SHOWBACK,
@@ -795,6 +797,20 @@ module.exports = {
         filterBykey: {
           from: query,
           default: '',
+        },
+      },
+    },
+    [VM_POOL_INFOSET]: {
+      // inspected
+      httpMethod: POST,
+      params: {
+        ids: {
+          from: postBody,
+          default: '',
+        },
+        extended: {
+          from: postBody,
+          default: false,
         },
       },
     },

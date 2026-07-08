@@ -14,14 +14,23 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { Stack, Box, Link, List, ListItemText, Typography } from '@mui/material'
-import { FormWithSchema, Tr, Translate, SubmitButton } from '@ComponentsModule'
-import { AUTH_APPS, T, STYLE_BUTTONS } from '@ConstantsModule'
+import { Stack, Box, Link, Typography } from '@mui/material'
+import { Tr, Translate } from '@ResourcesModule'
+import { OtpInput, StepList, SubmitButton } from '@ComponentsV2Module'
+import {
+  AUTH_APPS,
+  DEFAULT_OTP_LENGTH,
+  T,
+  STYLE_BUTTONS,
+} from '@ConstantsModule'
 import { FIELDS } from '@modules/containers/Settings/Tfa/schema'
 import { AuthAPI } from '@FeaturesModule'
-import { Component, useState } from 'react'
-import { FormProvider, useForm } from 'react-hook-form'
+import { getDigits } from '@UtilsModule'
+import { Component, Fragment, useState } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import PropTypes from 'prop-types'
+
+const TOKEN_FIELD = FIELDS[0].name
 
 /**
  * @param {object} params - Params
@@ -35,24 +44,60 @@ export const QrDisplay = ({ imgSrc, token, user, remember } = {}) => {
   const [isLoading, setIsLoading] = useState(false)
   const [login, loginState] = AuthAPI.useLoginMutation()
   const [getAuthUser] = AuthAPI.useLazyGetAuthUserQuery()
-  const { handleSubmit, setError, ...methods } = useForm({
+  const { clearErrors, control, getValues, handleSubmit, setError } = useForm({
     reValidateMode: 'onChange',
+    defaultValues: { [TOKEN_FIELD]: '' },
   })
+  const tokenValue = useWatch({ control, name: TOKEN_FIELD })
+  const isSubmitting =
+    loginState?.isLoading || loginState?.isFetching || isLoading
+  const isTokenComplete =
+    getDigits(tokenValue, DEFAULT_OTP_LENGTH).length === DEFAULT_OTP_LENGTH
 
-  const submitToken = handleSubmit(async ({ TOKEN: tfatoken }) => {
+  const handleTokenBlur = () => {
+    const isComplete =
+      getDigits(getValues(TOKEN_FIELD), DEFAULT_OTP_LENGTH).length ===
+      DEFAULT_OTP_LENGTH
+
+    if (!isComplete) {
+      setError(TOKEN_FIELD, {
+        type: 'validate',
+        message: T.EnterVerificationCode,
+      })
+
+      return
+    }
+
+    clearErrors(TOKEN_FIELD)
+  }
+
+  const submitToken = handleSubmit(async ({ [TOKEN_FIELD]: tfatoken }) => {
     try {
       setIsLoading(true)
       if (!tfatoken) return
       const response = await login({ user, token, tfatoken, remember })
-      await getAuthUser()
+      const { data, error } = response
 
-      const { error } = response
-
-      error &&
-        setError(FIELDS[0].name, {
+      if (error) {
+        setError(TOKEN_FIELD, {
           type: 'custom',
-          message: error?.data ?? T.Error,
+          message:
+            error?.status === 401 ? T.InvalidTfa : error?.data ?? T.Error,
         })
+
+        return
+      }
+
+      if (data?.status === 'ok') {
+        const authUserResponse = await getAuthUser()
+
+        if (authUserResponse?.error) {
+          setError(TOKEN_FIELD, {
+            type: 'custom',
+            message: T.InvalidTfa,
+          })
+        }
+      }
     } catch {
     } finally {
       setIsLoading(false)
@@ -60,73 +105,113 @@ export const QrDisplay = ({ imgSrc, token, user, remember } = {}) => {
   })
 
   return (
-    <Stack
-      direction="column"
-      spacing={1}
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-        overflow: 'hidden',
-      }}
-    >
-      <Typography
-        variant="subtitle2"
+    <Stack width="100%" gap={5}>
+      <Stack gap={0.5}>
+        <Typography
+          variant="h6"
+          sx={{
+            color: 'text.headings',
+          }}
+        >
+          <Translate word={T.TwoFactorAuthenticationRequired} />
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+          <Translate word={T.TwoFactorAuthenticationSetupRequired} />
+        </Typography>
+      </Stack>
+
+      <Box
         sx={{
-          textAlign: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
-        <Translate word={T.EnforceTFAConcept} />
-      </Typography>
-      <Typography variant="caption">
-        <Translate word={T.ScanThisQr} />
-      </Typography>
-      <Box
-        component="img"
-        src={imgSrc}
-        alt={Tr(T.ScanThisQr)}
-        data-cy="qrTfa"
-        sx={{
-          width: '300px',
-          height: '300px',
-        }}
-      />
-      <FormProvider {...methods}>
-        <FormWithSchema cy={'2fa-ui'} fields={FIELDS} />
-      </FormProvider>
-      <SubmitButton
-        onClick={submitToken}
-        data-cy="addTfa"
-        label={T.Continue}
-        variant="contained"
-        isSubmitting={
-          loginState?.isLoading || loginState?.isFetching || isLoading
-        }
-        importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-        type={STYLE_BUTTONS.TYPE.FILLED}
-        size={STYLE_BUTTONS.SIZE.LARGE}
-        sx={{ textTransform: 'uppercase', width: '100%', marginTop: '2rem' }}
-      />
-      <List>
-        <ListItemText>
-          <Translate word={T.GetAuthenticatorApp} />
-          {AUTH_APPS.map(({ text, url }) => (
-            <>
-              <Link
-                key={text}
-                href={url}
-                color="info.main"
-                sx={{
-                  fontWeight: 'bold',
+        <Stack width="45%" gap={3}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              color: 'text.headings',
+            }}
+          >
+            <Translate word={T.AuthenticationInstructions} />
+          </Typography>
+
+          <Box
+            component="img"
+            src={imgSrc}
+            alt={Tr(T.ScanThisQr)}
+            data-cy="qrTfa"
+            sx={{
+              width: '179px',
+              height: '179px',
+              borderRadius: '12px',
+            }}
+          />
+
+          <StepList
+            items={[
+              <Fragment key="authenticator-app">
+                <Translate word={T.GetAuthenticatorAppOnDevice} />{' '}
+                {AUTH_APPS.map(({ text, url }) => (
+                  <Fragment key={text}>
+                    <Link href={url}>{text}</Link>{' '}
+                  </Fragment>
+                ))}
+              </Fragment>,
+              Tr(T.ScanQrWithAuthenticatorApp),
+              Tr(T.EnterGeneratedVerificationCode),
+            ]}
+          />
+        </Stack>
+
+        <Stack
+          component="form"
+          width="45%"
+          gap={5}
+          onSubmit={submitToken}
+          noValidate
+        >
+          <Controller
+            control={control}
+            name={TOKEN_FIELD}
+            rules={{
+              validate: (fieldValue) =>
+                getDigits(fieldValue, DEFAULT_OTP_LENGTH).length ===
+                  DEFAULT_OTP_LENGTH || T.EnterVerificationCode,
+            }}
+            render={({ field, fieldState }) => (
+              <OtpInput
+                label={Tr(T.AuthenticationCode)}
+                hint={Tr(T.EnterVerificationCode)}
+                isDisabled={isSubmitting}
+                error={fieldState.error?.message}
+                length={DEFAULT_OTP_LENGTH}
+                onBlur={() => {
+                  field.onBlur()
+                  handleTokenBlur()
                 }}
-              >
-                {text}
-              </Link>{' '}
-            </>
-          ))}
-        </ListItemText>
-      </List>
+                onChange={field.onChange}
+                value={field.value}
+              />
+            )}
+          />
+
+          <Stack gap={3}>
+            <SubmitButton
+              data-cy="addTfa"
+              isDisabled={!isTokenComplete}
+              label={<Translate word={T.ActivateTFAAndContinue} />}
+              type={STYLE_BUTTONS.TYPE.PRIMARY}
+              isSubmitting={isSubmitting}
+            />
+
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+              <Translate word={T.AfterTFASetupCodeUsage} />
+            </Typography>
+          </Stack>
+        </Stack>
+      </Box>
     </Stack>
   )
 }

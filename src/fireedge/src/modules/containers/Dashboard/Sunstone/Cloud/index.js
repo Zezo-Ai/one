@@ -13,16 +13,9 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { PATH } from '@ComponentsModule'
-import { RESOURCE_NAMES, T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T, PATH } from '@ConstantsModule'
 import { css } from '@emotion/css'
-import {
-  HostAPI,
-  useGeneralApi,
-  UserAPI,
-  useViews,
-  VmAPI,
-} from '@FeaturesModule'
+import { HostAPI, UserAPI, useViews, VmAPI } from '@FeaturesModule'
 import {
   DashboardButton,
   DashboardButtonInstantiate,
@@ -34,7 +27,7 @@ import {
 import { Box, Grid, useTheme } from '@mui/material'
 import clsx from 'clsx'
 import PropTypes from 'prop-types'
-import { ReactElement, useEffect, useMemo } from 'react'
+import { ReactElement, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 
 const { DASHBOARD, VM_TEMPLATE } = RESOURCE_NAMES
@@ -76,10 +69,6 @@ export default function CloudDashboard({ view }) {
   const theme = useTheme()
   const classes = useMemo(() => styles(theme))
   const { push: goTo } = useHistory()
-
-  // Delete second title
-  const { setSecondTitle } = useGeneralApi()
-  useEffect(() => setSecondTitle({}), [])
 
   const { data: quotaData = {} } = UserAPI.useGetUserQuery({})
   const { data: vmpoolMonitoringData = {}, isFetching: isFetchingVm } =

@@ -16,18 +16,16 @@
 import { ReactElement } from 'react'
 import { useHistory } from 'react-router'
 
-import { jsonToXml } from '@ModelsModule'
+import { jsonToXml } from '@UtilsModule'
 import { useGeneralApi, DatastoreAPI, ImageAPI } from '@FeaturesModule'
 
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  Files,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
-const { File } = Form
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation or modification form to a VM Template.
@@ -73,9 +71,12 @@ export function CreateFile() {
 
   return (
     <TranslateProvider>
-      <File.CreateForm onSubmit={onSubmit} fallback={<SkeletonStepsForm />}>
+      <Files.Forms.CreateForm
+        onSubmit={onSubmit}
+        fallback={<SkeletonStepsForm />}
+      >
         {(config) => <DefaultFormStepper {...config} />}
-      </File.CreateForm>
+      </Files.Forms.CreateForm>
     </TranslateProvider>
   )
 }

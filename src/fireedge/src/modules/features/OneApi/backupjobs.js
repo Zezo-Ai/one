@@ -15,12 +15,16 @@
  * ------------------------------------------------------------------------- */
 import { Actions, Commands } from 'server/utils/constants/commands/backupjobs'
 
-import { FilterFlag, Permission } from '@ConstantsModule'
+import { FilterFlag, Permission, RESOURCE_NAMES } from '@ConstantsModule'
 import {
   ONE_RESOURCES,
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import {
   removeResourceOnPool,
   updateNameOnResource,
@@ -30,6 +34,11 @@ import {
 
 const { BACKUPJOB } = ONE_RESOURCES
 const { BACKUPJOB_POOL } = ONE_RESOURCES_POOL
+const backupJobDetailAndPoolTags = (id) => [
+  { type: BACKUPJOB, id },
+  { type: BACKUPJOB_POOL, id: `${id}` },
+  BACKUPJOB_POOL,
+]
 
 const backupjobApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -48,20 +57,26 @@ const backupjobApi = oneApi.injectEndpoints({
         const name = Actions.BACKUPJOB_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) =>
-        [data?.BACKUPJOB_POOL?.BACKUPJOB ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.BACKUPJOB_POOL?.BACKUPJOB ?? []].flat(),
+          RESOURCE_NAMES.BACKUPJOBS,
+          meta
+        ),
       providesTags: (backupjobs) =>
-        backupjobs
-          ? [
-              ...backupjobs.map(({ ID }) => ({
-                type: BACKUPJOB_POOL,
-                id: `${ID}`,
-              })),
-              BACKUPJOB_POOL,
-            ]
-          : [BACKUPJOB_POOL],
+        withProfileLabelsTags(
+          backupjobs
+            ? [
+                ...backupjobs.map(({ ID }) => ({
+                  type: BACKUPJOB_POOL,
+                  id: `${ID}`,
+                })),
+                BACKUPJOB_POOL,
+              ]
+            : [BACKUPJOB_POOL]
+        ),
     }),
     getBackupJob: builder.query({
       /**
@@ -77,10 +92,16 @@ const backupjobApi = oneApi.injectEndpoints({
         const name = Actions.BACKUPJOB_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.BACKUPJOB ?? {},
-      providesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          data?.BACKUPJOB ?? {},
+          RESOURCE_NAMES.BACKUPJOBS,
+          meta
+        ),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: BACKUPJOB, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled
@@ -153,6 +174,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
+      invalidatesTags: [BACKUPJOB_POOL],
     }),
     updateBackupJob: builder.mutation({
       /**
@@ -174,7 +196,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchBackupJob = dispatch(
@@ -216,7 +238,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchBackupJob = dispatch(
@@ -260,10 +282,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [
-        { type: BACKUPJOB, id },
-        BACKUPJOB_POOL,
-      ],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     lockBackupJob: builder.mutation({
       /**
@@ -285,10 +304,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [
-        { type: BACKUPJOB, id },
-        BACKUPJOB_POOL,
-      ],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     unlockBackupJob: builder.mutation({
       /**
@@ -305,10 +321,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [
-        { type: BACKUPJOB, id },
-        BACKUPJOB_POOL,
-      ],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     startBackupJob: builder.mutation({
       /**
@@ -325,7 +338,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     cancelBackupJob: builder.mutation({
       /**
@@ -342,7 +355,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     retryBackupJob: builder.mutation({
       /**
@@ -359,7 +372,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     changeBackupJobPermissions: builder.mutation({
       /**
@@ -386,7 +399,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     addScheduledActionBackupJob: builder.mutation({
       /**
@@ -404,7 +417,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     updateScheduledActionBackupJob: builder.mutation({
       /**
@@ -423,7 +436,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     deleteScheduledActionBackupJob: builder.mutation({
       /**
@@ -441,7 +454,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
     updatePriorityBackupJob: builder.mutation({
       /**
@@ -459,7 +472,7 @@ const backupjobApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: BACKUPJOB, id }],
+      invalidatesTags: (_, __, { id }) => backupJobDetailAndPoolTags(id),
     }),
   }),
 })

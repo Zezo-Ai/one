@@ -13,30 +13,22 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+import { List, Table, ResourceContainer } from '@ComponentsV2Module'
+import { T, RESOURCE_NAMES, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  GlobalLabel,
-  MarketplacesTable,
-  MarketplaceTabs,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { Marketplace, RESOURCE_NAMES, T } from '@ConstantsModule'
-import { MarketplaceAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  useFunctionality,
+  useFunctionalityApi,
+  useViews,
+} from '@FeaturesModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+import { getActionsAvailable, getTotalOfResources } from '@UtilsModule'
+import { DetailsDrawer } from '@modules/containers/Marketplaces/Details'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
+  getMarketplaceCapacityInfo,
+  getMarketplaceState,
+  marketplaceTable,
+} from '@ModelsModule'
+import { Marketplace } from '@ResourcesModule'
 
 /**
  * Displays a list of Marketplaces with a split pane between the list and selected row(s).
@@ -44,173 +36,159 @@ import { memo, ReactElement, useEffect, useState } from 'react'
  * @returns {ReactElement} Marketplaces list and selected row(s)
  */
 export function Marketplaces() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = MarketplacesTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const { searchExpression, sortExpression, selectedItems, containerView } =
+    useFunctionality()
+  const { getResourceView } = useViews()
+
+  const availableActions = useMemo(
+    () =>
+      getActionsAvailable(getResourceView(RESOURCE_NAMES.MARKETPLACE)?.actions),
+    [getResourceView]
+  )
+
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = marketplaceTable.useData()
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((marketplace) => {
+          const {
+            ID,
+            NAME,
+            UNAME,
+            GNAME,
+            MARKET_MAD,
+            MARKETPLACEAPPS,
+            ZONE_ID,
+          } = marketplace
+          const state = getMarketplaceState(marketplace)
+          const capacity = getMarketplaceCapacityInfo(marketplace)
+
+          return [
+            ID,
+            NAME,
+            UNAME,
+            GNAME,
+            state?.name,
+            MARKET_MAD,
+            ZONE_ID,
+            getTotalOfResources(MARKETPLACEAPPS),
+            capacity?.percentLabel,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    return marketplaceTable.sortData(filteredData, sortExpression)
+  }, [data, searchExpression, sortExpression])
+
+  const selectedMarketplaces = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () =>
+      Object.fromEntries((selectedItems ?? []).map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(selectedItems.filter((itemId) => itemId !== id))
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={MarketplaceAPI.useUpdateMarketplaceMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <MarketplacesTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            onRowClick={props.resourcesBackButtonClick}
-            globalActions={props.actions}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            market: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.Marketplaces}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={marketplaceTable.sortOptions()}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={marketplaceTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((marketplace) => {
+                  const { ID } = marketplace
+                  const id = String(ID)
 
-          return <InfoTabs {...propsInfo} />
-        }}
+                  return (
+                    <Marketplace.Card
+                      key={id}
+                      marketplace={marketplace}
+                      isSelected={selectedItems?.includes(id)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter((itemId) => itemId !== id)
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+
+      <DetailsDrawer
+        selectedMarketplaces={selectedMarketplaces}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        actions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a Marketplace.
- *
- * @param {Marketplace} market - Marketplace to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Marketplace
- * @param {Function} [unselect] - Function to unselect a Marketplace
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Marketplace details
- */
-const InfoTabs = memo(({ market, gotoPage, unselect, selectedRows }) => {
-  const [get, { data: lazyData, isFetching }] =
-    MarketplaceAPI.useLazyGetMarketplaceQuery()
-  const id = market?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.MARKETPLACE}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <MarketplaceTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  market: PropTypes.object.isRequired,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

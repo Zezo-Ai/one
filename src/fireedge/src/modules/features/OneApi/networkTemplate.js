@@ -13,13 +13,22 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { FilterFlag, Permission, VNetworkTemplate } from '@ConstantsModule'
+import {
+  FilterFlag,
+  Permission,
+  RESOURCE_NAMES,
+  VNetworkTemplate,
+} from '@ConstantsModule'
 
 import {
   ONE_RESOURCES,
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import {
   updateOwnershipOnResource,
   updateTemplateOnResource,
@@ -46,20 +55,26 @@ const vNetworkTemplateApi = oneApi.injectEndpoints({
         const name = Actions.VNTEMPLATE_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) =>
-        [data?.VNTEMPLATE_POOL?.VNTEMPLATE ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.VNTEMPLATE_POOL?.VNTEMPLATE ?? []].flat(),
+          RESOURCE_NAMES.VN_TEMPLATE,
+          meta
+        ),
       providesTags: (vNetTemplates) =>
-        vNetTemplates
-          ? [
-              ...vNetTemplates.map(({ ID }) => ({
-                type: VNTEMPLATE_POOL,
-                id: `${ID}`,
-              })),
-              VNTEMPLATE_POOL,
-            ]
-          : [VNTEMPLATE_POOL],
+        withProfileLabelsTags(
+          vNetTemplates
+            ? [
+                ...vNetTemplates.map(({ ID }) => ({
+                  type: VNTEMPLATE_POOL,
+                  id: `${ID}`,
+                })),
+                VNTEMPLATE_POOL,
+              ]
+            : [VNTEMPLATE_POOL]
+        ),
     }),
     getVNTemplate: builder.query({
       /**
@@ -75,10 +90,16 @@ const vNetworkTemplateApi = oneApi.injectEndpoints({
         const name = Actions.VNTEMPLATE_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.VNTEMPLATE ?? {},
-      providesTags: (_, __, { id }) => [{ type: VNTEMPLATE, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          data?.VNTEMPLATE ?? {},
+          RESOURCE_NAMES.VN_TEMPLATE,
+          meta
+        ),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: VNTEMPLATE, id }]),
     }),
     allocateVNTemplate: builder.mutation({
       /**

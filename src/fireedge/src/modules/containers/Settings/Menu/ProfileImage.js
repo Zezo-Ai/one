@@ -14,49 +14,62 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { STYLE_BUTTONS, T } from '@ConstantsModule'
+import { SubmitButton } from '@ComponentsV2Module'
 import { css } from '@emotion/css'
 import { useAuth, useGeneralApi, UserAPI } from '@FeaturesModule'
-import { jsonToXml } from '@ModelsModule'
-import { SubmitButton, Translate } from '@ComponentsModule'
+import { jsonToXml } from '@UtilsModule'
+import { Translate } from '@ResourcesModule'
 import { Avatar, Box, Tooltip, Typography, useTheme } from '@mui/material'
 import { Edit as EditIcon } from 'iconoir-react'
 import { ReactElement, useCallback, useMemo } from 'react'
 
-const styles = ({ palette, typography }) => ({
+const styles = ({ palette, borderWidth, borderRadius, scale, typography }) => ({
   root: css({
-    textAlign: 'center',
-    padding: `${typography.pxToRem(32)} 0 ${typography.pxToRem(16)}`,
+    paddingBottom: scale[400],
+    display: 'flex',
+    flexDirection: 'column',
+    gap: scale[400],
+    borderBottom: `${borderWidth.sm}px solid ${palette.border.primary}`,
   }),
   imagePlace: css({
-    width: typography.pxToRem(96),
-    height: typography.pxToRem(96),
+    width: scale[1100],
+    height: scale[1100],
     position: 'relative',
     display: 'inline-block',
+
+    '&:hover .upload-icon': {
+      visibility: 'initial',
+      transform: 'translate(25%, 25%)',
+    },
   }),
   image: css({
-    width: typography.pxToRem(96),
-    height: typography.pxToRem(96),
-    border: `${typography.pxToRem(2)} solid ${palette.info.dark}`,
+    width: scale[1100],
+    height: scale[1100],
+    borderRadius: borderRadius.lg,
   }),
   uploadIcon: css({
     position: 'absolute',
-    bottom: '0px',
-    right: '0px',
-    backgroundColor: palette.secondary.contrastText,
-    border: `${typography.pxToRem(2)} solid ${palette.info.dark}`,
-    borderRadius: '50%',
-    '& > button, & > button:hover, & > button:active': {
-      color: `${palette.info.dark} !important`,
+    bottom: 0,
+    right: 0,
+    visibility: 'hidden',
+    transition: 'transform 0.3s ease',
+    transform: 'translate(25%, 50%)',
+
+    '&:hover .upload-icon': {
+      visibility: 'initial',
+      transform: 'translate(25%, 25%)',
     },
   }),
   userName: css({
-    textAlign: 'center',
-    padding: `0 ${typography.pxToRem(32)} ${typography.pxToRem(16)}`,
-    '& > *': {
-      color: palette.info.main,
+    textAlign: 'left',
+    fontSize: typography.h6.fontSize,
+    fontWeight: typography.fontWeightBold,
+    paddingRight: scale[600],
+    color: palette.text.headings,
+    marginTop: scale[150],
+
+    '& div': {
       display: 'inline',
-      textOverflow: 'ellipsis',
-      overflow: 'hidden',
     },
   }),
 })
@@ -103,19 +116,17 @@ const ProfileImage = () => {
   const userName = `${user?.NAME || ''}!`
 
   return (
-    <>
-      <Box className={classes.root}>
+    <Box className={classes.root}>
+      <Box>
         <Box className={classes.imagePlace}>
           <Avatar
             src={user?.TEMPLATE?.FIREEDGE?.IMAGE_PROFILE}
             className={classes.image}
           />
-          <Box className={classes.uploadIcon}>
+          <Box className={`upload-icon ${classes.uploadIcon}`}>
             <SubmitButton
-              icon={<EditIcon />}
-              importance={STYLE_BUTTONS.IMPORTANCE.SECONDARY}
-              size={STYLE_BUTTONS.SIZE.MEDIUM}
-              type={STYLE_BUTTONS.TYPE.OUTLINED}
+              iconOnly={<EditIcon />}
+              type={STYLE_BUTTONS.TYPE.PRIMARY}
               onClick={() =>
                 document.getElementById('file-upload-input').click()
               }
@@ -136,7 +147,7 @@ const ProfileImage = () => {
           <div> {userName} </div>
         </Typography>
       </Tooltip>
-    </>
+    </Box>
   )
 }
 

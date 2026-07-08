@@ -17,7 +17,7 @@ import {
   DatastoresTable,
   DatastoreTabs,
   TranslateProvider,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 import { ReactElement } from 'react'
 import { Redirect, useParams } from 'react-router-dom'
 

@@ -15,8 +15,8 @@
  * ------------------------------------------------------------------------- */
 import { T } from '@ConstantsModule'
 import { Box, Paper, useTheme } from '@mui/material'
-import { ReactElement, useEffect, useMemo, useState } from 'react'
-import { TranslateProvider } from '@ComponentsModule'
+import { ReactElement, useMemo, useState } from 'react'
+import { TranslateProvider } from '@ResourcesModule'
 import { css } from '@emotion/css'
 import { AuthenticationSettings } from '@modules/containers/Settings/Authentication'
 import { ConfigurationChangePassword } from '@modules/containers/Settings/ChangePassword'
@@ -34,11 +34,15 @@ import {
   ReloadWindow as ShowbackIcon,
 } from 'iconoir-react'
 
-import { useGeneralApi } from '@FeaturesModule'
-
-const styles = ({ typography }) => ({
+const styles = ({ breakpoints }) => ({
   content: css({
-    borderRadius: `${typography.pxToRem(24)}`,
+    borderRadius: 0,
+    flexGrow: 1,
+    overflowY: 'scroll',
+  }),
+
+  wrapper: css({
+    height: '100%',
   }),
 })
 
@@ -99,42 +103,16 @@ export const Settings = () => {
   const [selectedOption, setSelectedOption] = useState(preferences)
   const setting = optionsSettings[selectedOption]
 
-  // Delete second title
-  const { setSecondTitle } = useGeneralApi()
-  useEffect(() => setSecondTitle({}), [])
-
   return (
     <TranslateProvider>
-      <Box
-        display="grid"
-        gridTemplateColumns={{ sm: '1fr', md: '250px 1fr' }}
-        gridAutoRows="auto"
-        gap="1em"
-        sx={{
-          height: {
-            sm: 'auto',
-            md: '80%',
-          },
-          flexGrow: 1,
-          marginBottom: '1rem',
-        }}
-      >
+      <Box display="flex" className={classes.wrapper}>
         <SettingsMenu
           options={optionsSettings}
           selectedOption={selectedOption}
           setSelectedOption={setSelectedOption}
           optionsRestrincted={optionsRestrincted}
         />
-        <Paper
-          className={classes.content}
-          sx={{
-            overflow: {
-              md: 'scroll',
-            },
-          }}
-        >
-          {setting.component}
-        </Paper>
+        <Paper className={classes.content}>{setting.component}</Paper>
       </Box>
     </TranslateProvider>
   )

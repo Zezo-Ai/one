@@ -14,16 +14,15 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import {
+  Cluster,
   DefaultFormStepper,
-  Form,
   SkeletonStepsForm,
   TranslateProvider,
-  PATH,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 import { ReactElement } from 'react'
 import { generatePath, useHistory, useLocation } from 'react-router'
 import { createFieldsFromDeploymentConfs } from '@UtilsModule'
-import { T, CLUSTER_CLOUD_OPERATIONS } from '@ConstantsModule'
+import { T, CLUSTER_CLOUD_OPERATIONS, PATH } from '@ConstantsModule'
 import {
   ProvisionAPI,
   DriverAPI,
@@ -31,7 +30,6 @@ import {
   useGeneralApi,
 } from '@FeaturesModule'
 import { get, filter } from 'lodash'
-const { Cluster } = Form
 
 /**
  * Displays the creation form for a cluster.
@@ -88,7 +86,7 @@ export function CreateClusterCloud() {
       {!providers || !drivers ? (
         <SkeletonStepsForm />
       ) : (
-        <Cluster.CreateCloudForm
+        <Cluster.Forms.CreateCloudForm
           stepProps={{ providers, groupedDrivers, onpremiseProvider }}
           initialValues={{
             onpremiseProvider: onpremiseProvider,
@@ -98,7 +96,7 @@ export function CreateClusterCloud() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </Cluster.CreateCloudForm>
+        </Cluster.Forms.CreateCloudForm>
       )}
     </TranslateProvider>
   )

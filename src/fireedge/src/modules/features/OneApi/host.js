@@ -14,12 +14,16 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Actions, Commands } from 'server/utils/constants/commands/host'
-import { Host } from '@ConstantsModule'
+import { Host, RESOURCE_NAMES } from '@ConstantsModule'
 import {
   ONE_RESOURCES,
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import {
   removeResourceOnPool,
   updateNameOnResource,
@@ -50,16 +54,23 @@ const hostApi = oneApi.injectEndpoints({
         const name = Actions.HOST_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { command, params }
+        return { command, params, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.HOST_POOL?.HOST ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.HOST_POOL?.HOST ?? []].flat(),
+          RESOURCE_NAMES.HOST,
+          meta
+        ),
       providesTags: (hosts) =>
-        hosts
-          ? [
-              ...hosts.map(({ ID }) => ({ type: HOST_POOL, id: `${ID}` })),
-              HOST_POOL,
-            ]
-          : [HOST_POOL],
+        withProfileLabelsTags(
+          hosts
+            ? [
+                ...hosts.map(({ ID }) => ({ type: HOST_POOL, id: `${ID}` })),
+                HOST_POOL,
+              ]
+            : [HOST_POOL]
+        ),
     }),
     getHostsAdmin: builder.query({
       /**
@@ -73,16 +84,23 @@ const hostApi = oneApi.injectEndpoints({
         const name = ExtraActions.HOSTPOOL_ADMINSHOW
         const command = { name, ...ExtraCommands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.HOST_POOL?.HOST ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.HOST_POOL?.HOST ?? []].flat(),
+          RESOURCE_NAMES.HOST,
+          meta
+        ),
       providesTags: (hosts) =>
-        hosts
-          ? [
-              ...hosts.map(({ ID }) => ({ type: HOST_POOL, id: `${ID}` })),
-              HOST_POOL,
-            ]
-          : [HOST_POOL],
+        withProfileLabelsTags(
+          hosts
+            ? [
+                ...hosts.map(({ ID }) => ({ type: HOST_POOL, id: `${ID}` })),
+                HOST_POOL,
+              ]
+            : [HOST_POOL]
+        ),
     }),
     getHost: builder.query({
       /**
@@ -97,16 +115,20 @@ const hostApi = oneApi.injectEndpoints({
         const name = Actions.HOST_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => {
-        if (!data?.HOST) return {}
+      transformResponse: (data, meta) => {
+        if (!data?.HOST) {
+          return withResourceLabels({}, RESOURCE_NAMES.HOST, meta)
+        }
 
         const monitoring = data?.HOST?.MONITORING
 
         const hostShare = data?.HOST?.HOST_SHARE?.NUMA_NODES
 
-        if (!monitoring || !hostShare) return data.HOST
+        if (!monitoring || !hostShare) {
+          return withResourceLabels(data.HOST, RESOURCE_NAMES.HOST, meta)
+        }
 
         /**
          * [GH-6027] Numa nodes attributes are not together, some of the attributes
@@ -151,9 +173,10 @@ const hostApi = oneApi.injectEndpoints({
           return node
         })
 
-        return data.HOST
+        return withResourceLabels(data.HOST, RESOURCE_NAMES.HOST, meta)
       },
-      providesTags: (_, __, { id }) => [{ type: HOST, id }],
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: HOST, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

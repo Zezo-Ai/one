@@ -13,19 +13,28 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Actions, Commands } from 'server/routes/api/oneflow/service/routes'
 
+import { Actions, Commands } from 'server/routes/api/oneflow/service/routes'
 import { oneApi } from '@modules/features/OneApi/oneApi'
-import { DOCUMENT, DOCUMENT_POOL } from '@modules/features/OneApi/resources'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
+import {
+  DOCUMENT,
+  DOCUMENT_POOL,
+  ONE_RESOURCES_POOL,
+} from '@modules/features/OneApi/resources'
 import {
   updateResourceOnPool,
   removeResourceOnPool,
   updateOwnershipOnResource,
 } from '@modules/features/OneApi/common'
-import { Service } from '@ConstantsModule'
+import { RESOURCE_NAMES, Service } from '@ConstantsModule'
 
 const { SERVICE } = DOCUMENT
 const { SERVICE_POOL } = DOCUMENT_POOL
+const { VM_POOL } = ONE_RESOURCES_POOL
 
 const serviceApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -40,20 +49,27 @@ const serviceApi = oneApi.injectEndpoints({
         const name = Actions.SERVICE_SHOW
         const command = { name, ...Commands[name] }
 
-        return { command }
+        return { command, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.DOCUMENT_POOL?.DOCUMENT ?? []].flat(),
-      providesTags: (services) =>
-        services
-          ? [
-              ...services.map(({ ID }) => ({
-                type: SERVICE_POOL,
-                id: `${ID}`,
-              })),
-              SERVICE_POOL,
-            ]
-          : [SERVICE_POOL],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.DOCUMENT_POOL?.DOCUMENT ?? []].flat(),
+          RESOURCE_NAMES.SERVICE,
+          meta
+        ),
+      providesTags: (services = []) =>
+        withProfileLabelsTags([
+          ...[]
+            .concat(services)
+            .filter(Boolean)
+            .map((service) => ({
+              type: SERVICE,
+              id: String(service?.ID ?? -1),
+            })),
+          SERVICE_POOL,
+        ]),
     }),
+
     getService: builder.query({
       /**
        * Retrieves information for the service.
@@ -67,11 +83,13 @@ const serviceApi = oneApi.injectEndpoints({
         const name = Actions.SERVICE_SHOW
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.DOCUMENT ?? {},
-      providesTags: (_, __, { id }) => [{ type: SERVICE, id }],
-      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+      transformResponse: (data, meta) =>
+        withResourceLabels(data?.DOCUMENT ?? {}, RESOURCE_NAMES.SERVICE, meta),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: SERVICE, id: String(id) }]),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled
 
@@ -83,7 +101,6 @@ const serviceApi = oneApi.injectEndpoints({
             )
           )
         } catch {
-          // if the query fails, we want to remove the resource from the pool
           dispatch(
             serviceApi.util.updateQueryData(
               'getServices',
@@ -94,6 +111,7 @@ const serviceApi = oneApi.injectEndpoints({
         }
       },
     }),
+
     removeService: builder.mutation({
       /**
        * Removes a service instance.
@@ -118,8 +136,8 @@ const serviceApi = oneApi.injectEndpoints({
        *
        * @param {object} params - Request params
        * @param {string} params.id - Service id
-       * @param {string} params.user - Service id
-       * @param {string} params.group - Service id
+       * @param {string} params.user - User id
+       * @param {string} params.group - Group id
        * @returns {Service} Updated service id
        * @throws Fails when response isn't code 200
        */
@@ -128,12 +146,13 @@ const serviceApi = oneApi.injectEndpoints({
           perform: 'chown',
           params: { owner_id: user, group_id: group },
         }
+
         const name = Actions.SERVICE_ADD_ACTION
         const command = { name, ...Commands[name] }
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: SERVICE, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: SERVICE, id: String(id) }],
       async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
         try {
           const patchServiceTemplate = dispatch(
@@ -159,6 +178,7 @@ const serviceApi = oneApi.injectEndpoints({
         } catch {}
       },
     }),
+
     recoverService: builder.mutation({
       /**
        * Tries to recover a failed service.
@@ -173,12 +193,17 @@ const serviceApi = oneApi.injectEndpoints({
           perform: 'recover',
           ...(params?.delete && { params: { delete: true } }),
         }
+
         const name = Actions.SERVICE_ADD_ACTION
         const command = { name, ...Commands[name] }
 
         return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: SERVICE, id }, SERVICE_POOL],
+      invalidatesTags: (_, __, { id }) => [
+        { type: SERVICE, id: String(id) },
+        SERVICE_POOL,
+        VM_POOL,
+      ],
     }),
 
     serviceAddRole: builder.mutation({
@@ -196,12 +221,16 @@ const serviceApi = oneApi.injectEndpoints({
           perform: 'add_role',
           ...(params?.role && { params: { role: params.role } }),
         }
+
         const name = Actions.SERVICE_ADD_ROLE
         const command = { name, ...Commands[name] }
 
         return { params, command }
       },
-      invalidatesTags: (_, __, params) => [{ type: 'SERVICE', id: params.id }],
+      invalidatesTags: (_, __, { id }) => [
+        { type: SERVICE, id: String(id) },
+        VM_POOL,
+      ],
       async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
         try {
           const patchServiceTemplate = dispatch(
@@ -244,7 +273,10 @@ const serviceApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, params) => [{ type: 'SERVICE', id: params.id }],
+      invalidatesTags: (_, __, { id }) => [
+        { type: SERVICE, id: String(id) },
+        VM_POOL,
+      ],
       async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
         try {
           const patchServiceTemplate = dispatch(
@@ -296,7 +328,11 @@ const serviceApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, params) => [{ type: 'SERVICE', id: params.id }],
+      invalidatesTags: (_, __, { id }) => [
+        { type: SERVICE, id: String(id) },
+        SERVICE_POOL,
+        VM_POOL,
+      ],
       async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
         try {
           const patchServiceTemplate = dispatch(
@@ -325,11 +361,11 @@ const serviceApi = oneApi.injectEndpoints({
 
     serviceAddAction: builder.mutation({
       /**
-       * Tries to perform a role action.
+       * Tries to perform a service action.
        *
        * @param {object} params - Request params
        * @param {string} params.id - Service id
-       * @param {string} params.role - Role config
+       * @param {string} params.perform - Action name
        * @returns {Service} Service id
        * @throws Fails when response isn't code 200
        */
@@ -346,7 +382,10 @@ const serviceApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, params) => [{ type: 'SERVICE', id: params.id }],
+      invalidatesTags: (_, __, { id }) => [
+        { type: SERVICE, id: String(id) },
+        VM_POOL,
+      ],
       async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
         try {
           const patchServiceTemplate = dispatch(

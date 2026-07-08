@@ -22,14 +22,12 @@ import { useGeneralApi, MarketplaceAPI, SystemAPI } from '@FeaturesModule'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  Marketplace,
   TranslateProvider,
-} from '@ComponentsModule'
-import { jsonToXml } from '@ModelsModule'
+} from '@ResourcesModule'
+import { jsonToXml } from '@UtilsModule'
 
-import { T } from '@ConstantsModule'
-const { Marketplace } = Form
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation form for a marketplace.
@@ -95,7 +93,7 @@ export function CreateMarketplace() {
   return (
     <TranslateProvider>
       {version && (!marketplaceId || (marketplaceId && marketplace)) ? (
-        <Marketplace.CreateForm
+        <Marketplace.Forms.CreateForm
           onSubmit={onSubmit}
           initialValues={marketplace}
           stepProps={{
@@ -105,7 +103,7 @@ export function CreateMarketplace() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </Marketplace.CreateForm>
+        </Marketplace.Forms.CreateForm>
       ) : (
         <SkeletonStepsForm />
       )}

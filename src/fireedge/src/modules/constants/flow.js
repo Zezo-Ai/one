@@ -126,101 +126,81 @@ export const SERVICE_STATES = [
     // 0
     name: STATES.PENDING,
     color: COLOR.info.main,
-    meaning: `
-      The Application starts in this state, and will stay in
-      it until the LCM decides to deploy it`,
   },
   {
     // 1
     name: STATES.DEPLOYING,
     color: COLOR.info.main,
-    meaning: 'Some roles are being deployed',
   },
   {
     // 2
     name: STATES.RUNNING,
     color: COLOR.success.main,
-    meaning: 'All roles are deployed successfully',
   },
   {
     // 3
     name: STATES.UNDEPLOYING,
     color: COLOR.error.light,
-    meaning: 'Some roles are being undeployed',
   },
   {
     // 4
     name: STATES.WARNING,
     color: COLOR.error.light,
-    meaning: 'A VM was found in a failure state',
   },
   {
     // 5
     name: STATES.DONE,
     color: COLOR.debug.light,
-    meaning: `
-      The Applications will stay in this state after
-      a successful undeploying. It can be deleted`,
   },
   {
     // 6
     name: STATES.FAILED_UNDEPLOYING,
     color: COLOR.error.dark,
-    meaning: 'An error occurred while undeploying the Application',
   },
   {
     // 7
     name: STATES.FAILED_DEPLOYING,
     color: COLOR.error.dark,
-    meaning: 'An error occurred while deploying the Application',
   },
   {
     // 8
     name: STATES.SCALING,
     color: COLOR.info.main,
-    meaning: 'A roles is scaling up or down',
   },
   {
     // 9
     name: STATES.FAILED_SCALING,
     color: COLOR.error.dark,
-    meaning: 'An error occurred while scaling the Application',
   },
   {
     // 10
     name: STATES.COOLDOWN,
     color: COLOR.info.main,
-    meaning: 'A roles is in the cooldown period after a scaling operation',
   },
   {
     // 11
     name: STATES.DEPLOYING_NETS,
     color: COLOR.info.main,
-    meaning: 'Service networks are being deployed, they are in LOCK state',
   },
   {
     // 12
     name: STATES.UNDEPLOYING_NETS,
     color: COLOR.error.light,
-    meaning: 'An error occurred while undeploying the Service networks',
   },
   {
     // 13
     name: STATES.FAILED_DEPLOYING_NETS,
     color: COLOR.error.dark,
-    meaning: 'An error occurred while deploying the Service networks',
   },
   {
     // 14
     name: STATES.FAILED_UNDEPLOYING_NETS,
     color: COLOR.error.dark,
-    meaning: '',
   },
   {
     // 15
     name: STATES.HOLD,
     color: COLOR.info.main,
-    meaning: 'All roles are in hold state',
   },
 ]
 
@@ -230,105 +210,90 @@ export const ROLE_STATES = [
     // 0
     name: STATES.PENDING,
     color: COLOR.info.light,
-    meaning: 'The role is waiting to be deployed',
   },
   {
     // 1
     name: STATES.DEPLOYING,
     color: COLOR.info.main,
-    meaning: `
-      The VMs are being created, and will be
-      monitored until all of them are running`,
   },
   {
     // 2
     name: STATES.RUNNING,
     color: COLOR.success.main,
-    meaning: 'All the VMs are running',
   },
   {
     // 3
     name: STATES.UNDEPLOYING,
     color: COLOR.error.light,
-    meaning: `
-      The VMs are being shutdown. The role will stay in
-      this state until all VMs are done`,
   },
   {
     // 4
     name: STATES.WARNING,
     color: COLOR.error.light,
-    meaning: 'A VM was found in a failure state',
   },
   {
     // 5
     name: STATES.DONE,
     color: COLOR.debug.light,
-    meaning: 'All the VMs are done',
   },
   {
     // 6
     name: STATES.FAILED_UNDEPLOYING,
     color: COLOR.error.dark,
-    meaning: 'An error occurred while undeploying the VMs',
   },
   {
     // 7
     name: STATES.FAILED_DEPLOYING,
     color: COLOR.error.dark,
-    meaning: 'An error occurred while deploying the VMs',
   },
   {
     // 8
     name: STATES.SCALING,
     color: COLOR.info.main,
-    meaning: 'The role is waiting for VMs to be deployed or to be shutdown',
   },
   {
     // 9
     name: STATES.FAILED_SCALING,
     color: COLOR.error.dark,
-    meaning: 'An error occurred while scaling the role',
   },
   {
     // 10
     name: STATES.COOLDOWN,
     color: COLOR.info.main,
-    meaning: 'The role is in the cooldown period after a scaling operation',
   },
   {
     // 11
     name: STATES.HOLD,
     color: COLOR.info.main,
-    meaning:
-      'The VMs are HOLD and will not be scheduled until them are released',
   },
 ]
 
 /** @enum {string} Role actions */
 export const ROLE_ACTIONS = {
-  CREATE_DIALOG: 'create_dialog',
+  DISK_SNAPSHOT_CREATE: 'disk-snapshot-create',
+  DISK_SNAPSHOT_DELETE: 'disk-snapshot-delete',
+  DISK_SNAPSHOT_REVERT: 'disk-snapshot-revert',
   HOLD: 'hold',
-  POWEROFF_HARD: 'poweroff_hard',
   POWEROFF: 'poweroff',
-  REBOOT_HARD: 'reboot_hard',
+  POWEROFF_HARD: 'poweroff-hard',
   REBOOT: 'reboot',
+  REBOOT_HARD: 'reboot-hard',
   RELEASE: 'release',
   RESUME: 'resume',
+  SNAPSHOT_CREATE: 'snapshot-create',
+  SNAPSHOT_DELETE: 'snapshot-delete',
+  SNAPSHOT_REVERT: 'snapshot-revert',
   STOP: 'stop',
   SUSPEND: 'suspend',
-  TERMINATE_HARD: 'terminate_hard',
   TERMINATE: 'terminate',
-  UNDEPLOY_HARD: 'undeploy_hard',
+  TERMINATE_HARD: 'terminate-hard',
   UNDEPLOY: 'undeploy',
-  SNAPSHOT_DISK_CREATE: 'snapshot_disk_create',
-  SNAPSHOT_DISK_RENAME: 'snapshot_disk_rename',
-  SNAPSHOT_DISK_REVERT: 'snapshot_disk_revert',
-  SNAPSHOT_DISK_DELETE: 'snapshot_disk_delete',
-  SNAPSHOT_CREATE: 'snapshot_create',
-  SNAPSHOT_REVERT: 'snapshot_revert',
-  SNAPSHOT_DELETE: 'snapshot_delete',
+  UNDEPLOY_HARD: 'undeploy-hard',
 }
+
+export const ROLE_ACTION_ENUM = Object.freeze(
+  Object.fromEntries(Object.keys(ROLE_ACTIONS).map((key) => [key, key]))
+)
 
 /** @type {string[]} Actions that can be scheduled */
 export const ROLE_ACTIONS_WITH_SCHEDULE = [
@@ -341,9 +306,9 @@ export const ROLE_ACTIONS_WITH_SCHEDULE = [
   ROLE_ACTIONS.RESUME,
   ROLE_ACTIONS.SNAPSHOT_CREATE,
   ROLE_ACTIONS.SNAPSHOT_DELETE,
-  ROLE_ACTIONS.SNAPSHOT_DISK_CREATE,
-  ROLE_ACTIONS.SNAPSHOT_DISK_DELETE,
-  ROLE_ACTIONS.SNAPSHOT_DISK_REVERT,
+  ROLE_ACTIONS.DISK_SNAPSHOT_CREATE,
+  ROLE_ACTIONS.DISK_SNAPSHOT_DELETE,
+  ROLE_ACTIONS.DISK_SNAPSHOT_REVERT,
   ROLE_ACTIONS.SNAPSHOT_REVERT,
   ROLE_ACTIONS.STOP,
   ROLE_ACTIONS.SUSPEND,

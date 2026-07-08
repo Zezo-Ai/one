@@ -21,7 +21,11 @@ import {
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
-import { Permission, Marketplace } from '@ConstantsModule'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
+import { Permission, Marketplace, RESOURCE_NAMES } from '@ConstantsModule'
 
 import {
   removeResourceOnPool,
@@ -30,7 +34,7 @@ import {
   isUpdateOnPool,
 } from '@modules/features/OneApi/common'
 
-import { xmlToJson } from '@ModelsModule'
+import { xmlToJson } from '@UtilsModule'
 
 const { MARKETPLACE } = ONE_RESOURCES
 const { MARKETPLACE_POOL } = ONE_RESOURCES_POOL
@@ -84,20 +88,26 @@ const marketplaceApi = oneApi.injectEndpoints({
         const name = Actions.MARKET_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { command }
+        return { command, needStateInMeta: true }
       },
-      transformResponse: (data) =>
-        [data?.MARKETPLACE_POOL?.MARKETPLACE ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.MARKETPLACE_POOL?.MARKETPLACE ?? []].flat(),
+          RESOURCE_NAMES.MARKETPLACE,
+          meta
+        ),
       providesTags: (marketplaces) =>
-        marketplaces
-          ? [
-              ...marketplaces.map(({ ID }) => ({
-                type: MARKETPLACE_POOL,
-                id: `${ID}`,
-              })),
-              MARKETPLACE_POOL,
-            ]
-          : [MARKETPLACE_POOL],
+        withProfileLabelsTags(
+          marketplaces
+            ? [
+                ...marketplaces.map(({ ID }) => ({
+                  type: MARKETPLACE_POOL,
+                  id: `${ID}`,
+                })),
+                MARKETPLACE_POOL,
+              ]
+            : [MARKETPLACE_POOL]
+        ),
     }),
     getMarketplace: builder.query({
       /**
@@ -113,10 +123,16 @@ const marketplaceApi = oneApi.injectEndpoints({
         const name = Actions.MARKET_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.MARKETPLACE ?? {},
-      providesTags: (_, __, { id }) => [{ type: MARKETPLACE, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          data?.MARKETPLACE ?? {},
+          RESOURCE_NAMES.MARKETPLACE,
+          meta
+        ),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: MARKETPLACE, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

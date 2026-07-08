@@ -16,6 +16,7 @@
 import { Actions, Commands } from 'server/utils/constants/commands/user'
 
 import { AuthSlice } from '@modules/features/Auth/slice'
+import { PROFILE_LABELS } from '@modules/features/OneApi/labels'
 import { oneApi } from '@modules/features/OneApi/oneApi'
 import {
   ONE_RESOURCES,
@@ -199,7 +200,7 @@ const userApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: USER, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: USER, id }, PROFILE_LABELS],
       async onQueryStarted(params, { dispatch, queryFulfilled, getState }) {
         try {
           const patchUser = dispatch(

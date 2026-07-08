@@ -71,6 +71,8 @@ src/oca/python/pyone/grpc/
 # editors temporary/swap files
 *.swp
 *.swo
+*.projectile-cache.eld
+*~
 
 # backups
 *.*-

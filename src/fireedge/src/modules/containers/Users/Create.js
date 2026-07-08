@@ -21,13 +21,11 @@ import { UserAPI, useGeneralApi } from '@FeaturesModule'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  User,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 const { useAllocateUserMutation } = UserAPI
-const { User } = Form
 
 /**
  * Displays the creation form for a User.
@@ -49,9 +47,12 @@ export function CreateUser() {
 
   return (
     <TranslateProvider>
-      <User.CreateForm onSubmit={onSubmit} fallback={<SkeletonStepsForm />}>
+      <User.Forms.CreateForm
+        onSubmit={onSubmit}
+        fallback={<SkeletonStepsForm />}
+      >
         {(config) => <DefaultFormStepper {...config} />}
-      </User.CreateForm>
+      </User.Forms.CreateForm>
     </TranslateProvider>
   )
 }

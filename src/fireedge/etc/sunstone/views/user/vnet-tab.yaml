@@ -60,7 +60,7 @@ info-tabs:
   address:
     enabled: true
     actions:
-      add_ar: false
+      add_ar: true
       update_ar: true
       delete_ar: true
 

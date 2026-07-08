@@ -13,97 +13,155 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+import { Button, ResourceContainer, Table } from '@ComponentsV2Module'
+import { RESOURCE_NAMES, T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  ACLsTable,
-  MultipleTags,
-  ResourcesBackButton,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { useGeneral } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { ReactElement, useState } from 'react'
+  AclAPI,
+  useFunctionality,
+  useFunctionalityApi,
+  useModalsApi,
+  useViews,
+} from '@FeaturesModule'
+import { aclTable, ACL_LIST_COLUMNS, getAclSearchValue } from '@ModelsModule'
+import { Trash } from 'iconoir-react'
+import { ReactElement, useCallback, useMemo } from 'react'
 
 /**
- * Displays a list of Groups with a split pane between the list and selected row(s).
+ * Displays a list of ACL rules.
  *
- * @returns {ReactElement} Groups list and selected row(s)
+ * @returns {ReactElement} ACLs list
  */
 export function ACLs() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const { zone } = useGeneral()
-  const actions = ACLsTable.Actions({ selectedRows, setSelectedRows })
+  const { searchExpression, sortExpression, filterExpression, selectedItems } =
+    useFunctionality()
+  const { setSelectedItems } = useFunctionalityApi()
+  const { getResourceView } = useViews()
+  const resourceViewFilters = getResourceView(RESOURCE_NAMES.ACL)?.filters
+  const { showModal } = useModalsApi()
+  const [remove, { isLoading: isRemoving }] = AclAPI.useRemoveAclMutation()
+  const selectedCount = selectedItems?.length ?? 0
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = aclTable.useData()
+
+  const filterOptions = useMemo(
+    () =>
+      aclTable.filterOptions(data, resourceViewFilters, undefined, [
+        { id: 'id', header: T.ID, accessorKey: 'ID' },
+      ]),
+    [data, resourceViewFilters]
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((acl) => getAclSearchValue(acl).includes(search))
+      : data
+
+    const filteredByFilters = aclTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
+
+    return aclTable.sortData(
+      filteredByFilters,
+      sortExpression,
+      ACL_LIST_COLUMNS
+    )
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
+
+  const rowSelection = useMemo(
+    () =>
+      Object.fromEntries((selectedItems ?? []).map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+
+  const handleOpenDeleteForm = useCallback(() => {
+    const selectedIds = selectedItems ?? []
+
+    if (selectedIds.length === 0) return
+
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: [T.Delete, T.ACLs].filter(Boolean).join(' '),
+        description: T.DoYouWantProceed,
+        confirmLabel: T.Delete,
+      },
+      onSubmit: async () => {
+        await Promise.all(selectedIds.map((id) => remove({ id })))
+        setSelectedItems([])
+      },
+    })
+  }, [remove, selectedItems, setSelectedItems, showModal])
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
+
+  const extraSlots = useMemo(
+    () => [
+      [
+        () => (
+          <Button
+            data-cy="delete-selected-acls"
+            type="secondary"
+            size="medium"
+            startIcon={<Trash width="16px" height="16px" />}
+            isDestructive
+            isDisabled={selectedCount === 0 || isRemoving}
+            onClick={handleOpenDeleteForm}
+          >
+            {T.DeleteSelected}
+          </Button>
+        ),
+        {},
+        { flex: '0 0 auto' },
+      ],
+    ],
+    [handleOpenDeleteForm, isRemoving, selectedCount]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <ACLsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
+    <ResourceContainer
+      resourceName={T.ACLs}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={aclTable.sortOptions(ACL_LIST_COLUMNS)}
+      filterOptions={filterOptions}
+      extraSlots={extraSlots}
+      viewMode={TABLE_VIEW_MODE.LIST}
+    >
+      <Table
+        columns={aclTable.columns(ACL_LIST_COLUMNS)}
+        data={items}
+        isLoading={isRefreshing}
+        isRowsSelectable
+        isMultiRowSelection
+        isCopyColumn
+        rowSelection={rowSelection}
+        onRowSelectionChange={handleRowSelectionChange}
+        getRowId={(row) => String(row.ID)}
+        onRowClick={(row) => handleSelect(row.ID)}
+        size="medium"
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

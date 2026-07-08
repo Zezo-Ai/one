@@ -162,7 +162,7 @@ const defaults = {
     'UtilsModule',
     'ConstantsModule',
     'ContainersModule',
-    'ComponentsModule',
+    'ResourcesModule',
     'FeaturesModule',
     'ProvidersModule',
     'ModelsModule',

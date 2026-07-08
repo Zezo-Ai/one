@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { SubmitButton, FormWithSchema, Tr } from '@ComponentsModule'
+import { FormWithSchema, Tr } from '@ResourcesModule'
+import { SubmitButton } from '@ComponentsV2Module'
 import {
   AUTH_DRIVER,
   ONEADMIN_ID,
@@ -90,9 +91,7 @@ const ChangePassword = () => {
           </FormProvider>
           <Box className={classes.buttonPlace}>
             <SubmitButton
-              importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-              size={STYLE_BUTTONS.SIZE.MEDIUM}
-              type={STYLE_BUTTONS.TYPE.FILLED}
+              type={STYLE_BUTTONS.TYPE.PRIMARY}
               data-cy={'change-password-button'}
               label={T.ChangePassword}
               disabled={

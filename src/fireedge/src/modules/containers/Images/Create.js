@@ -22,18 +22,16 @@ import {
   useGeneralApi,
   useSystemData,
 } from '@FeaturesModule'
-import { jsonToXml } from '@ModelsModule'
+import { jsonToXml } from '@UtilsModule'
 
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  Image,
   TranslateProvider,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 
-import { T } from '@ConstantsModule'
-const { Image } = Form
+import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
 
@@ -89,7 +87,7 @@ export function CreateImage() {
   return (
     <TranslateProvider>
       {!_.isEmpty(oneConfig) ? (
-        <Image.CreateForm
+        <Image.Forms.CreateForm
           onSubmit={onSubmit}
           stepProps={{
             oneConfig,
@@ -98,7 +96,7 @@ export function CreateImage() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </Image.CreateForm>
+        </Image.Forms.CreateForm>
       ) : (
         <SkeletonStepsForm />
       )}

@@ -15,4 +15,4 @@
  * ------------------------------------------------------------------------- */
 export * from '@modules/containers/VnTemplates/Create'
 export * from '@modules/containers/VnTemplates/Instantiate'
-export * from '@modules/containers/VnTemplates/VirtualNetworkTemplates'
+export * from '@modules/containers/VnTemplates/VnTemplates'

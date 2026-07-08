@@ -16,11 +16,11 @@
 import { ReactElement } from 'react'
 import PropTypes from 'prop-types'
 
-import { Box, Paper, Typography } from '@mui/material'
+import { Box, Paper } from '@mui/material'
+import { Text } from '@ComponentsV2Module'
 
 import Form from '@modules/containers/Support/Authentication/Form'
-import { Translate, TranslateProvider } from '@ComponentsModule'
-import { T } from '@ConstantsModule'
+import { T, TEXT_VARIANTS, TEXT_WEIGHTS } from '@ConstantsModule'
 
 /**
  * Section to login in Support portal.
@@ -32,17 +32,17 @@ import { T } from '@ConstantsModule'
  * @returns {ReactElement} Settings configuration UI
  */
 export const LoginSupport = ({ onSubmit, error, isLoading }) => (
-  <TranslateProvider>
-    <Paper variant="outlined" sx={{ display: 'flex', flexDirection: 'column' }}>
-      <Box mt="0.5rem" p="1rem">
-        <Typography variant="underline">
-          <Translate word={T.CommercialSupport} />
-        </Typography>
+  <Paper variant="outlined" sx={{ display: 'flex', flexDirection: 'column' }}>
+    <Box mt="0.5rem" p="1rem">
+      <Text
+        variant={TEXT_VARIANTS.BODY_LARGE}
+        weight={TEXT_WEIGHTS.SEMIBOLD}
+        value={T.CommercialSupport}
+      />
 
-        <Form onSubmit={onSubmit} error={error} isLoading={isLoading} />
-      </Box>
-    </Paper>
-  </TranslateProvider>
+      <Form onSubmit={onSubmit} error={error} isLoading={isLoading} />
+    </Box>
+  </Paper>
 )
 
 LoginSupport.propTypes = {

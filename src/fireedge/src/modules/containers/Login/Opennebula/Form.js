@@ -17,19 +17,25 @@
 import { ArrowTrSquare } from 'iconoir-react'
 import PropTypes from 'prop-types'
 import { useEffect } from 'react'
-
 import { Box, Divider, Link, Slide, Stack } from '@mui/material'
-
 import { yupResolver } from '@hookform/resolvers/yup'
-import { FormProvider, useForm } from 'react-hook-form'
+import { FormProvider, useForm, useWatch } from 'react-hook-form'
+import { FormWithSchema, Translate, TranslateProvider } from '@ResourcesModule'
+import { DEFAULT_OTP_LENGTH, INPUT_TYPES, T } from '@ConstantsModule'
+import { getDigits } from '@UtilsModule'
+import { SubmitButton } from '@ComponentsV2Module'
 
-import {
-  FormWithSchema,
-  SubmitButton,
-  Translate,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { STYLE_BUTTONS, T } from '@ConstantsModule'
+const getErrorMessage = (error) =>
+  typeof error === 'string' ? error : error?.message
+
+const getErrorFields = ({ error, errorField, fields = [] } = {}) =>
+  []
+    .concat(
+      (typeof error === 'string' ? undefined : error?.field) ||
+        errorField ||
+        fields[0]?.name
+    )
+    .filter(Boolean)
 
 export const Form = ({
   onBack,
@@ -37,19 +43,42 @@ export const Form = ({
   resolver,
   fields,
   error,
+  errorField,
   isLoading,
   transitionProps,
   remoteRedirect,
 }) => {
-  const { handleSubmit, setError, ...methods } = useForm({
+  const methods = useForm({
     reValidateMode: 'onSubmit',
     defaultValues: resolver.default(),
     resolver: yupResolver(resolver),
   })
+  const { clearErrors, handleSubmit, setError } = methods
+
+  const otpField = fields.find(({ type }) => type === INPUT_TYPES.OTP)
+  const otpLength = otpField?.fieldProps?.length ?? DEFAULT_OTP_LENGTH
+  const otpValue = useWatch({
+    control: methods.control,
+    disabled: !otpField,
+    name: otpField?.name,
+  })
+  const isOtpComplete =
+    !otpField || getDigits(otpValue, otpLength).length === otpLength
 
   useEffect(() => {
-    error && setError(fields[0].name, { type: 'manual', message: error })
-  }, [error])
+    const message = getErrorMessage(error)
+    const fieldNames = getErrorFields({ error, errorField, fields })
+
+    if (!message) {
+      clearErrors(fieldNames)
+
+      return
+    }
+
+    fieldNames.forEach((fieldName) => {
+      setError(fieldName, { type: 'manual', message })
+    })
+  }, [clearErrors, error, errorField, fields, setError])
 
   return (
     <TranslateProvider>
@@ -66,7 +95,7 @@ export const Form = ({
           display="flex"
           flexDirection="column"
           flexShrink={0}
-          gap="2rem"
+          gap={5}
           justifyContent={{ sm: 'center' }}
           sx={{ opacity: isLoading ? 0.7 : 1 }}
         >
@@ -75,40 +104,30 @@ export const Form = ({
               cy="login"
               fields={fields}
               rootProps={{ sx: { margin: 0 } }}
-              gridItemSx={{ padding: '0rem !important' }}
+              gridItemSx={{ padding: '0 !important' }}
               gridContainerSx={{
                 width: '100% !important',
-                margin: '0rem !important',
-                gap: '2rem',
+                margin: '0 !important',
+                gap: 3,
+                '& .textfield-container, & .textfield-root': {
+                  width: '100%',
+                },
               }}
             />
           </FormProvider>
-          <Stack direction="row" sx={{ gap: '1rem' }}>
-            {onBack && (
-              <SubmitButton
-                onClick={onBack}
-                disabled={isLoading}
-                sx={{ textTransform: 'uppercase', width: '100%' }}
-                importance={STYLE_BUTTONS.IMPORTANCE.SECONDARY}
-                type={STYLE_BUTTONS.TYPE.FILLED}
-                size={STYLE_BUTTONS.SIZE.LARGE}
-                label={<Translate word={T.Back} />}
-              ></SubmitButton>
-            )}
+          <Stack direction="row" gap={2}>
             <SubmitButton
               data-cy="login-button"
+              isDisabled={!isOtpComplete}
               isSubmitting={isLoading}
-              sx={{ textTransform: 'uppercase', width: '100%' }}
+              sx={{ width: '100%' }}
               label={<Translate word={onBack ? T.Next : T.SignIn} />}
-              importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-              type={STYLE_BUTTONS.TYPE.FILLED}
-              size={STYLE_BUTTONS.SIZE.LARGE}
             />
           </Stack>
           {remoteRedirect && (
             <>
               <Divider />
-              <Stack direction="row" sx={{ gap: '1rem' }}>
+              <Stack direction="row" gap={2}>
                 <Link
                   component="button"
                   variant="body2"
@@ -118,7 +137,7 @@ export const Form = ({
                   data-cy="link-saml"
                   sx={{
                     display: 'inline-flex',
-                    gap: '0.4rem',
+                    gap: 0.5,
                     alignItems: 'center',
                   }}
                 >
@@ -142,7 +161,11 @@ Form.propTypes = {
     })
   ),
   onSubmit: PropTypes.func.isRequired,
-  error: PropTypes.string,
+  error: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  errorField: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.arrayOf(PropTypes.string),
+  ]),
   isLoading: PropTypes.bool,
   transitionProps: PropTypes.shape({
     name: PropTypes.string,
@@ -156,6 +179,7 @@ Form.defaultProps = {
   resolver: {},
   fields: [],
   error: undefined,
+  errorField: undefined,
   isLoading: false,
   transitionProps: undefined,
 }

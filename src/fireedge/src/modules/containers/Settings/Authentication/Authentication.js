@@ -14,6 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { css } from '@emotion/css'
+import { SubmitButton } from '@ComponentsV2Module'
 import { UserAPI, useAuth, useGeneralApi } from '@FeaturesModule'
 import { useSettingWrapper } from '@modules/containers/Settings/Wrapper'
 import {
@@ -29,12 +30,11 @@ import PropTypes from 'prop-types'
 import { ReactElement, memo, useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 
-import { SubmitButton, Translate } from '@ComponentsModule'
+import { Translate } from '@ResourcesModule'
 import { T } from '@ConstantsModule'
-import { jsonToXml } from '@ModelsModule'
-import { sanitize } from '@UtilsModule'
+import { jsonToXml, sanitize } from '@UtilsModule'
 
-const styles = ({ typography }) => ({
+const styles = ({ palette, spacing }) => ({
   field: css({
     padding: 0,
     margin: 0,
@@ -45,16 +45,21 @@ const styles = ({ typography }) => ({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'start',
-    gap: typography.pxToRem(16),
+    gap: spacing(2),
     width: '100%',
+  }),
+  staticText: css({
+    color: palette.text.body,
   }),
   textField: css({
     flexGrow: 1,
+    color: palette.text.body,
     '& > p': {
       whiteSpace: 'normal',
       wordBreak: 'break-all',
       overflowWrap: 'break-word',
       maxWidth: '100%',
+      color: palette.text.body,
     },
   }),
 })
@@ -155,14 +160,14 @@ export const StaticComponent = memo(
           <>
             <Box className={classes.textField}>
               <Typography
+                className={classes.staticText}
                 title={sanitize`${defaultValue}`}
-                color="text.secondary"
               >
                 {sanitize`${defaultValue}` || <Translate word={tooltip} />}
               </Typography>
             </Box>
             <SubmitButton
-              icon={<Edit />}
+              iconOnly={<Edit />}
               onClick={() => setIsEnabled({ [name]: true })}
               disabled={isEnabled && !isEnabled?.[name]}
             />

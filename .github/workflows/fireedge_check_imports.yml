@@ -1,0 +1,32 @@
+name: Check cross module imports
+on:
+  push:
+    paths:
+      - 'src/fireedge/src/modules/**'
+  pull_request:
+    paths:
+      - 'src/fireedge/src/modules/**'
+  workflow_dispatch: {}
+jobs:
+  check-imports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - name: Detect cross-module imports
+        working-directory: src/fireedge/src/modules
+        run: |
+          fail=0
+          for d in */; do
+            hits=$(rg -nP '@modules/(?!'"${d%/}"')' "$d" || true)
+            if [ -n "$hits" ]; then
+              echo "::group::Cross-module imports in ${d%/}"
+              echo "$hits" | while IFS= read -r line; do
+                echo "::error::$line"
+              done
+              echo "::endgroup::"
+              fail=1
+            fi
+          done
+          [ "$fail" -eq 0 ] && echo "No cross-module imports" || exit 1

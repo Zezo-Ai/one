@@ -13,201 +13,192 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+
+import { List, ResourceContainer, Table } from '@ComponentsV2Module'
+import { RESOURCE_NAMES, T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-  VrsTable,
-  VrTabs,
-} from '@ComponentsModule'
-import { RESOURCE_NAMES, T, VmTemplate } from '@ConstantsModule'
-import { useGeneral, useGeneralApi, VrAPI } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  useFunctionality,
+  useFunctionalityApi,
+  useViews,
+} from '@FeaturesModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+import { getActionsAvailable } from '@UtilsModule'
+import { DetailsDrawer } from '@modules/containers/VirtualRouters/Details'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
+  getVirtualRouterTotalNics,
+  getVirtualRouterTotalVms,
+  vrTable,
+} from '@ModelsModule'
+import { VirtualRouter } from '@ResourcesModule'
 
 /**
- * Displays a list of VM Templates with a split pane between the list and selected row(s).
+ * Displays a list of Virtual Routers with a split pane between the list and selected row(s).
  *
- * @returns {ReactElement} VM Templates list and selected row(s)
+ * @returns {ReactElement} Virtual Routers list and selected row(s)
  */
 export function VirtualRouters() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = VrsTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const {
+    searchExpression,
+    sortExpression,
+    filterExpression,
+    selectedItems,
+    containerView,
+  } = useFunctionality()
+  const { getResourceView } = useViews()
+  const resourceView = getResourceView(RESOURCE_NAMES.VROUTER)
+
+  const availableActions = useMemo(
+    () => getActionsAvailable(resourceView?.actions),
+    [resourceView?.actions]
+  )
+
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = vrTable.useData()
+
+  const filterOptions = useMemo(
+    () => vrTable.filterOptions(data, resourceView?.filters),
+    [data, resourceView?.filters]
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((vrouter) => {
+          const { GNAME, ID, LOCK, NAME, TEMPLATE_ID, UNAME } = vrouter
+
+          return [
+            ID,
+            NAME,
+            UNAME,
+            GNAME,
+            TEMPLATE_ID,
+            getVirtualRouterTotalVms(vrouter),
+            getVirtualRouterTotalNics(vrouter),
+            LOCK && T.Locked,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    const filteredByFilters = vrTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
+
+    return vrTable.sortData(filteredByFilters, sortExpression)
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
+
+  const selectedResources = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () =>
+      Object.fromEntries((selectedItems ?? []).map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(selectedItems.filter((itemId) => itemId !== id))
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <VrsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            template: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.VirtualRouters}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={vrTable.sortOptions()}
+      filterOptions={filterOptions}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={vrTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((vrouter) => {
+                  const { ID } = vrouter
+                  const id = String(ID)
 
-          return <InfoTabs {...propsInfo} />
-        }}
+                  return (
+                    <VirtualRouter.Card
+                      key={id}
+                      vrouter={vrouter}
+                      isSelected={selectedItems?.includes(id)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter((itemId) => itemId !== id)
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+
+      <DetailsDrawer
+        selectedResources={selectedResources}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        actions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a VM Template.
- *
- * @param {VmTemplate} template - VM Template id to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a VM Template
- * @param {Function} [unselect] - Function to unselect a VM Template
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} VM Template details
- */
-const InfoTabs = memo(({ template, gotoPage, unselect, selectedRows }) => {
-  const [getTemplate, { data, isFetching }] = VrAPI.useLazyGetVrQuery()
-  const id = template?.ID ?? data?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.VROUTER}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => getTemplate({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <VrTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  template: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

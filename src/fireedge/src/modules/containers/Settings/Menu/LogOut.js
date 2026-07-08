@@ -16,17 +16,40 @@
 import { STYLE_BUTTONS, T } from '@ConstantsModule'
 import { css } from '@emotion/css'
 import { AuthAPI } from '@FeaturesModule'
-import { SubmitButton } from '@ComponentsModule'
+import { SubmitButton } from '@ComponentsV2Module'
 import { Box, useTheme } from '@mui/material'
 import { LogOut as LogOutIcon } from 'iconoir-react'
 import { memo, useMemo } from 'react'
 
-const styles = ({ typography }) => ({
+const styles = ({ borderWidth, palette, scale }) => ({
   root: css({
-    padding: typography.pxToRem(16),
-    display: 'inline-flex',
+    borderTop: `${borderWidth.sm}px solid ${palette.border.primary}`,
+    paddingTop: scale[500],
+
     '& > button': {
-      width: '100%',
+      backgroundColor: 'transparent',
+      color: palette.text.body,
+      border: 'none',
+
+      '& .MuiButton-startIcon': {
+        width: scale[600],
+        height: scale[600],
+        strokeWidth: 1.6,
+        color: palette.icon.error,
+      },
+
+      '&:hover': {
+        border: 'none',
+        backgroundColor: palette.surface.destructiveDisabled,
+        color: palette.text.onDestructive,
+      },
+
+      '&:active, &:focus': {
+        border: 'none',
+        backgroundColor: 'transparent',
+        outline: `${borderWidth.md}px solid ${palette.border.destructive}`,
+        outlineOffset: `${borderWidth.md}px`,
+      },
     },
   }),
 })
@@ -39,13 +62,11 @@ const LogOut = memo(() => {
   return (
     <Box className={classes.root}>
       <SubmitButton
-        onClick={() => logout()}
-        importance={STYLE_BUTTONS.IMPORTANCE.SECONDARY}
-        size={STYLE_BUTTONS.SIZE.MEDIUM}
-        type={STYLE_BUTTONS.TYPE.OUTLINED}
+        onClick={logout}
+        type={STYLE_BUTTONS.TYPE.TRANSPARENT}
         label={T.SignOut}
         data-cy="logout-button"
-        icon={<LogOutIcon />}
+        startIcon={<LogOutIcon />}
       />
     </Box>
   )

@@ -17,12 +17,17 @@ import { string, boolean, object } from 'yup'
 
 import { useAuth } from '@FeaturesModule'
 import { getValidationFromFields, arrayToOptions } from '@UtilsModule'
-import { Tr } from '@ComponentsModule'
-import { T, INPUT_TYPES, FILTER_POOL, SERVER_CONFIG } from '@ConstantsModule'
+import { Tr } from '@ResourcesModule'
+import {
+  DEFAULT_OTP_LENGTH,
+  T,
+  INPUT_TYPES,
+  FILTER_POOL,
+} from '@ConstantsModule'
 
 const USERNAME = {
   name: 'user',
-  label: T.Username,
+  label: T.User,
   type: INPUT_TYPES.TEXT,
   validation: string()
     .trim()
@@ -30,6 +35,7 @@ const USERNAME = {
     .default(() => ''),
   grid: { md: 12 },
   fieldProps: {
+    placeholder: T.UsernamePlaceholder,
     autoFocus: true,
     required: true,
     autoComplete: 'username',
@@ -48,6 +54,7 @@ const PASSWORD = {
     .default(() => ''),
   grid: { md: 12 },
   fieldProps: {
+    placeholder: T.PasswordPlaceholder,
     required: true,
     autoComplete: 'current-password',
     size: 'medium',
@@ -66,20 +73,21 @@ const REMEMBER = {
   },
 }
 
+const TFA_TOKEN_ERROR = `Your one-time password must be ${DEFAULT_OTP_LENGTH} characters.`
+
 const TFA_TOKEN = {
   name: 'tfatoken',
   label: T.Token2FA,
-  type: INPUT_TYPES.TEXT,
+  type: INPUT_TYPES.OTP,
   validation: string()
     .trim()
-    .required()
+    .required(TFA_TOKEN_ERROR)
+    .length(DEFAULT_OTP_LENGTH, TFA_TOKEN_ERROR)
     .default(() => ''),
   grid: { md: 12 },
   fieldProps: {
-    autoFocus: true,
-    required: true,
-    margin: 'normal',
-    sx: { margin: '2rem 0rem 2rem 0rem' },
+    hint: T.EnterVerificationCode,
+    length: DEFAULT_OTP_LENGTH,
   },
 }
 
@@ -114,11 +122,7 @@ const GROUP = {
   },
 }
 
-const FORM_USER_FIELDS = [
-  USERNAME,
-  PASSWORD,
-  `${SERVER_CONFIG?.keep_me_logged}` === 'true' && REMEMBER,
-].filter(Boolean)
+const FORM_USER_FIELDS = [USERNAME, PASSWORD, REMEMBER].filter(Boolean)
 
 const FORM_2FA_FIELDS = [TFA_TOKEN]
 

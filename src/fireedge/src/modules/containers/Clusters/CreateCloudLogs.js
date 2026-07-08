@@ -15,19 +15,24 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useEffect, useState, useMemo } from 'react'
 import { Redirect, useParams, useLocation } from 'react-router-dom'
+import { TranslateProvider } from '@ResourcesModule'
 import {
   SkeletonStepsForm,
-  TranslateProvider,
   SubmitButton,
-  PATH,
-  Tr,
   LogsViewer,
-  StatusChip,
-} from '@ComponentsModule'
-import { Box, Stack, Typography, useTheme, LinearProgress } from '@mui/material'
+  ProgressBar,
+  StatusTag,
+  Text,
+} from '@ComponentsV2Module'
+import { Box, Stack } from '@mui/material'
 import { ProvisionAPI } from '@FeaturesModule'
-import { T, STYLE_BUTTONS, CLUSTER_CLOUD_OPERATIONS } from '@ConstantsModule'
-import { styles } from '@modules/containers/Clusters/styles'
+import {
+  T,
+  CLUSTER_CLOUD_OPERATIONS,
+  PATH,
+  TEXT_VARIANTS,
+  TEXT_WEIGHTS,
+} from '@ConstantsModule'
 import { last, filter, find } from 'lodash'
 import {
   getProvisionColorState,
@@ -35,6 +40,7 @@ import {
   isFinalState,
 } from '@ModelsModule'
 import { useHistory } from 'react-router'
+import { Tr } from '@ProvidersModule'
 
 /**
  * Displays the creation form for a cluster.
@@ -42,18 +48,12 @@ import { useHistory } from 'react-router'
  * @returns {ReactElement} - The cluster form component
  */
 export function CreateClusterCloudLogs() {
-  // Get styles
-  const theme = useTheme()
-  const classes = useMemo(() => styles(theme), [theme])
-
   // Get history to redirect to back to clusters
   const history = useHistory()
 
   // Get id and the name of the operation
   const { id } = useParams()
   const { state } = useLocation()
-
-  const [retry] = ProvisionAPI.useRetryProvisionMutation()
 
   if (Number.isNaN(+id)) {
     return <Redirect to="/" />
@@ -87,13 +87,14 @@ export function CreateClusterCloudLogs() {
   }, [provision])
 
   // Get logs
-  const { data: logsData } = ProvisionAPI.useGetProvisionLogsQuery(
-    { id: id, all: true },
-    {
-      pollingInterval: 3000,
-      skipPollingIfUnfocused: true,
-    }
-  )
+  const { data: logsData, refetch: refetchLogs } =
+    ProvisionAPI.useGetProvisionLogsQuery(
+      { id: id, all: true },
+      {
+        pollingInterval: 3000,
+        skipPollingIfUnfocused: true,
+      }
+    )
 
   // Get last info from logs to display to the user
   const lastInfo = useMemo(
@@ -104,7 +105,7 @@ export function CreateClusterCloudLogs() {
       // Delete date and level
       const regexDate = /^(.+?\[\w\])\s*(.*)/
       const matchDate = log?.text.match(regexDate)
-      const message = matchDate ? matchDate[2] : log.text
+      const message = matchDate ? matchDate[2] : log?.text
 
       return message
     },
@@ -119,31 +120,38 @@ export function CreateClusterCloudLogs() {
 
   return logsData ? (
     <TranslateProvider>
-      <Stack direction="column">
-        <Typography variant="subtitle2">{translations.description}</Typography>
+      <Stack
+        direction="column"
+        sx={{ flex: '1 1 auto', minHeight: 0, minWidth: 0 }}
+      >
+        <Text
+          variant={TEXT_VARIANTS.BODY_SMALL}
+          value={translations.description}
+        />
         <Stack
           direction="row"
           justifyContent="space-between"
           alignItems="center"
           sx={{ marginTop: '10px' }}
         >
-          <Typography className={classes.titleText}>
-            {operationText ? translations.operation : provision?.NAME}
-          </Typography>
+          <Text
+            variant={TEXT_VARIANTS.BODY_SMALL}
+            weight={TEXT_WEIGHTS.SEMIBOLD}
+            value={operationText ? translations.operation : provision?.NAME}
+          />
           <Box>
-            <StatusChip
+            <StatusTag
               dataCy="state"
-              stateColor={getProvisionColorState(
+              statusColor={getProvisionColorState(
                 provision?.TEMPLATE?.PROVISION_BODY?.state
               )}
-              text={provision?.TEMPLATE?.PROVISION_BODY?.state}
+              statusName={provision?.TEMPLATE?.PROVISION_BODY?.state}
             />
           </Box>
           <SubmitButton
             data-cy={`button-background`}
-            importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-            size={STYLE_BUTTONS.SIZE.MEDIUM}
-            type={STYLE_BUTTONS.TYPE.FILLED}
+            size="medium"
+            type="primary"
             onClick={() => history.push(PATH.INFRASTRUCTURE.CLUSTERS.LIST)}
             label={
               isFinalState(provision?.TEMPLATE?.PROVISION_BODY?.state)
@@ -157,25 +165,35 @@ export function CreateClusterCloudLogs() {
           sx={{ width: '100%', margin: '15px 0', gap: '4px' }}
         >
           {progress < 100 && (
-            <Typography className={classes.infoText}>
-              {lastInfo(logsData)}
-            </Typography>
+            <Text
+              variant={TEXT_VARIANTS.BODY_SMALL}
+              weight={TEXT_WEIGHTS.SEMIBOLD}
+              value={lastInfo(logsData)}
+              sx={{ color: 'text.action' }}
+            />
           )}
-          <LinearProgress
-            variant="determinate"
-            value={progress}
-            classes={{
-              root: classes.root,
-              bar: progress >= 100 ? classes.solidBar : classes.animatedBar,
-            }}
-          />
+          <ProgressBar size="medium" value={progress} />
         </Stack>
-        <LogsViewer
-          logs={logsData}
-          options={{ followLogs: true }}
-          provisionId={id}
-          onRetry={() => retry({ id })}
-        />
+        <Box
+          sx={{
+            display: 'flex',
+            flex: '1 1 0',
+            minHeight: 0,
+            minWidth: 0,
+            '& > *': {
+              flex: '1 1 0',
+              minHeight: 0,
+              minWidth: 0,
+            },
+          }}
+        >
+          <LogsViewer
+            logs={logsData}
+            getLogs={refetchLogs}
+            options={{ followLogs: true }}
+            provisionId={id}
+          />
+        </Box>
       </Stack>
     </TranslateProvider>
   ) : (

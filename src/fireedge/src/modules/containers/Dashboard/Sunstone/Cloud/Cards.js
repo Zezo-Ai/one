@@ -14,7 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { Graph, Tr, Translate } from '@ComponentsModule'
+import { Graph, Tr, Translate } from '@ResourcesModule'
 import { T } from '@ConstantsModule'
 import { css } from '@emotion/css'
 import {
@@ -62,9 +62,6 @@ const styles = ({ palette, typography }) => ({
     fontStyle: 'normal',
     fontWeight: '700',
     lineHeight: '1.25rem',
-  }),
-  secondTitle: css({
-    marginBottom: typography.pxToRem(20),
   }),
   progressBar: css({
     height: typography.pxToRem(4),
@@ -303,9 +300,7 @@ const QuotaBar = memo(
 
       return (
         <Tooltip placement="top-start" title={`${resourceType?.titleQuota}`}>
-          <Typography
-            className={clsx(classes.noProgressBarTitle, classes.secondTitle)}
-          >
+          <Typography className={clsx(classes.noProgressBarTitle)}>
             {`${dataUsed} / -`}
           </Typography>
         </Tooltip>

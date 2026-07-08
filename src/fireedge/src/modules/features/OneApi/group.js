@@ -14,6 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Actions, Commands } from 'server/utils/constants/commands/group'
+import { PROFILE_LABELS } from '@modules/features/OneApi/labels'
 import { oneApi } from '@modules/features/OneApi/oneApi'
 import {
   ONE_RESOURCES,
@@ -89,6 +90,12 @@ const groupApi = oneApi.injectEndpoints({
               GROUP_POOL,
             ]
           : [GROUP_POOL],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(oneApi.util.invalidateTags([PROFILE_LABELS]))
+        } catch {}
+      },
     }),
     getGroup: builder.query({
       /**
@@ -185,7 +192,7 @@ const groupApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: GROUP, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: GROUP, id }, PROFILE_LABELS],
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchGroup = dispatch(

@@ -76,23 +76,25 @@ const authSupportApi = oneApi.injectEndpoints({
         return { params, command }
       },
       transformResponse: (resp) => {
-        const { comments, users } = resp[0]
+        const commentsResponse = Array.isArray(resp) ? resp[0] : resp?.data?.[0]
+        const { comments = [], users = [] } = commentsResponse ?? {}
 
         return comments.map((comment) => {
-          const author = users.find((user) => user.id === comment.author_id)
+          const author =
+            users.find((user) => user.id === comment.author_id) ?? {}
 
           return {
             id: comment.id,
             createdAt: comment.created_at,
             body: comment.html_body,
-            attachments: comment.attachments.map((attachment) => ({
+            attachments: (comment.attachments ?? []).map((attachment) => ({
               filename: attachment.file_name,
               url: attachment.content_url,
               size: attachment.size,
             })),
             author: {
-              id: author.id,
-              name: author.name,
+              id: author.id ?? comment.author_id,
+              name: author.name ?? '-',
               photo: author.photo?.content_url,
             },
           }

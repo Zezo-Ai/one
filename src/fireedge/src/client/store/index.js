@@ -22,6 +22,7 @@ import { isDevelopment } from '@UtilsModule'
 import {
   AuthSlice,
   GeneralSlice,
+  FunctionalitySlice,
   SupportSlice,
   PersistentSlice,
   GuacamoleSlice,
@@ -49,6 +50,7 @@ export const createStore = ({ initState = {}, extraMiddleware = [] }) => {
       [AuthSlice.name]: AuthSlice.reducer,
       [SupportSlice.name]: SupportSlice.reducer,
       [GeneralSlice.name]: GeneralSlice.reducer,
+      [FunctionalitySlice.name]: FunctionalitySlice.reducer,
       [GuacamoleSlice.name]: GuacamoleSlice.reducer,
       [ModalsSlice.name]: ModalsSlice.reducer,
       [oneApi.reducerPath]: oneApi.reducer,
@@ -60,7 +62,12 @@ export const createStore = ({ initState = {}, extraMiddleware = [] }) => {
         immutableCheck: true,
         serializableCheck: {
           ignoredActions: ['persist/PERSIST'],
-          ignoredActionPaths: ['payload.form', 'payload.onSubmit'],
+          ignoredActionPaths: [
+            'payload.form',
+            'payload.onSubmit',
+            'payload.dialogProps.children',
+            'payload.dialogProps.description', // Can potentially be a react node, so ignoring
+          ],
           ignoredPaths: ['persist', 'modals'],
         },
       }).concat([

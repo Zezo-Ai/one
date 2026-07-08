@@ -29,6 +29,7 @@ export const AUTH_APPS = [
     url: 'https://www.microsoft.com/en-us/p/microsoft-authenticator/9nblgggzmcj6?activetab=pivot:overviewtab',
   },
 ]
+export const DEFAULT_OTP_LENGTH = 6
 
 const isBackend = () => typeof window === 'undefined'
 
@@ -57,6 +58,8 @@ export const UNITS = {
   ZB: 'ZB',
   YB: 'YB',
 }
+
+export const DEFAULT_TIMESTAMP_FORMAT = 'MMM dd HH:mm:ss'
 
 // should be equal to the apps in src/server/utils/constants/defaults.js
 export const _APPS = { sunstone: 'sunstone' }
@@ -145,6 +148,7 @@ export const INPUT_TYPES = {
   TIME: 'time',
   HIDDEN: 'hidden',
   PASSWORD: 'password',
+  OTP: 'otp',
   SELECT: 'select',
   SLIDER: 'slider',
   TEXT: 'text',
@@ -168,51 +172,52 @@ export const DEBUG_LEVEL = {
 export const SOCKETS = {
   CONNECT: 'connect',
   DISCONNECT: 'disconnect',
-  HOOKS: 'hooks',
-  GUACAMOLE: 'guacamole',
   EXTERNAL_GUACAMOLE: 'external-guacamole',
+  GUACAMOLE: 'guacamole',
+  HOOKS: 'hooks',
 }
 
 /** @enum {string} Names of resource */
 export const RESOURCE_NAMES = {
-  APP: 'marketplace-app',
   ACL: 'acl',
+  APP: 'marketplace-app',
   BACKUP: 'backup',
+  BACKUPJOBS: 'backupjobs',
   CLUSTER: 'cluster',
+  DASHBOARD: 'dashboard',
   DATASTORE: 'datastore',
   DRIVER: 'driver',
+  FILE: 'file',
   GROUP: 'group',
   HOST: 'host',
   IMAGE: 'image',
-  FILE: 'file',
   LOGO: 'logo',
   MARKETPLACE: 'marketplace',
+  ONEKS: 'kubernetes',
   PROVIDER: 'provider',
   PROVISION: 'provision',
   SEC_GROUP: 'security-group',
+  SERVICE: 'service',
+  SERVICE_TEMPLATE: 'service-template',
+  SUPPORT: 'support',
   USER: 'user',
   VDC: 'virtual-data-center',
   VLAN_GROUP: 'vlan-group',
+  VM: 'vm',
+  VM_GROUP: 'vm-group',
+  VM_TEMPLATE: 'vm-template',
+  VNET: 'virtual-network',
+  VN_TEMPLATE: 'network-template',
   VROUTER: 'vrouter',
   VROUTER_TEMPLATE: 'vrouter-template',
-  VM_TEMPLATE: 'vm-template',
-  VM_GROUP: 'vm-group',
-  VM: 'vm',
-  VN_TEMPLATE: 'network-template',
-  VNET: 'virtual-network',
-  SERVICE: 'service',
-  SERVICE_TEMPLATE: 'service-template',
   ZONE: 'zone',
-  BACKUPJOBS: 'backupjobs',
-  SUPPORT: 'support',
-  DASHBOARD: 'dashboard',
-  ONEKS: 'kubernetes',
 }
 
+export * as ACTIONS from '@modules/constants/actions'
 export * as T from '@modules/constants/translates'
 
+export * as STATES from '@modules/constants/states'
 export * from '@modules/constants/acl'
-export * as ACTIONS from '@modules/constants/actions'
 export * from '@modules/constants/backupjob'
 export * from '@modules/constants/cluster'
 export * from '@modules/constants/color'
@@ -220,7 +225,6 @@ export * from '@modules/constants/common'
 export * from '@modules/constants/datastore'
 export * from '@modules/constants/driver'
 export * from '@modules/constants/errors'
-export * from '@modules/constants/flow'
 export * from '@modules/constants/group'
 export * from '@modules/constants/guacamole'
 export * from '@modules/constants/host'
@@ -230,25 +234,29 @@ export * from '@modules/constants/marketplace'
 export * from '@modules/constants/marketplaceApp'
 export * from '@modules/constants/network'
 export * from '@modules/constants/networkTemplate'
-export * from '@modules/constants/oneks'
-export * from '@modules/constants/quota'
-export * from '@modules/constants/scheduler'
-export * from '@modules/constants/securityGroup'
-export * from '@modules/constants/serviceTemplate'
-export * as STATES from '@modules/constants/states'
 export * from '@modules/constants/ods'
+export * from '@modules/constants/oneks'
+export * from '@modules/constants/path'
 export * from '@modules/constants/provider'
 export * from '@modules/constants/provision'
+export * from '@modules/constants/quota'
+export * from '@modules/constants/resources'
+export * from '@modules/constants/scheduler'
+export * from '@modules/constants/securityGroup'
+export * from '@modules/constants/service'
+export * from '@modules/constants/serviceTemplate'
+export * from '@modules/constants/steps'
 export * from '@modules/constants/styles'
 export * from '@modules/constants/support'
 export * from '@modules/constants/system'
+export * from '@modules/constants/text'
 export * from '@modules/constants/user'
 export * from '@modules/constants/userInput'
+export * from '@modules/constants/vRouter'
+export * from '@modules/constants/vRouterTemplate'
 export * from '@modules/constants/vdc'
 export * from '@modules/constants/vlanRule'
 export * from '@modules/constants/vm'
 export * from '@modules/constants/vmGroup'
 export * from '@modules/constants/vmTemplate'
-export * from '@modules/constants/vRouter'
-export * from '@modules/constants/vRouterTemplate'
 export * from '@modules/constants/zone'

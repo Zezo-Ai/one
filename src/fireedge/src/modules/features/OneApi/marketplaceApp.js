@@ -24,6 +24,7 @@ import {
   LockLevel,
   MarketplaceApp,
   Permission,
+  RESOURCE_NAMES,
 } from '@ConstantsModule'
 
 import {
@@ -31,6 +32,10 @@ import {
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import {
   removeLockLevelOnResource,
   removeResourceOnPool,
@@ -64,17 +69,23 @@ const marketAppApi = oneApi.injectEndpoints({
         const name = Actions.MARKETAPP_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) =>
-        [data?.MARKETPLACEAPP_POOL?.MARKETPLACEAPP ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.MARKETPLACEAPP_POOL?.MARKETPLACEAPP ?? []].flat(),
+          RESOURCE_NAMES.APP,
+          meta
+        ),
       providesTags: (apps) =>
-        apps
-          ? [
-              ...apps.map(({ ID }) => ({ type: APP_POOL, id: `${ID}` })),
-              APP_POOL,
-            ]
-          : [APP_POOL],
+        withProfileLabelsTags(
+          apps
+            ? [
+                ...apps.map(({ ID }) => ({ type: APP_POOL, id: `${ID}` })),
+                APP_POOL,
+              ]
+            : [APP_POOL]
+        ),
     }),
     getMarketplaceApp: builder.query({
       /**
@@ -89,10 +100,16 @@ const marketAppApi = oneApi.injectEndpoints({
         const name = Actions.MARKETAPP_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.MARKETPLACEAPP ?? {},
-      providesTags: (_, __, { id }) => [{ type: APP, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          data?.MARKETPLACEAPP ?? {},
+          RESOURCE_NAMES.APP,
+          meta
+        ),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: APP, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

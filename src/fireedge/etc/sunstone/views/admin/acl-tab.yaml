@@ -9,7 +9,6 @@ resource_name: "ACL"
 
 actions:
   create_dialog: true
-  create_dialog_string: true
   delete: true
 
 # Filters - List of criteria to filter the resources

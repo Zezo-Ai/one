@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { INPUT_TYPES, T } from '@ConstantsModule'
+import { INPUT_TYPES } from '@ConstantsModule'
 import { getObjectSchemaFromFields } from '@UtilsModule'
 import { number } from 'yup'
 
 const TFA_TOKEN = {
   name: 'TOKEN',
-  label: T.EnterVerificationCode,
   type: INPUT_TYPES.TEXT,
   htmlType: 'number',
   validation: number().min(0).required().default(),

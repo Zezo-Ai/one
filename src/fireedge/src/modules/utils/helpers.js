@@ -29,6 +29,13 @@ import _ from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
 import { BaseSchema, ObjectSchema, object, reach } from 'yup'
 import { DateTime } from 'luxon'
+import {
+  isValidElement,
+  createElement,
+  cloneElement,
+  Component,
+  ReactNode,
+} from 'react'
 
 /**
  * Simulate a delay in a function.
@@ -744,8 +751,17 @@ export const getLocked = (OpennebulaObject) => !!+OpennebulaObject.LOCK?.LOCKED
  * @param {string} root0.fallback - Optional fallback error message
  * @returns {string} - Formatted error message
  */
-export const formatError = (errorId = '', { fallback = '' } = {}) =>
-  sentenceCase(ERROR_LOOKUP_TABLE?.[String(errorId) || ''] ?? fallback)
+export const formatError = (errorId = '', { fallback } = {}) => {
+  const lookup = ERROR_LOOKUP_TABLE?.[String(errorId)]
+  const message = lookup ?? fallback
+
+  if (message === null) return null
+  if (typeof message === 'string' && message.length > 0) {
+    return sentenceCase(message)
+  }
+
+  return ''
+}
 
 /**
  * @param {object} obj - Dirty object
@@ -797,3 +813,166 @@ export const getMonthName = (month, locale = 'en') =>
   })
     .setLocale(locale)
     .toFormat('LLLL')
+
+/**
+ * @param {ReactNode} iconProp - Icon node or import reference.
+ * @param {object} props - Override props
+ * @returns {Component} - React component
+ */
+export const renderIcon = (iconProp, props = {}) => {
+  if (!iconProp) return null
+
+  return isValidElement(iconProp)
+    ? cloneElement(iconProp, props)
+    : createElement(iconProp, props)
+}
+
+/**
+ * Build breadcrumb lookup map from endpoints definition.
+ *
+ * @param {Array} endpoints - Endpoint definitions
+ * @returns {Function} Breadcrumb lookup function.
+ */
+export const buildBreadcrumbMap = (endpoints) => {
+  const titles = {}
+  const chains = {}
+
+  const collect = (route, group) => {
+    if (route.path) titles[route.path] = route.title
+    route.routes?.forEach((r) => collect(r, route.title ?? group))
+  }
+
+  const buildChain = (route, group) => {
+    if (route.path) {
+      const crumbs = group ? [{ label: group, path: null }] : []
+
+      let path = ''
+      for (const seg of route.path.split('/').filter(Boolean)) {
+        path += '/' + seg
+        if (titles[path]) crumbs.push({ label: titles[path], path })
+      }
+
+      chains[route.path] = crumbs
+    }
+    route.routes?.forEach((r) => buildChain(r, route.title ?? group))
+  }
+
+  endpoints.forEach((r) => collect(r))
+  endpoints.forEach((r) => buildChain(r))
+
+  const dynamic = Object.keys(chains)
+    .filter((p) => p.includes(':'))
+    .map((p) => ({
+      re: new RegExp('^' + p.replace(/:[^/]+/g, '[^/]+') + '$'),
+      chain: chains[p],
+    }))
+
+  return (path) =>
+    chains[path] ?? dynamic.find(({ re }) => re.test(path))?.chain ?? null
+}
+
+/**
+ * @param {object} resources - Any
+ * @returns {number} - Total number of resources
+ */
+export const getTotalOfResources = (resources) =>
+  [resources?.ID ?? []].flat().length || 0
+
+/**
+ * Aggregates permissions over multiple resources.
+ *
+ * @param {object[]} resources - Resources with a PERMISSIONS map
+ * @returns {object} Aggregated permissions keyed by permission name
+ */
+export const aggregatePermissions = (resources) =>
+  Object.fromEntries(
+    [
+      'OWNER_U',
+      'OWNER_M',
+      'OWNER_A',
+      'GROUP_U',
+      'GROUP_M',
+      'GROUP_A',
+      'OTHER_U',
+      'OTHER_M',
+      'OTHER_A',
+    ].map((k) => {
+      const values = resources.map((r) => +r.PERMISSIONS?.[k])
+
+      if (values.every((v) => v === 1)) return [k, 1]
+      if (values.every((v) => v === 0)) return [k, 0]
+
+      return [k, null]
+    })
+  )
+
+/**
+ * Aggregates ownership over multiple resources.
+ *
+ * @param {object[]} resources - Resources with UNAME, GNAME, UID, GID fields
+ * @returns {object} -
+ */
+export const aggregateOwnership = (resources) => {
+  const [first] = [].concat(resources)
+
+  const same = (key) =>
+    resources.every((r) => r[key] === first?.[key]) ? first?.[key] : undefined
+
+  return {
+    UNAME: same('UNAME'),
+    GNAME: same('GNAME'),
+    UID: same('UID'),
+    GID: same('GID'),
+  }
+}
+
+/**
+ * Aggregates lock state across multiple resources.
+ *
+ * @param {object[]} resources - Resources with a LOCK field
+ * @returns {{ allLocked: boolean, noneLocked: boolean }} - Aggregate lock status
+ */
+export const aggregateLockState = (resources) =>
+  [].concat(resources).reduce(
+    (acc, r) => {
+      const isLocked = r?.LOCK != null
+
+      return {
+        allLocked: acc.allLocked && isLocked,
+        noneLocked: acc.noneLocked && !isLocked,
+      }
+    },
+    { allLocked: true, noneLocked: true }
+  )
+
+/**
+ * Sums numeric template metrics across multiple resources.
+ *
+ * @param {object[]} resources - Resources with a TEMPLATE map
+ * @param {string[]} keys - Keys to sum
+ * @returns {object} Summed metrics keyed by name
+ */
+export const aggregateMetrics = (resources, keys) =>
+  [].concat(resources).reduce((acc, resource) => {
+    keys.forEach((k) => {
+      acc[k] += +_.get(resource, k, 0)
+    })
+
+    return acc
+  }, Object.fromEntries(keys.map((k) => [k, 0])))
+
+/**
+ * Get if there is a common value for the getter in all resources.
+ *
+ * @param {Array} resources - List of resources
+ * @param {Function} getter - Function to get the value
+ * @returns {string} - The common value or -
+ */
+export const getCommonValue = (resources, getter) => {
+  const [first] = [].concat(resources)
+  const firstValue = getter(first)
+
+  return resources.every((resource) => getter(resource) === firstValue)
+    ? firstValue
+    : '-'
+}

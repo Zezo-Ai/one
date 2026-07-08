@@ -16,7 +16,7 @@
 import { ReactElement } from 'react'
 import { useParams, Redirect } from 'react-router-dom'
 
-import { ServiceTabs, TranslateProvider } from '@ComponentsModule'
+import { ServiceTabs, TranslateProvider } from '@ResourcesModule'
 
 /**
  * Displays the detail information about a Service.

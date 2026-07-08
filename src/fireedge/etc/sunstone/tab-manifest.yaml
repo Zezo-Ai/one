@@ -1,14 +1,14 @@
 - title: Instances
-  icon: Cell2X2
+  icon: GridAdd
   routes:
     - title: VMs
       path: /vm
       sidebar: true
       icon: ModernTv
       Component: VirtualMachines
-    - title: VMs
-      path: /vm/:id
-      Component: VirtualMachineDetail
+    - title: Create VM
+      path: /vm/create
+      Component: CreateVm
     - title: Virtual Routers
       path: /vrouter
       sidebar: true
@@ -32,7 +32,7 @@
       path: /service/:id
       Component: ServiceDetail
 - title: Templates
-  icon: Archive
+  icon: ViewStructureDown
   routes:
     - title: VM Templates
       path: /vm-template
@@ -65,7 +65,7 @@
     - title: Service Template
       path: /service-template/:id
       Component: ServiceTemplateDetail
-    - title: Instantiate Virtual Router Template
+    - title: Instantiate VR Template
       path: /vrouter-template/instantiate/
       Component: InstantiateVrTemplate
     - title: Virtual Routers
@@ -73,10 +73,10 @@
       sidebar: true
       icon: Shuffle
       Component: VrTemplates
-    - title: Create Virtual Router Template
+    - title: Create VR Template
       path: /vrouter-template/create
       Component: CreateVrTemplate
-    - title: Virtual Router Template
+    - title: VR Template
       path: /vrouter-template/:id
       Component: VrTemplateDetail
     - title: Create VM group
@@ -88,7 +88,7 @@
       sidebar: true
       Component: VmGroups
 - title: Storage
-  icon: Box
+  icon: DatabaseStats
   routes:
     - title: Datastores
       path: /datastore
@@ -162,7 +162,7 @@
       path: /backupjobs/:id
       Component: BackupJobDetail
 - title: Networks
-  icon: ServerConnection
+  icon: Network
   routes:
     - title: Virtual networks
       path: /virtual-network
@@ -198,7 +198,7 @@
       path: /security-group/create
       Component: CreateSecurityGroup
 - title: Infrastructure
-  icon: CloudSync
+  icon: Cloud
   routes:
     - title: Drivers
       path: /driver
@@ -247,7 +247,7 @@
       icon: MinusPinAlt
       Component: Zones
 - title: System
-  icon: Home
+  icon: Tools
   routes:
     - title: Create User
       path: /user/create
@@ -295,6 +295,9 @@
   sidebar: true
   icon: HeadsetHelp
   Component: Support
+- title: Create Ticket
+  path: /support/create
+  Component: CreateTicket
 - title: Guacamole
   path: /guacamole/:id/:type
   sidebar: false

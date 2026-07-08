@@ -13,203 +13,267 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+
 import {
-  GlobalLabel,
-  GroupsTable,
-  GroupTabs,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { Group, RESOURCE_NAMES, T } from '@ConstantsModule'
-import { GroupAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  Card,
+  List,
+  OwnershipSlot,
+  ProgressBarSlot,
+  ResourceContainer,
+  Table,
+  TitleSlot,
+} from '@ComponentsV2Module'
+import { T, TABLE_VIEW_MODE } from '@ConstantsModule'
+import { useFunctionality, useFunctionalityApi } from '@FeaturesModule'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
+  getGroupQuotaUsage,
+  GROUP_LIST_COLUMNS,
+  groupTable,
+} from '@ModelsModule'
+import { DetailsDrawer } from '@modules/containers/Groups/Details'
+import { getTotalOfResources } from '@UtilsModule'
+import { ReactElement, useCallback, useMemo } from 'react'
 
 /**
- * Displays a list of Groups with a split pane between the list and selected row(s).
+ * Displays a list of Groups.
  *
- * @returns {ReactElement} Groups list and selected row(s)
+ * @returns {ReactElement} Groups list
  */
 export function Groups() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = GroupsTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const { searchExpression, sortExpression, selectedItems, containerView } =
+    useFunctionality()
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = groupTable.useData()
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((group) => {
+          const {
+            ID,
+            NAME,
+            USERS,
+            VM_QUOTA,
+            DATASTORE_QUOTA,
+            NETWORK_QUOTA,
+            IMAGE_QUOTA,
+          } = group
+          const totalUsers = getTotalOfResources(USERS)
+          const vmQuotaUsage = getGroupQuotaUsage('VM', VM_QUOTA ?? {})
+          const datastoreQuotaUsage = getGroupQuotaUsage(
+            'DATASTORE',
+            DATASTORE_QUOTA ?? {}
+          )
+          const networkQuotaUsage = getGroupQuotaUsage(
+            'NETWORK',
+            NETWORK_QUOTA ?? {}
+          )
+          const imageQuotaUsage = getGroupQuotaUsage('IMAGE', IMAGE_QUOTA ?? {})
+
+          return [
+            ID,
+            NAME,
+            totalUsers,
+            datastoreQuotaUsage?.size?.percentLabel,
+            vmQuotaUsage?.vms?.percentLabel,
+            networkQuotaUsage?.leases?.percentLabel,
+            imageQuotaUsage?.rvms?.percentLabel,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    return groupTable.sortData(filteredData, sortExpression)
+  }, [data, searchExpression, sortExpression])
+
+  const rowSelection = useMemo(
+    () =>
+      Object.fromEntries((selectedItems ?? []).map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const selectedGroups = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(
+      (selectedItems ?? []).filter((itemId) => String(itemId) !== id)
+    )
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={GroupAPI.useUpdateGroupMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <GroupsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            group: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.Groups}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={groupTable.sortOptions()}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={groupTable.columns(GROUP_LIST_COLUMNS)}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((group) => {
+                  const {
+                    ID,
+                    NAME,
+                    USERS,
+                    VM_QUOTA,
+                    DATASTORE_QUOTA,
+                    NETWORK_QUOTA,
+                    IMAGE_QUOTA,
+                  } = group
+                  const id = String(ID)
+                  const totalUsers = getTotalOfResources(USERS)
+                  const vmQuotaUsage = getGroupQuotaUsage('VM', VM_QUOTA ?? {})
+                  const datastoreQuotaUsage = getGroupQuotaUsage(
+                    'DATASTORE',
+                    DATASTORE_QUOTA ?? {}
+                  )
+                  const networkQuotaUsage = getGroupQuotaUsage(
+                    'NETWORK',
+                    NETWORK_QUOTA ?? {}
+                  )
+                  const imageQuotaUsage = getGroupQuotaUsage(
+                    'IMAGE',
+                    IMAGE_QUOTA ?? {}
+                  )
 
-          return <InfoTabs {...propsInfo} />
-        }}
+                  return (
+                    <Card
+                      key={id}
+                      isSelected={selectedItems?.includes(id)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter((itemId) => itemId !== id)
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                      slots={[
+                        [
+                          TitleSlot,
+                          {
+                            title: NAME,
+                          },
+                        ],
+                        [
+                          OwnershipSlot,
+                          {
+                            labels: [
+                              [T.ID, id],
+                              [T.Users, String(totalUsers)],
+                            ],
+                          },
+                        ],
+                        [
+                          ProgressBarSlot,
+                          {
+                            bars: [
+                              {
+                                label: `${T.DatastoreSize} ${
+                                  datastoreQuotaUsage?.size?.percentLabel ?? '-'
+                                }`,
+                                size: 'extraSmall',
+                                value:
+                                  datastoreQuotaUsage?.size?.percentOfUsed ?? 0,
+                                isLabelVisible: true,
+                              },
+                              {
+                                label: `${T.VMCount} ${
+                                  vmQuotaUsage?.vms?.percentLabel ?? '-'
+                                }`,
+                                size: 'extraSmall',
+                                value: vmQuotaUsage?.vms?.percentOfUsed ?? 0,
+                                isLabelVisible: true,
+                              },
+                              {
+                                label: `${T.NetworkLeases} ${
+                                  networkQuotaUsage?.leases?.percentLabel ?? '-'
+                                }`,
+                                size: 'extraSmall',
+                                value:
+                                  networkQuotaUsage?.leases?.percentOfUsed ?? 0,
+                                isLabelVisible: true,
+                              },
+                              {
+                                label: `${T.ImageRVMS} ${
+                                  imageQuotaUsage?.rvms?.percentLabel ?? '-'
+                                }`,
+                                size: 'extraSmall',
+                                value:
+                                  imageQuotaUsage?.rvms?.percentOfUsed ?? 0,
+                                isLabelVisible: true,
+                              },
+                            ],
+                          },
+                        ],
+                      ]}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedGroups={selectedGroups}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a Group.
- *
- * @param {Group} group - Group to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Group
- * @param {Function} [unselect] - Function to unselect a Group
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Group details
- */
-const InfoTabs = memo(({ group, gotoPage, unselect, selectedRows }) => {
-  const [get, { data: lazyData, isFetching }] = GroupAPI.useLazyGetGroupQuery()
-  const id = group?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.GROUP}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <GroupTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  group: PropTypes.object.isRequired,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

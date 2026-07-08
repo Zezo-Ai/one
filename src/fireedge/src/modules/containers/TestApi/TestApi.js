@@ -18,7 +18,7 @@ import { TextField, Autocomplete, Grid, Box } from '@mui/material'
 
 import Commands from 'server/utils/constants/commands'
 import { ResponseForm } from '@modules/containers/TestApi/ResponseForm'
-import { Tr } from '@ComponentsModule'
+import { Tr } from '@ResourcesModule'
 import { T } from '@ConstantsModule'
 
 const COMMANDS = Object.keys(Commands)?.sort()

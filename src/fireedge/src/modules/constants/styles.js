@@ -15,19 +15,10 @@
  * ------------------------------------------------------------------------- */
 
 export const STYLE_BUTTONS = {
-  IMPORTANCE: {
-    MAIN: 'main',
-    SECONDARY: 'secondary',
-    DANGER: 'danger',
-  },
-  SIZE: {
-    LARGE: 'large',
-    MEDIUM: 'medium',
-  },
   TYPE: {
-    FILLED: 'filled',
-    OUTLINED: 'outlined',
-    OUTLINED_ICON: 'outlinedIcon',
-    NOBORDER: 'noborder',
+    OUTLINE: 'outline',
+    PRIMARY: 'primary',
+    SECONDARY: 'secondary',
+    TRANSPARENT: 'transparent',
   },
 }

@@ -14,7 +14,6 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import * as ACTIONS from '@modules/constants/actions'
-import { COLOR } from '@modules/constants/color'
 import * as STATES from '@modules/constants/states'
 import * as T from '@modules/constants/translates'
 
@@ -122,47 +121,47 @@ export const HOST_STATES = [
   {
     name: STATES.INIT,
     shortName: 'init',
-    color: COLOR.info.main,
+    color: 'default',
   },
   {
     name: STATES.MONITORING_MONITORED,
     shortName: 'update',
-    color: COLOR.info.main,
+    color: 'information',
   },
   {
     name: STATES.MONITORED,
     shortName: 'on',
-    color: COLOR.success.main,
+    color: 'success',
   },
   {
     name: STATES.ERROR,
     shortName: 'err',
-    color: COLOR.error.dark,
+    color: 'error',
   },
   {
     name: STATES.DISABLED,
     shortName: 'dsbl',
-    color: COLOR.error.light,
+    color: 'information',
   },
   {
     name: STATES.MONITORING_ERROR,
     shortName: 'retry',
-    color: COLOR.error.dark,
+    color: 'error',
   },
   {
     name: STATES.MONITORING_INIT,
     shortName: 'init',
-    color: COLOR.info.main,
+    color: 'default',
   },
   {
     name: STATES.MONITORING_DISABLED,
     shortName: 'dsbl',
-    color: COLOR.error.light,
+    color: 'information',
   },
   {
     name: STATES.OFFLINE,
     shortName: 'off',
-    color: COLOR.error.dark,
+    color: 'information',
   },
 ]
 

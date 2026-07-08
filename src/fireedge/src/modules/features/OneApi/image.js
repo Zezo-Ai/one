@@ -20,8 +20,11 @@ import {
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import { UpdateFromSocket } from '@modules/features/OneApi/socket'
-import { http } from '@UtilsModule'
 import {
   FilterFlag,
   Image,
@@ -29,8 +32,9 @@ import {
   IMAGE_TYPES_FOR_FILES,
   IMAGE_TYPES_FOR_IMAGES,
   IMAGE_TYPES_FOR_BACKUPS,
+  RESOURCE_NAMES,
 } from '@ConstantsModule'
-import { getImageType } from '@ModelsModule'
+import { getImageType, http } from '@UtilsModule'
 import {
   updateResourceOnPool,
   removeResourceOnPool,
@@ -39,6 +43,27 @@ import {
 
 const { IMAGE } = ONE_RESOURCES
 const { IMAGE_POOL } = ONE_RESOURCES_POOL
+const IMAGE_POOL_QUERIES = ['getImages', 'getFiles', 'getBackups']
+const imageDetailAndPoolTags = (id) => [
+  { type: IMAGE, id },
+  { type: IMAGE_POOL, id: `${id}` },
+  IMAGE_POOL,
+]
+const getImageResourceName = (image, resourceType) => {
+  if (resourceType) return resourceType
+
+  const imageType = getImageType(image)
+
+  if (IMAGE_TYPES_FOR_FILES.some((type) => type === imageType)) {
+    return RESOURCE_NAMES.FILE
+  }
+
+  if (IMAGE_TYPES_FOR_BACKUPS.some((type) => type === imageType)) {
+    return RESOURCE_NAMES.BACKUP
+  }
+
+  return RESOURCE_NAMES.IMAGE
+}
 
 const imageApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -58,9 +83,9 @@ const imageApi = oneApi.injectEndpoints({
         const name = Actions.IMAGE_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data, _, { imageTypes } = {}) => {
+      transformResponse: (data, meta, { imageTypes } = {}) => {
         const imagesPool = data?.IMAGE_POOL?.IMAGE
           ? Array.isArray(data.IMAGE_POOL.IMAGE)
             ? data.IMAGE_POOL.IMAGE
@@ -73,15 +98,17 @@ const imageApi = oneApi.injectEndpoints({
             .some((imageType) => imageType === getImageType(image))
         )
 
-        return images
+        return withResourceLabels(images, RESOURCE_NAMES.IMAGE, meta)
       },
       providesTags: (images) =>
-        images
-          ? [
-              ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
-              IMAGE_POOL,
-            ]
-          : [IMAGE_POOL],
+        withProfileLabelsTags(
+          images
+            ? [
+                ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
+                IMAGE_POOL,
+              ]
+            : [IMAGE_POOL]
+        ),
     }),
     getFiles: builder.query({
       /**
@@ -98,9 +125,9 @@ const imageApi = oneApi.injectEndpoints({
         const name = Actions.IMAGE_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => {
+      transformResponse: (data, meta) => {
         const imagesPool = data?.IMAGE_POOL?.IMAGE
           ? Array.isArray(data.IMAGE_POOL.IMAGE)
             ? data.IMAGE_POOL.IMAGE
@@ -113,15 +140,17 @@ const imageApi = oneApi.injectEndpoints({
           )
         )
 
-        return files
+        return withResourceLabels(files, RESOURCE_NAMES.FILE, meta)
       },
       providesTags: (images) =>
-        images
-          ? [
-              ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
-              IMAGE_POOL,
-            ]
-          : [IMAGE_POOL],
+        withProfileLabelsTags(
+          images
+            ? [
+                ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
+                IMAGE_POOL,
+              ]
+            : [IMAGE_POOL]
+        ),
     }),
     getBackups: builder.query({
       /**
@@ -138,9 +167,9 @@ const imageApi = oneApi.injectEndpoints({
         const name = Actions.IMAGE_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => {
+      transformResponse: (data, meta) => {
         const imagesPool = data?.IMAGE_POOL?.IMAGE
           ? Array.isArray(data.IMAGE_POOL.IMAGE)
             ? data.IMAGE_POOL.IMAGE
@@ -153,15 +182,17 @@ const imageApi = oneApi.injectEndpoints({
           )
         )
 
-        return backups
+        return withResourceLabels(backups, RESOURCE_NAMES.BACKUP, meta)
       },
       providesTags: (images) =>
-        images
-          ? [
-              ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
-              IMAGE_POOL,
-            ]
-          : [IMAGE_POOL],
+        withProfileLabelsTags(
+          images
+            ? [
+                ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
+                IMAGE_POOL,
+              ]
+            : [IMAGE_POOL]
+        ),
     }),
     getImage: builder.query({
       /**
@@ -177,14 +208,27 @@ const imageApi = oneApi.injectEndpoints({
         const name = Actions.IMAGE_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.IMAGE ?? {},
-      providesTags: (_, __, { id }) => [{ type: IMAGE, id }],
+      transformResponse: (data, meta, { resourceType } = {}) => {
+        const image = data?.IMAGE ?? {}
+
+        return withResourceLabels(
+          image,
+          getImageResourceName(image, resourceType),
+          meta
+        )
+      },
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: IMAGE, id }]),
       onCacheEntryAdded: UpdateFromSocket({
-        updateQueryData: (updateFn) =>
-          imageApi.util.updateQueryData('getImages', undefined, updateFn),
+        updateQueryData: (
+          updateFn,
+          rtkResource = 'getImages',
+          params = undefined
+        ) => imageApi.util.updateQueryData(rtkResource, params, updateFn),
         resource: 'IMAGE',
+        rtkResources: IMAGE_POOL_QUERIES,
       }),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
@@ -307,7 +351,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params: { id, enable: true }, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, id) => imageDetailAndPoolTags(id),
     }),
     disableImage: builder.mutation({
       /**
@@ -323,7 +367,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params: { id, enable: false }, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, id) => imageDetailAndPoolTags(id),
     }),
     persistentImage: builder.mutation({
       /**
@@ -341,7 +385,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
     }),
     changeImageType: builder.mutation({
       /**
@@ -359,7 +403,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
     }),
     updateImage: builder.mutation({
       /**
@@ -377,10 +421,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [
-        { type: IMAGE, id },
-        { type: IMAGE_POOL, id },
-      ],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchImage = dispatch(
@@ -431,7 +472,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
     }),
     changeImageOwnership: builder.mutation({
       /**
@@ -451,7 +492,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
     }),
     renameImage: builder.mutation({
       /**
@@ -469,7 +510,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
     }),
     deleteImageSnapshot: builder.mutation({
       /**
@@ -545,7 +586,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
     }),
     unlockImage: builder.mutation({
       /**
@@ -562,7 +603,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
     }),
     restoreBackup: builder.mutation({
       /**
@@ -581,7 +622,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: IMAGE, id }],
+      invalidatesTags: (_, __, { id }) => imageDetailAndPoolTags(id),
     }),
   }),
 })

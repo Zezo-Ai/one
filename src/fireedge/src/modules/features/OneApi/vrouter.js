@@ -16,6 +16,10 @@
 import { Actions, Commands } from 'server/utils/constants/commands/vrouter'
 
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 
 import {
   ONE_RESOURCES,
@@ -23,15 +27,45 @@ import {
 } from '@modules/features/OneApi/resources'
 
 import {
+  removeLockLevelOnResource,
   updateNameOnResource,
+  updateLockLevelOnResource,
   updatePermissionOnResource,
   updateOwnershipOnResource,
   updateTemplateOnResource,
 } from '@modules/features/OneApi/common'
-import { Permission, FilterFlag } from '@ConstantsModule'
+import {
+  FilterFlag,
+  LockLevel,
+  Permission,
+  RESOURCE_NAMES,
+} from '@ConstantsModule'
 
 const { VROUTER } = ONE_RESOURCES
 const { VROUTER_POOL } = ONE_RESOURCES_POOL
+
+const normalizeOwnershipParams = ({
+  userId,
+  groupId,
+  user,
+  group,
+  ...rest
+}) => {
+  const normalizedUser = userId ?? user
+  const normalizedGroup = groupId ?? group
+
+  return {
+    ...rest,
+    ...(normalizedUser !== undefined && {
+      user: normalizedUser,
+      userId: normalizedUser,
+    }),
+    ...(normalizedGroup !== undefined && {
+      group: normalizedGroup,
+      groupId: normalizedGroup,
+    }),
+  }
+}
 
 const virtualRouterApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -50,16 +84,23 @@ const virtualRouterApi = oneApi.injectEndpoints({
         const name = Actions.VROUTER_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.VROUTER_POOL?.VROUTER ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.VROUTER_POOL?.VROUTER ?? []].flat(),
+          RESOURCE_NAMES.VROUTER,
+          meta
+        ),
       providesTags: (vRouters) =>
-        vRouters
-          ? [
-              ...vRouters.map(({ ID }) => ({ type: VROUTER_POOL, ID })),
-              VROUTER_POOL,
-            ]
-          : [VROUTER_POOL],
+        withProfileLabelsTags(
+          vRouters
+            ? [
+                ...vRouters.map(({ ID }) => ({ type: VROUTER_POOL, ID })),
+                VROUTER_POOL,
+              ]
+            : [VROUTER_POOL]
+        ),
     }),
 
     getVr: builder.query({
@@ -76,10 +117,12 @@ const virtualRouterApi = oneApi.injectEndpoints({
         const name = Actions.VROUTER_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.VROUTER ?? {},
-      providesTags: (_, __, { id }) => [{ type: VROUTER, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(data?.VROUTER ?? {}, RESOURCE_NAMES.VROUTER, meta),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: VROUTER, id }]),
     }),
 
     changeVrOwnership: builder.mutation({
@@ -98,20 +141,32 @@ const virtualRouterApi = oneApi.injectEndpoints({
         const name = Actions.VROUTER_CHOWN
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params: normalizeOwnershipParams(params), command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }, VROUTER_POOL],
       async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
         try {
+          const normalizedParams = normalizeOwnershipParams(params)
           const patchVr = dispatch(
             virtualRouterApi.util.updateQueryData(
               'getVr',
               { id: params.id },
-              updateOwnershipOnResource(getState(), params)
+              updateOwnershipOnResource(getState(), normalizedParams)
             )
           )
 
-          queryFulfilled.catch(patchVr.undo)
+          const patchVrs = dispatch(
+            virtualRouterApi.util.updateQueryData(
+              'getVrs',
+              undefined,
+              updateOwnershipOnResource(getState(), normalizedParams)
+            )
+          )
+
+          queryFulfilled.catch(() => {
+            patchVr.undo()
+            patchVrs.undo()
+          })
         } catch {}
       },
     }),
@@ -141,7 +196,7 @@ const virtualRouterApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }, VROUTER_POOL],
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchVr = dispatch(
@@ -152,7 +207,18 @@ const virtualRouterApi = oneApi.injectEndpoints({
             )
           )
 
-          queryFulfilled.catch(patchVr.undo)
+          const patchVrs = dispatch(
+            virtualRouterApi.util.updateQueryData(
+              'getVrs',
+              undefined,
+              updatePermissionOnResource(params)
+            )
+          )
+
+          queryFulfilled.catch(() => {
+            patchVr.undo()
+            patchVrs.undo()
+          })
         } catch {}
       },
     }),
@@ -173,7 +239,7 @@ const virtualRouterApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }, VROUTER_POOL],
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchVR = dispatch(
@@ -220,7 +286,7 @@ const virtualRouterApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }, VROUTER_POOL],
       async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const patchVr = dispatch(
@@ -247,6 +313,129 @@ const virtualRouterApi = oneApi.injectEndpoints({
       },
     }),
 
+    lockVr: builder.mutation({
+      /**
+       * Locks a virtual router.
+       *
+       * @param {object} params - Request parameters
+       * @param {string|number} params.id - Virtual router id
+       * @param {LockLevel} params.lock - Lock level
+       * @returns {number} Virtual router id
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.VROUTER_LOCK
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }, VROUTER_POOL],
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
+        try {
+          const patchVr = dispatch(
+            virtualRouterApi.util.updateQueryData(
+              'getVr',
+              { id: params.id },
+              updateLockLevelOnResource(params)
+            )
+          )
+
+          const patchVrs = dispatch(
+            virtualRouterApi.util.updateQueryData(
+              'getVrs',
+              undefined,
+              updateLockLevelOnResource(params)
+            )
+          )
+
+          queryFulfilled.catch(() => {
+            patchVr.undo()
+            patchVrs.undo()
+          })
+        } catch {}
+      },
+    }),
+
+    unlockVr: builder.mutation({
+      /**
+       * Unlocks a virtual router.
+       *
+       * @param {object} params - Request parameters
+       * @param {string|number} params.id - Virtual router id
+       * @returns {number} Virtual router id
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.VROUTER_UNLOCK
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }, VROUTER_POOL],
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
+        try {
+          const patchVr = dispatch(
+            virtualRouterApi.util.updateQueryData(
+              'getVr',
+              { id: params.id },
+              removeLockLevelOnResource(params)
+            )
+          )
+
+          const patchVrs = dispatch(
+            virtualRouterApi.util.updateQueryData(
+              'getVrs',
+              undefined,
+              removeLockLevelOnResource(params)
+            )
+          )
+
+          queryFulfilled.catch(() => {
+            patchVr.undo()
+            patchVrs.undo()
+          })
+        } catch {}
+      },
+    }),
+
+    attachNicVr: builder.mutation({
+      /**
+       * Attaches a NIC to a virtual router and its VMs.
+       *
+       * @param {object} params - Request params
+       * @param {number|string} params.id - Virtual router id
+       * @param {string} params.template - NIC template in XML format
+       * @returns {number} Virtual router id
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.VROUTER_NIC_ATTACH
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }, VROUTER_POOL],
+    }),
+
+    detachNicVr: builder.mutation({
+      /**
+       * Detaches a NIC from a virtual router and its VMs.
+       *
+       * @param {object} params - Request params
+       * @param {number|string} params.id - Virtual router id
+       * @param {number|string} params.nic - NIC id
+       * @returns {number} Virtual router id
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.VROUTER_NIC_DETACH
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      invalidatesTags: (_, __, { id }) => [{ type: VROUTER, id }, VROUTER_POOL],
+    }),
+
     deleteVr: builder.mutation({
       query: (params) => {
         const name = Actions.VROUTER_DELETE
@@ -270,6 +459,10 @@ const vrouterQueries = (({
   useChangeVrPermissionsMutation,
   useRenameVrMutation,
   useUpdateVrMutation,
+  useLockVrMutation,
+  useUnlockVrMutation,
+  useAttachNicVrMutation,
+  useDetachNicVrMutation,
 }) => ({
   // Queries
   useGetVrQuery,
@@ -281,6 +474,10 @@ const vrouterQueries = (({
   useChangeVrPermissionsMutation,
   useRenameVrMutation,
   useUpdateVrMutation,
+  useLockVrMutation,
+  useUnlockVrMutation,
+  useAttachNicVrMutation,
+  useDetachNicVrMutation,
 }))(virtualRouterApi)
 
 export default vrouterQueries

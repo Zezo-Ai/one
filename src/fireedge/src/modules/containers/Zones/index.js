@@ -13,196 +13,147 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
-import {
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-  ZonesTable,
-  ZoneTabs,
-} from '@ComponentsModule'
-import { T, Zone } from '@ConstantsModule'
-import { ZoneAPI, useGeneral, useGeneralApi, useAuth } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
-import {
-  Cancel,
-  RefreshDouble,
-  Expand,
-  Collapse,
-  NavArrowLeft,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useState, useEffect } from 'react'
-const { useLazyGetZoneQuery, useUpdateZoneMutation } = ZoneAPI
+
+import { List, Table, ResourceContainer } from '@ComponentsV2Module'
+
+import { T, TABLE_VIEW_MODE } from '@ConstantsModule'
+import { ZoneAPI, useFunctionalityApi, useFunctionality } from '@FeaturesModule'
+import { ReactElement, useMemo, useCallback } from 'react'
+import { DetailsDrawer } from '@modules/containers/Zones/Details'
+import { Zone } from '@ResourcesModule'
+import { getZoneEndpoint, getZoneState, zoneTable } from '@ModelsModule'
 
 /**
- * Displays a list of Zones with a split pane between the list and selected row(s).
+ * Displays a list of Zones.
  *
- * @returns {ReactElement} Zones list and selected row(s)
+ * @returns {ReactElement} Zones list
  */
 export function Zones() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
+  const { searchExpression, sortExpression, selectedItems, containerView } =
+    useFunctionality()
 
-  // Attempting to remove MuiProvider
-  return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={useUpdateZoneMutation}
-        table={(props) => (
-          <ZonesTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            zone: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+  const { setSelectedItems } = useFunctionalityApi()
 
-          return <InfoTabs {...propsInfo} />
-        }}
-      />
-    </TranslateProvider>
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refreshZones,
+  } = ZoneAPI.useGetZonesQuery()
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((zone) =>
+          [
+            zone?.ID,
+            zone?.NAME,
+            getZoneState(zone)?.name,
+            getZoneEndpoint(zone),
+            zone?.TEMPLATE?.ENDPOINT_GRPC,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        )
+      : data
+
+    return zoneTable.sortData(filteredData, sortExpression)
+  }, [data, searchExpression, sortExpression])
+
+  const selectedZones = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
   )
-}
 
-/**
- * Displays details of a Zone.
- *
- * @param {Zone} zone - Zone to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Zone
- * @param {Function} [unselect] - Function to unselect
- * @returns {ReactElement} Zone details
- */
-const InfoTabs = memo(({ zone, gotoPage, unselect }) => {
-  const [get, { data: lazyData, isFetching }] = useLazyGetZoneQuery()
-  const id = zone?.ID ?? lazyData?.ID
+  const rowSelection = useMemo(
+    () => Object.fromEntries((selectedItems ?? []).map((id) => [id, true])),
+    [selectedItems]
+  )
 
-  const { settings: { FIREEDGE: fireedge = {} } = {} } = useAuth()
-  const { FULL_SCREEN_INFO } = fireedge
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
+  const handleSelect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
 
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(selectedItems?.filter((item) => String(item) !== id))
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {FULL_SCREEN_INFO === 'true' && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
+    <ResourceContainer
+      resourceName={T.Zones}
+      onRefresh={refreshZones}
+      isRefreshing={isRefreshing}
+      sortOptions={zoneTable.sortOptions()}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={zoneTable.columns()}
+                data={items}
+                isRowsSelectable
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+                isLoading={isRefreshing}
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((zone) => {
+                  const id = String(zone.ID)
 
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {FULL_SCREEN_INFO === 'false' && (
-            <SubmitButton
-              data-cy="detail-full-mode"
-              icon={isFullMode ? <Collapse /> : <Expand />}
-              tooltip={Tr(T.FullScreen)}
-              isSubmitting={isFetching}
-              onClick={() => {
-                setFullMode(!isFullMode)
-              }}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <ZoneTabs id={id} />
-    </Stack>
-  )
-})
+                  return (
+                    <Zone.Card
+                      key={id}
+                      zone={zone}
+                      isRemoveCheckbox
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter((itemId) => itemId !== id)
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                      isSelected={selectedItems?.includes(id)}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
 
-InfoTabs.propTypes = {
-  zone: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = memo(
-  ({ tags = [], handleElement = true, onDelete = () => undefined }) => (
-    <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-      <MultipleTags
-        limitTags={10}
-        tags={tags?.map((props) => {
-          const { original, id, toggleRowSelected, gotoPage } = props
-          const clickElement = handleElement
-            ? {
-                onClick: gotoPage,
-                onDelete: () => onDelete(id) || toggleRowSelected(false),
-              }
-            : {}
-
-          return (
-            <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-          )
-        })}
+      <DetailsDrawer
+        selectedZones={selectedZones}
+        handleClose={() => setSelectedItems([])}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
       />
-    </Stack>
+    </ResourceContainer>
   )
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
 }
-GroupedTags.displayName = 'GroupedTags'

@@ -16,18 +16,17 @@
 import { ReactElement } from 'react'
 import { useHistory, useLocation } from 'react-router'
 
+import { VirtualNetworks } from '@modules/containers/VirtualNetworks/VirtualNetworks'
 import { useSystemData, useGeneralApi, VnAPI } from '@FeaturesModule'
 
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  PATH,
-  Form,
   TranslateProvider,
-} from '@ComponentsModule'
+  VirtualNetwork,
+} from '@ResourcesModule'
 
-import { T } from '@ConstantsModule'
-const { Vn } = Form
+import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
 
@@ -38,7 +37,11 @@ const _ = require('lodash')
  */
 export function CreateVirtualNetwork() {
   const history = useHistory()
-  const { state: { ID: vnetId, NAME } = {} } = useLocation()
+  const { state = {} } = useLocation()
+  const { ID: vnetId, NAME, createType } = state
+  const shouldSelectCreateType =
+    !vnetId &&
+    createType !== VirtualNetwork.Actions.VIRTUAL_NETWORK_CREATE_TYPES.SCRATCH
 
   const { enqueueSuccess } = useGeneralApi()
   const [update] = VnAPI.useUpdateVNetMutation()
@@ -49,17 +52,18 @@ export function CreateVirtualNetwork() {
     { id: vnetId, extended: true },
     { skip: vnetId === undefined }
   )
+  const handleCancel = () => history.push(PATH.NETWORK.VNETS.LIST)
 
   const onSubmit = async (formResult) => {
     try {
       if (!vnetId) {
         const newVnetId = await allocate(formResult).unwrap()
-        enqueueSuccess(T.SuccessVnetCreated, newVnetId)
+        enqueueSuccess(T.SuccessVnetCreated, String(newVnetId))
       } else {
         const template =
           typeof formResult === 'string' ? formResult : formResult.template
         await update({ id: vnetId, template }).unwrap()
-        enqueueSuccess(T.SuccessVnetUpdated, [vnetId, NAME])
+        enqueueSuccess(T.SuccessVnetUpdated, [String(vnetId), NAME])
       }
 
       history.push(PATH.NETWORK.VNETS.LIST)
@@ -68,8 +72,13 @@ export function CreateVirtualNetwork() {
 
   return (
     <TranslateProvider>
-      {!_.isEmpty(oneConfig) && ((vnetId && data) || !vnetId) ? (
-        <Vn.CreateForm
+      {shouldSelectCreateType ? (
+        <>
+          <VirtualNetworks />
+          <VirtualNetwork.Actions.CreateAction />
+        </>
+      ) : !_.isEmpty(oneConfig) && ((vnetId && data) || !vnetId) ? (
+        <VirtualNetwork.Forms.CreateForm
           initialValues={data}
           stepProps={{
             data,
@@ -79,8 +88,14 @@ export function CreateVirtualNetwork() {
           onSubmit={onSubmit}
           fallback={<SkeletonStepsForm />}
         >
-          {(config) => <DefaultFormStepper {...config} />}
-        </Vn.CreateForm>
+          {(config) => (
+            <DefaultFormStepper
+              {...config}
+              update={!!vnetId}
+              {...(!vnetId && { onCancel: handleCancel })}
+            />
+          )}
+        </VirtualNetwork.Forms.CreateForm>
       ) : (
         <SkeletonStepsForm />
       )}

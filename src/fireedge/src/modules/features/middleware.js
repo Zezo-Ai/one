@@ -29,9 +29,11 @@ export const unauthenticatedMiddleware = (store) => (next) => {
   return (action) => {
     const { auth } = getState()
     const status = action?.payload?.status
+    const endpointName = action?.meta?.arg?.endpointName
+    const isLoginRequest = endpointName === 'login'
 
     if (status != null) {
-      if (status === 401 && canResetCache) {
+      if (status === 401 && canResetCache && !isLoginRequest) {
         canResetCache = false
         dispatch(logout(auth?.isLoggedIn ? T.SessionExpired : undefined)) // Expired = true
         dispatch(oneApi.util.resetApiState()) // Expired = false

@@ -229,11 +229,11 @@ const createAppTheme = (appTheme, mode = SCHEMES.DARK) => {
     mixins: {
       toolbar: {
         minHeight: toolbar.regular,
-        [`@media (min-width:${breakpoints.xs}px) and (orientation: landscape)`]:
+        [`@media (minWidth:${breakpoints.xs}px) and (orientation: landscape)`]:
           {
             minHeight: toolbar.xs,
           },
-        [`@media (min-width:${breakpoints.sm}px)`]: {
+        [`@media (minWidth:${breakpoints.sm}px)`]: {
           minHeight: toolbar.sm,
         },
       },

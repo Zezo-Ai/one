@@ -17,17 +17,15 @@ import { ReactElement } from 'react'
 import { useHistory, useLocation } from 'react-router'
 
 import { DatastoreAPI, useGeneralApi } from '@FeaturesModule'
-import { jsonToXml } from '@ModelsModule'
+import { jsonToXml } from '@UtilsModule'
 
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  PATH,
-  Form,
+  Datastore,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
-const { Datastore } = Form
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation or modification form to a VM Template.
@@ -74,14 +72,14 @@ export function CreateDatastore() {
       {datastoreId && !data ? (
         <SkeletonStepsForm />
       ) : (
-        <Datastore.CreateForm
+        <Datastore.Forms.CreateForm
           onSubmit={onSubmit}
           initialValues={data}
           stepProps={{ ...data, datastoreId }}
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </Datastore.CreateForm>
+        </Datastore.Forms.CreateForm>
       )}
     </TranslateProvider>
   )

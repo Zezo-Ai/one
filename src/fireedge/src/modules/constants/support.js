@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 
 import * as STATES from '@modules/constants/states'
-import { COLOR } from '@modules/constants/color'
 import { T } from '@modules/constants'
 
 /**
@@ -61,27 +60,27 @@ import { T } from '@modules/constants'
 export const TICKET_STATES = {
   [STATES.NEW]: {
     name: STATES.NEW,
-    color: COLOR.info.main,
+    color: 'information',
   },
   [STATES.OPEN]: {
     name: STATES.OPEN,
-    color: COLOR.info.main,
+    color: 'information',
   },
   [STATES.PENDING]: {
     name: STATES.PENDING,
-    color: COLOR.warning.main,
+    color: 'warning',
   },
   [STATES.HOLD]: {
     name: STATES.HOLD,
-    color: COLOR.debug.main,
+    color: 'error',
   },
   [STATES.SOLVED]: {
     name: STATES.SOLVED,
-    color: COLOR.success.main,
+    color: 'success',
   },
   [STATES.CLOSED]: {
     name: STATES.CLOSED,
-    color: COLOR.error.main,
+    color: 'disabled',
   },
 }
 

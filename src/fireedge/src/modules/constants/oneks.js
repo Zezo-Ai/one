@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { COLOR } from '@modules/constants/color'
-
 /**
  * @typedef Kubernete
  * @property {string} ID - Id
@@ -44,122 +42,122 @@ export const STATE_SHOW_DATA = {
 export const ONEKS_STATE = {
   UNKNOWN: {
     name: 'UNKNOWN',
-    color: COLOR.debug.light,
+    color: 'default',
     finalState: false,
   },
   PENDING: {
     name: 'PENDING',
-    color: COLOR.debug.light,
+    color: 'default',
     finalState: false,
   },
   BOOTSTRAPPING: {
     name: 'READY',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   BOOTSTRAPPING_FAILURE: {
     name: 'BOOTSTRAPPING_FAILURE',
-    color: COLOR.warning.main,
+    color: 'error',
     finalState: true,
   },
   PROVISIONING_SEED: {
     name: 'PROVISIONING_SEED',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   PROVISIONING: {
     name: 'PROVISIONING',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   PROVISIONING_MGMT: {
     name: 'PROVISIONING_MGMT',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   PROVISIONING_CP: {
     name: 'PROVISIONING_CP',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   PROVISIONING_FAILURE: {
     name: 'PROVISIONING_FAILURE',
-    color: COLOR.warning.main,
+    color: 'error',
     finalState: true,
   },
   PIVOTING_CLUSTER: {
     name: 'PIVOTING_CLUSTER',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   PIVOTING_FAILURE: {
     name: 'PIVOTING_FAILURE',
-    color: COLOR.warning.main,
+    color: 'error',
     finalState: true,
   },
   SCALING: {
     name: 'SCALING',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   SCALING_FAILURE: {
     name: 'SCALING_FAILURE',
-    color: COLOR.warning.main,
+    color: 'error',
     finalState: true,
   },
   UPGRADING: {
     name: 'UPGRADING',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   UPGRADING_FAILURE: {
     name: 'UPGRADING_FAILURE',
-    color: COLOR.warning.main,
+    color: 'error',
     finalState: true,
   },
   DEPROVISIONING: {
     name: 'DEPROVISIONING',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   DEPROVISIONING_FAILURE: {
     name: 'DEPROVISIONING_FAILURE',
-    color: COLOR.warning.main,
+    color: 'error',
     finalState: true,
   },
   DEPLOYING: {
     name: 'DEPLOYING',
-    color: COLOR.info.main,
+    color: 'information',
     finalState: false,
   },
   RUNNING: {
     name: STATE_SHOW_DATA.RUNNING,
-    color: COLOR.success.main,
+    color: 'success',
     finalState: true,
   },
   WARNING: {
     name: 'WARNING',
-    color: COLOR.warning.main,
+    color: 'warning',
     finalState: true,
   },
   ERROR: {
     name: 'ERROR',
-    color: COLOR.error.main,
+    color: 'error',
     finalState: true,
   },
   DONE: {
     name: 'DONE',
-    color: COLOR.success.main,
+    color: 'success',
     finalState: true,
   },
   DELETED: {
     name: 'DELETED',
-    color: COLOR.error.main,
+    color: 'error',
     finalState: true,
   },
   ANY: {
     name: 'ANY',
-    color: COLOR.debug.light,
+    color: 'default',
     finalState: false,
   },
 }

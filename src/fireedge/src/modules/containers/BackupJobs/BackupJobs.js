@@ -14,29 +14,24 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 /* eslint-disable react/prop-types */
+import { List, ResourceContainer, Table } from '@ComponentsV2Module'
+import { DetailsDrawer } from '@modules/containers/BackupJobs/Details'
+import { RESOURCE_NAMES, TABLE_VIEW_MODE, T } from '@ConstantsModule'
 import {
-  BackupJobsTable,
-  BackupJobsTabs,
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { RESOURCE_NAMES, T } from '@ConstantsModule'
-import { BackupJobAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  BackupJobAPI,
+  useFunctionality,
+  useFunctionalityApi,
+  useGeneral,
+  useViews,
+} from '@FeaturesModule'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { ReactElement, memo, useEffect, useState } from 'react'
+  backupJobTable,
+  getBackupJobLastBackupTime,
+  getBackupJobRelativeLastBackupTime,
+  getBackupJobStatus,
+} from '@ModelsModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+import { BackupJobs as BackupJobsResource } from '@ResourcesModule'
 
 /**
  * Displays a list of Backup Jobs with a split pane between the list and selected row(s).
@@ -44,173 +39,137 @@ import { ReactElement, memo, useEffect, useState } from 'react'
  * @returns {ReactElement} Backup Jobs list and selected row(s)
  */
 export function BackupJobs() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = BackupJobsTable.Actions({ selectedRows, setSelectedRows })
   const { zone } = useGeneral()
+  const { searchExpression, sortExpression, selectedItems, containerView } =
+    useFunctionality()
+
+  const { getResourceView } = useViews()
+  const availableActions = useMemo(
+    () => getResourceView(RESOURCE_NAMES.BACKUPJOBS)?.actions ?? {},
+    [getResourceView]
+  )
+
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = BackupJobAPI.useGetBackupJobsQuery({ zone })
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((backupJob) => {
+          const { ID, NAME, UNAME, GNAME, PRIORITY, LAST_BACKUP_TIME } =
+            backupJob
+          const state = getBackupJobStatus(backupJob)
+
+          return [
+            ID,
+            NAME,
+            state?.name,
+            PRIORITY,
+            getBackupJobLastBackupTime(LAST_BACKUP_TIME),
+            getBackupJobRelativeLastBackupTime(LAST_BACKUP_TIME),
+            UNAME,
+            GNAME,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    return backupJobTable.sortData(filteredData, sortExpression)
+  }, [data, searchExpression, sortExpression])
+
+  const selectedData = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(ID)) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () => Object.fromEntries(selectedItems.map((id) => [id, true])),
+    [selectedItems]
+  )
+  const handleClose = () => setSelectedItems([])
+  const handleSelect = (ID) =>
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === ID ? [] : [ID]
+    )
+  const handleDeselect = (ID) =>
+    setSelectedItems(selectedItems.filter((id) => id !== ID))
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={BackupJobAPI.useUpdateBackupJobMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <BackupJobsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            template: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
-
-          return <InfoTabs {...propsInfo} />
-        }}
+    <ResourceContainer
+      resourceName={T.BackupJobs}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={backupJobTable.sortOptions()}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => ID) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={backupJobTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => row.ID}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((backupjob) => (
+                  <BackupJobsResource.Card
+                    key={backupjob?.ID}
+                    data={backupjob}
+                    isSelected={selectedItems?.includes(backupjob?.ID)}
+                    onCheck={() =>
+                      setSelectedItems(
+                        selectedItems?.includes(backupjob?.ID)
+                          ? selectedItems.filter((id) => id !== backupjob?.ID)
+                          : [...(selectedItems ?? []), backupjob?.ID]
+                      )
+                    }
+                    onClick={() => handleSelect(backupjob?.ID)}
+                  />
+                ))}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedData={selectedData}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        availableActions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a Backup Job Template.
- *
- * @param {object} template - Backup Job Template id to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Backup Job Template
- * @param {Function} [unselect] - Function to unselect a Backup Job Template
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Backup Job Template details
- */
-const InfoTabs = memo(({ template, gotoPage, unselect, selectedRows }) => {
-  const [getBackupJob, { data, isFetching }] =
-    BackupJobAPI.useLazyGetBackupJobQuery()
-  const id = template?.ID ?? data?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.BACKUPJOBS}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => getBackupJob({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <BackupJobsTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  template: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

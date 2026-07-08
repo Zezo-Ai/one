@@ -35,7 +35,6 @@ const initial = {
   isUpdateDialog: false,
   isFullMode: false,
   tableViewMode: TABLE_VIEW_MODE.CARD,
-  secondTitle: {},
   loadedOsProfile: {},
   upload: 0,
   notifications: [],
@@ -93,9 +92,6 @@ const slice = createSlice({
       })
       .addCase(actions.setFullMode, (state, { payload }) => {
         state.isFullMode = !!payload
-      })
-      .addCase(actions.setSecondTitle, (state, { payload }) => {
-        state.secondTitle = payload
       })
       .addCase(actions.setTableViewMode, (state, { payload }) => {
         state.tableViewMode = payload
@@ -322,7 +318,7 @@ const slice = createSlice({
             payload?.length > 0 && {
               key: generateKey(),
               message: payload,
-              options: { variant: 'error' },
+              options: { variant: 'error', urgent: true },
             },
           ].filter(Boolean),
         })

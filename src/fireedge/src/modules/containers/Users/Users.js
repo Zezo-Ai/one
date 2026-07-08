@@ -13,196 +13,309 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+
 import {
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-  UserTabs,
-  UsersTable,
-} from '@ComponentsModule'
-import { T, User } from '@ConstantsModule'
-import { UserAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  Card,
+  List,
+  OwnershipSlot,
+  ProgressBarSlot,
+  ResourceContainer,
+  Table,
+  TitleSlot,
+} from '@ComponentsV2Module'
+import { RESOURCE_NAMES, T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { ReactElement, memo, useEffect, useState } from 'react'
+  useFunctionality,
+  useFunctionalityApi,
+  useViews,
+} from '@FeaturesModule'
+import {
+  getUserQuotaUsage,
+  getUserState,
+  userTable,
+  USER_LIST_COLUMNS,
+} from '@ModelsModule'
+import { DetailsDrawer } from '@modules/containers/Users/Details'
+import { ReactElement, useCallback, useMemo } from 'react'
 
 /**
- * Displays a list of Users with a split pane between the list and selected row(s).
+ * Displays a list of Users.
  *
- * @returns {ReactElement} Users list and selected row(s)
+ * @returns {ReactElement} Users list
  */
 export function Users() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = UsersTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const {
+    searchExpression,
+    sortExpression,
+    filterExpression,
+    selectedItems,
+    containerView,
+  } = useFunctionality()
+  const { setSelectedItems } = useFunctionalityApi()
+  const { getResourceView } = useViews()
+  const userViewFilters = getResourceView(RESOURCE_NAMES.USER)?.filters ?? {}
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = userTable.useData()
+
+  const filterOptions = useMemo(
+    () =>
+      userTable.filterOptions(data, userViewFilters, undefined, [
+        {
+          id: 'state',
+          header: T.Status,
+          accessorFn: (user) => getUserState(user)?.name,
+        },
+      ]),
+    [data, userViewFilters]
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+
+    const filteredData = search
+      ? data?.filter((user) => {
+          const {
+            ID,
+            NAME,
+            GNAME,
+            AUTH_DRIVER,
+            VM_QUOTA,
+            DATASTORE_QUOTA,
+            NETWORK_QUOTA,
+            IMAGE_QUOTA,
+          } = user
+
+          const state = getUserState(user)
+          const vmQuotaUsage = getUserQuotaUsage('VM', VM_QUOTA ?? {})
+          const datastoreQuotaUsage = getUserQuotaUsage(
+            'DATASTORE',
+            DATASTORE_QUOTA ?? {}
+          )
+          const networkQuotaUsage = getUserQuotaUsage(
+            'NETWORK',
+            NETWORK_QUOTA ?? {}
+          )
+          const imageQuotaUsage = getUserQuotaUsage('IMAGE', IMAGE_QUOTA ?? {})
+
+          return [
+            ID,
+            NAME,
+            GNAME,
+            AUTH_DRIVER,
+            state?.name,
+            datastoreQuotaUsage?.size?.percentLabel,
+            vmQuotaUsage?.vms?.percentLabel,
+            networkQuotaUsage?.leases?.percentLabel,
+            imageQuotaUsage?.rvms?.percentLabel,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    const filteredByFilters = userTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
+
+    return userTable.sortData(filteredByFilters, sortExpression)
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
+
+  const rowSelection = useMemo(
+    () =>
+      Object.fromEntries((selectedItems ?? []).map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const selectedUsers = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(
+      (selectedItems ?? []).filter((itemId) => String(itemId) !== id)
+    )
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={UserAPI.useUpdateUserMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <UsersTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            user: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.Users}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={userTable.sortOptions()}
+      filterOptions={filterOptions}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={userTable.columns(USER_LIST_COLUMNS)}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((user) => {
+                  const {
+                    ID,
+                    NAME,
+                    GNAME,
+                    AUTH_DRIVER,
+                    VM_QUOTA,
+                    DATASTORE_QUOTA,
+                    NETWORK_QUOTA,
+                    IMAGE_QUOTA,
+                  } = user
+                  const id = String(ID)
+                  const state = getUserState(user)
+                  const vmQuotaUsage = getUserQuotaUsage('VM', VM_QUOTA ?? {})
+                  const datastoreQuotaUsage = getUserQuotaUsage(
+                    'DATASTORE',
+                    DATASTORE_QUOTA ?? {}
+                  )
+                  const networkQuotaUsage = getUserQuotaUsage(
+                    'NETWORK',
+                    NETWORK_QUOTA ?? {}
+                  )
+                  const imageQuotaUsage = getUserQuotaUsage(
+                    'IMAGE',
+                    IMAGE_QUOTA ?? {}
+                  )
 
-          return <InfoTabs {...propsInfo} />
-        }}
+                  return (
+                    <Card
+                      key={id}
+                      isSelected={selectedItems?.includes(id)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter((itemId) => itemId !== id)
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                      slots={[
+                        [
+                          TitleSlot,
+                          {
+                            title: NAME,
+                            status:
+                              state?.shortName === 'on'
+                                ? 'success'
+                                : 'disabled',
+                            statusName: state?.name,
+                          },
+                        ],
+                        [
+                          OwnershipSlot,
+                          {
+                            labels: [
+                              [T.ID, id],
+                              [T.Group, GNAME],
+                              [T.AuthDriver, AUTH_DRIVER],
+                            ],
+                          },
+                        ],
+                        [
+                          ProgressBarSlot,
+                          {
+                            bars: [
+                              {
+                                label: `${T.DatastoreSize} ${
+                                  datastoreQuotaUsage?.size?.percentLabel ?? '-'
+                                }`,
+                                size: 'extraSmall',
+                                value:
+                                  datastoreQuotaUsage?.size?.percentOfUsed ?? 0,
+                                isLabelVisible: true,
+                              },
+                              {
+                                label: `${T.VMCount} ${
+                                  vmQuotaUsage?.vms?.percentLabel ?? '-'
+                                }`,
+                                size: 'extraSmall',
+                                value: vmQuotaUsage?.vms?.percentOfUsed ?? 0,
+                                isLabelVisible: true,
+                              },
+                              {
+                                label: `${T.NetworkLeases} ${
+                                  networkQuotaUsage?.leases?.percentLabel ?? '-'
+                                }`,
+                                size: 'extraSmall',
+                                value:
+                                  networkQuotaUsage?.leases?.percentOfUsed ?? 0,
+                                isLabelVisible: true,
+                              },
+                              {
+                                label: `${T.ImageRVMS} ${
+                                  imageQuotaUsage?.rvms?.percentLabel ?? '-'
+                                }`,
+                                size: 'extraSmall',
+                                value:
+                                  imageQuotaUsage?.rvms?.percentOfUsed ?? 0,
+                                isLabelVisible: true,
+                              },
+                            ],
+                          },
+                        ],
+                      ]}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedUsers={selectedUsers}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of an User.
- *
- * @param {User} user - User to display
- * @param {Function} [gotoPage] - Function to navigate to a page of an User
- * @param {Function} [unselect] - Function to unselect a User
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} User details
- */
-const InfoTabs = memo(({ user, gotoPage, unselect, selectedRows }) => {
-  const [get, { data: lazyData, isFetching }] = UserAPI.useLazyGetUserQuery()
-  const id = user?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <UserTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  user: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

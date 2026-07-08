@@ -31,13 +31,6 @@ info-tabs:
       enabled: true
       actions:
         rename: true
-    nsx_panel:
-      enabled: true
-      actions:
-        copy: true
-        add: true
-        edit: true
-        delete: true
     monitoring_panel:
       enabled: true
       actions:

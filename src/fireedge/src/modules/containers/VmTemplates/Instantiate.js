@@ -29,18 +29,19 @@ import {
 
 import {
   DefaultFormStepper,
-  Form,
-  PATH,
   SkeletonStepsForm,
   TranslateProvider,
-} from '@ComponentsModule'
+  VmTemplate,
+} from '@ResourcesModule'
 
-import { RESOURCE_NAMES, T, TAB_FORM_MAP } from '@ConstantsModule'
-import { jsonToXml } from '@ModelsModule'
-import { filterTemplateData, transformActionsInstantiate } from '@UtilsModule'
+import { RESOURCE_NAMES, T, TAB_FORM_MAP, PATH } from '@ConstantsModule'
+import {
+  jsonToXml,
+  filterTemplateData,
+  transformActionsInstantiate,
+} from '@UtilsModule'
 
 const _ = require('lodash')
-const { VmTemplate } = Form
 
 /**
  * Displays the instantiation form for a VM Template.
@@ -153,7 +154,7 @@ export function InstantiateVmTemplate() {
       {!dataTemplateExtended || !apiTemplateData || _.isEmpty(oneConfig) ? (
         <SkeletonStepsForm />
       ) : (
-        <VmTemplate.InstantiateForm
+        <VmTemplate.Forms.InstantiateForm
           initialValues={dataTemplateExtended}
           stepProps={{
             dataTemplateExtended,
@@ -164,7 +165,7 @@ export function InstantiateVmTemplate() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </VmTemplate.InstantiateForm>
+        </VmTemplate.Forms.InstantiateForm>
       )}
     </TranslateProvider>
   )

@@ -1,0 +1,291 @@
+/* ------------------------------------------------------------------------- *
+ * Copyright 2002-2026, OpenNebula Project, OpenNebula Systems               *
+ *                                                                           *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
+ * not use this file except in compliance with the License. You may obtain   *
+ * a copy of the License at                                                  *
+ *                                                                           *
+ * http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                           *
+ * Unless required by applicable law or agreed to in writing, software       *
+ * distributed under the License is distributed on an "AS IS" BASIS,         *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ * See the License for the specific language governing permissions and       *
+ * limitations under the License.                                            *
+ * ------------------------------------------------------------------------- */
+
+const paddingScale = (theme, size) =>
+  ({
+    small: `${theme.scale[100]}px ${theme.scale[500]}px`,
+    medium: `${theme.scale[500]}px ${theme.scale[500]}px`,
+    large: `${theme.scale[600]}px ${theme.scale[500]}px`,
+  }?.[size])
+
+/**
+ * @param {object} root0 - Params
+ * @param {object} root0.theme - Current MUI theme
+ * @param {string} root0.size - Row size
+ * @param {boolean} root0.isDisabled - Disable interactions
+ * @param {boolean} root0.isLoading - Is loading
+ * @param {number} root0.theadHeight - Table header ref height
+ * @param {number} root0.tfootHeight - Table footer ref height
+ * @param {boolean} root0.isFullHeight - Is table full height
+ * @returns {object} - Table SX styles
+ */
+export const getStyles = ({
+  theme,
+  size,
+  isDisabled,
+  isLoading,
+  theadHeight,
+  tfootHeight,
+  isFullHeight,
+}) => {
+  const rootStyles = {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    height: isFullHeight ? '100%' : 'auto',
+    minWidth: 0,
+  }
+
+  const tableContainer = {
+    display: 'flex',
+    width: '100%',
+    height: isFullHeight ? '100%' : 'auto',
+    boxSizing: 'border-box',
+    flexDirection: 'column',
+    flexShrink: isFullHeight ? 1 : 0,
+    overflow: isFullHeight ? 'auto' : 'hidden',
+    borderRadius: `${theme.borderRadius['3xl']}px`,
+    border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
+    bgcolor: 'surface.primary',
+    fontSize: {
+      xs: theme.fontSize.body.sm.mobile,
+      sm: theme.fontSize.body.sm.tablet,
+      md: theme.fontSize.body.sm.desktop,
+    },
+    fontWeight: {
+      xs: theme.fontWeight.body.sm.mobile,
+      sm: theme.fontWeight.body.sm.tablet,
+      md: theme.fontWeight.body.sm.desktop,
+    },
+    lineHeight: {
+      xs: theme.lineHeight.body.sm.mobile,
+      sm: theme.lineHeight.body.sm.tablet,
+      md: theme.lineHeight.body.sm.desktop,
+    },
+  }
+
+  const table = {
+    '& .table-toolbar': {
+      display: 'flex',
+      boxSizing: 'border-box',
+      marginBottom: `${theme.scale[400]}px`,
+      gap: `${theme.scale[100]}px`,
+      alignItems: 'center',
+      minWidth: 0,
+    },
+
+    '& .table-toolbar-search': {
+      display: 'flex',
+      flex: '1 1 auto',
+      minWidth: 0,
+    },
+
+    '& .table-toolbar-custom': {
+      display: 'flex',
+      flex: '0 0 auto',
+      alignItems: 'center',
+      gap: `${theme.scale[100]}px`,
+    },
+
+    '& .table-container': {
+      ...tableContainer,
+    },
+
+    '& .table-container table': {
+      boxSizing: 'border-box',
+      width: '100%',
+      height: isFullHeight
+        ? `calc(100% - ${theadHeight + tfootHeight}px)`
+        : 'auto',
+      tableLayout: 'fixed',
+      borderCollapse: 'separate',
+      borderSpacing: 0,
+      spacing: 0,
+      gap: 0,
+      margin: 0,
+      bgcolor: 'surface.primary',
+      fontSize: {
+        xs: theme.fontSize.body.sm.mobile,
+        sm: theme.fontSize.body.sm.tablet,
+        md: theme.fontSize.body.sm.desktop,
+      },
+      fontWeight: {
+        xs: theme.fontWeight.body.sm.mobile,
+        sm: theme.fontWeight.body.sm.tablet,
+        md: theme.fontWeight.body.sm.desktop,
+      },
+      lineHeight: {
+        xs: theme.lineHeight.body.sm.mobile,
+        sm: theme.lineHeight.body.sm.tablet,
+        md: theme.lineHeight.body.sm.desktop,
+      },
+
+      '& .text-ellipsis': {
+        display: 'block',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '100%',
+        color: 'text.headings',
+      },
+
+      '& th.table-title': {
+        captionSide: 'top',
+        textAlign: 'left',
+        padding: `${theme.scale[200]}px ${theme.scale[500]}px ${theme.scale[100]}px ${theme.scale[500]}px`,
+        borderBottom: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
+        color: 'text.headings',
+        fontFamily: 'Inter',
+        fontStyle: 'normal',
+        fontWeight: 600,
+
+        fontSize: {
+          xs: theme.fontSize.heading.h6.mobile,
+          sm: theme.fontSize.heading.h6.tablet,
+          md: theme.fontSize.heading.h6.desktop,
+        },
+        lineHeight: {
+          xs: theme.lineHeight.heading.h5.mobile,
+          sm: theme.lineHeight.heading.h5.tablet,
+          md: theme.lineHeight.heading.h5.desktop,
+        },
+      },
+
+      '& thead tr.table-header-row': {
+        '& .text-ellipsis': {
+          fontWeight: 500,
+        },
+      },
+
+      '& tbody tr:not(first-of-type) td': {
+        color: 'text.body',
+      },
+
+      '& th, tr': {
+        border: 'none',
+        bgcolor: 'surface.primary',
+      },
+
+      '& th, & td': {
+        textAlign: 'left',
+        verticalAlign: 'middle',
+        margin: 0,
+        padding: paddingScale(theme, size),
+      },
+
+      '& thead tr.table-header-row th': {
+        borderBottom: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
+        textOverflow: 'ellipsis',
+      },
+
+      '& thead th > *': {
+        display: 'flex',
+        alignItems: 'center',
+        alignSelf: 'stretch',
+      },
+
+      '& tfoot td': {
+        position: isFullHeight ? 'sticky' : 'static',
+        bottom: 0,
+        zIndex: 1,
+        bgcolor: 'surface.primary',
+      },
+
+      '& tbody tr:not(:last-of-type):not(.filler-row) td': {
+        borderBottom: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
+      },
+
+      '& tbody tr:not(.selected):not(.filler-row):not(.table-empty-row):hover':
+        {
+          ...(!isDisabled &&
+            !isLoading && {
+              backgroundColor: theme.palette.surface.actionHover4,
+              cursor: 'pointer',
+            }),
+        },
+
+      '& tbody tr.selected:not(.filler-row):not(.table-empty-row):hover': {
+        ...(!isDisabled &&
+          !isLoading && {
+            cursor: 'pointer',
+          }),
+      },
+
+      '& tbody tr.selected': {
+        backgroundColor: theme.palette.surface.focus2,
+      },
+
+      '& tbody tr.table-empty-row': {
+        height: isFullHeight ? '100%' : '240px',
+      },
+
+      '& tbody tr.table-empty-row td': {
+        border: 'none',
+        padding: `${theme.scale[900]}px ${theme.scale[500]}px`,
+        textAlign: 'center',
+      },
+
+      '& tbody': {
+        height: isFullHeight
+          ? `calc(100% - ${theadHeight + tfootHeight}px)`
+          : 'auto',
+      },
+
+      '& tbody tr.filler-row': {
+        height: '100%',
+        pointerEvents: 'none',
+        '& td': {
+          padding: 0,
+          border: 'none',
+        },
+      },
+
+      '@keyframes shimmer': {
+        '0%': { transform: 'translateX(-100%)' },
+        '100%': { transform: 'translateX(100%)' },
+      },
+      '& .skeleton-cell': {
+        position: 'relative',
+        overflow: 'hidden',
+        height: '14px',
+        borderRadius: `${theme.borderRadius.lg}px`,
+        bgcolor: 'surface.mute',
+        width: '100%',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          background:
+            'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%)',
+          animation: 'shimmer 2s infinite',
+        },
+      },
+
+      ...(isDisabled && {
+        pointerEvents: 'none',
+        cursor: 'not-allowed',
+      }),
+    },
+  }
+
+  return {
+    ...rootStyles,
+    ...table,
+  }
+}

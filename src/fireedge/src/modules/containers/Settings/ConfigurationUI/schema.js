@@ -64,14 +64,6 @@ const LANG_FIELD = {
   grid: { md: 12 },
 }
 
-const SIDEBAR_FIELD = {
-  name: 'SIDEBAR',
-  label: T.StuckSidebar,
-  type: INPUT_TYPES.SWITCH,
-  validation: boolean().default(() => false),
-  grid: { md: 12 },
-}
-
 const DISABLE_ANIMATIONS_FIELD = {
   name: 'DISABLE_ANIMATIONS',
   label: T.DisableDashboardAnimations,
@@ -124,14 +116,6 @@ const ZONE_ENDPOINT_FIELD = ({ zones = [] }) => ({
   grid: { md: 12 },
 })
 
-const FULL_SCREEN_INFO_FIELD = {
-  name: 'FULL_SCREEN_INFO',
-  label: T.FullScreenInfo,
-  type: INPUT_TYPES.SWITCH,
-  validation: boolean().default(() => false),
-  grid: { md: 12 },
-}
-
 const ROW_STYLE_FIELD = {
   name: 'ROW_STYLE',
   type: INPUT_TYPES.RADIO,
@@ -162,11 +146,7 @@ const ROW_SIZE_FIELD = {
 
 export const FIELDS_THEME = [SCHEME_FIELD]
 
-export const FIELDS_DATATABLE = [
-  ROW_STYLE_FIELD,
-  ROW_SIZE_FIELD,
-  FULL_SCREEN_INFO_FIELD,
-]
+export const FIELDS_DATATABLE = [ROW_STYLE_FIELD, ROW_SIZE_FIELD]
 
 /**
  * Fields of the other settings form.
@@ -179,7 +159,6 @@ export const FIELDS_DATATABLE = [
  */
 export const FIELDS_OTHERS = (props) => [
   LANG_FIELD,
-  SIDEBAR_FIELD,
   ZONE_ENDPOINT_FIELD(props),
   VIEW_FIELD(props),
 ]

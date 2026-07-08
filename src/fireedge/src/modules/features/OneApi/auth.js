@@ -20,9 +20,10 @@ import {
   ONE_RESOURCES,
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
+import { PROFILE_LABELS } from '@modules/features/OneApi/labels'
 import { oneApi } from '@modules/features/OneApi/oneApi'
 
-import { jsonToXml } from '@ModelsModule'
+import { encodeLabels, jsonToXml, parseLabels } from '@UtilsModule'
 import { FILTER_POOL } from '@ConstantsModule'
 const { actions: authActions } = AuthSlice
 
@@ -35,6 +36,15 @@ const {
   USER_GROUPS_RESOURCES,
 } = FILTER_POOL
 const SUNSTONE_VIEWS_TAG = { type: SYSTEM, id: 'sunstone-views' }
+const toLabelTree = (labels) => {
+  const parsedLabels = parseLabels(labels ?? {})
+  const isLabelTree =
+    parsedLabels &&
+    typeof parsedLabels === 'object' &&
+    !Array.isArray(parsedLabels)
+
+  return isLabelTree ? parsedLabels : {}
+}
 
 const authApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -49,6 +59,7 @@ const authApi = oneApi.injectEndpoints({
         try {
           const { data: user } = await queryFulfilled
           dispatch(authActions.changeAuthUser(user))
+          dispatch(oneApi.util.invalidateTags([PROFILE_LABELS]))
         } catch {
         } finally {
           dispatch(authActions.setSessionVerified())
@@ -172,13 +183,19 @@ const authApi = oneApi.injectEndpoints({
           if (!newLabel) return { data: '' }
 
           const authUser = getState().auth.user
-          const currentLabels = authUser?.TEMPLATE?.LABELS?.split(',') ?? []
+          const currentLabels = toLabelTree(
+            authUser?.TEMPLATE?.FIREEDGE?.LABELS ?? authUser?.TEMPLATE?.LABELS
+          )
+          const labelKey = newLabel.startsWith('$') ? newLabel : `$${newLabel}`
 
-          const exists = currentLabels.some((l) => l === newLabel)
+          const exists = currentLabels?.[labelKey] !== undefined
           if (exists) return { data: newLabel }
 
-          const newLabels = currentLabels.concat(newLabel).join(',')
-          const template = jsonToXml({ LABELS: newLabels })
+          const template = jsonToXml({
+            FIREEDGE: {
+              LABELS: encodeLabels({ ...currentLabels, [labelKey]: {} }),
+            },
+          })
           const queryData = { id: authUser.ID, template, replace: 1 }
 
           await dispatch(
@@ -203,18 +220,23 @@ const authApi = oneApi.injectEndpoints({
           if (!label) return { data: '' }
 
           const authUser = getState().auth.user
-          const { LABELS, ...userTemplate } = authUser?.TEMPLATE
-          const currentLabels = LABELS?.split(',') ?? []
-          const lastLabel = currentLabels?.length <= 1
+          const currentLabels = toLabelTree(
+            authUser?.TEMPLATE?.FIREEDGE?.LABELS ?? authUser?.TEMPLATE?.LABELS
+          )
+          const labelKey = label.startsWith('$') ? label : `$${label}`
 
-          const newLabels = currentLabels.filter((l) => l !== label).join()
-          const template = lastLabel
-            ? jsonToXml(userTemplate)
-            : jsonToXml({ LABELS: newLabels })
+          const newLabels = Object.fromEntries(
+            Object.entries(currentLabels).filter(
+              ([key]) => ![label, labelKey].includes(key)
+            )
+          )
+          const template = jsonToXml({
+            FIREEDGE: { LABELS: encodeLabels(newLabels) },
+          })
           const queryData = {
             id: authUser.ID,
             template,
-            replace: lastLabel ? 0 : 1,
+            replace: 1,
           }
 
           await dispatch(

@@ -15,6 +15,7 @@
  * ------------------------------------------------------------------------- */
 import { schemaOdsUserInputField } from '@modules/utils/ods'
 import { isPlainObject, mapValues, isArray } from 'lodash'
+import { DateTime } from 'luxon'
 
 /**
  * Create a list of fields to use in the schema and in forms from the list of ODS User Inputs.
@@ -82,4 +83,94 @@ const castNumericStrings = (data) => {
   return data
 }
 
-export { createFieldsFromOneKsOdsUserInputs, castNumericStrings }
+/**
+ * Checks that a OneKE-related resource ID can be used in route generation.
+ *
+ * @param {string|number} id - Resource ID
+ * @returns {boolean} True when the ID is non-empty and numeric
+ */
+const isValidOneKsResourceId = (id) => {
+  const stringId = String(id ?? '').trim()
+
+  return stringId !== '' && !Number.isNaN(Number(stringId))
+}
+
+const ONEKS_EVENT_LEVEL_MARKS = {
+  debug: 'D',
+  info: 'I',
+  warn: 'W',
+  error: 'E',
+}
+
+const safeOneKsEventText = (value) => String(value ?? '').trim()
+
+const getOneKsEventLevel = (event = {}) => {
+  const sourceLevel = safeOneKsEventText(
+    event?.level ?? event?.severity
+  ).toLowerCase()
+  const sourceText = [
+    sourceLevel,
+    event?.action,
+    event?.description,
+    event?.message,
+  ]
+    .map(safeOneKsEventText)
+    .join(' ')
+    .toLowerCase()
+
+  if (sourceLevel === 'debug' || /\bdebug\b/.test(sourceText)) return 'debug'
+  if (
+    sourceLevel === 'error' ||
+    /\b(error|failed|failure|fatal)\b/.test(sourceText)
+  ) {
+    return 'error'
+  }
+  if (sourceLevel === 'warn' || /\b(warn|warning)\b/.test(sourceText)) {
+    return 'warn'
+  }
+
+  return 'info'
+}
+
+const formatOneKsEventTime = (time) => {
+  const timestamp = Number(time)
+
+  return Number.isFinite(timestamp) && timestamp > 0
+    ? DateTime.fromSeconds(timestamp).toFormat('ff')
+    : '-'
+}
+
+/**
+ * Converts OneKE historic events to the shared LogsViewer data shape.
+ *
+ * @param {object[]} events - OneKE historic events
+ * @returns {{lines: object[]}} LogsViewer-compatible log data
+ */
+const oneKsEventsToLogs = (events = []) => ({
+  lines: []
+    .concat(events ?? [])
+    .filter(Boolean)
+    .map((event) => {
+      const level = getOneKsEventLevel(event)
+      const action = safeOneKsEventText(event?.action)
+      const description = safeOneKsEventText(
+        event?.description ?? event?.message
+      )
+      const message = [action, description].filter(Boolean).join(': ') || '-'
+      const time = formatOneKsEventTime(event?.time ?? event?.timestamp)
+      const levelMark = ONEKS_EVENT_LEVEL_MARKS[level]
+
+      return {
+        ...event,
+        level,
+        text: `${time} [${levelMark}] ${message}`,
+      }
+    }),
+})
+
+export {
+  createFieldsFromOneKsOdsUserInputs,
+  castNumericStrings,
+  isValidOneKsResourceId,
+  oneKsEventsToLogs,
+}

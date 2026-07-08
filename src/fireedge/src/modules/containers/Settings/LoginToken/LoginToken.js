@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { SubmitButton, FormWithSchema, Tr, Translate } from '@ComponentsModule'
+import { FormWithSchema, Tr, Translate } from '@ResourcesModule'
+import { SubmitButton } from '@ComponentsV2Module'
 import { STYLE_BUTTONS, T } from '@ConstantsModule'
 import { css } from '@emotion/css'
 import {
@@ -25,7 +26,7 @@ import {
   useViews,
 } from '@FeaturesModule'
 import { useClipboard } from '@HooksModule'
-import { timeToString } from '@ModelsModule'
+import { timeToString } from '@UtilsModule'
 import { FIELDS, SCHEMA } from '@modules/containers/Settings/LoginToken/schema'
 import { useSettingWrapper } from '@modules/containers/Settings/Wrapper'
 import { Box, Grid, Typography, useTheme } from '@mui/material'
@@ -35,13 +36,16 @@ import { ReactElement, useCallback, useMemo } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { v4 as uuidv4 } from 'uuid'
 
-const styles = ({ typography, palette }) => ({
+const styles = ({ borderRadius, borderWidth, palette, spacing }) => ({
   buttonPlace: css({
     textAlign: 'center',
   }),
-  buttonAction: css({
-    width: '100%',
-    marginBottom: typography.pxToRem(8),
+  rowContent: css({
+    flexGrow: 1,
+  }),
+  tokenText: css({
+    margin: spacing(2),
+    color: palette.text.body,
   }),
   token: css({
     textOverflow: 'ellipsis',
@@ -49,13 +53,21 @@ const styles = ({ typography, palette }) => ({
     overflow: 'hidden',
   }),
   message: css({
-    margin: `${typography.pxToRem(32)} 0 0`,
+    margin: spacing(4) + ' 0 0',
+    color: palette.text.body,
   }),
   tokenContainer: css({
-    border: `1px solid ${palette.grey[300]}`,
-    padding: typography.pxToRem(8),
-    borderRadius: typography.pxToRem(8),
-    marginBottom: typography.pxToRem(8),
+    border: `${borderWidth.sm}px solid ${palette.border.primary}`,
+    color: palette.text.body,
+    padding: spacing(1),
+    borderRadius: borderRadius.xlg,
+    marginBottom: spacing(1),
+    backgroundColor: palette.surface.primary,
+  }),
+  tokenActions: css({
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing(1),
   }),
 })
 
@@ -65,11 +77,11 @@ const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
   const classes = useMemo(() => styles(theme), [theme])
   const { TOKEN = '', EXPIRATION_TIME = 0, EGID = '' } = data
   const groupToken =
-    groups.find((group) => group?.ID === EGID)?.NAME || Tr(T.None)
+    groups.find((group) => `${group?.ID}` === `${EGID}`)?.NAME || Tr(T.None)
 
   const handleCopy = useCallback(
     (evt) => {
-      !isCopied && copy(TOKEN)
+      !isCopied(TOKEN) && copy(TOKEN)
       evt.stopPropagation()
     },
     [copy, TOKEN, isCopied]
@@ -79,16 +91,24 @@ const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
     <>
       {TOKEN && EXPIRATION_TIME && EGID && (
         <Grid container role="row" className={classes.tokenContainer}>
-          <Grid item sx={{ flexGrow: 1 }}>
+          <Grid item className={classes.rowContent}>
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <Typography variant="body2" gutterBottom sx={{ m: '1rem' }}>
+                <Typography
+                  variant="body2"
+                  gutterBottom
+                  className={classes.tokenText}
+                >
                   <b>{`${Tr(T.ValidUntil)}: `}</b>
                   {timeToString(EXPIRATION_TIME)}
                 </Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="body2" gutterBottom sx={{ m: '1rem' }}>
+                <Typography
+                  variant="body2"
+                  gutterBottom
+                  className={classes.tokenText}
+                >
                   <b>{`${Tr(T.Group)}: `}</b>
                   {groupToken}
                 </Typography>
@@ -97,8 +117,7 @@ const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
                 <Typography
                   variant="body2"
                   gutterBottom
-                  sx={{ m: '1rem' }}
-                  className={classes.token}
+                  className={[classes.tokenText, classes.token].join(' ')}
                 >
                   <b>{`${Tr(T.Token)}: `}</b>
                   {TOKEN}
@@ -106,14 +125,20 @@ const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
               </Grid>
             </Grid>
           </Grid>
-          <Grid item>
+          <Grid item className={classes.tokenActions}>
             <SubmitButton
-              icon={isCopied ? <CopiedIcon /> : <CopyIcon className="icon" />}
+              iconOnly={
+                isCopied(TOKEN) ? (
+                  <CopiedIcon />
+                ) : (
+                  <CopyIcon className="iconOnly" />
+                )
+              }
               onClick={handleCopy}
               aria-label="toggle password visibility"
             />
             <SubmitButton
-              icon={<Cancel />}
+              iconOnly={<Cancel />}
               onClick={() => edit(TOKEN)}
               aria-label="delete"
             />
@@ -127,8 +152,8 @@ const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
 Row.propTypes = {
   data: PropTypes.shape({
     TOKEN: PropTypes.string,
-    EXPIRATION_TIME: PropTypes.string,
-    EGID: PropTypes.string,
+    EXPIRATION_TIME: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    EGID: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }),
   groups: PropTypes.arrayOf(PropTypes.object),
   edit: PropTypes.func,
@@ -170,16 +195,19 @@ const LoginToken = () => {
 
   const { handleSubmit, ...methods } = useForm({
     reValidateMode: 'onChange',
-    defaultValues: useMemo(
-      () =>
-        SCHEMA({ views, userView }).cast(
-          {},
-          {
-            stripUnknown: true,
-          }
-        ),
-      [LOGIN_TOKEN]
-    ),
+    defaultValues: useMemo(() => {
+      const defaultValues = SCHEMA({ views, userView }).cast(
+        {},
+        {
+          stripUnknown: true,
+        }
+      )
+
+      return {
+        ...defaultValues,
+        EXPIRE: `${defaultValues.EXPIRE ?? ''}`,
+      }
+    }, [LOGIN_TOKEN]),
   })
 
   const handleDeleteLoginToken = useCallback(
@@ -205,7 +233,11 @@ const LoginToken = () => {
   const handleCreateLoginToken = useCallback(
     async ({ EXPIRE: expire, EGID: gid } = {}) => {
       try {
-        const newToken = await addLoginToken({ user: NAME, expire, gid })
+        const newToken = await addLoginToken({
+          user: NAME,
+          expire: +expire,
+          gid,
+        })
         if (newToken?.data) {
           const newUserData = await get({ id: ID, __: uuidv4() })
           if (newUserData?.data) {
@@ -255,9 +287,7 @@ const LoginToken = () => {
               <Box className={classes.buttonPlace}>
                 <SubmitButton
                   onClick={handleSubmit(handleCreateLoginToken)}
-                  importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-                  size={STYLE_BUTTONS.SIZE.MEDIUM}
-                  type={STYLE_BUTTONS.TYPE.FILLED}
+                  type={STYLE_BUTTONS.TYPE.PRIMARY}
                   data-cy="addLoginToken"
                   label={T.GetNewToken}
                 />
@@ -265,12 +295,7 @@ const LoginToken = () => {
             </Box>
           </>
         )}
-        <Typography
-          variant="body2"
-          gutterBottom
-          sx={{ m: '1rem' }}
-          className={classes.message}
-        >
+        <Typography variant="body2" gutterBottom className={classes.message}>
           <Translate word={T.MessageLoginToken} />
         </Typography>
       </InternalWrapper>

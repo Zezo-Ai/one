@@ -14,7 +14,6 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import * as ACTIONS from '@modules/constants/actions'
-import { COLOR } from '@modules/constants/color'
 import * as STATES from '@modules/constants/states'
 // eslint-disable-next-line no-unused-vars
 import { DISK_TYPES_STR } from '@modules/constants/image'
@@ -53,12 +52,12 @@ export const DATASTORE_STATES = [
   {
     name: STATES.READY,
     shortName: 'on',
-    color: COLOR.success.main,
+    color: 'success',
   },
   {
     name: STATES.DISABLED,
     shortName: 'off',
-    color: COLOR.error.dark,
+    color: 'error',
   },
 ]
 

@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { COLOR } from '@modules/constants/color'
 
 /** Driver states */
-export const DRIVER_STATES = [
-  {
+export const DRIVER_STATES = {
+  ENABLED: {
     name: 'ENABLED',
-    color: COLOR.success.main,
+    color: 'success',
   },
-  {
+  DISABLED: {
     name: 'DISABLED',
-    color: COLOR.error.dark,
+    color: 'disable',
   },
-]
+}
 
 /** @enum {string} Driver actions */
 export const DRIVER_ACTIONS = {

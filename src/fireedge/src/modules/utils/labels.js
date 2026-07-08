@@ -16,6 +16,39 @@
 
 import { RESOURCE_NAMES, LABEL_DELIMITER } from '@ConstantsModule'
 
+const compactLabelKey = (key = '') =>
+  `${key}`
+    .replace(/^\$/, '')
+    .replace(/[-_\s]/g, '')
+    .toLowerCase()
+
+const RESOURCE_NAME_BY_LABEL_KEY = Object.fromEntries(
+  Object.values(RESOURCE_NAMES).map((resourceName) => [
+    compactLabelKey(resourceName),
+    resourceName,
+  ])
+)
+
+/**
+ * Resource leaves use Sunstone resource names, accepting differences in case,
+ * leading `$`, and separators. Label path segments keep their original names.
+ *
+ * @param {string} key - Label tree key
+ * @returns {string} - Normalized resource name or original key
+ */
+export const normalizeLabelResourceName = (key = '') => {
+  const plainKey = `${key}`.replace(/^\$/, '')
+
+  return RESOURCE_NAME_BY_LABEL_KEY[compactLabelKey(key)] ?? plainKey
+}
+
+/**
+ * @param {string} key - Label tree key
+ * @returns {boolean} - True when the key represents a resource leaf
+ */
+export const isLabelResourceName = (key) =>
+  Object.hasOwn(RESOURCE_NAME_BY_LABEL_KEY, compactLabelKey(key))
+
 /**
  * @param {string} labelString - Double encoded JSON string
  * @returns {object} - JSON object
@@ -49,8 +82,12 @@ export const buildLabelTreeState = (params) => {
   } = params
 
   const selectedRowIds = new Set(
-    selectedRows?.map(({ original }) => original?.ID)
+    selectedRows
+      ?.map(({ original }) => original?.ID)
+      ?.filter((id) => id !== undefined && id !== null)
+      ?.map(String)
   )
+  const labelResourceType = normalizeLabelResourceName(resourceType)
 
   const adminGroupNames = new Set(
     groups
@@ -98,18 +135,22 @@ export const buildLabelTreeState = (params) => {
       const nodeMeta = createMetadata({ expanded, isEditable })
       currentResult[nodeKey] = nodeMeta
 
-      const resourceIdMap = Object.fromEntries(
-        Object.entries(currentNode).filter(
-          ([k, v]) =>
-            !k.startsWith('$') &&
-            Object.values(RESOURCE_NAMES).includes(k) &&
-            Array.isArray(v)
-        )
+      const resourceIdMap = Object.entries(currentNode).reduce(
+        (ids, [key, value]) => {
+          const resourceName = normalizeLabelResourceName(key)
+
+          if (Array.isArray(value) && isLabelResourceName(key)) {
+            ids[resourceName] = value
+          }
+
+          return ids
+        },
+        {}
       )
 
       const matchingResourceIds =
-        resourceIdMap?.[resourceType]?.filter((id) =>
-          selectedRowIds?.has(id)
+        resourceIdMap?.[labelResourceType]?.filter((id) =>
+          selectedRowIds?.has(String(id))
         ) ?? []
 
       nodeMeta.ids = resourceIdMap
@@ -131,9 +172,13 @@ export const buildLabelTreeState = (params) => {
         }
       }
 
-      Object.values(RESOURCE_NAMES).forEach((r) => delete currentNode[r])
+      const childNodes = Object.fromEntries(
+        Object.entries(currentNode).filter(
+          ([key, value]) => !(Array.isArray(value) && isLabelResourceName(key))
+        )
+      )
 
-      walk(currentNode, false, path, nodeMeta.children)
+      walk(childNodes, false, path, nodeMeta.children)
     }
 
     return currentResult
@@ -145,7 +190,7 @@ export const buildLabelTreeState = (params) => {
     ...parsedTree,
     __info: {
       uId,
-      resourceType,
+      resourceType: labelResourceType,
       rowIds: [...selectedRowIds],
     },
   }
@@ -186,7 +231,10 @@ export const getResourceLabels = (
       const newPath = [...path, key]
 
       if (Array.isArray(value)) {
-        if (key === resourceType && value.includes(resourceId)) {
+        if (
+          normalizeLabelResourceName(key) === resourceType &&
+          value.some((id) => String(id) === String(resourceId))
+        ) {
           const labelPath = path.join(delimiter)
           if (type === 'user') {
             userLabels.add(labelPath)
@@ -224,3 +272,12 @@ export const getResourceLabels = (
     group: Object.fromEntries([...groupLabelsMap].map(([k, v]) => [k, [...v]])),
   }
 }
+
+/**
+ * @param {any} val - Translate target
+ * @returns {boolean} - Can be translated
+ */
+export const labelCanBeTranslated = (val) =>
+  typeof val === 'string' ||
+  (Array.isArray(val) && val.length === 2) ||
+  (typeof val === 'object' && val?.word)

@@ -40,7 +40,7 @@ const Actions = {
   UPDATE_NODEGROUP: 'oneks.update_nodegroup',
   DELETE_NODEGROUP: 'oneks.delete_nodegroup',
   SCALE_NODEGROUP: 'oneks.scale_nodegroup',
-  LOG: 'oneks.log',
+  LOGS: 'oneks.log',
   RECOVER: 'oneks.recover',
   RECOVER_NODEGROUP: 'oneks.recover_nodegroup',
   CHMOD: 'oneks.chmod',

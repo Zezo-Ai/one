@@ -28,19 +28,15 @@ import {
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  Group,
   TranslateProvider,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 
-import {
-  createStringACL,
-  createAclObjectFromString,
-  jsonToXml,
-} from '@ModelsModule'
+import { jsonToXml } from '@UtilsModule'
 
-import { ACL_RIGHTS, ACL_TYPE_ID, T } from '@ConstantsModule'
-const { Group } = Form
+import { createStringACL, createAclObjectFromString } from '@ModelsModule'
+
+import { ACL_RIGHTS, ACL_TYPE_ID, T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation form for a group.
@@ -169,7 +165,7 @@ export function CreateGroup() {
     <TranslateProvider>
       {views && version ? (
         !groupId ? (
-          <Group.CreateForm
+          <Group.Forms.CreateForm
             onSubmit={onSubmit}
             stepProps={{
               views,
@@ -178,9 +174,9 @@ export function CreateGroup() {
             fallback={<SkeletonStepsForm />}
           >
             {(config) => <DefaultFormStepper {...config} />}
-          </Group.CreateForm>
+          </Group.Forms.CreateForm>
         ) : group ? (
-          <Group.UpdateForm
+          <Group.Forms.UpdateForm
             initialValues={group}
             onSubmit={onSubmit}
             stepProps={{
@@ -189,8 +185,8 @@ export function CreateGroup() {
             }}
             fallback={<SkeletonStepsForm />}
           >
-            {(config) => <DefaultFormStepper {...config} />}
-          </Group.UpdateForm>
+            {(config) => <DefaultFormStepper {...config} update />}
+          </Group.Forms.UpdateForm>
         ) : (
           <SkeletonStepsForm />
         )

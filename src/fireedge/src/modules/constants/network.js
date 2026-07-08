@@ -103,43 +103,43 @@ export const VN_STATES = [
   {
     // 0
     name: STATES.INIT,
-    color: COLOR.info.light,
+    color: 'default',
     meaning: 'Initialization state, the Virtual Network object was created',
   },
   {
     // 1
     name: STATES.READY,
-    color: COLOR.success.main,
+    color: 'success',
     meaning: 'Virtual Network is ready, can execute any action',
   },
   {
     // 2
     name: STATES.LOCK_CREATE,
-    color: COLOR.error.light,
+    color: 'information',
     meaning: 'The driver initialization action is in progress',
   },
   {
     // 3
     name: STATES.LOCK_DELETE,
-    color: COLOR.error.light,
+    color: 'information',
     meaning: 'The driver delete action is in progress',
   },
   {
     // 4
     name: STATES.DONE,
-    color: COLOR.debug.light,
+    color: 'success',
     meaning: 'Network driver delete successful',
   },
   {
     // 5
     name: STATES.ERROR,
-    color: COLOR.error.dark,
+    color: 'error',
     meaning: 'Driver action failed.',
   },
   {
     // 6
     name: STATES.UPDATE_FAILURE,
-    color: COLOR.error.light,
+    color: 'error',
     meaning: 'Network action failed',
   },
 ]

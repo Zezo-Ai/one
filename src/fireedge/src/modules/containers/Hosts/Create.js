@@ -21,13 +21,10 @@ import { HostAPI, useGeneralApi } from '@FeaturesModule'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
+  Host,
   TranslateProvider,
-  PATH,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
-
-const { Host } = Form
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation or modification form to a Host.
@@ -50,9 +47,12 @@ export function CreateHost() {
 
   return (
     <TranslateProvider>
-      <Host.CreateForm onSubmit={onSubmit} fallback={<SkeletonStepsForm />}>
+      <Host.Forms.CreateForm
+        onSubmit={onSubmit}
+        fallback={<SkeletonStepsForm />}
+      >
         {(config) => <DefaultFormStepper {...config} />}
-      </Host.CreateForm>
+      </Host.Forms.CreateForm>
     </TranslateProvider>
   )
 }

@@ -14,7 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { OpenNebulaLogo, Tr } from '@ComponentsModule'
+import { Tr } from '@ResourcesModule'
+import { InteractiveGrid, OpenNebulaIcon } from '@ComponentsV2Module'
 import { T } from '@ConstantsModule'
 import { AuthAPI, useAuth, useAuthApi } from '@FeaturesModule'
 import { Form } from '@modules/containers/Login/Opennebula/Form'
@@ -23,7 +24,6 @@ import * as FORM_SCHEMA from '@modules/containers/Login/Opennebula/schema'
 import {
   Box,
   Container,
-  LinearProgress,
   Typography,
   useMediaQuery,
   useTheme,
@@ -40,6 +40,16 @@ const STEPS = {
   GROUP_FORM: 3,
 }
 
+const getResponseErrorMessage = (error, fallback) => {
+  const data = error?.data
+
+  return (
+    (typeof data === 'string' ? data : data?.message) ||
+    error?.message ||
+    fallback
+  )
+}
+
 /**
  * Displays the login form and handles the login process.
  *
@@ -52,6 +62,7 @@ export function OpenNebulaLoginHandler({ data = {} }) {
   const { remoteRedirect } = data
 
   const [MFAParams, setMFAParams] = useState(null)
+  const [formError, setFormError] = useState(undefined)
   const [loginParams, setLoginParams] = useState({
     username: '',
     password: '',
@@ -70,25 +81,37 @@ export function OpenNebulaLoginHandler({ data = {} }) {
   const [login, loginState] = AuthAPI.useLoginMutation()
   const [getAuthUser] = AuthAPI.useLazyGetAuthUserQuery()
 
-  const errorMessage = loginState.error?.data?.message ?? authError
+  const apiErrorMessage = getResponseErrorMessage(loginState.error, authError)
+  const errorMessage =
+    formError === null ? undefined : formError ?? apiErrorMessage
 
   const [step, setStep] = useState(() =>
     needGroupToContinue ? STEPS.GROUP_FORM : STEPS.USER_FORM
   )
 
-  // Wrong username and password message
-  const wrongUsernamePassword = Tr(T.WrongUsernamePassword)
-
   const handleSubmit = async (formData) => {
     setIsLoading(true)
+    setFormError(null)
+    setErrorMessage(undefined)
     setLoginParams((prev) => ({ ...prev, ...formData }))
     try {
       const response = await login({ ...loginParams, ...formData }).unwrap()
-      await getAuthUser()
-      const { isLoginInProgress, imgUrl, status } = response || {}
+      const { isLoginInProgress, img, imgUrl, status } = response || {}
 
       switch (status) {
         case 'ok': {
+          const authUserResponse = await getAuthUser()
+
+          if (authUserResponse?.error) {
+            setFormError({
+              field: formData?.tfatoken ? 'tfatoken' : ['user', 'token'],
+              id: Date.now(),
+              message: formData?.tfatoken ? T.InvalidTfa : T.LoginFailed,
+            })
+
+            break
+          }
+
           if (isLoginInProgress) {
             setStep(STEPS.GROUP_FORM)
           }
@@ -96,7 +119,7 @@ export function OpenNebulaLoginHandler({ data = {} }) {
         }
 
         case 'need_2fa_setup': {
-          setMFAParams({ imgSrc: imgUrl, ...formData })
+          setMFAParams({ imgSrc: imgUrl || img, ...formData })
           setStep(STEPS.REGISTER_2FA)
           break
         }
@@ -107,11 +130,20 @@ export function OpenNebulaLoginHandler({ data = {} }) {
         }
       }
     } catch (error) {
-      if (error?.status === 401) {
-        setErrorMessage(wrongUsernamePassword)
-      } else {
-        setErrorMessage(error?.data?.message || 'Login failed')
-      }
+      const isTfaError = step === STEPS.FA2_FORM || !!formData?.tfatoken
+      const message =
+        error?.status === 401
+          ? isTfaError
+            ? T.InvalidTfa
+            : T.WrongUsernamePassword
+          : getResponseErrorMessage(error, T.LoginFailed)
+
+      setErrorMessage(message)
+      setFormError({
+        field: isTfaError ? 'tfatoken' : ['user', 'token'],
+        id: Date.now(),
+        message,
+      })
     } finally {
       setIsLoading(false)
     }
@@ -123,89 +155,99 @@ export function OpenNebulaLoginHandler({ data = {} }) {
 
   const handleBack = () => {
     setStep(STEPS.USER_FORM)
+    setFormError(null)
     setLoginParams({})
   }
 
   const theme = useTheme()
   const classes = useMemo(() => styles(theme), [theme])
 
+  const renderFormStep = ({
+    direction = 'left',
+    onBack = handleBack,
+    onSubmit = handleSubmit,
+    resolver,
+    fields,
+    errorField,
+    enter,
+    additionalProps = {},
+  }) => (
+    <Form
+      transitionProps={{
+        direction,
+        in: true,
+        ...(enter !== undefined && { enter }),
+      }}
+      onBack={onBack}
+      onSubmit={onSubmit}
+      resolver={resolver}
+      fields={fields}
+      error={errorMessage}
+      errorField={errorField}
+      isLoading={isLoading}
+      {...additionalProps}
+    />
+  )
+
+  const renderUserStep = () =>
+    renderFormStep({
+      direction: 'right',
+      onBack: null,
+      resolver: FORM_SCHEMA.FORM_USER_SCHEMA,
+      fields: FORM_SCHEMA.FORM_USER_FIELDS,
+      errorField: 'token',
+      additionalProps: {
+        remoteRedirect,
+      },
+    })
+
+  const renderFa2Step = () =>
+    renderFormStep({
+      resolver: FORM_SCHEMA.FORM_2FA_SCHEMA,
+      fields: FORM_SCHEMA.FORM_2FA_FIELDS,
+      errorField: 'tfatoken',
+    })
+
+  const renderGroupStep = () =>
+    renderFormStep({
+      onSubmit: handleSubmitGroup,
+      resolver: FORM_SCHEMA.FORM_GROUP_SCHEMA,
+      fields: FORM_SCHEMA.FORM_GROUP_FIELDS,
+    })
+
+  const renderRegister2FAStep = () => <QrDisplay {...MFAParams} />
+
+  const loginStepClass = {
+    [STEPS.USER_FORM]: classes.loginUser,
+    [STEPS.REGISTER_2FA]: classes.loginQr,
+    [STEPS.FA2_FORM]: classes.login2fa,
+    [STEPS.GROUP_FORM]: classes.loginUser,
+  }[step]
+
   return (
     <Container
+      className={classes.container}
       component="main"
       disableGutters={isMobile}
-      maxWidth={isMobile ? 'lg' : 'xs'}
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        height: '100vh',
-        alignItems: 'center',
-      }}
     >
-      <LinearProgress sx={{ visibility: isLoading ? 'visible' : 'hidden' }} />
-      <Box className={classes.login}>
-        <OpenNebulaLogo
-          data-cy="opennebula-logo"
-          height={'3rem'}
-          width="100%"
-          withText
-        />
+      <InteractiveGrid data-cy="opennebula-brand-grid">
+        <OpenNebulaIcon withText width={100} height={40} />
+      </InteractiveGrid>
 
+      <Box className={`${classes.login} ${loginStepClass}`}>
         {![STEPS.FA2_FORM, STEPS.REGISTER_2FA]?.includes(step) && (
-          <Box display="flex" overflow="hidden">
-            <Typography variant="h2" sx={{ margin: '3.5rem 0rem 0rem 0rem' }}>
+          <Box data-login-title display="flex" overflow="hidden" width="100%">
+            <Typography className={classes.loginTitle} variant="h6">
               {Tr(T.LogIn)}
             </Typography>
           </Box>
         )}
 
-        <Box display="flex" overflow="hidden">
-          {step === STEPS.USER_FORM && (
-            <Form
-              transitionProps={{
-                direction: 'right',
-                in: step === STEPS.USER_FORM,
-                enter: false,
-              }}
-              onSubmit={handleSubmit}
-              resolver={FORM_SCHEMA.FORM_USER_SCHEMA}
-              fields={FORM_SCHEMA.FORM_USER_FIELDS}
-              error={errorMessage}
-              isLoading={isLoading}
-              remoteRedirect={remoteRedirect}
-            />
-          )}
-          {step === STEPS.REGISTER_2FA && <QrDisplay {...MFAParams} />}
-
-          {step === STEPS.FA2_FORM && (
-            <Form
-              transitionProps={{
-                direction: 'left',
-                in: step === STEPS.FA2_FORM,
-              }}
-              onBack={handleBack}
-              onSubmit={handleSubmit}
-              resolver={FORM_SCHEMA.FORM_2FA_SCHEMA}
-              fields={FORM_SCHEMA.FORM_2FA_FIELDS}
-              error={errorMessage}
-              isLoading={isLoading}
-            />
-          )}
-
-          {step === STEPS.GROUP_FORM && (
-            <Form
-              transitionProps={{
-                direction: 'left',
-                in: step === STEPS.GROUP_FORM,
-              }}
-              onBack={handleBack}
-              onSubmit={handleSubmitGroup}
-              resolver={FORM_SCHEMA.FORM_GROUP_SCHEMA}
-              fields={FORM_SCHEMA.FORM_GROUP_FIELDS}
-              error={errorMessage}
-              isLoading={isLoading}
-            />
-          )}
+        <Box display="flex" overflow="visible" width="100%">
+          {STEPS.USER_FORM === step && renderUserStep()}
+          {STEPS.REGISTER_2FA === step && renderRegister2FAStep()}
+          {STEPS.FA2_FORM === step && renderFa2Step()}
+          {STEPS.GROUP_FORM === step && renderGroupStep()}
         </Box>
       </Box>
     </Container>

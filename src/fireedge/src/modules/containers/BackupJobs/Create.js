@@ -18,15 +18,12 @@ import { useHistory } from 'react-router'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  BackupJobs,
   TranslateProvider,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 import { BackupJobAPI, useGeneralApi } from '@FeaturesModule'
-import { jsonToXml } from '@ModelsModule'
-import { T } from '@ConstantsModule'
-
-const { BackupJob } = Form
+import { jsonToXml } from '@UtilsModule'
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation or modification form to a BackupJob.
@@ -53,12 +50,12 @@ export function CreateBackupJob() {
 
   return (
     <TranslateProvider>
-      <BackupJob.CreateForm
+      <BackupJobs.Forms.CreateForm
         onSubmit={onSubmit}
         fallback={<SkeletonStepsForm />}
       >
         {(config) => <DefaultFormStepper {...config} />}
-      </BackupJob.CreateForm>
+      </BackupJobs.Forms.CreateForm>
     </TranslateProvider>
   )
 }

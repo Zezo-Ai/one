@@ -16,6 +16,10 @@
 import { Actions, Commands } from 'server/utils/constants/commands/secgroup'
 import { oneApi } from '@modules/features/OneApi/oneApi'
 import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
+import {
   ONE_RESOURCES,
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
@@ -23,7 +27,7 @@ import {
   removeResourceOnPool,
   updateResourceOnPool,
 } from '@modules/features/OneApi/common'
-import { FilterFlag, Permission } from '@ConstantsModule'
+import { FilterFlag, Permission, RESOURCE_NAMES } from '@ConstantsModule'
 
 const { SECURITYGROUP } = ONE_RESOURCES
 const { SECURITYGROUP_POOL } = ONE_RESOURCES_POOL
@@ -45,20 +49,26 @@ const securityGroupApi = oneApi.injectEndpoints({
         const name = Actions.SECGROUP_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) =>
-        [data?.SECURITY_GROUP_POOL?.SECURITY_GROUP ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.SECURITY_GROUP_POOL?.SECURITY_GROUP ?? []].flat(),
+          RESOURCE_NAMES.SEC_GROUP,
+          meta
+        ),
       providesTags: (secGroups) =>
-        secGroups
-          ? [
-              ...secGroups.map(({ ID }) => ({
-                type: SECURITYGROUP_POOL,
-                id: `${ID}`,
-              })),
-              SECURITYGROUP_POOL,
-            ]
-          : [SECURITYGROUP_POOL],
+        withProfileLabelsTags(
+          secGroups
+            ? [
+                ...secGroups.map(({ ID }) => ({
+                  type: SECURITYGROUP_POOL,
+                  id: `${ID}`,
+                })),
+                SECURITYGROUP_POOL,
+              ]
+            : [SECURITYGROUP_POOL]
+        ),
     }),
     getSecGroup: builder.query({
       /**
@@ -74,10 +84,16 @@ const securityGroupApi = oneApi.injectEndpoints({
         const name = Actions.SECGROUP_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.SECURITY_GROUP ?? {},
-      providesTags: (_, __, { id }) => [{ type: SECURITYGROUP, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          data?.SECURITY_GROUP ?? {},
+          RESOURCE_NAMES.SEC_GROUP,
+          meta
+        ),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: SECURITYGROUP, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

@@ -16,16 +16,46 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import { css } from '@emotion/css'
 
-export const styles = ({ palette }) => ({
+export const styles = (theme) => ({
+  container: css({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(12, 1fr)',
+    columnGap: theme.spacing(4),
+    alignItems: 'start',
+    paddingInline: theme.spacing(3),
+    minHeight: '100vh',
+  }),
+
   login: css({
-    backgroundColor: palette.login.backgroundColor,
-    padding: '3.75rem 3.5rem 3.75rem 3.5rem',
-    borderRadius: '2rem',
-    overflow: 'hidden',
-    minWidth: '34.5rem',
-    border: {
-      xs: 'none',
-      sm: `1px solid ${palette.divider}`,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(4),
+    backgroundColor: 'transparent',
+    overflow: 'visible',
+    marginTop: theme.spacing(34),
+    width: '100%',
+  }),
+
+  loginUser: css({
+    gridColumn: '5 / span 4',
+  }),
+
+  loginQr: css({
+    gridColumn: '3 / span 9',
+  }),
+
+  login2fa: css({
+    gridColumn: '5 / span 4',
+  }),
+
+  loginTitle: css({
+    width: '100%',
+    color: theme.palette.text.headings,
+    textAlign: 'center',
+    lineHeight: {
+      xs: theme.lineHeight.heading.h5.mobile,
+      sm: theme.lineHeight.heading.h5.tablet,
+      md: theme.lineHeight.heading.h5.desktop,
     },
   }),
 })

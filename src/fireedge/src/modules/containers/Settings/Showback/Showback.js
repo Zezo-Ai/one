@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { DateRangeFilter, SubmitButton, Tr } from '@ComponentsModule'
+import { Tr } from '@ResourcesModule'
+import { DateRangeFilter, SubmitButton } from '@ComponentsV2Module'
 import { STYLE_BUTTONS, T } from '@ConstantsModule'
 import { css } from '@emotion/css'
 import { VmAPI, useGeneralApi } from '@FeaturesModule'
@@ -22,9 +23,18 @@ import { Box, Stack, Typography, useTheme } from '@mui/material'
 import { DateTime } from 'luxon'
 import { ReactElement, useMemo, useState } from 'react'
 
-const styles = ({ typography, palette }) => ({
+const styles = ({ palette, spacing }) => ({
+  description: css({
+    margin: spacing(2),
+    color: palette.text.body,
+  }),
   formContainer: css({
+    height: '100%',
+    gap: spacing(1),
+    padding: spacing(1),
+    overflow: 'auto',
     alignItems: 'center',
+    color: palette.text.body,
   }),
 })
 
@@ -80,16 +90,14 @@ export const Settings = () => {
     <Box component="form" onSubmit={handleCalculateClick}>
       <Legend title={T['showback.title']} />
       <InternalWrapper>
-        <Typography variant="body2" gutterBottom sx={{ m: '1rem' }}>
+        <Typography
+          variant="body2"
+          gutterBottom
+          className={classes.description}
+        >
           {Tr(T['showback.button.help.paragraph.1'])}
         </Typography>
-        <Stack
-          height={1}
-          gap="0.5rem"
-          p="0.5rem"
-          overflow="auto"
-          className={classes.formContainer}
-        >
+        <Stack className={classes.formContainer}>
           <DateRangeFilter
             initialStartDate={dateRange.startDate}
             initialEndDate={dateRange.endDate}
@@ -97,10 +105,8 @@ export const Settings = () => {
             views={['month', 'year']}
           />
           <SubmitButton
-            disabled={disable}
-            importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-            size={STYLE_BUTTONS.SIZE.MEDIUM}
-            type={STYLE_BUTTONS.TYPE.FILLED}
+            isDisabled={disable}
+            type={STYLE_BUTTONS.TYPE.PRIMARY}
             label={T['showback.button.calculateShowback']}
           />
         </Stack>

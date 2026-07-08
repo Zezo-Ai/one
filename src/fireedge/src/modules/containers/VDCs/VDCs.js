@@ -13,203 +13,189 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+
 import {
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-  VDCsTable,
-  VDCTabs,
-} from '@ComponentsModule'
-import { RESOURCE_NAMES, T, VmTemplate as VdcTemplate } from '@ConstantsModule'
-import { useGeneral, useGeneralApi, VdcAPI } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  Card,
+  LabelSlot,
+  List,
+  MetadataSlot,
+  ResourceContainer,
+  Table,
+  TitleSlot,
+} from '@ComponentsV2Module'
+import { T, TABLE_VIEW_MODE } from '@ConstantsModule'
+import { useFunctionality, useFunctionalityApi } from '@FeaturesModule'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
+  getVdcClustersCount,
+  getVdcDatastoresCount,
+  getVdcGroupsCount,
+  getVdcHostsCount,
+  getVdcVnetsCount,
+  getLabelSlotLabels,
+  VDC_LIST_COLUMNS,
+  vdcTable,
+} from '@ModelsModule'
+import { DetailsDrawer } from '@modules/containers/VDCs/Details'
+import { ReactElement, useCallback, useMemo } from 'react'
 
 /**
- * Displays a list of VDCs with a split pane between the list and selected row(s).
+ * Displays a list of VDCs.
  *
- * @returns {ReactElement} VDCs list and selected row(s)
+ * @returns {ReactElement} VDCs list
  */
 export function VDCs() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = VDCsTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const { searchExpression, sortExpression, selectedItems, containerView } =
+    useFunctionality()
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = vdcTable.useData()
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((vdc) =>
+          [
+            vdc?.ID,
+            vdc?.NAME,
+            getVdcGroupsCount(vdc),
+            getVdcClustersCount(vdc),
+            getVdcHostsCount(vdc),
+            getVdcDatastoresCount(vdc),
+            getVdcVnetsCount(vdc),
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        )
+      : data
+
+    return vdcTable.sortData(filteredData, sortExpression)
+  }, [data, searchExpression, sortExpression])
+
+  const rowSelection = useMemo(
+    () =>
+      Object.fromEntries((selectedItems ?? []).map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const selectedVdcs = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={VdcAPI.useUpdateVDCMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <VDCsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            template: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.VDCs}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={vdcTable.sortOptions()}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={vdcTable.columns(VDC_LIST_COLUMNS)}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((vdc) => {
+                  const { ID, NAME } = vdc
+                  const id = String(ID)
+                  const groupsCount = getVdcGroupsCount(vdc)
+                  const clustersCount = getVdcClustersCount(vdc)
+                  const hostsCount = getVdcHostsCount(vdc)
+                  const datastoresCount = getVdcDatastoresCount(vdc)
+                  const vnetsCount = getVdcVnetsCount(vdc)
+                  const labelSlotLabels = getLabelSlotLabels(vdc?.LABELS)
 
-          return <InfoTabs {...propsInfo} />
-        }}
-      />
-    </TranslateProvider>
+                  return (
+                    <Card
+                      key={id}
+                      isSelected={selectedItems?.includes(id)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter((itemId) => itemId !== id)
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                      slots={[
+                        [
+                          TitleSlot,
+                          {
+                            title: NAME,
+                          },
+                        ],
+                        [
+                          MetadataSlot,
+                          {
+                            labels: [
+                              [T.ID, id],
+                              [T.Groups, String(groupsCount)],
+                              [T.Clusters, String(clustersCount)],
+                              [T.Hosts, String(hostsCount)],
+                              [T.Datastores, String(datastoresCount)],
+                              [T.Vnets, String(vnetsCount)],
+                            ],
+                          },
+                        ],
+                        labelSlotLabels.length > 0 && [
+                          LabelSlot,
+                          {
+                            labels: labelSlotLabels,
+                          },
+                        ],
+                      ].filter(Boolean)}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer selectedVdcs={selectedVdcs} handleClose={handleClose} />
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a VDC Template.
- *
- * @param {VdcTemplate} template - VDC Template id to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a VDC Template
- * @param {Function} [unselect] - Function to unselect a VDC Template
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} VDC Template details
- */
-const InfoTabs = memo(({ template, gotoPage, unselect, selectedRows }) => {
-  const [getVDC, { data, isFetching }] = VdcAPI.useLazyGetVDCQuery()
-  const id = template?.ID ?? data?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.VDC}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => getVDC({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <VDCTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  template: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

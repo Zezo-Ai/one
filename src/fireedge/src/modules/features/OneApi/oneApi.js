@@ -22,6 +22,7 @@ import {
   ONE_RESOURCES,
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
+import { PROFILE_LABELS } from '@modules/features/OneApi/labels'
 import { formatError, generateKey, http, requestConfig } from '@UtilsModule'
 import { httpCodes } from 'server/utils/constants'
 
@@ -53,11 +54,12 @@ const oneApi = createApi({
 
       const error =
         message ??
-        formatError(errorFromOned?.type ?? errorFromOned?.status, {
-          fallback: errorFromOned,
+        formatError(errorFromOned?.type, {
+          fallback: errorFromOned || messageFromServer,
         }) ??
         messageFromServer ??
         statusText
+
       if (status === 204) {
         const state = needStateInMeta ? getState() : {}
 
@@ -70,7 +72,7 @@ const oneApi = createApi({
           enqueueSnackbar({
             key: generateKey(),
             message: error,
-            options: { variant: 'error' },
+            options: { variant: 'error', urgent: true },
           })
         )
 
@@ -83,6 +85,7 @@ const oneApi = createApi({
     ...Object.values(ONE_RESOURCES_POOL),
     ...Object.values(DOCUMENT),
     ...Object.values(DOCUMENT_POOL),
+    PROFILE_LABELS,
   ],
   endpoints: () => ({}),
 })

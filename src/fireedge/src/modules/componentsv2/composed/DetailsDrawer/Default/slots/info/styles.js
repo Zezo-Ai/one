@@ -1,0 +1,260 @@
+/* ------------------------------------------------------------------------- *
+ * Copyright 2002-2026, OpenNebula Project, OpenNebula Systems               *
+ *                                                                           *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
+ * not use this file except in compliance with the License. You may obtain   *
+ * a copy of the License at                                                  *
+ *                                                                           *
+ * http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                           *
+ * Unless required by applicable law or agreed to in writing, software       *
+ * distributed under the License is distributed on an "AS IS" BASIS,         *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ * See the License for the specific language governing permissions and       *
+ * limitations under the License.                                            *
+ * ------------------------------------------------------------------------- */
+
+/**
+ * @param {object} root0 - Params
+ * @param {object} root0.theme - Current theme in use
+ * @returns {object} - Slot styles
+ */
+export const getStyles = ({ theme }) => {
+  const baseStyles = {
+    display: 'flex',
+    flexDirection: 'row',
+    flex: '1 0 0',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  }
+
+  const infoContainer = {
+    '& .info-container': {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      alignSelf: 'stretch',
+      gap: `${theme.scale[600]}px`,
+      flex: '1 0 0',
+
+      fontSize: {
+        xs: theme.fontSize.body.sm.mobile,
+        sm: theme.fontSize.body.sm.tablet,
+        md: theme.fontSize.body.sm.desktop,
+      },
+      fontWeight: {
+        xs: theme.fontWeight.body.sm.mobile,
+        sm: theme.fontWeight.body.sm.tablet,
+        md: theme.fontWeight.body.sm.desktop,
+      },
+      lineHeight: {
+        xs: theme.lineHeight.body.sm.mobile,
+        sm: theme.lineHeight.body.sm.tablet,
+        md: theme.lineHeight.body.sm.desktop,
+      },
+    },
+  }
+
+  const header = {
+    '& .info-header': {
+      display: 'flex',
+      alignItems: 'center',
+      gap: `${theme.scale[100]}px`,
+
+      '&:hover': {
+        '& .info-edit-icon-container': {
+          visibility: 'visible',
+        },
+      },
+
+      '& .icon-container': {
+        width: '40px',
+        height: '40px',
+        padding: '4px',
+
+        borderRadius: `${theme.borderRadius.xlg}px`,
+        border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
+
+        '& .info-icon': {
+          width: '100%',
+          height: '100%',
+          aspectRatio: '1/1',
+        },
+      },
+      '& .info-edit-icon-container': {
+        appearance: 'none',
+        cursor: 'pointer',
+        lineHeight: 0,
+
+        visibility: 'hidden',
+
+        display: 'flex',
+        padding: `${theme.scale[50]}px`,
+        alignItems: 'center',
+        gap: '10px',
+        borderRadius: `${theme.borderRadius['2xl']}px`,
+        border: `${theme.borderWidth.sm}px solid ${theme.palette.border.actionHover2}`,
+        bgcolor: 'surface.actionHover2',
+        color: 'icon.action',
+
+        '&:focus-visible': {
+          outline: `${theme.borderWidth.sm}px unset ${theme.palette.border.focus}`,
+          outlineOffset: '2px',
+        },
+      },
+      '& .info-title, .info-id': {
+        color: 'text.headings',
+        fontFamily: 'Inter',
+        fontSize: {
+          xs: theme.fontSize.heading.h5.mobile,
+          sm: theme.fontSize.heading.h5.tablet,
+          md: theme.fontSize.heading.h5.desktop,
+        },
+
+        fontStyle: 'normal',
+        fontWeight: 700,
+
+        lineHeight: {
+          xs: theme.lineHeight.heading.h5.mobile,
+          sm: theme.lineHeight.heading.h5.tablet,
+          md: theme.lineHeight.heading.h5.desktop,
+        },
+      },
+
+      '& .info-id': {
+        color: 'text.onDisabled',
+      },
+    },
+  }
+
+  const captionTypography = {
+    color: 'text.body',
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
+    fontWeight: 400,
+    fontSize: {
+      xs: theme.fontSize.body.caption.mobile,
+      sm: theme.fontSize.body.caption.tablet,
+      md: theme.fontSize.body.caption.desktop,
+    },
+    lineHeight: {
+      xs: theme.lineHeight.body.caption.mobile,
+      sm: theme.lineHeight.body.caption.tablet,
+      md: theme.lineHeight.body.caption.desktop,
+    },
+  }
+  const ownership = {
+    '& .info-ownership': {
+      display: 'flex',
+      gap: `${theme.scale[100]}px`,
+      alignItems: 'center',
+      alignSelf: 'stretch',
+
+      '& .region-label': {
+        display: 'flex',
+        gap: `${theme.scale[50]}px`,
+        '&::before': {
+          content: '"\\2022"',
+          marginRight: `${theme.scale[50]}px`,
+          ...captionTypography,
+        },
+        '&:first-of-type::before': {
+          display: 'none',
+        },
+        '& .region-label--title, & .region-label--value': {
+          ...captionTypography,
+        },
+
+        '& .region-label--title': {
+          '&:not(:only-child)::after': {
+            content: '":"',
+          },
+        },
+      },
+    },
+  }
+  const toolbar = {
+    '& .info-action-toggles': {
+      width: 'fit-content',
+      flexShrink: 0,
+      flexWrap: 'nowrap',
+    },
+  }
+
+  return {
+    ...baseStyles,
+    ...infoContainer,
+    ...header,
+    ...ownership,
+    ...toolbar,
+  }
+}
+
+/**
+ * @param {object} root0 - Params.
+ * @param {object} root0.theme - Current theme in use.
+ * @returns {object} Editable title styles.
+ */
+export const getEditableTitleStyles = ({ theme }) => {
+  const baseStyles = {
+    color: 'text.headings',
+    cursor: 'pointer',
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
+    display: 'inline-grid',
+    width: 'fit-content',
+    borderRadius: `${theme.borderRadius['2xl']}px`,
+    fontWeight: 700,
+    fontSize: {
+      xs: theme.fontSize.heading.h5.mobile,
+      sm: theme.fontSize.heading.h5.tablet,
+      md: theme.fontSize.heading.h5.desktop,
+    },
+    lineHeight: {
+      xs: theme.lineHeight.heading.h5.mobile,
+      sm: theme.lineHeight.heading.h5.tablet,
+      md: theme.lineHeight.heading.h5.desktop,
+    },
+
+    '&:hover': {
+      backgroundColor: theme.palette.surface.mute,
+    },
+
+    '&::after': {
+      content: 'attr(data-value)',
+      gridArea: '1 / 1',
+      visibility: 'hidden',
+      whiteSpace: 'pre',
+      padding: '0 4px',
+      font: 'inherit',
+    },
+
+    '&:has(.MuiInputBase-input:focus)': {
+      backgroundColor: theme.palette.surface.mute,
+      outline: `${theme.borderWidth.sm}px solid ${theme.palette.border.focus}`,
+    },
+
+    '&:not(.editable)': {
+      pointerEvents: 'none',
+      cursor: 'default',
+
+      '&:hover': {
+        backgroundColor: 'transparent',
+      },
+    },
+
+    '& input.MuiInputBase-input': {
+      gridArea: '1 / 1',
+      width: 0,
+      minWidth: '100%',
+      boxSizing: 'border-box',
+      padding: '0 4px',
+      font: 'inherit',
+    },
+  }
+
+  return {
+    ...baseStyles,
+  }
+}

@@ -21,12 +21,10 @@ import { VdcAPI, ZoneAPI, useGeneralApi } from '@FeaturesModule'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  Vdc,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
-const { Vdc } = Form
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation or modification form to a VDC Template.
@@ -65,14 +63,14 @@ export function CreateVDC() {
   return (
     <TranslateProvider>
       {zones.length ? (
-        <Vdc.CreateForm
+        <Vdc.Forms.CreateForm
           initialValues={state}
           onSubmit={onSubmit}
           fallback={<SkeletonStepsForm />}
           stepProps={zones}
         >
-          {(config) => <DefaultFormStepper {...config} />}
-        </Vdc.CreateForm>
+          {(config) => <DefaultFormStepper {...config} update={!!vdcId} />}
+        </Vdc.Forms.CreateForm>
       ) : (
         <SkeletonStepsForm />
       )}

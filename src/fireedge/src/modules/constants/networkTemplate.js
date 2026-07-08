@@ -46,4 +46,13 @@ export const VN_TEMPLATE_ACTIONS = {
   RENAME: ACTIONS.RENAME,
   CHANGE_OWNER: ACTIONS.CHANGE_OWNER,
   CHANGE_GROUP: ACTIONS.CHANGE_GROUP,
+
+  // ADDRESS RANGE
+  ADD_AR: 'add_ar',
+  UPDATE_AR: 'update_ar',
+  DELETE_AR: 'delete_ar',
+
+  // SECURITY GROUPS
+  ADD_SECGROUP: 'add_secgroup',
+  DELETE_SECGROUP: 'delete_secgroup',
 }

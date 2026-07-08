@@ -13,9 +13,13 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Zone } from '@ConstantsModule'
+import { RESOURCE_NAMES, Zone } from '@ConstantsModule'
 
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 
 import {
   ONE_RESOURCES,
@@ -45,16 +49,23 @@ const zoneApi = oneApi.injectEndpoints({
         const name = Actions.ZONE_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { command }
+        return { command, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.ZONE_POOL?.ZONE ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.ZONE_POOL?.ZONE ?? []].flat(),
+          RESOURCE_NAMES.ZONE,
+          meta
+        ),
       providesTags: (zones) =>
-        zones
-          ? [
-              ...zones.map(({ ID }) => ({ type: ZONE_POOL, id: `${ID}` })),
-              ZONE_POOL,
-            ]
-          : [ZONE_POOL],
+        withProfileLabelsTags(
+          zones
+            ? [
+                ...zones.map(({ ID }) => ({ type: ZONE_POOL, id: `${ID}` })),
+                ZONE_POOL,
+              ]
+            : [ZONE_POOL]
+        ),
     }),
     getZone: builder.query({
       /**
@@ -68,10 +79,12 @@ const zoneApi = oneApi.injectEndpoints({
         const name = Actions.ZONE_INFO
         const command = { name, ...Commands[name] }
 
-        return { params: { id }, command }
+        return { params: { id }, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.ZONE ?? {},
-      providesTags: (_, __, { id }) => [{ type: ZONE, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(data?.ZONE ?? {}, RESOURCE_NAMES.ZONE, meta),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: ZONE, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

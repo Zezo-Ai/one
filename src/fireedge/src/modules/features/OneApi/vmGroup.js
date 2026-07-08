@@ -15,12 +15,16 @@
  * ------------------------------------------------------------------------- */
 import { Actions, Commands } from 'server/utils/constants/commands/vmgroup'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 
 import {
   ONE_RESOURCES,
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
-import { FilterFlag } from '@ConstantsModule'
+import { FilterFlag, RESOURCE_NAMES } from '@ConstantsModule'
 import {
   updateNameOnResource,
   updateOwnershipOnResource,
@@ -48,16 +52,23 @@ const vmGroupApi = oneApi.injectEndpoints({
         const name = Actions.VM_GROUP_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.VM_GROUP_POOL?.VM_GROUP ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.VM_GROUP_POOL?.VM_GROUP ?? []].flat(),
+          RESOURCE_NAMES.VM_GROUP,
+          meta
+        ),
       providesTags: (vmGroups) =>
-        vmGroups
-          ? [
-              ...vmGroups.map(({ ID }) => ({ type: VMGROUP_POOL, ID })),
-              VMGROUP_POOL,
-            ]
-          : [VMGROUP_POOL],
+        withProfileLabelsTags(
+          vmGroups
+            ? [
+                ...vmGroups.map(({ ID }) => ({ type: VMGROUP, id: ID })),
+                VMGROUP_POOL,
+              ]
+            : [VMGROUP_POOL]
+        ),
     }),
     getVMGroup: builder.query({
       /**
@@ -73,10 +84,12 @@ const vmGroupApi = oneApi.injectEndpoints({
         const name = Actions.VM_GROUP_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.VM_GROUP ?? {},
-      providesTags: (_, __, arg) => [{ type: VMGROUP, id: arg.id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(data?.VM_GROUP ?? {}, RESOURCE_NAMES.VM_GROUP, meta),
+      providesTags: (_, __, arg) =>
+        withProfileLabelsTags([{ type: VMGROUP, id: arg.id }]),
     }),
     /**
      * Adds a role to a already defined vm group.
@@ -132,33 +145,35 @@ const vmGroupApi = oneApi.injectEndpoints({
       /**
        * Locks a VM group.
        *
-       * @param {string|number} id - VM group id
+       * @param {object} params - Request parameters
+       * @param {string} params.id - VM Group id
        * @returns {number} VM group id
        * @throws Fails when response isn't code 200
        */
-      query: (id) => {
+      query: (params) => {
         const name = Actions.VM_GROUP_LOCK
         const command = { name, ...Commands[name] }
 
-        return { params: { id }, command }
+        return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: VMGROUP, id }, VMGROUP_POOL],
+      invalidatesTags: (_, __, { id }) => [{ type: VMGROUP, id }, VMGROUP_POOL],
     }),
     unlockVMGroup: builder.mutation({
       /**
        * Unlocks a VM group.
        *
-       * @param {string|number} id - VM group id
+       * @param {object} params - Request parameters
+       * @param {string} params.id - VM Group id
        * @returns {number} VM group id
        * @throws Fails when response isn't code 200
        */
-      query: (id) => {
+      query: (params) => {
         const name = Actions.VM_GROUP_UNLOCK
         const command = { name, ...Commands[name] }
 
-        return { params: { id }, command }
+        return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: VMGROUP, id }, VMGROUP_POOL],
+      invalidatesTags: (_, __, { id }) => [{ type: VMGROUP, id }, VMGROUP_POOL],
     }),
     renameVMGroup: builder.mutation({
       /**
@@ -220,7 +235,7 @@ const vmGroupApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: VMGROUP, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: VMGROUP, id }],
       async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
         try {
           const patchVMGroup = dispatch(
@@ -359,7 +374,7 @@ const vmGroupApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: VMGROUP, id }, VMGROUP_POOL],
+      invalidatesTags: [VMGROUP_POOL],
     }),
 
     allocateVMGroup: builder.mutation({
@@ -377,6 +392,8 @@ const vmGroupApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
+
+      invalidatesTags: [VMGROUP_POOL],
     }),
   }),
 })

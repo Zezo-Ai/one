@@ -20,7 +20,7 @@ import {
   ProviderTabs,
   TranslateProvider,
   ProvidersTable,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 
 /**
  * Displays the detail information about a Provider.

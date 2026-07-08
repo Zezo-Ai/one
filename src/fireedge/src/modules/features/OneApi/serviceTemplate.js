@@ -16,6 +16,10 @@
 import { Actions, Commands } from 'server/routes/api/oneflow/template/routes'
 
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import { DOCUMENT, DOCUMENT_POOL } from '@modules/features/OneApi/resources'
 import {
   updateResourceOnPool,
@@ -24,7 +28,7 @@ import {
   updateOwnershipOnResource,
   updateTemplateOnDocument,
 } from '@modules/features/OneApi/common'
-import { ServiceTemplate } from '@ConstantsModule'
+import { RESOURCE_NAMES, ServiceTemplate } from '@ConstantsModule'
 
 const { SERVICE_TEMPLATE } = DOCUMENT
 const { SERVICE_POOL, SERVICE_TEMPLATE_POOL } = DOCUMENT_POOL
@@ -41,19 +45,26 @@ const basicEndpoints = (builder) => ({
       const name = Actions.SERVICE_TEMPLATE_SHOW
       const command = { name, ...Commands[name] }
 
-      return { command }
+      return { command, needStateInMeta: true }
     },
-    transformResponse: (data) => [data?.DOCUMENT_POOL?.DOCUMENT ?? []].flat(),
+    transformResponse: (data, meta) =>
+      withResourceLabels(
+        [data?.DOCUMENT_POOL?.DOCUMENT ?? []].flat(),
+        RESOURCE_NAMES.SERVICE_TEMPLATE,
+        meta
+      ),
     providesTags: (serviceTemplates) =>
-      serviceTemplates
-        ? [
-            ...serviceTemplates.map(({ ID }) => ({
-              type: SERVICE_TEMPLATE_POOL,
-              id: `${ID}`,
-            })),
-            SERVICE_TEMPLATE_POOL,
-          ]
-        : [SERVICE_TEMPLATE_POOL],
+      withProfileLabelsTags(
+        serviceTemplates
+          ? [
+              ...serviceTemplates.map(({ ID }) => ({
+                type: SERVICE_TEMPLATE,
+                id: `${ID}`,
+              })),
+              SERVICE_TEMPLATE_POOL,
+            ]
+          : [SERVICE_TEMPLATE_POOL]
+      ),
   }),
   getServiceTemplate: builder.query({
     /**
@@ -68,10 +79,16 @@ const basicEndpoints = (builder) => ({
       const name = Actions.SERVICE_TEMPLATE_SHOW
       const command = { name, ...Commands[name] }
 
-      return { params, command }
+      return { params, command, needStateInMeta: true }
     },
-    transformResponse: (data) => data?.DOCUMENT ?? {},
-    providesTags: (_, __, { id }) => [{ type: SERVICE_TEMPLATE, id }],
+    transformResponse: (data, meta) =>
+      withResourceLabels(
+        data?.DOCUMENT ?? {},
+        RESOURCE_NAMES.SERVICE_TEMPLATE,
+        meta
+      ),
+    providesTags: (_, __, { id }) =>
+      withProfileLabelsTags([{ type: SERVICE_TEMPLATE, id }]),
     async onQueryStarted(id, { dispatch, queryFulfilled }) {
       try {
         const { data: resourceFromQuery } = await queryFulfilled
@@ -106,6 +123,31 @@ const basicEndpoints = (builder) => ({
      */
     query: (params) => {
       const name = Actions.SERVICE_TEMPLATE_CREATE
+      const command = { name, ...Commands[name] }
+
+      return { params, command }
+    },
+    invalidatesTags: [SERVICE_TEMPLATE_POOL],
+  }),
+
+  cloneServiceTemplate: builder.mutation({
+    /**
+     * Clones an existing service template.
+     *
+     * @param {object} params - Request params
+     * @param {number|string} params.id - The ID of the template to be cloned
+     * @param {string} params.name - Name for the new template
+     * @param {boolean} params.recursive - Clone the template recursively (templates and images)
+     * @returns {number} Template id
+     * @throws Fails when response isn't code 200
+     */
+    query: (params) => {
+      params.action = {
+        perform: 'clone',
+        params: { ...params },
+      }
+
+      const name = Actions.SERVICE_TEMPLATE_ACTION
       const command = { name, ...Commands[name] }
 
       return { params, command }
@@ -367,6 +409,8 @@ const extendedEnpoints = (builder) => ({
         return { error }
       }
     },
+    providesTags: (_, __, { id }) =>
+      withProfileLabelsTags([{ type: SERVICE_TEMPLATE, id }]),
   }),
 })
 
@@ -386,6 +430,7 @@ const serviceTemplateQueries = (({
   useGetServiceTemplateExtendedQuery,
   // Mutations
   useCreateServiceTemplateMutation,
+  useCloneServiceTemplateMutation,
   useUpdateServiceTemplateMutation,
   useRemoveServiceTemplateMutation,
   useDeployServiceTemplateMutation,
@@ -401,6 +446,7 @@ const serviceTemplateQueries = (({
   useGetServiceTemplateExtendedQuery,
   // Mutations
   useCreateServiceTemplateMutation,
+  useCloneServiceTemplateMutation,
   useUpdateServiceTemplateMutation,
   useRemoveServiceTemplateMutation,
   useDeployServiceTemplateMutation,

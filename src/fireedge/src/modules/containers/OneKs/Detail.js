@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { OneKsTabs, OneKSTable, TranslateProvider } from '@ComponentsModule'
-import { ReactElement } from 'react'
-import { Redirect, useParams } from 'react-router-dom'
+import { LoadingDisplay, TranslateProvider } from '@ResourcesModule'
+import { ReactElement, useMemo } from 'react'
+import { Redirect, useHistory, useParams } from 'react-router-dom'
+import { PATH, RESOURCE_NAMES } from '@ConstantsModule'
+import { OneKsAPI, useViews } from '@FeaturesModule'
+import { SingleView } from '@modules/containers/OneKs/Details/single'
 
 /**
  * Displays the detail information about a Cluster.
@@ -24,14 +27,36 @@ import { Redirect, useParams } from 'react-router-dom'
  */
 export function OneKsDetail() {
   const { id } = useParams()
+  const history = useHistory()
+  const { getResourceView } = useViews()
+  const availableActions = useMemo(
+    () => getResourceView(RESOURCE_NAMES.ONEKS)?.actions ?? {},
+    [getResourceView]
+  )
+
+  const { data = {}, isFetching } = OneKsAPI.useGetOneKsClusterQuery({
+    id,
+    expand: true,
+  })
 
   if (Number.isNaN(+id)) {
     return <Redirect to="/" />
   }
 
+  const selectedData = data?.DOCUMENT ?? {}
+
   return (
     <TranslateProvider>
-      <OneKsTabs id={id} singleActions={OneKSTable.Actions} />
+      {isFetching && !selectedData?.ID ? (
+        <LoadingDisplay />
+      ) : (
+        <SingleView
+          isOpen
+          selectedData={selectedData}
+          availableActions={availableActions}
+          handleClose={() => history.push(PATH.ONEKS.LIST)}
+        />
+      )}
     </TranslateProvider>
   )
 }

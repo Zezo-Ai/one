@@ -13,9 +13,5 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import MuiProvider from '@modules/providers/muiProvider'
-import NotiStackProvider from '@modules/providers/notistackProvider'
-import PreloadConfigProvider from '@modules/providers/preloadConfigProvider'
 
-export * from '@modules/providers/theme'
-export { MuiProvider, NotiStackProvider, PreloadConfigProvider }
+export * from '@modules/providers/translationProvider'

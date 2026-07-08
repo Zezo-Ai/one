@@ -13,204 +13,218 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
-import { Chip, Stack } from '@mui/material'
-import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
 
+import { List, ResourceContainer, Table } from '@ComponentsV2Module'
+import { T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  ServicesTable,
-  ServiceTabs,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { RESOURCE_NAMES, T } from '@ConstantsModule'
-import { ServiceAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
+  useFunctionality,
+  useFunctionalityApi,
+  useViews,
+} from '@FeaturesModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+import {
+  getActionsAvailable,
+  timeFromMilliseconds,
+  timeToString,
+} from '@UtilsModule'
+import {
+  getServiceState,
+  getServiceTotalRoles,
+  getServiceTotalVms,
+  serviceTable,
+} from '@ModelsModule'
+import { Service } from '@ResourcesModule'
+import { DetailsDrawer } from '@modules/containers/Services/Details'
 
 /**
- * Displays a list of Service with a split pane between
- * the list and selected row(s).
+ * Displays a list of Services with a split pane between the list and selected row(s).
  *
  * @returns {ReactElement} Service list and selected row(s)
  */
 export function Services() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = ServicesTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const {
+    searchExpression,
+    sortExpression,
+    filterExpression,
+    selectedItems = [],
+    containerView,
+  } = useFunctionality()
+  const { getResourceView } = useViews()
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const viewConfig = useMemo(
+    () => getResourceView(Service.RID),
+    [getResourceView]
+  )
+
+  const availableActions = useMemo(
+    () => getActionsAvailable(viewConfig?.actions),
+    [viewConfig]
+  )
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = serviceTable.useData()
+
+  const filterOptions = useMemo(
+    () => serviceTable.filterOptions(data, viewConfig?.filters),
+    [data, viewConfig?.filters]
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((service) => {
+          const {
+            ID,
+            NAME,
+            UNAME,
+            GNAME,
+            TEMPLATE: {
+              BODY: {
+                deployment,
+                registration_time: regTime,
+                start_time: startTime,
+              },
+            } = { BODY: {} },
+          } = service
+          const state = getServiceState(service)
+          const registeredTime = regTime ?? startTime
+
+          return [
+            ID,
+            NAME,
+            UNAME,
+            GNAME,
+            state?.displayName,
+            getServiceTotalRoles(service),
+            getServiceTotalVms(service),
+            deployment,
+            registeredTime && timeToString(registeredTime),
+            registeredTime &&
+              timeFromMilliseconds(+registeredTime).toRelative(),
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    const filteredByFilters = serviceTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
+
+    return serviceTable.sortData(filteredByFilters, sortExpression)
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
+
+  const selectedServices = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () =>
+      Object.fromEntries((selectedItems ?? []).map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+
+    setSelectedItems(selectedItems.filter((itemId) => itemId !== id))
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <ServicesTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            service: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.Services}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={serviceTable.sortOptions()}
+      filterOptions={filterOptions}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={serviceTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((service) => {
+                  const { ID } = service
+                  const id = String(ID)
 
-          return <InfoTabs {...propsInfo} />
-        }}
+                  return (
+                    <Service.Card
+                      key={id}
+                      service={service}
+                      isSelected={selectedItems?.includes(id)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter((itemId) => itemId !== id)
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+
+      <DetailsDrawer
+        selectedServices={selectedServices}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        actions={availableActions}
+        viewConfig={viewConfig}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a Service.
- *
- * @param {object} service - Service to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Service
- * @param {Function} [unselect] - Function to unselect a Service
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Service details
- */
-const InfoTabs = memo(({ service, gotoPage, unselect, selectedRows }) => {
-  const [get, { data: lazyData, isFetching }] =
-    ServiceAPI.useLazyGetServiceQuery()
-  const id = service?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.SERVICE}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <ServiceTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  service: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

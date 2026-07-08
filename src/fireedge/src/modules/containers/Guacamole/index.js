@@ -13,35 +13,64 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Box, Container, Stack, Typography } from '@mui/material'
+import { Box, Container, Skeleton, Stack } from '@mui/material'
 import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { useHistory, useParams } from 'react-router'
 import { useLocation } from 'react-router-dom'
 
 import {
+  GuacamoleActionButtons,
   GuacamoleClipboard,
-  GuacamoleCtrlAltDelButton,
   GuacamoleDisplay,
-  GuacamoleDownloadConButton,
-  GuacamoleFullScreenButton,
   GuacamoleKeyboard,
-  GuacamoleLogo,
   GuacamoleMouse,
-  GuacamoleReconnectButton,
-  GuacamoleReconnectReadOnlyButton,
-  GuacamoleSSHParams,
-  GuacamoleScreenshotButton,
   HeaderVmInfo,
-  PATH,
-  Tr,
-  TranslateProvider,
   useGuacamoleSession,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 
 import { VmAPI, useGeneral, useGeneralApi, useViews } from '@FeaturesModule'
 
-import { RESOURCE_NAMES, T, VM_ACTIONS } from '@ConstantsModule'
+import { RESOURCE_NAMES, PATH } from '@ConstantsModule'
 import { sentenceCase } from '@UtilsModule'
+
+const HeaderVmInfoSkeleton = () => (
+  <Stack direction="row" alignItems="center" gap="0.75em" flexGrow={1}>
+    <Skeleton variant="rounded" width={38} height={38} />
+    <Stack gap="0.35em" minWidth={0} flexGrow={1}>
+      <Skeleton height={30} sx={{ width: { xs: '100%', sm: '60%' } }} />
+      <Skeleton height={16} sx={{ width: { xs: '80%', sm: '35%' } }} />
+    </Stack>
+  </Stack>
+)
+
+const GuacamoleActionsSkeleton = () => (
+  <Stack direction="row" alignItems="center" gap="0.5em" flexWrap="wrap">
+    <Skeleton variant="rounded" width={74} height={34} />
+    <Skeleton variant="rounded" width={112} height={34} />
+    <Skeleton variant="rounded" width={36} height={34} />
+  </Stack>
+)
+
+const GuacamoleDisplaySkeleton = () => (
+  <Box
+    sx={{
+      width: '100%',
+      height: '100%',
+      minHeight: 0,
+      display: 'flex',
+    }}
+  >
+    <Skeleton
+      variant="rounded"
+      sx={(theme) => ({
+        width: '100%',
+        height: '100%',
+        minHeight: '16rem',
+        borderRadius: `${theme.borderRadius?.xlg ?? 8}px`,
+      })}
+    />
+  </Box>
+)
 
 /** @returns {ReactElement} Guacamole container */
 export const Guacamole = () => {
@@ -74,23 +103,41 @@ export const Guacamole = () => {
   const { view, [RESOURCE_NAMES.VM]: vmView } = useViews()
 
   const isAvailableView = useMemo(
-    () => view && !!vmView?.actions?.[type] === true,
-    [view]
+    () => view && Boolean(vmView?.actions?.[type]),
+    [type, view, vmView]
   )
 
   const paramsGetGuacamoleSession = { id, type }
+
+  const {
+    data: vm,
+    isError: vmInfoIsError,
+    isFetching: isVmInfoFetching,
+    isSuccess: isVmInfoSuccess,
+  } = VmAPI.useGetVmQuery(
+    { id },
+    {
+      refetchOnMountOrArgChange: true,
+      skip: !id || !isAvailableView || !isZoneChanged,
+    }
+  )
+
+  const isVmInfoReady = isVmInfoSuccess && !isVmInfoFetching
 
   const { isError: queryIsError, data } = VmAPI.useGetGuacamoleSessionQuery(
     paramsGetGuacamoleSession,
     {
       refetchOnMountOrArgChange: false,
-      skip: !isAvailableView && !isZoneChanged,
+      skip: !id || !isAvailableView || !isZoneChanged || !isVmInfoReady,
     }
   )
 
+  const isGuacamoleReady = isVmInfoReady && Boolean(data)
+
   useEffect(() => {
-    ;(queryIsError || !isAvailableView) && redirectTo(PATH.DASHBOARD)
-  }, [queryIsError])
+    ;(queryIsError || vmInfoIsError || (view && !isAvailableView)) &&
+      redirectTo(PATH.DASHBOARD)
+  }, [queryIsError, vmInfoIsError, view, isAvailableView, redirectTo])
 
   const guacamoleOption = useMemo(
     () => ({
@@ -101,9 +148,11 @@ export const Guacamole = () => {
       header: headerRef.current,
       zone: selectedZone,
       externalZone: `${selectedZone}` !== `${defaultZone}`,
+      isReady: isGuacamoleReady,
     }),
     [
       selectedZone,
+      isGuacamoleReady,
       containerRef.current?.offsetWidth,
       containerRef.current?.offsetHeight,
       headerRef.current?.offsetWidth,
@@ -126,9 +175,8 @@ export const Guacamole = () => {
     GuacamoleClipboard
   )
 
-  const colorStatus = useMemo(
-    () =>
-      isError ? 'error.main' : isConnected ? 'success.main' : 'text.secondary',
+  const connectionStatus = useMemo(
+    () => (isError ? 'error' : isConnected ? 'success' : 'default'),
     [isError, isConnected]
   )
 
@@ -138,70 +186,48 @@ export const Guacamole = () => {
   )
 
   return (
-    <TranslateProvider>
-      <Box
-        ref={containerRef}
-        sx={{
-          height: '100%',
-          display: 'grid',
-          gridTemplateRows: 'auto 1fr',
-          gap: '1em',
-        }}
+    <Box
+      ref={containerRef}
+      sx={{
+        height: '100%',
+        display: 'grid',
+        gridTemplateRows: 'auto 1fr',
+        gap: '1em',
+      }}
+    >
+      <Stack
+        ref={headerRef}
+        component={Container}
+        direction={{ sm: 'column', md: 'row' }}
+        alignItems="stretch"
+        justifyContent="space-between"
+        gap="1em"
+        padding="1em"
       >
+        {vm ? (
+          <HeaderVmInfo
+            {...paramsGetGuacamoleSession}
+            vm={vm}
+            connectionState={connectionState}
+            connectionStatus={connectionStatus}
+          />
+        ) : (
+          <HeaderVmInfoSkeleton />
+        )}
         <Stack
-          ref={headerRef}
-          component={Container}
-          direction={{ sm: 'column', md: 'row' }}
-          alignItems="stretch"
-          justifyContent="space-between"
+          direction={{ sm: 'row', md: 'column' }}
+          alignItems={{ sm: 'center', md: 'end' }}
+          flexGrow={{ sm: 1, md: 0 }}
+          flexWrap="wrap"
           gap="1em"
-          padding="1em"
         >
-          {data && <HeaderVmInfo {...paramsGetGuacamoleSession} />}
-          <Stack
-            direction={{ sm: 'row', md: 'column' }}
-            alignItems={{ sm: 'center', md: 'end' }}
-            flexGrow={{ sm: 1, md: 0 }}
-            flexWrap="wrap"
-            gap="1em"
-          >
-            {data && connectionState && (
-              <Stack
-                title={`${Tr(T.GuacamoleState)}: ${connectionState}`}
-                flexGrow={1}
-                direction={{ sm: 'row-reverse', md: 'row' }}
-                justifyContent="flex-end"
-                alignItems="flex-end"
-                gap="1em"
-              >
-                <Typography color={colorStatus} data-cy="state">
-                  {connectionState}
-                </Typography>
-                <GuacamoleLogo />
-              </Stack>
-            )}
-            {data && (
-              <Stack direction="row" alignItems="center" gap="1em">
-                {type === VM_ACTIONS.VNC && (
-                  <GuacamoleReconnectReadOnlyButton {...session} />
-                )}
-                {type === VM_ACTIONS.SSH && <GuacamoleSSHParams {...session} />}
-                {[VM_ACTIONS.VNC, VM_ACTIONS.RDP].includes(type) && (
-                  <GuacamoleDownloadConButton
-                    {...session}
-                    typeConnection={type}
-                  />
-                )}
-                <GuacamoleReconnectButton {...session} />
-                <GuacamoleScreenshotButton {...session} />
-                <GuacamoleFullScreenButton {...session} />
-                <GuacamoleCtrlAltDelButton {...session} />
-              </Stack>
-            )}
-          </Stack>
+          {isGuacamoleReady && (
+            <GuacamoleActionButtons {...session} typeConnection={type} />
+          )}
+          {!isGuacamoleReady && <GuacamoleActionsSkeleton />}
         </Stack>
-        {data && displayElement}
-      </Box>
-    </TranslateProvider>
+      </Stack>
+      {isGuacamoleReady ? displayElement : <GuacamoleDisplaySkeleton />}
+    </Box>
   )
 }

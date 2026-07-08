@@ -14,7 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { TranslateProvider } from '@ComponentsModule'
+import { TranslateProvider } from '@ResourcesModule'
 import { OpenNebulaLogin } from '@modules/containers/Login/Opennebula'
 import { RemoteLogin } from '@modules/containers/Login/Remote'
 import { ReactElement } from 'react'

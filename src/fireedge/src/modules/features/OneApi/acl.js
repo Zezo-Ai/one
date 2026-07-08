@@ -18,7 +18,7 @@ import { oneApi } from '@modules/features/OneApi/oneApi'
 import { ONE_RESOURCES_POOL } from '@modules/features/OneApi/resources'
 
 import { Acl } from '@ConstantsModule'
-import { aclFromString } from '@ModelsModule'
+import { aclFromString } from '@UtilsModule'
 const _ = require('lodash')
 
 const { ACL_POOL } = ONE_RESOURCES_POOL

@@ -48,6 +48,28 @@ info-tabs:
 
   roles:
     enabled: true
+    actions:
+      add_role: true
+      scale: true
+      resume: true
+      release: true
+      hold: true
+      suspend: true
+      stop: true
+      poweroff: true
+      poweroff-hard: true
+      reboot: true
+      reboot-hard: true
+      undeploy: true
+      undeploy-hard: true
+      terminate: true
+      terminate-hard: true
+      snapshot-create: true
+      snapshot-revert: true
+      snapshot-delete: true
+      disk-snapshot-create: true
+      disk-snapshot-revert: true
+      disk-snapshot-delete: true
 
   log:
     enabled: true
@@ -56,10 +78,8 @@ info-tabs:
     enabled: true
     actions:
       sched-add: true
-      sched-update: false
-      sched-delete: false
-      charter_create: true
-      perform_action: true
+      sched-update: true
+      sched-delete: true
 
 # Dialogs
 

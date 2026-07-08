@@ -19,6 +19,7 @@ import {
   FilterFlag,
   LockLevel,
   Permission,
+  RESOURCE_NAMES,
   VirtualNetwork,
 } from '@ConstantsModule'
 
@@ -27,6 +28,10 @@ import {
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import {
   removeLockLevelOnResource,
   removeResourceOnPool,
@@ -60,16 +65,26 @@ const vNetworkApi = oneApi.injectEndpoints({
         const name = Actions.VN_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { command, params }
+        return { command, params, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.VNET_POOL?.VNET ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.VNET_POOL?.VNET ?? []].flat(),
+          RESOURCE_NAMES.VNET,
+          meta
+        ),
       providesTags: (networks) =>
-        networks
-          ? [
-              ...networks.map(({ ID }) => ({ type: VNET_POOL, id: `${ID}` })),
-              VNET_POOL,
-            ]
-          : [VNET_POOL],
+        withProfileLabelsTags(
+          networks
+            ? [
+                ...networks.map(({ ID }) => ({
+                  type: VNET_POOL,
+                  id: `${ID}`,
+                })),
+                VNET_POOL,
+              ]
+            : [VNET_POOL]
+        ),
     }),
     getVNetwork: builder.query({
       /**
@@ -85,10 +100,12 @@ const vNetworkApi = oneApi.injectEndpoints({
         const name = Actions.VN_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.VNET ?? {},
-      providesTags: (_, __, { id }) => [{ type: VNET, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(data?.VNET ?? {}, RESOURCE_NAMES.VNET, meta),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: VNET, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

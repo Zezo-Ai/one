@@ -615,7 +615,6 @@ msgstr "Start Date"
 msgid "EndDate"
 msgstr "EndDate"
 
-#: ./src/modules/components/Dialogs/DialogConfirmation.js:105
 #: ./src/modules/components/FormControl/Tooltip.js:39
 #: ./src/modules/components/Forms/ACLs/CreateForm/Utils/helper.js:96
 #: ./src/modules/components/List/ListHeader/index.js:53
@@ -631,10 +630,6 @@ msgstr "EndDate"
 #: ./src/modules/containers/Settings/Wrapper.js:79
 msgid "title"
 msgstr "title"
-
-#: ./src/modules/components/Dialogs/DialogConfirmation.js:110
-msgid "subheader"
-msgstr "subheader"
 
 #: ./src/modules/components/FormControl/InformationUnitController.js:144
 msgid "Unit memory"

@@ -14,11 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Cluster } from '@ConstantsModule'
-import {
-  removeResourceOnPool,
-  updateResourceOnPool,
-  updateOwnershipOnResource,
-} from '@modules/features/OneApi/common'
+import { updateOwnershipOnResource } from '@modules/features/OneApi/common'
 import { oneApi } from '@modules/features/OneApi/oneApi'
 import {
   ONE_RESOURCES,
@@ -28,6 +24,137 @@ import { Actions, Commands } from 'server/routes/api/oneks/routes'
 
 const { ONEKS } = ONE_RESOURCES
 const { ONEKS_POOL } = ONE_RESOURCES_POOL
+
+const PERMISSION_KEYS_BY_OCTAL = [
+  ['OWNER_U', 'OWNER_M', 'OWNER_A'],
+  ['GROUP_U', 'GROUP_M', 'GROUP_A'],
+  ['OTHER_U', 'OTHER_M', 'OTHER_A'],
+]
+
+const PERMISSION_VALUES = [4, 2, 1]
+
+const hasResourceId = (id) => id !== undefined && id !== null
+
+const getOneKsResource = (resource) => resource?.DOCUMENT ?? resource
+
+const getOneKsResourceId = (resource) => getOneKsResource(resource)?.ID
+
+const isSameOneKsResource = (resource, id) =>
+  hasResourceId(id) && `${getOneKsResourceId(resource)}` === `${id}`
+
+const oneKsPoolTag = (id) => ({ type: ONEKS_POOL, id: `${id}` })
+
+const oneKsDetailTag = (id) => ({ type: ONEKS, id: `${id}` })
+
+const oneKsDetailAndPoolTags = (id) => [
+  oneKsDetailTag(id),
+  oneKsPoolTag(id),
+  ONEKS_POOL,
+]
+
+const getOneKsPoolTags = (clusters = []) => [
+  ...clusters.map(getOneKsResourceId).filter(hasResourceId).map(oneKsPoolTag),
+  ONEKS_POOL,
+]
+
+const updateOneKsQueriesByTag = ({
+  api,
+  state,
+  dispatch,
+  tag,
+  endpointName,
+  updateRecipe,
+}) =>
+  api.util
+    .selectInvalidatedBy(state, [tag])
+    .filter((query) => query.endpointName === endpointName)
+    .map(({ originalArgs }) =>
+      dispatch(
+        api.util.updateQueryData(endpointName, originalArgs, updateRecipe)
+      )
+    )
+
+const updateOneKsResourceInDraft =
+  ({ id, updateResource }) =>
+  (draft) => {
+    if (!hasResourceId(id) || !draft) return
+
+    if (Array.isArray(draft)) {
+      draft.forEach((entry) => {
+        if (!isSameOneKsResource(entry, id)) return
+
+        const entryResource = getOneKsResource(entry)
+        entryResource && updateResource(entryResource)
+      })
+
+      return
+    }
+
+    const resource = getOneKsResource(draft)
+    const resourceId = getOneKsResourceId(draft)
+
+    if (
+      !resource ||
+      (hasResourceId(resourceId) && !isSameOneKsResource(draft, id))
+    ) {
+      return
+    }
+
+    updateResource(resource)
+  }
+
+const updateOneKsResourceOnPool =
+  ({ id, resourceFromQuery }) =>
+  (draft) => {
+    if (!Array.isArray(draft) || !hasResourceId(id)) return
+
+    const resourceIndex = draft.findIndex((entry) =>
+      isSameOneKsResource(entry, id)
+    )
+    const resource = getOneKsResource(resourceFromQuery)
+
+    if (resourceIndex === -1 || !resource) return
+
+    if (draft[resourceIndex]?.DOCUMENT) {
+      draft[resourceIndex].DOCUMENT = resource
+
+      return
+    }
+
+    draft[resourceIndex] = resource
+  }
+
+const removeOneKsResourceOnPool =
+  ({ id }) =>
+  (draft) => {
+    if (!Array.isArray(draft) || !hasResourceId(id)) return
+
+    return draft.filter((entry) => !isSameOneKsResource(entry, id))
+  }
+
+const updateOneKsPermissionsFromOctet = ({ id, octet }) =>
+  updateOneKsResourceInDraft({
+    id,
+    updateResource: (resource) => {
+      const octal = `${octet ?? ''}`.padStart(3, '0').slice(-3)
+
+      if (!/^[0-7]{3}$/.test(octal)) return
+
+      resource.PERMISSIONS ??= {}
+
+      PERMISSION_KEYS_BY_OCTAL.forEach((permissionKeys, index) => {
+        let permissionValue = Number(octal[index])
+
+        permissionKeys.forEach((permissionKey, permissionIndex) => {
+          const value = PERMISSION_VALUES[permissionIndex]
+          const isEnabled = permissionValue >= value
+
+          resource.PERMISSIONS[permissionKey] = isEnabled ? '1' : '0'
+          permissionValue -= isEnabled ? value : 0
+        })
+      })
+    },
+  })
 
 const oneKsApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -48,15 +175,7 @@ const oneKsApi = oneApi.injectEndpoints({
       },
       transformResponse: (data) => [data ?? []].flat(),
       providesTags: (clusters) =>
-        clusters
-          ? [
-              ...clusters.map(({ ID }) => ({
-                type: ONEKS_POOL,
-                id: `${ID}`,
-              })),
-              ONEKS_POOL,
-            ]
-          : [ONEKS_POOL],
+        clusters ? getOneKsPoolTags(clusters) : [ONEKS_POOL],
     }),
     getOneKsCluster: builder.query({
       /**
@@ -75,27 +194,29 @@ const oneKsApi = oneApi.injectEndpoints({
         return { params, command }
       },
       transformResponse: (data) => data ?? {},
-      providesTags: (_, __, { id }) => [{ type: ONEKS, id }],
-      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+      providesTags: (_, __, { id }) => [oneKsDetailTag(id)],
+      async onQueryStarted({ id }, { dispatch, getState, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled
 
-          dispatch(
-            oneKsApi.util.updateQueryData(
-              'getOneKsClusters',
-              undefined,
-              updateResourceOnPool({ id, resourceFromQuery })
-            )
-          )
+          updateOneKsQueriesByTag({
+            api: oneKsApi,
+            state: getState(),
+            dispatch,
+            tag: ONEKS_POOL,
+            endpointName: 'getOneKsClusters',
+            updateRecipe: updateOneKsResourceOnPool({ id, resourceFromQuery }),
+          })
         } catch {
           // if the query fails, we want to remove the resource from the pool
-          dispatch(
-            oneKsApi.util.updateQueryData(
-              'getOneKsClusters',
-              undefined,
-              removeResourceOnPool({ id })
-            )
-          )
+          updateOneKsQueriesByTag({
+            api: oneKsApi,
+            state: getState(),
+            dispatch,
+            tag: ONEKS_POOL,
+            endpointName: 'getOneKsClusters',
+            updateRecipe: removeOneKsResourceOnPool({ id }),
+          })
         }
       },
     }),
@@ -106,7 +227,7 @@ const oneKsApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: [ONEKS_POOL],
+      invalidatesTags: (_, __, { id }) => [{ type: ONEKS, id }, ONEKS_POOL],
     }),
     updateOneKsClusterNodeGroups: builder.mutation({
       query: (params) => {
@@ -115,7 +236,7 @@ const oneKsApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: [ONEKS_POOL],
+      invalidatesTags: (_, __, { id }) => [{ type: ONEKS, id }, ONEKS_POOL],
     }),
     scaleOneKsClusterNodeGroups: builder.mutation({
       query: (params) => {
@@ -124,7 +245,7 @@ const oneKsApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: [ONEKS_POOL],
+      invalidatesTags: (_, __, { id }) => [{ type: ONEKS, id }, ONEKS_POOL],
     }),
     deleteNodeGroup: builder.mutation({
       /**
@@ -232,6 +353,7 @@ const oneKsApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
+      invalidatesTags: (_, __, { id }) => [{ type: ONEKS, id }, ONEKS_POOL],
     }),
     getKubernetesLogs: builder.query({
       /**
@@ -282,8 +404,7 @@ const oneKsApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      keepUnusedDataFor: 0,
-      providesTags: [],
+      invalidatesTags: (_, __, { id }) => [{ type: ONEKS, id }, ONEKS_POOL],
     }),
     recoverOneKsNodeGroup: builder.mutation({
       /**
@@ -300,8 +421,7 @@ const oneKsApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      keepUnusedDataFor: 0,
-      providesTags: [],
+      invalidatesTags: (_, __, { id }) => [{ type: ONEKS, id }, ONEKS_POOL],
     }),
     changeOneKsClusterPermissions: builder.mutation({
       /**
@@ -321,7 +441,37 @@ const oneKsApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: ONEKS, id }],
+      invalidatesTags: (_, __, { id }) => oneKsDetailAndPoolTags(id),
+      onQueryStarted(params, { dispatch, getState, queryFulfilled }) {
+        let patches = []
+
+        try {
+          const state = getState()
+          const updateRecipe = updateOneKsPermissionsFromOctet(params)
+          patches = [
+            ...updateOneKsQueriesByTag({
+              api: oneKsApi,
+              state,
+              dispatch,
+              tag: oneKsDetailTag(params.id),
+              endpointName: 'getOneKsCluster',
+              updateRecipe,
+            }),
+            ...updateOneKsQueriesByTag({
+              api: oneKsApi,
+              state,
+              dispatch,
+              tag: ONEKS_POOL,
+              endpointName: 'getOneKsClusters',
+              updateRecipe,
+            }),
+          ]
+
+          queryFulfilled.catch(() => patches.forEach((patch) => patch.undo()))
+        } catch {
+          patches.forEach((patch) => patch.undo())
+        }
+      },
     }),
     changeOneKsClusterOwnership: builder.mutation({
       /**
@@ -335,39 +485,55 @@ const oneKsApi = oneApi.injectEndpoints({
        * @returns {number} Cluster id
        * @throws Fails when response isn't code 200
        */
-      query: ({ user = '-1', group = '-1', ...params }) => {
-        params.owner_id = user
-        params.group_id = group
+      query: ({ user, group, ...params }) => {
+        const isOwnerChange = user !== undefined && `${user}` !== '-1'
+        const name = isOwnerChange ? Actions.CHOWN : Actions.CHGRP
 
-        const name = Actions.CHOWN
+        if (isOwnerChange) {
+          params.owner_id = user
+          params.group_id =
+            group !== undefined && `${group}` !== '-1' ? group : null
+        } else {
+          params.group_id = group
+        }
+
         const command = { name, ...Commands[name] }
 
         return { params, command }
       },
-      invalidatesTags: (_, __, { id }) => [{ type: ONEKS, id }],
-      async onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
+      invalidatesTags: (_, __, { id }) => oneKsDetailAndPoolTags(id),
+      onQueryStarted(params, { getState, dispatch, queryFulfilled }) {
+        let patches = []
+
         try {
-          const patchOneKsCluster = dispatch(
-            oneKsApi.util.updateQueryData(
-              'getOneKsClusters',
-              { id: params.id },
-              updateOwnershipOnResource(getState(), params)
-            )
-          )
-
-          const patchOneKsClusters = dispatch(
-            oneKsApi.util.updateQueryData(
-              'getOneKsClusters',
-              undefined,
-              updateOwnershipOnResource(getState(), params)
-            )
-          )
-
-          queryFulfilled.catch(() => {
-            patchOneKsCluster.undo()
-            patchOneKsClusters.undo()
+          const state = getState()
+          const updateRecipe = updateOneKsResourceInDraft({
+            id: params.id,
+            updateResource: updateOwnershipOnResource(state, params),
           })
-        } catch {}
+          patches = [
+            ...updateOneKsQueriesByTag({
+              api: oneKsApi,
+              state,
+              dispatch,
+              tag: oneKsDetailTag(params.id),
+              endpointName: 'getOneKsCluster',
+              updateRecipe,
+            }),
+            ...updateOneKsQueriesByTag({
+              api: oneKsApi,
+              state,
+              dispatch,
+              tag: ONEKS_POOL,
+              endpointName: 'getOneKsClusters',
+              updateRecipe,
+            }),
+          ]
+
+          queryFulfilled.catch(() => patches.forEach((patch) => patch.undo()))
+        } catch {
+          patches.forEach((patch) => patch.undo())
+        }
       },
     }),
     updateOneKsDocument: builder.mutation({

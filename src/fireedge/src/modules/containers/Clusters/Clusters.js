@@ -13,205 +13,169 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+
+import { List, ResourceContainer, Table } from '@ComponentsV2Module'
+import { RESOURCE_NAMES, T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  ClustersTable,
-  ClusterTabs,
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { Cluster, RESOURCE_NAMES, T } from '@ConstantsModule'
-import { ClusterAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
-import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
+  useFunctionality,
+  useFunctionalityApi,
+  useViews,
+} from '@FeaturesModule'
+import { clusterTable } from '@ModelsModule'
+import { Cluster } from '@ResourcesModule'
+import { getActionsAvailable, getTotalOfResources } from '@UtilsModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+
+import { DetailsDrawer } from '@modules/containers/Clusters/Details'
 
 /**
- * Displays a list of Clusters with a split pane between the list and selected row(s).
+ * Displays a list of Clusters.
  *
- * @returns {ReactElement} Clusters list and selected row(s)
+ * @returns {ReactElement} Clusters list
  */
 export function Clusters() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
+  const {
+    searchExpression,
+    sortExpression,
+    selectedItems = [],
+    containerView,
+  } = useFunctionality()
+  const { setSelectedItems } = useFunctionalityApi()
+  const { getResourceView } = useViews()
 
-  const actions = ClustersTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const availableActions = useMemo(
+    () => getActionsAvailable(getResourceView(RESOURCE_NAMES.CLUSTER)?.actions),
+    [getResourceView]
+  )
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = clusterTable.useData()
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((cluster) =>
+          [
+            cluster?.ID,
+            cluster?.NAME,
+            getTotalOfResources(cluster?.HOSTS),
+            getTotalOfResources(cluster?.DATASTORES),
+            getTotalOfResources(cluster?.VNETS),
+            cluster?.TEMPLATE?.ONEFORM?.DRIVER,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        )
+      : data
+
+    return clusterTable.sortData(filteredData, sortExpression)
+  }, [data, searchExpression, sortExpression])
+
+  const selectedClusters = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(String(ID))) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () => Object.fromEntries(selectedItems.map((id) => [String(id), true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+
+  const handleSelect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === id ? [] : [id]
+    )
+  }
+
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(selectedItems.filter((selectedId) => selectedId !== id))
+  }
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={ClusterAPI.useUpdateClusterMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <ClustersTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            cluster: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.Clusters}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={clusterTable.sortOptions()}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(
+          checked ? items?.map(({ ID }) => String(ID)) ?? [] : []
+        )
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={clusterTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((cluster) => {
+                  const id = String(cluster?.ID)
 
-          return <InfoTabs {...propsInfo} />
-        }}
+                  return (
+                    <Cluster.Card
+                      key={id}
+                      cluster={cluster}
+                      isSelected={selectedItems?.includes(id)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(id)
+                            ? selectedItems.filter(
+                                (selectedId) => selectedId !== id
+                              )
+                            : [...(selectedItems ?? []), id]
+                        )
+                      }
+                      onClick={() => handleSelect(id)}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedClusters={selectedClusters}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        actions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of a Cluster.
- *
- * @param {Cluster} cluster - Cluster to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Cluster
- * @param {Function} [unselect] - Function to unselect a Cluster
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Cluster details
- */
-const InfoTabs = memo(({ cluster, gotoPage, unselect, selectedRows }) => {
-  const [get, { data: lazyData, isFetching }] =
-    ClusterAPI.useLazyGetClustersQuery()
-  const id = cluster?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack>
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.CLUSTER}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => get({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <ClusterTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  cluster: PropTypes.object.isRequired,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = memo(
-  ({ tags = [], handleElement = true, onDelete = () => undefined }) => (
-    <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-      <MultipleTags
-        limitTags={10}
-        tags={tags?.map((props) => {
-          const { original, id, toggleRowSelected, gotoPage } = props
-          const clickElement = handleElement
-            ? {
-                onClick: gotoPage,
-                onDelete: () => onDelete(id) || toggleRowSelected(false),
-              }
-            : {}
-
-          return (
-            <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-          )
-        })}
-      />
-    </Stack>
-  )
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

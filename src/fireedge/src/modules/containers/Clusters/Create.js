@@ -19,16 +19,13 @@ import { useHistory, useLocation } from 'react-router'
 import { ClusterAPI, SystemAPI, useGeneralApi } from '@FeaturesModule'
 
 import {
+  Cluster,
   DefaultFormStepper,
-  Form,
-  PATH,
   SkeletonStepsForm,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
-import { jsonToXml } from '@ModelsModule'
-
-const { Cluster } = Form
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
+import { jsonToXml } from '@UtilsModule'
 
 /**
  * Displays the creation form for a cluster.
@@ -37,7 +34,10 @@ const { Cluster } = Form
  */
 export function CreateCluster() {
   const history = useHistory()
-  const { state: { ID: clusterId } = {} } = useLocation()
+  const { state = {} } = useLocation()
+  const { ID: clusterId, createType } = state ?? {}
+  const shouldSelectCreateType =
+    !clusterId && createType !== Cluster.Actions.CLUSTER_TYPES.OPENNEBULA
 
   const { enqueueSuccess, enqueueError } = useGeneralApi()
   const [createCluster] = ClusterAPI.useAllocateClusterMutation()
@@ -214,8 +214,10 @@ export function CreateCluster() {
 
   return (
     <TranslateProvider>
-      {version && (!clusterId || (clusterId && cluster)) ? (
-        <Cluster.CreateForm
+      {shouldSelectCreateType ? (
+        <Cluster.Actions.CreateAction />
+      ) : version && (!clusterId || (clusterId && cluster)) ? (
+        <Cluster.Forms.CreateForm
           initialValues={cluster}
           onSubmit={onSubmit}
           stepProps={{
@@ -223,8 +225,8 @@ export function CreateCluster() {
           }}
           fallback={<SkeletonStepsForm />}
         >
-          {(config) => <DefaultFormStepper {...config} />}
-        </Cluster.CreateForm>
+          {(config) => <DefaultFormStepper {...config} update={!!clusterId} />}
+        </Cluster.Forms.CreateForm>
       ) : (
         <SkeletonStepsForm />
       )}

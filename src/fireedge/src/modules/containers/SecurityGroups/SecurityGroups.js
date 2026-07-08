@@ -14,29 +14,19 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 /* eslint-disable react/prop-types */
+import { List, Table, ResourceContainer } from '@ComponentsV2Module'
+import { RESOURCE_NAMES, T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  SecurityGroupsTable,
-  SecurityGroupTabs,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { Image, RESOURCE_NAMES, T } from '@ConstantsModule'
-import { SecurityGroupAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
-import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
+  useFunctionalityApi,
+  useFunctionality,
+  useViews,
+} from '@FeaturesModule'
+import { DetailsDrawer } from '@modules/containers/SecurityGroups/Details'
+import { securitygroupTable } from '@ModelsModule'
+import { getActionsAvailable, getTotalOfResources } from '@UtilsModule'
+import { SecurityGroup } from '@ResourcesModule'
+
+import { ReactElement, useMemo, useCallback } from 'react'
 
 /**
  * Displays a list of Security Groups with a split pane between the list and selected row(s).
@@ -44,173 +34,153 @@ import { memo, ReactElement, useEffect, useState } from 'react'
  * @returns {ReactElement} Security Groups list and selected row(s)
  */
 export function SecurityGroups() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = SecurityGroupsTable.Actions({ selectedRows, setSelectedRows })
-  const { zone } = useGeneral()
+  const { searchExpression, sortExpression, selectedItems, containerView } =
+    useFunctionality()
+  const { getResourceView } = useViews()
+
+  const availableActions = useMemo(
+    () => getActionsAvailable(getResourceView(RESOURCE_NAMES.SEC_GROUP)),
+    [getResourceView]
+  )
+
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = securitygroupTable.useData()
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((securityGroup) => {
+          const {
+            ERROR_VMS,
+            GNAME,
+            ID,
+            NAME,
+            OUTDATED_VMS,
+            TEMPLATE,
+            UNAME,
+            UPDATED_VMS,
+          } = securityGroup
+          const totalRules = []
+            .concat(TEMPLATE?.RULE ?? [])
+            .filter(Boolean).length
+
+          return [
+            ID,
+            NAME,
+            UNAME,
+            GNAME,
+            getTotalOfResources(UPDATED_VMS),
+            getTotalOfResources(OUTDATED_VMS),
+            getTotalOfResources(ERROR_VMS),
+            totalRules,
+            TEMPLATE?.LABELS,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    return securitygroupTable.sortData(filteredData, sortExpression)
+  }, [data, searchExpression, sortExpression])
+
+  const selectedSecurityGroups = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(ID)) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () => Object.fromEntries(selectedItems.map((id) => [id, true])),
+    [selectedItems]
+  )
+
+  const handleClose = () => setSelectedItems([])
+  const handleSelect = (ID) =>
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === ID ? [] : [ID]
+    )
+  const handleDeselect = (ID) =>
+    setSelectedItems(selectedItems.filter((id) => id !== ID))
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={SecurityGroupAPI.useUpdateSecGroupMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <SecurityGroupsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            onRowClick={props.resourcesBackButtonClick}
-            useUpdateMutation={props.useUpdateMutation}
-            zoneId={props.zone}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            securityGroup: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
+    <ResourceContainer
+      resourceName={T.SecurityGroups}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={securitygroupTable.sortOptions()}
+      searchPlaceholder={T.SearchSecurityGroups}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => ID) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={securitygroupTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => row.ID}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((securityGroup) => {
+                  const { ID } = securityGroup
 
-          return <InfoTabs {...propsInfo} />
-        }}
+                  return (
+                    <SecurityGroup.Card
+                      key={ID}
+                      securityGroup={securityGroup}
+                      isSelected={selectedItems?.includes(ID)}
+                      onCheck={() =>
+                        setSelectedItems(
+                          selectedItems?.includes(ID)
+                            ? selectedItems.filter((id) => id !== ID)
+                            : [...(selectedItems ?? []), ID]
+                        )
+                      }
+                      onClick={() => handleSelect(ID)}
+                    />
+                  )
+                })}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedSecurityGroups={selectedSecurityGroups}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        actions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of Security Group.
- *
- * @param {Image} securityGroup - Security Group to display
- * @param {Function} [gotoPage] - Function to navigate to a page of an Security Group
- * @param {Function} [unselect] - Function to unselect a Security Group
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Security Group details
- */
-const InfoTabs = memo(({ securityGroup, gotoPage, unselect, selectedRows }) => {
-  const [getSecurityGroup, { data: lazyData, isFetching }] =
-    SecurityGroupAPI.useLazyGetSecGroupQuery()
-  const id = securityGroup?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.SEC_GROUP}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => getSecurityGroup({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <SecurityGroupTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  securityGroup: PropTypes.object.isRequired,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

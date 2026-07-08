@@ -14,6 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
+import { InteractiveGrid, SubmitButton } from '@ComponentsV2Module'
 import {
   Box,
   Container,
@@ -21,11 +22,16 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import { Translate, OpenNebulaLogo, SubmitButton, Tr } from '@ComponentsModule'
-import { T, STYLE_BUTTONS } from '@ConstantsModule'
-import { ReactElement, useMemo } from 'react'
+import { Translate, OpenNebulaLogo, Tr } from '@ResourcesModule'
+import { JWT_NAME, T, STYLE_BUTTONS } from '@ConstantsModule'
+import { AuthSlice } from '@FeaturesModule'
+import { storage } from '@UtilsModule'
+import { ReactElement, useEffect, useMemo } from 'react'
+import { useDispatch } from 'react-redux'
 import PropTypes from 'prop-types'
 import { styles } from '@modules/containers/Login/styles'
+
+const { actions: authActions } = AuthSlice
 
 /**
  * Displays the remote login form and handles the login process.
@@ -35,7 +41,16 @@ import { styles } from '@modules/containers/Login/styles'
  * @returns {ReactElement} The login form.
  */
 export function Remote({ data = {} }) {
-  const { remoteRedirect = '.' } = data
+  const dispatch = useDispatch()
+  const { jwt, remoteRedirect = '.', ...user } = data
+
+  useEffect(() => {
+    if (jwt) {
+      storage(JWT_NAME, jwt)
+      dispatch(authActions.changeJwt(jwt))
+    }
+    user && dispatch(authActions.changeAuthUser(user))
+  }, [])
 
   const isMobile = useMediaQuery((themeSunstone) =>
     themeSunstone.breakpoints.only('xs')
@@ -52,36 +67,27 @@ export function Remote({ data = {} }) {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
         height: '100vh',
         alignItems: 'center',
       }}
     >
       <Box className={classes.login}>
-        <OpenNebulaLogo
-          data-cy="opennebula-logo"
-          height={'7rem'}
-          width="100%"
-          withText
-        />
+        <InteractiveGrid data-cy="opennebula-brand-grid">
+          <OpenNebulaLogo withText width={100} height={40} />
+        </InteractiveGrid>
 
-        <Box display="flex" overflow="hidden">
-          <Typography variant="h2" sx={{ margin: '3.5rem 0rem 0rem 0rem' }}>
-            {Tr(T.LogIn)}
-          </Typography>
-        </Box>
+        <Typography variant="h6" align="center">
+          {Tr(T.LogIn)}
+        </Typography>
 
         <SubmitButton
           data-cy="login-button"
-          variant="contained"
           onClick={() => {
             window.location.href = remoteRedirect
           }}
           label={<Translate word={T.SignIn} />}
-          importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-          type={STYLE_BUTTONS.TYPE.FILLED}
-          size={STYLE_BUTTONS.SIZE.LARGE}
-          sx={{ textTransform: 'uppercase', width: '100%', marginTop: '2rem' }}
+          type={STYLE_BUTTONS.TYPE.PRIMARY}
+          sx={{ width: '100%', marginTop: 3 }}
         />
       </Box>
     </Container>

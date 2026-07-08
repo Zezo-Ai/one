@@ -29,11 +29,10 @@ import {
 import {
   DefaultFormStepper,
   Form,
-  PATH,
   SkeletonStepsForm,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T } from '@ConstantsModule'
+} from '@ResourcesModule'
+import { T, PATH } from '@ConstantsModule'
 const _ = require('lodash')
 const { Vr } = Form
 

@@ -13,232 +13,203 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable react/prop-types */
+
+import { List, Table, ResourceContainer } from '@ComponentsV2Module'
+import { RESOURCE_NAMES, T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
-  GlobalLabel,
-  HostsTable,
-  HostTabs,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { Host, RESOURCE_NAMES, T } from '@ConstantsModule'
-import { HostAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
-import { MuiProvider, SunstoneTheme } from '@ProvidersModule'
-import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import {
-  memo,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+  useFunctionality,
+  useFunctionalityApi,
+  useGeneral,
+  useViews,
+} from '@FeaturesModule'
+import { getAllocatedInfo, getHostState, hostTable } from '@ModelsModule'
+import { Host } from '@ResourcesModule'
+import { getTotalOfResources } from '@UtilsModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+import { DetailsDrawer } from '@modules/containers/Hosts/Details'
 
 /**
- * Displays a list of Hosts with a split pane between the list and selected row(s).
+ * Displays a list of Hosts.
  *
- * @returns {ReactElement} Hosts list and selected row(s)
+ * @returns {ReactElement} Hosts list
  */
 export function Hosts() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = HostsTable.Actions({ selectedRows, setSelectedRows })
+  // Get hooks
+  const {
+    searchExpression,
+    sortExpression,
+    filterExpression,
+    selectedItems,
+    containerView,
+  } = useFunctionality()
   const { zone } = useGeneral()
+  const { getResourceView } = useViews()
+  const resourceViewFilters = getResourceView(RESOURCE_NAMES.HOST)?.filters
+  const { setSelectedItems } = useFunctionalityApi()
 
-  const refetchRef = useRef(null)
-  const handleRefetch = useCallback((refresh) => {
-    refetchRef.current = refresh
-  }, [])
+  // Get hosts pool
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refreshHosts,
+  } = hostTable.useData({ zone })
 
-  const handleUseRefetch = useCallback(() => {
-    if (typeof refetchRef.current === 'function') {
-      refetchRef.current()
-    }
-  }, [])
-
-  return (
-    <MuiProvider theme={SunstoneTheme}>
-      <TranslateProvider>
-        <ResourcesBackButton
-          selectedRows={selectedRows}
-          setSelectedRows={setSelectedRows}
-          useUpdateMutation={HostAPI.useUpdateHostMutation}
-          zone={zone}
-          actions={actions}
-          table={(props) => (
-            <HostsTable.Table
-              onSelectedRowsChange={props.setSelectedRows}
-              globalActions={props.actions}
-              useUpdateMutation={props.useUpdateMutation}
-              onRowClick={props.resourcesBackButtonClick}
-              zoneId={props.zone}
-              initialState={{
-                selectedRowIds: props.selectedRowsTable,
-              }}
-              handleRefetch={handleRefetch}
-            />
-          )}
-          simpleGroupsTags={(props) => (
-            <GroupedTags
-              tags={props.selectedRows}
-              handleElement={props.handleElement}
-              onDelete={props.handleUnselectRow}
-            />
-          )}
-          info={(props) => {
-            const propsInfo = {
-              host: props?.selectedRows?.[0]?.original,
-              selectedRows: props?.selectedRows,
-            }
-            props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-            props?.unselect && (propsInfo.unselect = props.unselect)
-            propsInfo.handleUseRefetch = handleUseRefetch
-
-            return <InfoTabs {...propsInfo} />
-          }}
-        />
-      </TranslateProvider>
-    </MuiProvider>
+  const filterOptions = useMemo(
+    () => hostTable.filterOptions(data, resourceViewFilters),
+    [data, resourceViewFilters]
   )
-}
 
-/**
- * Displays details of a Host.
- *
- * @param {Host} host - Host to display
- * @param {Function} [gotoPage] - Function to navigate to a page of a Host
- * @param {Function} [unselect] - Function to unselect a Host
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Host details
- */
-const InfoTabs = memo(
-  ({ host, gotoPage, unselect, selectedRows, handleUseRefetch }) => {
-    const [getHost, { data: lazyData, isFetching }] =
-      HostAPI.useLazyGetHostQuery()
-    const id = host?.ID ?? lazyData?.ID
+  // Filter hosts in the search bar
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((host) => {
+          const {
+            CLUSTER,
+            HOST_SHARE,
+            ID,
+            IM_MAD,
+            NAME,
+            TEMPLATE,
+            VM_MAD,
+            VMS,
+          } = host
+          const state = getHostState(host)
+          const allocatedInfo = getAllocatedInfo(host)
 
-    const { isFullMode } = useGeneral()
-    const { setFullMode } = useGeneralApi()
+          return [
+            ID,
+            TEMPLATE?.NAME ?? NAME,
+            state?.name,
+            CLUSTER,
+            IM_MAD,
+            VM_MAD,
+            HOST_SHARE?.RUNNING_VMS,
+            getTotalOfResources(VMS),
+            allocatedInfo?.percentCpuLabel,
+            allocatedInfo?.percentMemLabel,
+            TEMPLATE?.LABELS,
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
 
-    useEffect(() => {
-      !isFullMode && gotoPage()
-    }, [])
+    const filteredByFilters = hostTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
 
-    return (
-      <Stack overflow="auto">
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          gap={1}
-          mx={1}
-          mb={1}
-        >
-          <Stack direction="row">
-            {isFullMode && (
-              <SubmitButton
-                data-cy="detail-back"
-                icon={<NavArrowLeft />}
-                tooltip={Tr(T.Back)}
-                isSubmitting={isFetching}
-                onClick={() => unselect()}
-              />
-            )}
-          </Stack>
+    return hostTable.sortData(filteredByFilters, sortExpression)
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
 
-          <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-            {isFullMode && (
-              <GlobalLabel
-                selectedRows={selectedRows}
-                type={RESOURCE_NAMES?.HOST}
-              />
-            )}
-            <SubmitButton
-              data-cy="detail-full-mode"
-              icon={isFullMode ? <Collapse /> : <Expand />}
-              tooltip={Tr(T.FullScreen)}
-              isSubmitting={isFetching}
-              onClick={() => {
-                setFullMode(!isFullMode)
-              }}
-            />
-            <SubmitButton
-              data-cy="detail-refresh"
-              icon={<RefreshDouble />}
-              tooltip={Tr(T.Refresh)}
-              isSubmitting={isFetching}
-              onClick={async () => {
-                await getHost({ id })
-                handleUseRefetch && (await handleUseRefetch())
-              }}
-            />
-            {typeof unselect === 'function' && (
-              <SubmitButton
-                data-cy="unselect"
-                icon={<Cancel />}
-                tooltip={Tr(T.Close)}
-                onClick={() => unselect()}
-              />
-            )}
-          </Stack>
-        </Stack>
-        <HostTabs id={id} />
-      </Stack>
+  // Handle the selection of a row
+  const selectedItemIds = useMemo(
+    () => new Set((selectedItems ?? []).map(String)),
+    [selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () => Object.fromEntries([...selectedItemIds].map((id) => [id, true])),
+    [selectedItemIds]
+  )
+
+  // Selected hosts
+  const selectedHosts = useMemo(
+    () => items?.filter(({ ID }) => selectedItemIds.has(String(ID))) ?? [],
+    [items, selectedItemIds]
+  )
+
+  // Handle details of a row
+  const handleSelect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(
+      selectedItems?.length === 1 && String(selectedItems?.[0]) === id
+        ? []
+        : [id]
     )
   }
-)
 
-InfoTabs.propTypes = {
-  host: PropTypes.object,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
+  const handleDeselect = (ID) => {
+    const id = String(ID)
+    setSelectedItems(selectedItems?.filter((item) => String(item) !== id))
+  }
+
+  // Handle change the details of a row
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
+
+  return (
+    <ResourceContainer
+      resourceName={T.Hosts}
+      onRefresh={refreshHosts}
+      isRefreshing={isRefreshing}
+      sortOptions={hostTable.sortOptions()}
+      filterOptions={filterOptions}
+      searchPlaceholder={T.SearchHosts}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => String(ID)) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={hostTable.columns()}
+                data={items}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => String(row.ID)}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+                isLoading={isRefreshing}
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((host) => (
+                  <Host.Card
+                    key={host?.ID}
+                    host={host}
+                    isSelected={selectedItemIds.has(String(host?.ID))}
+                    onCheck={() =>
+                      setSelectedItems(
+                        selectedItemIds.has(String(host?.ID))
+                          ? [...selectedItemIds].filter(
+                              (id) => id !== String(host?.ID)
+                            )
+                          : [...selectedItemIds, String(host?.ID)]
+                      )
+                    }
+                    onClick={() => handleSelect(host?.ID)}
+                  />
+                ))}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedHosts={selectedHosts}
+        handleClose={() => setSelectedItems([])}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+      />
+    </ResourceContainer>
+  )
 }
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

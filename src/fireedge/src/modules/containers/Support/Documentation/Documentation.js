@@ -14,9 +14,14 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { ReactElement } from 'react'
-import { Box, Paper, Typography, Divider, useTheme } from '@mui/material'
-import { Translate, TranslateProvider } from '@ComponentsModule'
-import { COMMUNITY_WEBSITE, T } from '@ConstantsModule'
+import { Box, Paper, Divider, useTheme } from '@mui/material'
+import { Text } from '@ComponentsV2Module'
+import {
+  COMMUNITY_WEBSITE,
+  T,
+  TEXT_VARIANTS,
+  TEXT_WEIGHTS,
+} from '@ConstantsModule'
 import { InfoEmpty, Book, ChatLines } from 'iconoir-react'
 import { generateDocLink } from '@UtilsModule'
 import { SystemAPI } from '@FeaturesModule'
@@ -31,88 +36,93 @@ export const Settings = () => {
   const { data: version } = SystemAPI.useGetOneVersionQuery()
 
   return (
-    <TranslateProvider>
-      <Paper
-        variant="outlined"
-        sx={{ overflow: 'auto', py: '1.5em', gridColumn: { md: 'span 2' } }}
-      >
-        <Box px="1rem">
-          <Typography
-            variant="h5"
+    <Paper
+      variant="outlined"
+      sx={{ overflow: 'auto', py: '1.5em', gridColumn: { md: 'span 2' } }}
+    >
+      <Box px="1rem">
+        <Box
+          sx={{
+            display: 'flex',
+            gap: theme.spacing(1),
+          }}
+        >
+          <InfoEmpty
             sx={{
-              display: 'flex',
-              gap: theme.spacing(1),
+              pl: '1em',
+            }}
+          />
+          <Text
+            variant={TEXT_VARIANTS.H5}
+            weight={TEXT_WEIGHTS.SEMIBOLD}
+            value={T.AdditionalHelpResources}
+          />
+        </Box>
+
+        <Divider sx={{ my: '1em' }} />
+
+        <Box
+          display="grid"
+          gap="1em"
+          sx={{ gridTemplateColumns: { sm: '1fr', md: '1fr 1fr' } }}
+        >
+          <Box
+            sx={{
+              textAlign: 'center',
             }}
           >
-            <InfoEmpty
-              sx={{
-                pl: '1em',
+            <a
+              href={generateDocLink(version, '')}
+              target="_blank"
+              style={{
+                color: theme.palette.primary.dark,
+                textDecoration: 'none',
               }}
-            />
-            <Translate word={T.AdditionalHelpResources} />
-          </Typography>
-
-          <Divider sx={{ my: '1em' }} />
+              rel="noreferrer"
+            >
+              <Book
+                sx={{
+                  fontSize: 'xxx-large',
+                  color: theme.palette.text.secondary,
+                }}
+              />
+              <Text
+                variant={TEXT_VARIANTS.H6}
+                weight={TEXT_WEIGHTS.SEMIBOLD}
+                value={T.Documentation}
+              />
+            </a>
+          </Box>
 
           <Box
-            display="grid"
-            gap="1em"
-            sx={{ gridTemplateColumns: { sm: '1fr', md: '1fr 1fr' } }}
+            sx={{
+              textAlign: 'center',
+            }}
           >
-            <Box
-              sx={{
-                textAlign: 'center',
+            <a
+              href={COMMUNITY_WEBSITE}
+              target="_blank"
+              style={{
+                color: theme.palette.primary.dark,
+                textDecoration: 'none',
               }}
+              rel="noreferrer"
             >
-              <a
-                href={generateDocLink(version, '')}
-                target="_blank"
-                style={{
-                  color: theme.palette.primary.dark,
-                  textDecoration: 'none',
+              <ChatLines
+                sx={{
+                  fontSize: 'xxx-large',
+                  color: theme.palette.text.secondary,
                 }}
-                rel="noreferrer"
-              >
-                <Book
-                  sx={{
-                    fontSize: 'xxx-large',
-                    color: theme.palette.text.secondary,
-                  }}
-                />
-                <Typography variant="h6">
-                  <Translate word={T.Documentation} />
-                </Typography>
-              </a>
-            </Box>
-
-            <Box
-              sx={{
-                textAlign: 'center',
-              }}
-            >
-              <a
-                href={COMMUNITY_WEBSITE}
-                target="_blank"
-                style={{
-                  color: theme.palette.primary.dark,
-                  textDecoration: 'none',
-                }}
-                rel="noreferrer"
-              >
-                <ChatLines
-                  sx={{
-                    fontSize: 'xxx-large',
-                    color: theme.palette.text.secondary,
-                  }}
-                />
-                <Typography variant="h6">
-                  <Translate word={T.Community} />
-                </Typography>
-              </a>
-            </Box>
+              />
+              <Text
+                variant={TEXT_VARIANTS.H6}
+                weight={TEXT_WEIGHTS.SEMIBOLD}
+                value={T.Community}
+              />
+            </a>
           </Box>
         </Box>
-      </Paper>
-    </TranslateProvider>
+      </Box>
+    </Paper>
   )
 }

@@ -51,10 +51,11 @@ export const useAuth = () => {
 
   const waitViewToLogin = appNeedViews() ? !!view : true
 
-  const { data: defaultLabels = {}, isLoading: isLabelsLoading } =
+  const { data: defaultLabelsResponse = {}, isLoading: isLabelsLoading } =
     oneApi.endpoints.getDefaultLabels.useQueryState(undefined, {
       skip: !user,
     })
+  const defaultLabels = defaultLabelsResponse?.data ?? defaultLabelsResponse
 
   const { data: groups, isLoading: isGroupsLoading } =
     oneApi.endpoints.getGroups.useQueryState(undefined, {
@@ -75,6 +76,7 @@ export const useAuth = () => {
   const groupLabels = groups?.reduce((acc, group) => {
     acc[group.NAME] = merge(
       {},
+      defaultLabels?.group?.[group.NAME] ?? {},
       defaultLabels?.group?.[`$${group.NAME}`] ?? {},
       parseLabels(group?.TEMPLATE?.FIREEDGE?.LABELS ?? {})
     )
@@ -86,11 +88,17 @@ export const useAuth = () => {
     const labels = merge(
       {},
       defaultLabels?.user ?? {},
-      parseLabels(user?.TEMPLATE?.LABELS ?? {})
+      parseLabels(
+        user?.TEMPLATE?.FIREEDGE?.LABELS ?? user?.TEMPLATE?.LABELS ?? {}
+      )
     )
 
     return labels
-  }, [user?.TEMPLATE?.LABELS])
+  }, [
+    defaultLabels?.user,
+    user?.TEMPLATE?.FIREEDGE?.LABELS,
+    user?.TEMPLATE?.LABELS,
+  ])
 
   const allLabels = { user: userLabels, group: groupLabels } ?? {}
 

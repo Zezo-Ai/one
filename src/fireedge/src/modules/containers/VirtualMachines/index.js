@@ -13,6 +13,5 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-export * from '@modules/containers/VirtualMachines/ButtonClearErrors'
-export * from '@modules/containers/VirtualMachines/Detail'
 export * from '@modules/containers/VirtualMachines/VirtualMachines'
+export * from '@modules/containers/VirtualMachines/Create'

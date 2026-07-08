@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { VDCsTable, TranslateProvider, VDCTabs } from '@ComponentsModule'
+import { VDCsTable, TranslateProvider, VDCTabs } from '@ResourcesModule'
 import { ReactElement } from 'react'
 import { Redirect, useParams } from 'react-router-dom'
 

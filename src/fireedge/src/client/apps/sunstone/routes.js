@@ -14,12 +14,10 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import {
-  ReportColumns as DashboardIcon,
+  DashboardDots as DashboardIcon,
   Settings as SettingsIcon,
 } from 'iconoir-react'
-
 import loadable from '@loadable/component'
-
 import { T } from '@ConstantsModule'
 
 const Dashboard = loadable(
@@ -49,7 +47,7 @@ export const ENDPOINTS = [
   {
     title: T.Dashboard,
     path: PATH.DASHBOARD,
-    sidebar: true,
+    sidebar: false,
     icon: DashboardIcon,
     position: 1,
     Component: Dashboard,
@@ -57,16 +55,17 @@ export const ENDPOINTS = [
   {
     title: T.Settings,
     path: PATH.SETTINGS,
-    sidebar: true,
+    sidebar: false,
     icon: SettingsIcon,
     position: -1,
     Component: Settings,
+    removeStyles: true,
   },
   {
     title: 'Guacamole', // no need to translate
-    disableLayout: true,
     path: PATH.GUACAMOLE,
     Component: Guacamole,
+    disableLayout: true,
   },
 ]
 

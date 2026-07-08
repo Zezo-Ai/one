@@ -18,16 +18,15 @@ import {
   ModalHost,
   Notifier,
   NotifierUpload,
-  PATH,
-  Sidebar,
-  TranslateProvider,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
+import { Sidebar } from '@ComponentsV2Module'
 import { ENDPOINTS, getEndpointsByView } from 'client/apps/sunstone/routes'
 import Router from 'client/router'
 import { ENDPOINTS as DEV_ENDPOINTS } from 'client/router/dev'
 import { ReactElement, useEffect, useMemo } from 'react'
-
-import { _APPS, SERVER_CONFIG } from '@ConstantsModule'
+import { matchPath, useLocation } from 'react-router-dom'
+import { TranslateProvider } from '@ProvidersModule'
+import { _APPS, SERVER_CONFIG, PATH } from '@ConstantsModule'
 import {
   oneApi,
   SupportAPI,
@@ -51,6 +50,22 @@ const showSupportTab = (routes = [], find = true) => {
   return routes
 }
 
+const isDisabledLayoutRoute = (pathname, routes = []) => {
+  const matchDisabledRoute = ({ path, disableLayout } = {}) =>
+    disableLayout && path && matchPath(pathname, { path, exact: true })
+
+  return routes.some(({ routes: subRoutes, ...route }) =>
+    Array.isArray(subRoutes)
+      ? subRoutes.some((subRoute) =>
+          matchDisabledRoute({
+            ...subRoute,
+            disableLayout: subRoute.disableLayout ?? route.disableLayout,
+          })
+        )
+      : matchDisabledRoute(route)
+  )
+}
+
 /**
  * Sunstone App component.
  *
@@ -59,6 +74,7 @@ const showSupportTab = (routes = [], find = true) => {
 const SunstoneApp = () => {
   const [getSupport, { isSuccess: isSupportSuccess }] =
     SupportAPI.useLazyCheckOfficialSupportQuery()
+  const { pathname } = useLocation()
   const { changeAppTitle } = useGeneralApi()
   const { isLogged, externalRedirect } = useAuth()
   const { views, view } = useViews()
@@ -98,6 +114,11 @@ const SunstoneApp = () => {
     )
   }, [tabManifest, view, isSupportSuccess, isManifestLoaded, isManifestLoading])
 
+  const isLayoutDisabled = useMemo(
+    () => isDisabledLayoutRoute(pathname, endpoints),
+    [endpoints, pathname]
+  )
+
   return (
     <TranslateProvider>
       <AuthLayout
@@ -108,7 +129,7 @@ const SunstoneApp = () => {
       >
         {isLogged && (
           <>
-            <Sidebar endpoints={endpoints} />
+            {!isLayoutDisabled && <Sidebar endpoints={endpoints} />}
             <Notifier />
             <NotifierUpload />
             <ModalHost />

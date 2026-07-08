@@ -14,32 +14,57 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { Translate, TranslateProvider } from '@ComponentsModule'
+import { Translate, TranslateProvider } from '@ResourcesModule'
 import { css } from '@emotion/css'
 import { Box, Typography, useTheme } from '@mui/material'
 import PropTypes from 'prop-types'
 import { ReactElement, createContext, useContext, useMemo } from 'react'
+import clsx from 'clsx'
 
 const SettingWrapperContext = createContext(null)
 
-const styles = ({ typography }) => ({
+const styles = ({ typography, borderWidth, borderRadius, palette, scale }) => ({
   content: css({
-    padding: typography.pxToRem(16),
-    '& > *': {
-      marginBottom: typography.pxToRem(48),
-    },
+    margin: `0 auto ${scale[800]}px`,
+    width: '100%',
+    maxWidth: '1024px',
   }),
+
   legend: css({
-    marginLeft: typography.pxToRem(-16),
-    padding: `${typography.pxToRem(8)} ${typography.pxToRem(16)}`,
-    marginBottom: typography.pxToRem(24),
-    display: 'inline-table',
+    textAlign: 'left',
+    padding: 0,
+    marginTop: scale[800],
+    marginBottom: scale[700],
+    border: 'none',
+    fontSize: typography.h6.fontSize,
+    fontWeight: typography.fontWeightBold,
+    color: palette.text.headings,
   }),
+
   internalWrapper: css({
-    display: 'grid',
-    gridTemplateColumns: '140px 1fr',
-    gridAutoRows: 'auto',
-    gap: '1em',
+    display: 'flex',
+    flexDirection: 'column',
+    marginBottom: scale[500],
+    borderRadius: '12px',
+    overflow: 'hidden',
+    border: `${borderWidth.sm}px solid ${palette.border.primary}`,
+    backgroundColor: palette.surface.primary,
+  }),
+
+  innerWrapperTitle: css({
+    textAlign: 'left',
+    fontSize: typography.body2.fontSize,
+    fontWeight: typography.fontWeightMedium,
+    marginTop: '0 !important',
+    color: palette.text.headings,
+    padding: `${scale[400]}px ${scale[600]}px`,
+    borderBottom: `${borderWidth.sm}px solid ${palette.border.primary}`,
+  }),
+
+  innerWrapperBox: css({
+    backgroundColor: palette.background.paper,
+    color: palette.text.body,
+    padding: `${scale[500]}px ${scale[600]}px`,
   }),
 })
 
@@ -72,10 +97,15 @@ const Wrapper = ({ children }) => {
       className={classes.internalWrapper}
       gridTemplateColumns={{ sm: '1fr' }}
     >
-      <Typography className={innerClassName} component="legend">
-        <Translate word={title} />
-      </Typography>
-      <Box>{children}</Box>
+      {title && (
+        <Typography
+          className={clsx(classes.innerWrapperTitle, innerClassName)}
+          component="legend"
+        >
+          <Translate word={title} />
+        </Typography>
+      )}
+      <Box className={classes.innerWrapperBox}>{children}</Box>
     </Box>
   )
   InternalWrapper.propTypes = {

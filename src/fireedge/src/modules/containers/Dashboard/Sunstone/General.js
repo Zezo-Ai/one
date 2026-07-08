@@ -21,7 +21,7 @@ import {
   ModernTv as VmsIcons,
 } from 'iconoir-react'
 import PropTypes from 'prop-types'
-import { ReactElement, memo, useEffect, useMemo } from 'react'
+import { ReactElement, memo, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 
 import {
@@ -30,18 +30,17 @@ import {
   VmTemplateAPI,
   VnAPI,
   useAuth,
-  useGeneralApi,
   useViews,
 } from '@FeaturesModule'
 
+import { NumberEasing, TranslateProvider, WavesCard } from '@ResourcesModule'
 import {
-  NumberEasing,
+  RESOURCE_NAMES,
+  T,
+  VM_POOL_PAGINATION_SIZE,
   PATH,
-  TranslateProvider,
-  WavesCard,
-} from '@ComponentsModule'
-import { RESOURCE_NAMES, T, VM_POOL_PAGINATION_SIZE } from '@ConstantsModule'
-import { stringToBoolean } from '@ModelsModule'
+} from '@ConstantsModule'
+import { stringToBoolean } from '@UtilsModule'
 
 const { VM, VM_TEMPLATE, IMAGE, VNET } = RESOURCE_NAMES
 
@@ -54,10 +53,6 @@ export default function SunstoneDashboard({ view }) {
   const { settings: { FIREEDGE: fireedge = {} } = {} } = useAuth()
   const { DISABLE_ANIMATIONS } = fireedge
   const { hasAccessToResource } = useViews()
-
-  // Delete second title
-  const { setSecondTitle } = useGeneralApi()
-  useEffect(() => setSecondTitle({}), [])
 
   const { push: goTo } = useHistory()
 

@@ -1,0 +1,318 @@
+/* ------------------------------------------------------------------------- *
+ * Copyright 2002-2026, OpenNebula Project, OpenNebula Systems               *
+ *                                                                           *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
+ * not use this file except in compliance with the License. You may obtain   *
+ * a copy of the License at                                                  *
+ *                                                                           *
+ * http://www.apache.org/licenses/LICENSE-2.0                                *
+ *                                                                           *
+ * Unless required by applicable law or agreed to in writing, software       *
+ * distributed under the License is distributed on an "AS IS" BASIS,         *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ * See the License for the specific language governing permissions and       *
+ * limitations under the License.                                            *
+ * ------------------------------------------------------------------------- */
+
+import { useControllableState } from '@HooksModule'
+import {
+  Component,
+  forwardRef,
+  useRef,
+  useState,
+  useEffect,
+  useMemo,
+} from 'react'
+import PropTypes from 'prop-types'
+import { Autocomplete, ListSubheader, Divider, useTheme } from '@mui/material'
+import { InputField } from '@modules/componentsv2/primitives/Fields/Default'
+import { NavArrowDown as OpenIcon, Cancel as CloseIcon } from 'iconoir-react'
+import {
+  getInputStyles,
+  getMenuStyles,
+  getListStyles,
+} from '@modules/componentsv2/primitives/Dropdown/Default/styles'
+import { renderIcon } from '@UtilsModule'
+import { T } from '@ConstantsModule'
+
+const getOptionText = (option) => {
+  const text = typeof option === 'object' ? option?.text : option
+
+  return text == null ? '' : String(text)
+}
+
+const getOptionValue = (option) =>
+  typeof option === 'object' ? option?.value ?? option?.text : option
+
+const filterByTextOrValue = (options, { inputValue }) => {
+  const query = inputValue?.toLowerCase?.() ?? ''
+
+  return options?.filter((option) => {
+    const text = getOptionText(option).toLowerCase()
+    const value = String(getOptionValue(option) ?? '').toLowerCase()
+
+    return text.includes(query) || value.includes(query)
+  })
+}
+
+/**
+ * Dropdown component .
+ *
+ * @param {Array} root0.options - Dropdown options
+ * @param {boolean} root0.isDefaultOpen - Open by default
+ * @param {boolean} root0.isMultipleSelectable - Select multiple options
+ * @param {boolean} root0.isDisabled - Is disabled
+ * @param {number} root0.rowsDisplayed - Number of rows shown
+ * @param {string} root0.menuTitle - Dropdown menu title
+ * @param {string} root0.placeholder - Placeholder text
+ * @returns {Component} - Dropdown component
+ */
+export const Dropdown = forwardRef(
+  (
+    {
+      onChange,
+      error,
+      freeSolo = false,
+      hint,
+      initialValue,
+      isOutlined = true,
+      isDefaultOpen = false,
+      isMultipleSelectable = false,
+      isDisabled = false,
+      isReadOnly = false,
+      isSearchable = false,
+      isDisableEnter = false,
+      label,
+      menuTitle,
+      onInputChange,
+      options = [],
+      placeholder,
+      endIcon,
+      startIcon,
+      filterOptions = filterByTextOrValue,
+      rowsDisplayed = 4, // Controls the height of the scrollable menu container
+    },
+    ref
+  ) => {
+    const theme = useTheme()
+    const [open, setOpen] = useState(false)
+    const inputRef = useRef(null)
+    const menuItemRef = useRef(null)
+    const menuTitleRef = useRef(null)
+    const [menuHeight, setMenuHeight] = useState({ min: 0, max: 0 })
+    const EndIcon = open ? CloseIcon : OpenIcon
+    const [selected, setSelected] = useControllableState({
+      value: initialValue,
+      defaultValue: initialValue ?? (isMultipleSelectable ? [] : null),
+      onChange,
+    })
+
+    useEffect(() => {
+      if (menuItemRef.current && inputRef.current) {
+        const min = inputRef.current.offsetHeight
+        let max = menuItemRef.current.offsetHeight * rowsDisplayed
+
+        if (menuTitleRef.current) {
+          max += menuTitleRef.current.offsetHeight
+        }
+
+        setMenuHeight({
+          min,
+          max,
+        })
+      }
+    }, [open])
+
+    // Waits for inputRef to be defined before opening menu, otherwise anchoring fails
+    useEffect(() => {
+      if (isDefaultOpen && inputRef.current) {
+        setOpen(true)
+      }
+    }, [isDefaultOpen])
+
+    const inputStyles = useMemo(
+      () =>
+        getInputStyles({
+          theme,
+          isOpen: open,
+          menuHeight,
+          hasTitle: !!menuTitle,
+        }),
+      [theme, open, menuHeight, menuTitle]
+    )
+
+    const menuStyles = useMemo(
+      () =>
+        getMenuStyles({
+          theme,
+        }),
+      [theme]
+    )
+
+    const listBoxStyles = useMemo(
+      () =>
+        getListStyles({
+          theme,
+          rowsDisplayed,
+        }),
+      [theme, rowsDisplayed]
+    )
+
+    return (
+      <Autocomplete
+        disabled={isDisabled}
+        open={open}
+        onClose={() => setOpen(false)}
+        ref={ref}
+        className="dropdown"
+        sx={inputStyles}
+        onChange={(_, value) => {
+          if (isDisabled) return
+
+          setSelected(value)
+        }}
+        onInputChange={(event, value, reason) => {
+          if (isDisabled) return
+
+          if (reason === 'input') {
+            setOpen(true)
+          }
+
+          onInputChange?.(event, value, reason)
+        }}
+        value={
+          isMultipleSelectable
+            ? [].concat(selected ?? [])
+            : options.length === 0 && !freeSolo
+            ? null
+            : selected
+        }
+        multiple={isMultipleSelectable}
+        options={options}
+        filterOptions={filterOptions}
+        getOptionLabel={getOptionText}
+        isOptionEqualToValue={(opt, val) => {
+          if (!val) return false
+
+          return String(getOptionValue(opt)) === String(getOptionValue(val))
+        }}
+        freeSolo={freeSolo}
+        ListboxProps={{
+          sx: listBoxStyles,
+        }}
+        componentsProps={{
+          paper: {
+            className: 'dropdown-menu-paper',
+            sx: menuStyles,
+          },
+        }}
+        renderInput={({ InputProps, inputProps }) => (
+          <InputField
+            onClick={() => {
+              if (isDisabled) return
+              setOpen((prev) => !prev)
+            }}
+            className={'dropdown-input-wrapper'}
+            ref={inputRef}
+            label={label}
+            placeholder={placeholder || T.Placeholder}
+            isDisabled={isDisabled}
+            isOutlined={isOutlined}
+            hint={hint}
+            error={error}
+            endIcon={() =>
+              endIcon ? (
+                renderIcon(endIcon)
+              ) : (
+                <EndIcon width="16px" height="16px" strokeWidth={1.6} />
+              )
+            }
+            startIcon={startIcon && renderIcon(startIcon)}
+            inputProps={{
+              ...inputProps,
+              readOnly: isReadOnly || (!freeSolo && !isSearchable),
+              ...(isDisableEnter
+                ? {
+                    onKeyDown: (e) => {
+                      inputProps?.onKeyDown?.(e)
+                      e.key === 'Enter' && e.stopPropagation()
+                    },
+                  }
+                : {}),
+              style: {
+                ...inputProps?.style,
+                cursor: freeSolo || isSearchable ? 'text' : 'pointer',
+              },
+            }}
+            InputProps={InputProps}
+          />
+        )}
+        renderOption={({ className, ...optionProps }, option) => (
+          <li
+            {...optionProps}
+            className={[className, 'dropdown-menu-option']
+              .filter(Boolean)
+              .join(' ')}
+          >
+            {option?.startIcon && (
+              <span className="dropdown-option-starticon">
+                {renderIcon(option.startIcon)}
+              </span>
+            )}
+            <span className="dropdown-option-text">
+              {getOptionText(option)}
+            </span>
+            {option?.endIcon && (
+              <span className="dropdown-option-endicon">
+                {renderIcon(option.endIcon)}
+              </span>
+            )}
+          </li>
+        )}
+        {...(menuTitle && {
+          groupBy: () => menuTitle,
+          renderGroup: (params) => (
+            <li key={params.key}>
+              <ListSubheader
+                ref={menuTitleRef}
+                className="dropdown-menutitle-text"
+              >
+                {params.group}
+              </ListSubheader>
+              <Divider className="dropdown-menutitle-divider" />
+              <ul className="dropdown-options-list" ref={menuItemRef}>
+                {params.children}
+              </ul>
+            </li>
+          ),
+        })}
+      />
+    )
+  }
+)
+
+Dropdown.propTypes = {
+  onChange: PropTypes.func,
+  placeholder: PropTypes.string,
+  error: PropTypes.string,
+  hint: PropTypes.string,
+  label: PropTypes.string,
+  menuTitle: PropTypes.string,
+  isDefaultOpen: PropTypes.bool,
+  isOutlined: PropTypes.bool,
+  isDisabled: PropTypes.bool,
+  isReadOnly: PropTypes.bool,
+  isSearchable: PropTypes.bool,
+  isDisableEnter: PropTypes.bool,
+  freeSolo: PropTypes.bool,
+  onInputChange: PropTypes.func,
+  options: PropTypes.array,
+  filterOptions: PropTypes.func,
+  initialValue: PropTypes.any,
+  isMultipleSelectable: PropTypes.bool,
+  rowsDisplayed: PropTypes.number,
+  endIcon: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
+  startIcon: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
+}
+
+Dropdown.displayName = 'Dropdown'

@@ -14,7 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { FormWithSchema, Tr, Translate, SubmitButton } from '@ComponentsModule'
+import { FormWithSchema, Tr, Translate } from '@ResourcesModule'
+import { Button, SubmitButton } from '@ComponentsV2Module'
 import { AUTH_APPS, STYLE_BUTTONS, T } from '@ConstantsModule'
 import {
   TfaAPI,
@@ -28,7 +29,6 @@ import { FIELDS } from '@modules/containers/Settings/Tfa/schema'
 import { useSettingWrapper } from '@modules/containers/Settings/Wrapper'
 import {
   Box,
-  Button,
   Grid,
   Link,
   List,
@@ -42,39 +42,48 @@ import { Fragment, ReactElement, useCallback, useMemo, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { v4 as uuidv4 } from 'uuid'
 
-const styles = ({ typography, palette }) => ({
-  buttonClose: css({
-    width: '100%',
-    marginBottom: typography.pxToRem(8),
-  }),
+const styles = ({
+  borderRadius,
+  borderWidth,
+  palette,
+  spacing,
+  typography,
+}) => ({
   buttonPlace: css({
     width: '100%',
     textAlign: 'center',
   }),
   buttonAction: css({
     width: '100%',
-    marginTop: typography.pxToRem(8),
+    marginTop: spacing(1),
+  }),
+  rowContent: css({
+    flexGrow: 1,
   }),
   qr: css({
     width: '100%',
     height: 'auto',
   }),
   qrContainer: css({
-    border: `1px solid ${palette.grey[300]}`,
-    padding: typography.pxToRem(8),
-    borderRadius: typography.pxToRem(8),
-    marginBottom: typography.pxToRem(8),
+    border: `${borderWidth.sm}px solid ${palette.border.primary}`,
+    color: palette.text.body,
+    backgroundColor: palette.surface.primary,
+    padding: spacing(1),
+    borderRadius: '12px',
+    marginBottom: spacing(1),
   }),
   bold: css({
-    fontWeight: 'bold',
+    fontWeight: typography.fontWeightBold,
   }),
   enabled: css({
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    marginTop: typography.pxToRem(16),
-    borderRadius: typography.pxToRem(8),
+    border: `${borderWidth.sm}px solid ${palette.border.primary}`,
+    color: palette.text.body,
+    backgroundColor: palette.surface.primary,
+    marginTop: spacing(2),
+    borderRadius: '12px',
   }),
   verificationCodeForm: css({
-    paddingRight: typography.pxToRem(8),
+    paddingRight: spacing(1),
 
     '& > fieldset': {
       margin: 0,
@@ -117,7 +126,7 @@ const Qr = ({
   return (
     <div className={classes.qrContainer}>
       <Grid container role="row">
-        <Grid item sx={{ flexGrow: 1 }}>
+        <Grid item className={classes.rowContent}>
           <Grid container spacing={2}>
             <Grid item xs={6}>
               {data && isSuccess && (
@@ -136,9 +145,7 @@ const Qr = ({
               <Box className={classes.buttonAction}>
                 <SubmitButton
                   onClick={handleSubmit(handleEnableTfa)}
-                  importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-                  size={STYLE_BUTTONS.SIZE.MEDIUM}
-                  type={STYLE_BUTTONS.TYPE.FILLED}
+                  type={STYLE_BUTTONS.TYPE.PRIMARY}
                   data-cy="addTfa"
                   label={T.Add}
                 />
@@ -148,12 +155,10 @@ const Qr = ({
         </Grid>
         <Grid item>
           <SubmitButton
-            icon={<Cancel />}
+            iconOnly={<Cancel />}
             onClick={cancelFn}
             aria-label="delete"
-            importance={STYLE_BUTTONS.IMPORTANCE.SECONDARY}
-            size={STYLE_BUTTONS.SIZE.MEDIUM}
-            type={STYLE_BUTTONS.TYPE.OUTLINED_ICON}
+            type={STYLE_BUTTONS.TYPE.PRIMARY}
           />
         </Grid>
         <Grid item xs={12}>
@@ -243,13 +248,11 @@ const Tfa = () => {
               <ListItem
                 secondaryAction={
                   <Button
-                    variant="contained"
-                    color="secondary"
+                    iconOnly={<Trash />}
+                    type={STYLE_BUTTONS.TYPE.PRIMARY}
                     onClick={handleRemoveTfa}
                     data-cy="removeTfa"
-                  >
-                    <Trash className="icon" />
-                  </Button>
+                  />
                 }
               >
                 <Translate word={T.AuthenticatorAppSunstone} />
@@ -259,13 +262,11 @@ const Tfa = () => {
               <ListItem
                 secondaryAction={
                   <Button
-                    variant="contained"
-                    color="secondary"
+                    iconOnly={<Trash />}
+                    type={STYLE_BUTTONS.TYPE.PRIMARY}
                     onClick={handleRemoveTfa}
                     data-cy="removeTfa"
-                  >
-                    <Trash className="icon" />
-                  </Button>
+                  />
                 }
               >
                 <Translate word={T.AuthenticatorApp} />
@@ -277,9 +278,7 @@ const Tfa = () => {
           <Box className={classes.buttonPlace}>
             <SubmitButton
               onClick={() => setDisplayQr(true)}
-              importance={STYLE_BUTTONS.IMPORTANCE.MAIN}
-              size={STYLE_BUTTONS.SIZE.MEDIUM}
-              type={STYLE_BUTTONS.TYPE.FILLED}
+              type={STYLE_BUTTONS.TYPE.PRIMARY}
               data-cy="addTfa"
               label={T.RegisterAuthenticationApp}
             />

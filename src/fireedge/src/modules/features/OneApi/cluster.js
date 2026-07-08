@@ -23,7 +23,11 @@ import {
   ONE_RESOURCES_POOL,
 } from '@modules/features/OneApi/resources'
 import { oneApi } from '@modules/features/OneApi/oneApi'
-import { Cluster } from '@ConstantsModule'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
+import { Cluster, RESOURCE_NAMES } from '@ConstantsModule'
 import {
   removeResourceOnPool,
   updateNameOnResource,
@@ -49,19 +53,26 @@ const clusterApi = oneApi.injectEndpoints({
         const name = Actions.CLUSTER_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { command, params }
+        return { command, params, needStateInMeta: true }
       },
-      transformResponse: (data) => [data?.CLUSTER_POOL?.CLUSTER ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.CLUSTER_POOL?.CLUSTER ?? []].flat(),
+          RESOURCE_NAMES.CLUSTER,
+          meta
+        ),
       providesTags: (clusters) =>
-        clusters
-          ? [
-              ...clusters.map(({ ID }) => ({
-                type: CLUSTER_POOL,
-                id: `${ID}`,
-              })),
-              CLUSTER_POOL,
-            ]
-          : [CLUSTER_POOL],
+        withProfileLabelsTags(
+          clusters
+            ? [
+                ...clusters.map(({ ID }) => ({
+                  type: CLUSTER_POOL,
+                  id: `${ID}`,
+                })),
+                CLUSTER_POOL,
+              ]
+            : [CLUSTER_POOL]
+        ),
     }),
     getCluster: builder.query({
       /**
@@ -77,10 +88,12 @@ const clusterApi = oneApi.injectEndpoints({
         const name = Actions.CLUSTER_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.CLUSTER ?? {},
-      providesTags: (_, __, { id }) => [{ type: CLUSTER, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(data?.CLUSTER ?? {}, RESOURCE_NAMES.CLUSTER, meta),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: CLUSTER, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled
@@ -169,9 +182,16 @@ const clusterApi = oneApi.injectEndpoints({
         const name = ExtraActions.CLUSTER_ADMINSHOW
         const command = { name, ...ExtraCommands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      providesTags: (_, __, { id }) => [{ type: CLUSTER, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          data?.CLUSTER ?? data ?? {},
+          RESOURCE_NAMES.CLUSTER,
+          meta
+        ),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: CLUSTER, id }]),
     }),
     allocateCluster: builder.mutation({
       /**

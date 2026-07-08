@@ -15,7 +15,7 @@
  * ------------------------------------------------------------------------- */
 
 /* ******* Eagerly consumed dependencies ******** *
- *                                                 *
+ *                                                *
  * These are explicitly imported by the client so
  * that they can be consumed by the submodules    */
 import '@mui/material'
@@ -27,14 +27,9 @@ import { JSXElementConstructor } from 'react'
 import { Provider as ReduxProvider } from 'react-redux'
 import { BrowserRouter, StaticRouter } from 'react-router-dom'
 import { Store } from 'redux'
-
-import {
-  SunstoneTheme as theme,
-  PreloadConfigProvider,
-  MuiProvider,
-  NotiStackProvider,
-} from '@ProvidersModule'
-import { TranslateProvider } from '@ComponentsModule'
+import { Providers } from '@StylesModule'
+import { TranslateProvider } from '@ProvidersModule'
+import { SnackbarProvider } from '@ComponentsV2Module'
 import App, { APP_NAME as SunstoneAppName } from 'client/apps/sunstone/_app'
 import { APP_URL } from '@ConstantsModule'
 import { buildTranslationLocale } from '@UtilsModule'
@@ -48,11 +43,11 @@ buildTranslationLocale()
  * @returns {JSXElementConstructor} Sunstone App
  */
 const Sunstone = ({ store = {}, location = '' }) => (
-  <PreloadConfigProvider>
+  <Providers.PreloadConfigProvider>
     <ReduxProvider store={store}>
-      <MuiProvider theme={theme}>
+      <Providers.MuiThemeProvider>
         <TranslateProvider>
-          <NotiStackProvider>
+          <SnackbarProvider>
             {location ? (
               // server build
               <StaticRouter location={location}>
@@ -64,11 +59,11 @@ const Sunstone = ({ store = {}, location = '' }) => (
                 <App />
               </BrowserRouter>
             )}
-          </NotiStackProvider>
+          </SnackbarProvider>
         </TranslateProvider>
-      </MuiProvider>
+      </Providers.MuiThemeProvider>
     </ReduxProvider>
-  </PreloadConfigProvider>
+  </Providers.PreloadConfigProvider>
 )
 
 Sunstone.propTypes = {

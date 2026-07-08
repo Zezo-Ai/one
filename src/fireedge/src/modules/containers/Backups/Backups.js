@@ -14,29 +14,25 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 /* eslint-disable react/prop-types */
+import { List, ResourceContainer, Table } from '@ComponentsV2Module'
+import { DetailsDrawer } from '@modules/containers/Backups/Details'
+import { RESOURCE_NAMES, TABLE_VIEW_MODE, T } from '@ConstantsModule'
 import {
-  BackupsTable,
-  BackupTabs,
-  GlobalLabel,
-  MultipleTags,
-  ResourcesBackButton,
-  SubmitButton,
-  Tr,
-  TranslateProvider,
-} from '@ComponentsModule'
-import { Image, RESOURCE_NAMES, T } from '@ConstantsModule'
-import { ImageAPI, useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Chip, Stack } from '@mui/material'
+  ImageAPI,
+  useFunctionality,
+  useFunctionalityApi,
+  useGeneral,
+  useViews,
+} from '@FeaturesModule'
 import {
-  Cancel,
-  Collapse,
-  Expand,
-  NavArrowLeft,
-  RefreshDouble,
-} from 'iconoir-react'
-import { Row } from 'opennebula-react-table'
-import PropTypes from 'prop-types'
-import { memo, ReactElement, useEffect, useState } from 'react'
+  getBackupRunningVms,
+  getImageState,
+  getImageType,
+  imageTable,
+} from '@ModelsModule'
+import { prettyBytes, timeFromMilliseconds } from '@UtilsModule'
+import { ReactElement, useCallback, useMemo } from 'react'
+import { Backups as BackupsResource } from '@ResourcesModule'
 
 /**
  * Displays a list of Backups with a split pane between the list and selected row(s).
@@ -44,176 +40,168 @@ import { memo, ReactElement, useEffect, useState } from 'react'
  * @returns {ReactElement} Backups list and selected row(s)
  */
 export function Backups() {
-  const [selectedRows, setSelectedRows] = useState(() => [])
-  const actions = BackupsTable.Actions({ selectedRows, setSelectedRows })
   const { zone } = useGeneral()
-  const { refetch, isFetching } = ImageAPI.useGetBackupsQuery()
+  const {
+    searchExpression,
+    sortExpression,
+    filterExpression,
+    selectedItems,
+    containerView,
+  } = useFunctionality()
+
+  const { getResourceView } = useViews()
+  const resourceView = getResourceView(RESOURCE_NAMES.BACKUP)
+  const availableActions = useMemo(
+    () => resourceView?.actions ?? {},
+    [resourceView?.actions]
+  )
+
+  const { setSelectedItems } = useFunctionalityApi()
+
+  const {
+    data = [],
+    isFetching: isRefreshing,
+    refetch: refresh,
+  } = ImageAPI.useGetBackupsQuery({ zone })
+
+  const filterOptions = useMemo(
+    () => imageTable.filterOptions(data, resourceView?.filters),
+    [data, resourceView?.filters]
+  )
+
+  const items = useMemo(() => {
+    const search = String(searchExpression ?? '').toLowerCase()
+    const filteredData = search
+      ? data?.filter((backup) => {
+          const {
+            ID,
+            NAME,
+            UNAME,
+            GNAME,
+            REGTIME,
+            PERSISTENT,
+            DATASTORE,
+            SIZE,
+          } = backup
+          const state = getImageState(backup)
+          const type = getImageType(backup)
+
+          return [
+            ID,
+            NAME,
+            DATASTORE,
+            type,
+            state?.name,
+            UNAME,
+            GNAME,
+            +PERSISTENT ? T.Persistent : T.NonPersistent,
+            getBackupRunningVms(backup),
+            prettyBytes(+SIZE || 0, 'MB'),
+            REGTIME && timeFromMilliseconds(+REGTIME).toRelative(),
+          ]
+            .filter((value) => value || value === 0)
+            .some((value) => String(value).toLowerCase().includes(search))
+        })
+      : data
+
+    const filteredByFilters = imageTable.filterData(
+      filteredData,
+      filterExpression,
+      filterOptions
+    )
+
+    return imageTable.sortData(filteredByFilters, sortExpression)
+  }, [data, searchExpression, sortExpression, filterExpression, filterOptions])
+
+  const selectedData = useMemo(
+    () => items?.filter(({ ID }) => selectedItems?.includes(ID)) ?? [],
+    [items, selectedItems]
+  )
+
+  const rowSelection = useMemo(
+    () => Object.fromEntries(selectedItems.map((id) => [id, true])),
+    [selectedItems]
+  )
+  const handleClose = () => setSelectedItems([])
+  const handleSelect = (ID) =>
+    setSelectedItems(
+      selectedItems?.length === 1 && selectedItems?.[0] === ID ? [] : [ID]
+    )
+  const handleDeselect = (ID) =>
+    setSelectedItems(selectedItems.filter((id) => id !== ID))
+
+  const handleRowSelectionChange = useCallback(
+    (updater) => {
+      const next =
+        typeof updater === 'function' ? updater(rowSelection) : updater
+      setSelectedItems(Object.keys(next).filter((id) => next[id]))
+    },
+    [rowSelection, setSelectedItems]
+  )
 
   return (
-    <TranslateProvider>
-      <ResourcesBackButton
-        selectedRows={selectedRows}
-        setSelectedRows={setSelectedRows}
-        useUpdateMutation={ImageAPI.useUpdateImageMutation}
-        zone={zone}
-        actions={actions}
-        table={(props) => (
-          <BackupsTable.Table
-            onSelectedRowsChange={props.setSelectedRows}
-            globalActions={props.actions}
-            useUpdateMutation={props.useUpdateMutation}
-            onRowClick={props.resourcesBackButtonClick}
-            zoneId={props.zone}
-            refetchVm={refetch}
-            isFetchingVm={isFetching}
-            initialState={{
-              selectedRowIds: props.selectedRowsTable,
-            }}
-          />
-        )}
-        simpleGroupsTags={(props) => (
-          <GroupedTags
-            tags={props.selectedRows}
-            handleElement={props.handleElement}
-            onDelete={props.handleUnselectRow}
-          />
-        )}
-        info={(props) => {
-          const propsInfo = {
-            image: props?.selectedRows?.[0]?.original,
-            selectedRows: props?.selectedRows,
-          }
-          props?.gotoPage && (propsInfo.gotoPage = props.gotoPage)
-          props?.unselect && (propsInfo.unselect = props.unselect)
-
-          return <InfoTabs {...propsInfo} />
-        }}
+    <ResourceContainer
+      resourceName={T.Backups}
+      onRefresh={refresh}
+      isRefreshing={isRefreshing}
+      sortOptions={imageTable.sortOptions()}
+      filterOptions={filterOptions}
+      searchPlaceholder={T.SearchBackups ?? T.Search}
+      count={items?.length}
+      selectedCount={selectedItems?.length}
+      onSelectAll={(checked) =>
+        setSelectedItems(checked ? items?.map(({ ID }) => ID) : [])
+      }
+    >
+      {(() => {
+        switch (containerView) {
+          case TABLE_VIEW_MODE.LIST:
+            return (
+              <Table
+                columns={imageTable.columns()}
+                data={items}
+                isLoading={isRefreshing}
+                isRowsSelectable
+                isMultiRowSelection
+                isCopyColumn
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                getRowId={(row) => row.ID}
+                onRowClick={(row) => handleSelect(row.ID)}
+                size="medium"
+                isFullHeight
+              />
+            )
+          case TABLE_VIEW_MODE.CARD:
+          default:
+            return (
+              <List isRowIndicatorDisabled={true} isLoading={isRefreshing}>
+                {items?.map((backup) => (
+                  <BackupsResource.Card
+                    key={backup?.ID}
+                    data={backup}
+                    isSelected={selectedItems?.includes(backup?.ID)}
+                    onCheck={() =>
+                      setSelectedItems(
+                        selectedItems?.includes(backup?.ID)
+                          ? selectedItems.filter((id) => id !== backup?.ID)
+                          : [...(selectedItems ?? []), backup?.ID]
+                      )
+                    }
+                    onClick={() => handleSelect(backup?.ID)}
+                  />
+                ))}
+              </List>
+            )
+        }
+      })()}
+      <DetailsDrawer
+        selectedData={selectedData}
+        handleClose={handleClose}
+        handleSelect={handleSelect}
+        handleDeselect={handleDeselect}
+        availableActions={availableActions}
       />
-    </TranslateProvider>
+    </ResourceContainer>
   )
 }
-
-/**
- * Displays details of an Image.
- *
- * @param {Image} image - Image to display
- * @param {Function} [gotoPage] - Function to navigate to a page of an Image
- * @param {Function} [unselect] - Function to unselect a Image
- * @param {object[]} [selectedRows] - Selected rows (for Labels)
- * @returns {ReactElement} Image details
- */
-const InfoTabs = memo(({ image, gotoPage, unselect, selectedRows }) => {
-  const [getImage, { data: lazyData, isFetching }] =
-    ImageAPI.useLazyGetImageQuery()
-  const id = image?.ID ?? lazyData?.ID
-
-  const { isFullMode } = useGeneral()
-  const { setFullMode } = useGeneralApi()
-
-  useEffect(() => {
-    !isFullMode && gotoPage()
-  }, [])
-
-  return (
-    <Stack overflow="auto">
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        mx={1}
-        mb={1}
-      >
-        <Stack direction="row">
-          {isFullMode && (
-            <SubmitButton
-              data-cy="detail-back"
-              icon={<NavArrowLeft />}
-              tooltip={Tr(T.Back)}
-              isSubmitting={isFetching}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
-          {isFullMode && (
-            <GlobalLabel
-              selectedRows={selectedRows}
-              type={RESOURCE_NAMES?.BACKUP}
-            />
-          )}
-          <SubmitButton
-            data-cy="detail-full-mode"
-            icon={isFullMode ? <Collapse /> : <Expand />}
-            tooltip={Tr(T.FullScreen)}
-            isSubmitting={isFetching}
-            onClick={() => {
-              setFullMode(!isFullMode)
-            }}
-          />
-          <SubmitButton
-            data-cy="detail-refresh"
-            icon={<RefreshDouble />}
-            tooltip={Tr(T.Refresh)}
-            isSubmitting={isFetching}
-            onClick={() => getImage({ id })}
-          />
-          {typeof unselect === 'function' && (
-            <SubmitButton
-              data-cy="unselect"
-              icon={<Cancel />}
-              tooltip={Tr(T.Close)}
-              onClick={() => unselect()}
-            />
-          )}
-        </Stack>
-      </Stack>
-      <BackupTabs id={id} />
-    </Stack>
-  )
-})
-
-InfoTabs.propTypes = {
-  image: PropTypes.object.isRequired,
-  gotoPage: PropTypes.func,
-  unselect: PropTypes.func,
-}
-
-InfoTabs.displayName = 'InfoTabs'
-
-/**
- * Displays a list of tags that represent the selected rows.
- *
- * @param {Row[]} tags - Row(s) to display as tags
- * @returns {ReactElement} List of tags
- */
-const GroupedTags = ({
-  tags = [],
-  handleElement = true,
-  onDelete = () => undefined,
-}) => (
-  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
-    <MultipleTags
-      limitTags={10}
-      tags={tags?.map((props) => {
-        const { original, id, toggleRowSelected, gotoPage } = props
-        const clickElement = handleElement
-          ? {
-              onClick: gotoPage,
-              onDelete: () => onDelete(id) || toggleRowSelected(false),
-            }
-          : {}
-
-        return <Chip key={id} label={original?.NAME ?? id} {...clickElement} />
-      })}
-    />
-  </Stack>
-)
-
-GroupedTags.propTypes = {
-  tags: PropTypes.array,
-  handleElement: PropTypes.bool,
-  onDelete: PropTypes.func,
-}
-GroupedTags.displayName = 'GroupedTags'

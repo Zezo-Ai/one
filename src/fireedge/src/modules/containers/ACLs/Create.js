@@ -16,12 +16,12 @@
 import { ReactElement } from 'react'
 import PropTypes from 'prop-types'
 import {
+  ACLsTable,
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  PATH,
+  ACLs,
   TranslateProvider,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 import { createAclObjectFromString } from '@ModelsModule'
 
 import { useHistory, useLocation } from 'react-router'
@@ -37,8 +37,7 @@ import {
   useGeneralApi,
 } from '@FeaturesModule'
 
-import { T } from '@ConstantsModule'
-const { ACLs } = Form
+import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
 
@@ -48,7 +47,11 @@ const _ = require('lodash')
  * @returns {ReactElement} - The ACL form component
  */
 export function CreateACL() {
-  const { state: fromString } = useLocation()
+  const { state } = useLocation()
+  const hasCreateMode =
+    state === true || state === false || typeof state?.fromString === 'boolean'
+  const fromString = state === true || state?.fromString === true
+  const shouldSelectCreateType = !hasCreateMode
 
   // General api for enqueue
   const { enqueueSuccess, enqueueError } = useGeneralApi()
@@ -97,13 +100,15 @@ export function CreateACL() {
 
   return (
     <TranslateProvider>
-      {version &&
-      users &&
-      groups &&
-      clusters &&
-      zones &&
-      !_.isEmpty(oneConfig) ? (
-        <ACLs.CreateForm
+      {shouldSelectCreateType ? (
+        <ACLsTable.CreateAction />
+      ) : version &&
+        users &&
+        groups &&
+        clusters &&
+        zones &&
+        !_.isEmpty(oneConfig) ? (
+        <ACLs.Forms.CreateForm
           onSubmit={onSubmit}
           stepProps={{
             version,
@@ -117,7 +122,7 @@ export function CreateACL() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </ACLs.CreateForm>
+        </ACLs.Forms.CreateForm>
       ) : (
         <SkeletonStepsForm />
       )}

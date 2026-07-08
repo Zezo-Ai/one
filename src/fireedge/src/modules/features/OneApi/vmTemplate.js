@@ -16,6 +16,10 @@
 import { Actions, Commands } from 'server/utils/constants/commands/template'
 
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 
 import {
   ONE_RESOURCES,
@@ -31,7 +35,13 @@ import {
   updateOwnershipOnResource,
   updateTemplateOnResource,
 } from '@modules/features/OneApi/common'
-import { LockLevel, FilterFlag, Permission, VmTemplate } from '@ConstantsModule'
+import {
+  LockLevel,
+  FilterFlag,
+  Permission,
+  RESOURCE_NAMES,
+  VmTemplate,
+} from '@ConstantsModule'
 
 const { TEMPLATE } = ONE_RESOURCES
 const { VM_POOL, TEMPLATE_POOL } = ONE_RESOURCES_POOL
@@ -53,20 +63,26 @@ const vmTemplateApi = oneApi.injectEndpoints({
         const name = Actions.TEMPLATE_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) =>
-        [data?.VMTEMPLATE_POOL?.VMTEMPLATE ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.VMTEMPLATE_POOL?.VMTEMPLATE ?? []].flat(),
+          RESOURCE_NAMES.VM_TEMPLATE,
+          meta
+        ),
       providesTags: (vmTemplates) =>
-        vmTemplates
-          ? [
-              ...vmTemplates.map(({ ID }) => ({
-                type: TEMPLATE_POOL,
-                id: `${ID}`,
-              })),
-              TEMPLATE_POOL,
-            ]
-          : [TEMPLATE_POOL],
+        withProfileLabelsTags(
+          vmTemplates
+            ? [
+                ...vmTemplates.map(({ ID }) => ({
+                  type: TEMPLATE_POOL,
+                  id: `${ID}`,
+                })),
+                TEMPLATE_POOL,
+              ]
+            : [TEMPLATE_POOL]
+        ),
     }),
     getTemplate: builder.query({
       /**
@@ -83,10 +99,16 @@ const vmTemplateApi = oneApi.injectEndpoints({
         const name = Actions.TEMPLATE_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.VMTEMPLATE ?? {},
-      providesTags: (_, __, { id }) => [{ type: TEMPLATE, id }],
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          data?.VMTEMPLATE ?? {},
+          RESOURCE_NAMES.VM_TEMPLATE,
+          meta
+        ),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([{ type: TEMPLATE, id }]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled
@@ -125,6 +147,7 @@ const vmTemplateApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
+      invalidatesTags: [TEMPLATE_POOL],
     }),
     cloneTemplate: builder.mutation({
       /**

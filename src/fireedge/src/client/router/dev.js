@@ -28,10 +28,17 @@ const TestForm = loadable(
     ssr: false,
   }
 )
+const TestComponents = loadable(
+  () => import('@ContainersModule').then((module) => module.TestComponents),
+  {
+    ssr: false,
+  }
+)
 
 export const PATH = {
   TEST_API: '/test-api',
   TEST_FORM: '/test-form',
+  COMPONENTS_TESTING: '/components-testing',
 }
 
 export const ENDPOINTS = [
@@ -50,6 +57,14 @@ export const ENDPOINTS = [
     sidebar: true,
     icon: DevIcon,
     Component: TestForm,
+  },
+  {
+    title: 'Test Comp', // no need to translate
+    path: PATH.COMPONENTS_TESTING,
+    devMode: true,
+    sidebar: true,
+    icon: DevIcon,
+    Component: TestComponents,
   },
 ]
 

@@ -15,6 +15,20 @@
  * ------------------------------------------------------------------------- */
 import { T } from '@modules/constants'
 import * as ACTIONS from '@modules/constants/actions'
+// eslint-disable-next-line no-unused-vars
+import { Permissions } from '@modules/constants/common'
+
+/**
+ * @typedef SecurityGroup
+ * @property {number|string} ID - ID
+ * @property {string} NAME - Name
+ * @property {string} UNAME - Owner name
+ * @property {string} GNAME - Group name
+ * @property {Permissions} PERMISSIONS - Permissions
+ * @property {object} TEMPLATE - Template
+ * @property {string} TEMPLATE.DESCRIPTION - Description
+ * @property {SecurityGroupRule[]} TEMPLATE.RULE - Template
+ */
 
 /**
  * @typedef SecurityGroupRule

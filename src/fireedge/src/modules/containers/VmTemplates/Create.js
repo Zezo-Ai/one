@@ -31,22 +31,20 @@ import {
 
 import {
   DefaultFormStepper,
-  Form,
-  PATH,
   SkeletonStepsForm,
   TranslateProvider,
-} from '@ComponentsModule'
+  VmTemplate,
+} from '@ResourcesModule'
 
-import { STEP_MAP, T, TAB_FORM_MAP } from '@ConstantsModule'
-import { jsonToXml } from '@ModelsModule'
+import { STEP_MAP, T, TAB_FORM_MAP, PATH } from '@ConstantsModule'
 import {
+  jsonToXml,
   deepmerge,
   filterTemplateData,
   isDevelopment,
   transformActionsCreate,
 } from '@UtilsModule'
 
-const { VmTemplate } = Form
 const _ = require('lodash')
 
 /**
@@ -294,7 +292,7 @@ export function CreateVmTemplate() {
         !hostsLoaded) ? (
         <SkeletonStepsForm />
       ) : (
-        <VmTemplate.CreateForm
+        <VmTemplate.Forms.CreateForm
           initialValues={formattedTemplate}
           stepProps={{
             formattedTemplate,
@@ -306,8 +304,8 @@ export function CreateVmTemplate() {
           onSubmit={onSubmit}
           fallback={<SkeletonStepsForm />}
         >
-          {(config) => <DefaultFormStepper {...config} />}
-        </VmTemplate.CreateForm>
+          {(config) => <DefaultFormStepper {...config} update={!!templateId} />}
+        </VmTemplate.Forms.CreateForm>
       )}
     </TranslateProvider>
   )

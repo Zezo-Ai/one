@@ -30,6 +30,7 @@ const notShared = [
   'redux',
   'redux-thunk',
   'socket.io-client',
+  'date-fns',
 ]
 
 /**

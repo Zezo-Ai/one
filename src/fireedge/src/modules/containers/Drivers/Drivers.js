@@ -23,11 +23,11 @@ import {
   SubmitButton,
   Tr,
   TranslateProvider,
-} from '@ComponentsModule'
+} from '@ResourcesModule'
 import { Driver, RESOURCE_NAMES, SERVER_CONFIG, T } from '@ConstantsModule'
 import { useAuth, useGeneral, useGeneralApi, DriverAPI } from '@FeaturesModule'
 import { Chip, Stack } from '@mui/material'
-import { MuiProvider, SunstoneTheme } from '@ProvidersModule'
+import { MuiProvider, SunstoneTheme } from '@StylesModule'
 import {
   Cancel,
   Collapse,

@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 import * as STATES from '@modules/constants/states'
 import * as ACTIONS from '@modules/constants/actions'
-import { COLOR } from '@modules/constants/color'
 // eslint-disable-next-line no-unused-vars
 import { Permissions, LockInfo } from '@modules/constants/common'
 // eslint-disable-next-line no-unused-vars
@@ -129,57 +128,57 @@ export const IMAGE_STATES = [
   {
     // 0
     name: STATES.INIT,
-    color: COLOR.debug.main,
+    color: 'light',
   },
   {
     // 1
     name: STATES.READY,
-    color: COLOR.success.main,
+    color: 'success',
   },
   {
     // 2
     name: STATES.USED,
-    color: COLOR.success.main,
+    color: 'warning',
   },
   {
     // 3
     name: STATES.DISABLED,
-    color: COLOR.debug.light,
+    color: 'light',
   },
   {
     // 4
     name: STATES.LOCKED,
-    color: COLOR.warning.main,
+    color: 'secondary',
   },
   {
     // 5
     name: STATES.ERROR,
-    color: COLOR.error.main,
+    color: 'danger',
   },
   {
     // 6
     name: STATES.CLONE,
-    color: COLOR.info.light,
+    color: 'warning',
   },
   {
     // 7
     name: STATES.DELETE,
-    color: COLOR.error.main,
+    color: 'danger',
   },
   {
     // 8
     name: STATES.USED_PERS,
-    color: COLOR.error.light,
+    color: 'danger',
   },
   {
     // 9
     name: STATES.LOCKED_USED,
-    color: COLOR.warning.light,
+    color: 'warning',
   },
   {
     // 10
     name: STATES.LOCKED_USED_PERS,
-    color: COLOR.error.light,
+    color: 'warning',
   },
 ]
 

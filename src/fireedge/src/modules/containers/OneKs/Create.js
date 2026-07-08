@@ -19,15 +19,12 @@ import { OneKsAPI, useGeneralApi } from '@FeaturesModule'
 
 import {
   DefaultFormStepper,
-  Form,
-  PATH,
+  OneKs,
   SkeletonStepsForm,
   TranslateProvider,
-} from '@ComponentsModule'
-import { T, ONEKS_OPERATIONS } from '@ConstantsModule'
+} from '@ResourcesModule'
+import { T, ONEKS_OPERATIONS, PATH } from '@ConstantsModule'
 import { createFieldsFromOneKsOdsUserInputs } from '@UtilsModule'
-
-const { OneKsApp } = Form
 
 /**
  * Displays the creation form for a kubernetes cluster.
@@ -36,7 +33,8 @@ const { OneKsApp } = Form
  */
 export function CreateOneKsCluster() {
   const history = useHistory()
-  const { state: { ID: clusterId } = {} } = useLocation()
+  const { state } = useLocation()
+  const clusterId = state?.ID
 
   const { enqueueSuccess, enqueueError } = useGeneralApi()
   const [createOneKsCluster] = OneKsAPI.useCreateOneKsClusterMutation()
@@ -45,9 +43,9 @@ export function CreateOneKsCluster() {
 
   const familiesUserInputs = createFieldsFromOneKsOdsUserInputs(families)
 
-  const { data: cluster } = clusterId
-    ? OneKsAPI.useGetOneKsClustersQuery({ id: clusterId })
-    : { data: undefined }
+  const initialValues = clusterId
+    ? { cluster: { cluster: `${clusterId}` } }
+    : undefined
 
   const onSubmit = async (template) => {
     try {
@@ -74,16 +72,17 @@ export function CreateOneKsCluster() {
   return (
     <TranslateProvider>
       {families ? (
-        <OneKsApp.CreateOneKsClusterForm
-          initialValues={cluster}
+        <OneKs.Forms.CreateOneKsClusterForm
+          initialValues={initialValues}
           onSubmit={onSubmit}
           stepProps={{
             families: familiesUserInputs,
+            clusterId,
           }}
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </OneKsApp.CreateOneKsClusterForm>
+        </OneKs.Forms.CreateOneKsClusterForm>
       ) : (
         <SkeletonStepsForm />
       )}

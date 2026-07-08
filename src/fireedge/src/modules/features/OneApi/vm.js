@@ -25,11 +25,16 @@ import {
 } from 'server/routes/api/vmpool/routes'
 
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 
 import {
   FilterFlag,
   LockLevel,
   Permission,
+  RESOURCE_NAMES,
   VM as VmType,
 } from '@ConstantsModule'
 import { http } from '@UtilsModule'
@@ -90,14 +95,24 @@ const vmApi = oneApi.injectEndpoints({
           : Actions.VM_POOL_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
 
-      transformResponse: (data) => [data?.VM_POOL?.VM ?? []].flat(),
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.VM_POOL?.VM ?? []].flat(),
+          RESOURCE_NAMES.VM,
+          meta
+        ),
       providesTags: (vms) =>
-        vms
-          ? [...vms.map(({ ID }) => ({ type: VM_POOL, id: `${ID}` })), VM_POOL]
-          : [VM_POOL],
+        withProfileLabelsTags(
+          vms
+            ? [
+                ...vms.map(({ ID }) => ({ type: VM_POOL, id: `${ID}` })),
+                VM_POOL,
+              ]
+            : [VM_POOL]
+        ),
     }),
 
     getVmsPaginated: builder.query({
@@ -137,12 +152,56 @@ const vmApi = oneApi.injectEndpoints({
 
         const command = { name, ...ExtraCommandsPool[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
+      transformResponse: (data, meta) =>
+        withResourceLabels([data ?? []].flat(), RESOURCE_NAMES.VM, meta),
       providesTags: (vms) =>
-        vms
-          ? [...vms.map(({ ID }) => ({ type: VM_POOL, id: `${ID}` })), VM_POOL]
-          : [VM_POOL],
+        withProfileLabelsTags(
+          vms
+            ? [
+                ...vms.map(({ ID }) => ({ type: VM_POOL, id: `${ID}` })),
+                VM_POOL,
+              ]
+            : [VM_POOL]
+        ),
+    }),
+
+    getVmInfoset: builder.query({
+      /**
+       * Fetches information for a set of VMs.
+       *
+       * @param {object} params - Request parameters
+       * @param {string} [params.ids] - VMs set as a comma separated list of IDs
+       * @param {0|1} params.extended
+       * - Fetch extended:
+       * ``0``: Normal fetch.
+       * ``1``: Fetch extended info.
+       * @returns {VmType[]} Set of VMs
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.VM_POOL_INFOSET
+
+        const command = { name, ...Commands[name] }
+
+        return { params, command, needStateInMeta: true }
+      },
+      transformResponse: (data, meta) =>
+        withResourceLabels(
+          [data?.VM_POOL?.VM ?? []].flat(),
+          RESOURCE_NAMES.VM,
+          meta
+        ),
+      providesTags: (vms) =>
+        withProfileLabelsTags(
+          vms
+            ? [
+                ...vms.map(({ ID }) => ({ type: VM_POOL, id: `${ID}` })),
+                VM_POOL,
+              ]
+            : [VM_POOL]
+        ),
     }),
     getVm: builder.query({
       /**
@@ -157,13 +216,15 @@ const vmApi = oneApi.injectEndpoints({
         const name = Actions.VM_INFO
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data?.VM ?? {},
-      providesTags: (_, __, { id }) => [
-        { type: VM, id },
-        { type: VM_POOL, id },
-      ],
+      transformResponse: (data, meta) =>
+        withResourceLabels(data?.VM ?? {}, RESOURCE_NAMES.VM, meta),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([
+          { type: VM, id },
+          { type: VM_POOL, id },
+        ]),
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled
@@ -371,12 +432,13 @@ const vmApi = oneApi.injectEndpoints({
       },
     }),
     getVmLogs: builder.query({
-      // /**
-      //  * Retrieves log for a vm.
-      //  *
-      //  * @returns {number} VM ID
-      //  * @throws Fails when response isn't code 200
-      //  */
+      /**
+       * Retrieves log for a vm.
+       *
+       * @param {object} params - Request parameters
+       * @returns {number} VM ID
+       * @throws Fails when response isn't code 200
+       */
       query: (params) => {
         const name = ExtraActions.VM_LOGS
         const command = { name, ...ExtraCommands[name] }
@@ -1319,7 +1381,7 @@ const vmApi = oneApi.injectEndpoints({
        * @param {object} params - Request parameters
        * @param {string|number} params.id - Virtual machine id
        * @param {string} params.template
-       * - A string containing a single NIC vector attribute
+       * - A string containing a single PCI vector attribute
        * @returns {number} Virtual machine id
        * @throws Fails when response isn't code 200
        */
@@ -1340,7 +1402,7 @@ const vmApi = oneApi.injectEndpoints({
        *
        * @param {object} params - Request parameters
        * @param {string} params.id - Virtual machine id
-       * @param {string} params.nic - NIC id
+       * @param {string} params.pci - PCI id
        * @returns {number} Virtual machine id
        * @throws Fails when response isn't code 200
        */
@@ -1363,6 +1425,8 @@ const vmQueries = (({
   useGetVmsQuery,
   useLazyGetVmsQuery,
   useGetVmQuery,
+  useGetVmInfosetQuery,
+  useLazyGetVmInfosetQuery,
   useLazyGetVmQuery,
   useGetGuacamoleSessionQuery,
   useLazyGetGuacamoleSessionQuery,
@@ -1429,6 +1493,8 @@ const vmQueries = (({
   useGetVmsQuery,
   useLazyGetVmsQuery,
   useGetVmQuery,
+  useGetVmInfosetQuery,
+  useLazyGetVmInfosetQuery,
   useLazyGetVmQuery,
   useGetGuacamoleSessionQuery,
   useLazyGetGuacamoleSessionQuery,

@@ -15,7 +15,7 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement } from 'react'
 import { Redirect, useParams } from 'react-router-dom'
-import { VrsTable, TranslateProvider, VrTabs } from '@ComponentsModule'
+import { VrsTable, TranslateProvider, VrTabs } from '@ResourcesModule'
 
 /**
  * Displays the detail information about a Service Template.

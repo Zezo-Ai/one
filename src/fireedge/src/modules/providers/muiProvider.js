@@ -27,23 +27,25 @@ import StylesProvider from '@mui/styles/StylesProvider'
 import { ThemeProvider as StylesThemeProvider } from '@mui/styles'
 import AdapterLuxon from '@mui/lab/AdapterLuxon'
 import LocalizationProvider from '@mui/lab/LocalizationProvider'
-
-import { createTheme, generateClassName } from '@modules/providers/theme'
+import { generateClassName } from '@modules/providers/theme'
+import { createAppTheme } from '@StylesModule'
 import { useAuth } from '@FeaturesModule'
 import { SCHEMES } from '@ConstantsModule'
 
-const { DARK, LIGHT, SYSTEM } = SCHEMES
-
 const MuiProvider = ({ theme: appTheme, children }) => {
-  const { settings: { SCHEME } = {} } = useAuth()
+  const { settings: { SCHEME = SCHEMES.LIGHT } = {} } = useAuth()
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
+  const theme =
+    SCHEME === 'system'
+      ? prefersDarkMode
+        ? SCHEMES.DARK
+        : SCHEMES.LIGHT
+      : SCHEME
 
-  const muiTheme = useMemo(() => {
-    const prefersScheme = prefersDarkMode ? DARK : LIGHT
-    const newScheme = SCHEME === SYSTEM ? prefersScheme : SCHEME
-
-    return createTheme(appTheme, newScheme)
-  }, [SCHEME, prefersDarkMode])
+  const muiTheme = useMemo(
+    () => createAppTheme(theme),
+    [SCHEME, prefersDarkMode]
+  )
 
   useEffect(() => {
     const jssStyles = document.querySelector('#jss-server-side')
