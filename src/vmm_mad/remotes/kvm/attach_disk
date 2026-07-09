@@ -53,6 +53,96 @@ function insert_sec() {
     fi
 }
 
+function get_disk_bus() {
+    local disk_bus=""
+
+    if [ -z "${TARGET}" ]; then
+        echo ""
+        return 0
+    fi
+
+    if [ "${DEVICE}" = "cdrom" ]; then
+        if [[ "${MACHINE}" == *q35* || "${MACHINE}" == *virt* ]]; then
+            disk_bus="sata"
+        else
+            disk_bus="ide"
+        fi
+    else
+        case "${TARGET:0:1}" in
+        s)
+            disk_bus="${SD_DISK_BUS,,}"
+            ;;
+        v)
+            disk_bus="virtio"
+            ;;
+        *)
+            if [[ "${MACHINE}" == *q35* || "${MACHINE}" == *virt* ]]; then
+                disk_bus="sata"
+            else
+                disk_bus="ide"
+            fi
+            ;;
+        esac
+    fi
+
+    echo "${disk_bus}"
+}
+
+function disk_target_number() {
+    suffix="$1"
+    target_number=0
+
+    while [ -n "${suffix}" ]; do
+        ch="${suffix:0:1}"
+        suffix="${suffix:1}"
+
+        case "${ch}" in
+        [a-z])
+            target_number=$(( target_number * 26 + $(LC_CTYPE=C printf '%d' "'${ch}") - 96 ))
+            ;;
+        *)
+            echo "-1"
+            return
+            ;;
+        esac
+    done
+
+    echo $(( target_number - 1 ))
+}
+
+function get_driver_iothread() {
+    local domain_iothreads
+    local iothreadid_i
+
+    if [ "${DISK_BUS}" != "virtio" ]; then
+        echo ""
+        return
+    fi
+
+    read -r domain_iothreads <<<"$(virsh --connect "${LIBVIRT_URI}" \
+        dumpxml "${DOMAIN}" 2>/dev/null | \
+        xmllint --xpath '/domain/iothreads/text()' - \
+        2>/dev/null)"
+
+    if ! [[ "${domain_iothreads}" =~ ^[0-9]+$ ]] || \
+       [ "${domain_iothreads}" -le 0 ]; then
+        echo ""
+        return
+    fi
+
+    if [[ "${IOTHREAD}" =~ ^[0-9]+$ ]] && [ "${IOTHREAD}" -gt 0 ]; then
+        iothreadid_i="${IOTHREAD}"
+    else
+        iothreadid_i=1
+    fi
+
+    if [ "${iothreadid_i}" -gt "${domain_iothreads}" ]; then
+        echo "${domain_iothreads}"
+    else
+        echo "${iothreadid_i}"
+    fi
+}
+
 # defaults
 CACHE=${CACHE:-${DEFAULT_ATTACH_CACHE}}
 CACHE=${CACHE:-default}
@@ -77,11 +167,26 @@ WRITE_IOPS_SEC=${WRITE_IOPS_SEC:-${DEFAULT_ATTACH_WRITE_IOPS_SEC}}
 WRITE_IOPS_SEC_MAX_LENGTH=${WRITE_IOPS_SEC_MAX_LENGTH:-${DEFAULT_ATTACH_WRITE_IOPS_SEC_MAX_LENGTH}}
 WRITE_IOPS_SEC_MAX=${WRITE_IOPS_SEC_MAX:-${DEFAULT_ATTACH_WRITE_IOPS_SEC_MAX}}
 SIZE_IOPS_SEC=${SIZE_IOPS_SEC:-${DEFAULT_ATTACH_SIZE_IOPS_SEC}}
+IOTHREAD=${IOTHREAD:-${DEFAULT_ATTACH_VIRTIO_BLK_IOTHREAD}}
+VIRTIO_BLK_QUEUES=${VIRTIO_BLK_QUEUES:-${VM_VIRTIO_BLK_QUEUES}}
 VIRTIO_BLK_QUEUES=${VIRTIO_BLK_QUEUES:-${DEFAULT_ATTACH_VIRTIO_BLK_QUEUES}}
+
+if [ "${TYPE}" = "cdrom" ]; then
+    DRIVER="raw"
+fi
 
 if [ "${VIRTIO_BLK_QUEUES}" = "auto" ]; then
     VIRTIO_BLK_QUEUES="$VCPU"
 fi
+
+DISK_BUS=$(get_disk_bus)
+
+if [[ "${DISK_BUS}" == "sata" ]]; then
+    error_message "The SATA disks are not hot-pluggable!"
+    exit 1
+fi
+
+DRIVER_IOTHREAD=$(get_driver_iothread)
 
 # disk XML
 XML=''
@@ -92,8 +197,10 @@ XML+="<driver name='qemu' type='$(xml_esc "${DRIVER}")'"
 [ -n "${CACHE}" ] && XML+=" cache='$(xml_esc "${CACHE}")'"
 [ -n "${DISK_IO}" ] && XML+=" io='$(xml_esc "${DISK_IO}")'"
 [ -n "${DISCARD}" ] && XML+=" discard='$(xml_esc "${DISCARD}")'"
-[ -n "${IOTHREAD}" ] && XML+=" iothread='$(xml_esc "${IOTHREAD}")'"
-[ -n "${VIRTIO_BLK_QUEUES}" ] && XML+=" queues='$(xml_esc "${VIRTIO_BLK_QUEUES}")'"
+if [ "${DISK_BUS}" = "virtio" ]; then
+    [ -n "${DRIVER_IOTHREAD}" ] && XML+=" iothread='$(xml_esc "${DRIVER_IOTHREAD}")'"
+    [ -n "${VIRTIO_BLK_QUEUES}" ] && XML+=" queues='$(xml_esc "${VIRTIO_BLK_QUEUES}")'"
+fi
 XML+="/>"
 
 if [ "${TYPE_SOURCE}" == "file" ]; then
@@ -118,7 +225,9 @@ XML+="</source>"
 
 [ -n "${AUTH}" ] && XML+=" ${AUTH}"
 
-XML+="<target dev='$(xml_esc "${TARGET}")'/>"
+XML+="<target dev='$(xml_esc "${TARGET}")'"
+[ -n "${DISK_BUS}" ] && XML+=" bus='$(xml_esc "${DISK_BUS}")'"
+XML+="/>"
 [ -n "${ORDER}" ] && XML+=" <boot order='$(xml_esc "${ORDER}")'/>"
 [ "${READONLY}" = 'yes' ] && XML+="<readonly/>"
 [ "${SHAREABLE}" = 'yes' ] && XML+="<shareable/>"
@@ -163,14 +272,17 @@ then
 fi
 
 if [ -z "${DISK_TARGET##sd*}" ]; then
-    CTRL_TARGET=$(( $(LC_CTYPE=C printf '%d' "'${DISK_TARGET##sd}") - 97 ))
-    if [ ${CTRL_TARGET} -ge 0 ] && [ ${CTRL_TARGET} -lt 256 ]; then
+    CTRL_TARGET=$(disk_target_number "${DISK_TARGET##sd}")
+
+    if [ "${CTRL_TARGET}" -ge 0 ] && [ "${CTRL_TARGET}" -lt 256 ]; then
         XML+="<address type='drive' controller='0' bus='0' target='${CTRL_TARGET}' unit='0'/>"
     fi
 fi
 
 if [[ -n "${DISK_SERIAL}" ]]; then
-    XML+="<serial>${DISK_SERIAL//[^0-9a-zA-Z-._]/}</serial>"
+    if [ "${TYPE}" != "block" ] || [ "${DISK_BUS}" != "scsi" ]; then
+        XML+="<serial>${DISK_SERIAL//[^0-9a-zA-Z-._]/}</serial>"
+    fi
 fi
 
 XML+="</disk>"

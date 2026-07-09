@@ -823,8 +823,12 @@ function iqn_get_host {
 # This function builds the XML necessary for attach-disk operations
 # that require declaration of host sources
 #   @param $1 - Space separated list of hosts
+#   @param $2 - Optional transport attribute
 #   @return The XML via STDOUT
 function get_source_xml {
+    SOURCE_HOST=""
+    SOURCE_TRANSPORT="$2"
+
     for host in $1 ; do
         BCK_IFS=$IFS
         IFS=':'
@@ -835,10 +839,14 @@ function get_source_xml {
             HOST_PARTS[k++]="$part"
         done
 
-        SOURCE_HOST="$SOURCE_HOST<host name='${HOST_PARTS[0]}'"
+        SOURCE_HOST="$SOURCE_HOST<host name='$(xml_esc "${HOST_PARTS[0]}")'"
 
         if [ -n "${HOST_PARTS[1]}" ]; then
-            SOURCE_HOST="$SOURCE_HOST port='${HOST_PARTS[1]}'"
+            SOURCE_HOST="$SOURCE_HOST port='$(xml_esc "${HOST_PARTS[1]}")'"
+        fi
+
+        if [ -n "${SOURCE_TRANSPORT}" ]; then
+            SOURCE_HOST="$SOURCE_HOST transport='$(xml_esc "${SOURCE_TRANSPORT}")'"
         fi
 
         SOURCE_HOST="$SOURCE_HOST/>"
@@ -862,6 +870,10 @@ function get_source_xml {
 # The variables set are as follows:
 #
 # * VMID
+# * VCPU
+# * SD_DISK_BUS
+# * MACHINE
+# * VIRTIO_BLK_QUEUES
 # * DRIVER
 # * TYPE
 # * READONLY
@@ -874,7 +886,10 @@ function get_source_xml {
 # * CEPH_HOST
 # * CEPH_SECRET
 # * CEPH_USER
+# * GLUSTER_HOST
+# * GLUSTER_VOLUME
 # * LUKS_SECRET
+# * SHEEPDOG_HOST
 # * ISCSI_HOST
 # * ISCSI_USAGE
 # * ISCSI_USER
@@ -931,6 +946,9 @@ function get_disk_information {
         XPATH_ELEMENTS[i++]="$element"
     done < <($CMD       /VMM_DRIVER_ACTION_DATA/VM/ID \
                         /VMM_DRIVER_ACTION_DATA/VM/TEMPLATE/VCPU \
+                        /VMM_DRIVER_ACTION_DATA/VM/TEMPLATE/OS/SD_DISK_BUS \
+                        /VMM_DRIVER_ACTION_DATA/VM/TEMPLATE/OS/MACHINE \
+                        /VMM_DRIVER_ACTION_DATA/VM/TEMPLATE/FEATURES/VIRTIO_BLK_QUEUES \
                         $DISK_XPATH/DRIVER \
                         $DISK_XPATH/TYPE \
                         $DISK_XPATH/READONLY \
@@ -943,7 +961,10 @@ function get_disk_information {
                         $DISK_XPATH/CEPH_HOST \
                         $DISK_XPATH/CEPH_SECRET \
                         $DISK_XPATH/CEPH_USER \
+                        $DISK_XPATH/GLUSTER_HOST \
+                        $DISK_XPATH/GLUSTER_VOLUME \
                         $DISK_XPATH/LUKS_SECRET \
+                        $DISK_XPATH/SHEEPDOG_HOST \
                         $DISK_XPATH/ISCSI_HOST \
                         $DISK_XPATH/ISCSI_USAGE \
                         $DISK_XPATH/ISCSI_USER \
@@ -980,6 +1001,9 @@ function get_disk_information {
 
     VMID="${XPATH_ELEMENTS[j++]}"
     VCPU="${XPATH_ELEMENTS[j++]:-1}"
+    SD_DISK_BUS="${XPATH_ELEMENTS[j++]}"
+    MACHINE="${XPATH_ELEMENTS[j++]}"
+    VM_VIRTIO_BLK_QUEUES="${XPATH_ELEMENTS[j++]}"
     DRIVER="${XPATH_ELEMENTS[j++]:-$DEFAULT_TYPE}"
     TYPE="${XPATH_ELEMENTS[j++]}"
     READONLY="${XPATH_ELEMENTS[j++]}"
@@ -992,7 +1016,10 @@ function get_disk_information {
     CEPH_HOST="${XPATH_ELEMENTS[j++]}"
     CEPH_SECRET="${XPATH_ELEMENTS[j++]}"
     CEPH_USER="${XPATH_ELEMENTS[j++]}"
+    GLUSTER_HOST="${XPATH_ELEMENTS[j++]}"
+    GLUSTER_VOLUME="${XPATH_ELEMENTS[j++]}"
     LUKS_SECRET="${XPATH_ELEMENTS[j++]}"
+    SHEEPDOG_HOST="${XPATH_ELEMENTS[j++]}"
     ISCSI_HOST="${XPATH_ELEMENTS[j++]}"
     ISCSI_USAGE="${XPATH_ELEMENTS[j++]}"
     ISCSI_USER="${XPATH_ELEMENTS[j++]}"
@@ -1040,10 +1067,14 @@ function get_disk_information {
     fi
 
     case "$TYPE" in
-    block)
+    block|block_cdrom)
         TYPE_SOURCE="dev"
         TYPE_XML="block"
-        DEVICE="disk"
+        if [ "$TYPE" = "block_cdrom" ]; then
+            DEVICE="cdrom"
+        else
+            DEVICE="disk"
+        fi
         ;;
     iscsi)
         TYPE_SOURCE="name"
@@ -1088,10 +1119,16 @@ function get_disk_information {
             DEVICE="disk"
         fi
 
-        if [ "$CLONE" = "YES" ]; then
-            SOURCE="${IMG_SRC}-${VMID}-${DISK_ID}"
-        else
+        if [ -n "$IMG_SRC" ]; then
             SOURCE="${IMG_SRC}"
+        elif [ -n "$POOL_NAME" ]; then
+            SOURCE="${POOL_NAME}/one-sys"
+        else
+            SOURCE="one/one-sys"
+        fi
+
+        if [ "$CLONE" = "YES" ] || [ -z "$IMG_SRC" ]; then
+            SOURCE="${SOURCE}-${VMID}-${DISK_ID}"
         fi
 
         SOURCE_ARGS="protocol='rbd'"
@@ -1102,6 +1139,46 @@ function get_disk_information {
                     <secret type='ceph' uuid='$CEPH_SECRET'/>\
                   </auth>"
         fi
+        ;;
+    sheepdog*)
+        TYPE_SOURCE="name"
+        TYPE_XML="network"
+
+        if [ "$TYPE" = "sheepdog_cdrom" ]; then
+            DEVICE="cdrom"
+        else
+            DEVICE="disk"
+        fi
+
+        SOURCE="${IMG_SRC}"
+
+        if [ "$CLONE" = "YES" ]; then
+            SOURCE="${SOURCE}-${VMID}-${DISK_ID}"
+        fi
+
+        SOURCE_ARGS="protocol='sheepdog'"
+        SOURCE_HOST=$(get_source_xml "$SHEEPDOG_HOST" "tcp")
+        ;;
+    gluster*)
+        TYPE_SOURCE="name"
+        TYPE_XML="network"
+
+        if [ "$TYPE" = "gluster_cdrom" ]; then
+            DEVICE="cdrom"
+        else
+            DEVICE="disk"
+        fi
+
+        SOURCE="${GLUSTER_VOLUME}/"
+
+        if [ "$CLONE" = "YES" ]; then
+            SOURCE="${SOURCE}${VMID}/disk.${DISK_ID}"
+        else
+            SOURCE="${SOURCE}${IMG_SRC##*/}"
+        fi
+
+        SOURCE_ARGS="protocol='gluster'"
+        SOURCE_HOST=$(get_source_xml "$GLUSTER_HOST" "tcp")
         ;;
     *)
         #NOTE: This includes TYPE=FS and TYPE=SWAP
@@ -1116,7 +1193,7 @@ function get_disk_information {
             NAME="${RBD_SOURCE}"
             SOURCE_ARGS="protocol='rbd'"
 
-            SOURCE_HOST=$(get_source_xml $CEPH_HOST)
+            SOURCE_HOST=$(get_source_xml "$CEPH_HOST")
 
             if [ -n "$CEPH_USER" -a -n "$CEPH_SECRET" ]; then
                 AUTH="<auth username='$CEPH_USER'>\
@@ -1128,6 +1205,36 @@ function get_disk_information {
             TYPE_SOURCE="dev"
             TYPE_XML="block"
             DEVICE="disk"
+            ;;
+        SHEEPDOG | SHEEPDOG_CDROM)
+            TYPE_SOURCE="name"
+            TYPE_XML="network"
+            DEVICE="disk"
+
+            SOURCE="${IMG_SRC}"
+
+            if [ "$CLONE" = "YES" ]; then
+                SOURCE="${SOURCE}-${VMID}-${DISK_ID}"
+            fi
+
+            SOURCE_ARGS="protocol='sheepdog'"
+            SOURCE_HOST=$(get_source_xml "$SHEEPDOG_HOST" "tcp")
+            ;;
+        GLUSTER)
+            TYPE_SOURCE="name"
+            TYPE_XML="network"
+            DEVICE="disk"
+
+            SOURCE="${GLUSTER_VOLUME}/"
+
+            if [ "$CLONE" = "YES" ]; then
+                SOURCE="${SOURCE}${VMID}/disk.${DISK_ID}"
+            else
+                SOURCE="${SOURCE}${IMG_SRC##*/}"
+            fi
+
+            SOURCE_ARGS="protocol='gluster'"
+            SOURCE_HOST=$(get_source_xml "$GLUSTER_HOST" "tcp")
             ;;
         *)
             TYPE_SOURCE="file"
