@@ -3484,7 +3484,7 @@ int VirtualMachine::get_disk_images(string& error_str)
     vector<VectorAttribute *> adisks;
     vector<VectorAttribute *> acontext_disks;
 
-    int num_context = user_obj_template->remove("CONTEXT", acontext_disks);
+    user_obj_template->remove("CONTEXT", acontext_disks);
     user_obj_template->remove("DISK", adisks);
 
     obj_template->set(acontext_disks);
@@ -3492,7 +3492,7 @@ int VirtualMachine::get_disk_images(string& error_str)
 
     VectorAttribute * context = 0;
 
-    if ( num_context > 0 )
+    if ( !acontext_disks.empty() )
     {
         context = acontext_disks[0];
     }
@@ -3756,41 +3756,16 @@ int VirtualMachine::get_network_leases(string& estr)
     /*   * NIC_ALIAS                                                          */
     /*   * PCI + TYPE = NIC                                                   */
     /* ---------------------------------------------------------------------- */
-    vector<Attribute *> anics;
-    vector<Attribute *> alias;
+    vector<VectorAttribute *> anics;
+    vector<VectorAttribute *> alias;
 
     user_obj_template->remove("NIC", anics);
-
-    for (auto it = anics.begin(); it != anics.end(); )
-    {
-        if ( (*it)->type() != Attribute::VECTOR )
-        {
-            delete *it;
-            it = anics.erase(it);
-        }
-        else
-        {
-            obj_template->set(*it);
-            ++it;
-        }
-    }
-
     user_obj_template->remove("NIC_ALIAS", alias);
 
-    for (auto it = alias.begin(); it != alias.end(); )
-    {
-        if ( (*it)->type() != Attribute::VECTOR )
-        {
-            delete *it;
-            it = alias.erase(it);
-        }
-        else
-        {
-            obj_template->set(*it);
-            anics.push_back(*it);
-            ++it;
-        }
-    }
+    obj_template->set(anics);
+    obj_template->set(alias);
+
+    anics.insert(anics.end(), alias.begin(), alias.end());
 
     vector<VectorAttribute *> pcis;
 
@@ -4192,38 +4167,20 @@ void VirtualMachine::detach_pci(VectorAttribute * pci)
 
 int VirtualMachine::get_vmgroup(string& error)
 {
-    vector<Attribute  *> vmgroups;
-
-    bool found = false;
-    VectorAttribute * thegroup = 0;
+    vector<unique_ptr<VectorAttribute>> vmgroups;
 
     user_obj_template->remove("VMGROUP", vmgroups);
 
-    for (auto it = vmgroups.begin(); it != vmgroups.end(); )
-    {
-        if ( (*it)->type() != Attribute::VECTOR || found )
-        {
-            delete *it;
-            it = vmgroups.erase(it);
-        }
-        else
-        {
-            thegroup = dynamic_cast<VectorAttribute *>(*it);
-            found    = true;
-
-            ++it;
-        }
-    }
-
-    if ( thegroup == 0 )
+    if (vmgroups.empty())
     {
         return 0;
     }
 
-    VMGroupPool * vmgrouppool = Nebula::instance().get_vmgrouppool();
-    int rc;
+    VectorAttribute * thegroup = vmgroups.begin()->release();
 
-    rc = vmgrouppool->vmgroup_attribute(thegroup, get_uid(), get_oid(), error);
+    VMGroupPool * vmgrouppool = Nebula::instance().get_vmgrouppool();
+
+    int rc = vmgrouppool->vmgroup_attribute(thegroup, get_uid(), get_oid(), error);
 
     if ( rc != 0 )
     {

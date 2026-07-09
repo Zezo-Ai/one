@@ -208,7 +208,7 @@ int Backups::parse(Template *tmpl,
                    const vector<int>& eligible_ids,
                    std::string& error_str)
 {
-    vector<Attribute *> cfg_a;
+    vector<unique_ptr<Attribute>> cfg_a;
 
     int  iattr;
     bool battr;
@@ -225,12 +225,12 @@ int Backups::parse(Template *tmpl,
         return 0;
     }
 
-    VectorAttribute * cfg = dynamic_cast<VectorAttribute *>(cfg_a[0]);
+    VectorAttribute * cfg = dynamic_cast<VectorAttribute *>(cfg_a[0].get());
 
     if ( cfg == 0 )
     {
         error_str = "Internal error parsing BACKUP_CONFIG attribute.";
-        goto error_parse;
+        return -1;
     }
 
     /* ---------------------------------------------------------------------- */
@@ -272,7 +272,7 @@ int Backups::parse(Template *tmpl,
     {
         if (parse_disk_ids(sattr, disk_ids, error_str) != 0)
         {
-            goto error_parse;
+            return -1;
         }
 
         for (int id : disk_ids)
@@ -281,7 +281,7 @@ int Backups::parse(Template *tmpl,
             {
                 error_str = "Invalid DISK_IDS, disk " + to_string(id) +
                             " cannot be backed up";
-                goto error_parse;
+                return -1;
             }
         }
 
@@ -384,21 +384,8 @@ int Backups::parse(Template *tmpl,
     if (interactive() && mode() == INCREMENT && sattr == "SNAPSHOT")
     {
         error_str = "Interactive backups do not support SNAPSHOT increment mode.";
-        goto error_parse;
-    }
-
-    for (auto &i : cfg_a)
-    {
-        delete i;
+        return -1;
     }
 
     return 0;
-
-error_parse:
-    for (auto &i : cfg_a)
-    {
-        delete i;
-    }
-
-    return -1;
 }

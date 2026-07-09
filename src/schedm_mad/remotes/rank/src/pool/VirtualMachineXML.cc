@@ -292,7 +292,7 @@ static bool isVolatile(const VectorAttribute * disk)
 
 void VirtualMachineXML::init_storage_usage()
 {
-    vector<Attribute  *>            disks;
+    vector<unique_ptr<VectorAttribute>> disks;
 
     long long   size;
     long long   snapshot_size;
@@ -302,17 +302,10 @@ void VirtualMachineXML::init_storage_usage()
 
     system_ds_usage = 0;
 
-    int num = vm_template->remove("DISK", disks);
+    vm_template->remove("DISK", disks);
 
-    for (const auto attr : disks)
+    for (const auto& disk : disks)
     {
-        const VectorAttribute * disk = dynamic_cast<const VectorAttribute*>(attr);
-
-        if (!disk)
-        {
-            continue;
-        }
-
         if (disk->vector_value("SIZE", size) != 0)
         {
             continue;
@@ -323,7 +316,7 @@ void VirtualMachineXML::init_storage_usage()
             size += snapshot_size;
         }
 
-        if (isVolatile(disk))
+        if (isVolatile(disk.get()))
         {
             system_ds_usage += size;
         }
@@ -368,11 +361,6 @@ void VirtualMachineXML::init_storage_usage()
     if (this->memory > 0 && factor >= 0)
     {
         system_ds_usage += this->memory * factor;
-    }
-
-    for (int i = 0; i < num ; i++)
-    {
-        delete disks[i];
     }
 }
 

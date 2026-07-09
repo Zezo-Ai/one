@@ -289,7 +289,7 @@ struct NicAliasID
 };
 
 int VirtualMachineNics::get_network_leases(int vm_id, int uid,
-                                           vector<Attribute *>& nics, VectorAttribute * nic_default,
+                                           vector<VectorAttribute*>& nics, VectorAttribute * nic_default,
                                            vector<VectorAttribute*>& sgs, std::string& error_str)
 {
     Nebula& nd = Nebula::instance();
@@ -301,17 +301,16 @@ int VirtualMachineNics::get_network_leases(int vm_id, int uid,
 
     int nic_id = 0;
 
-    vector<Attribute *> alias_nics;
+    vector<VectorAttribute *> alias_nics;
 
     std::map<std::string, NicAliasID> nic_map;
 
     /* ---------------------------------------------------------------------- */
     /* Get the interface network information                                  */
     /* ---------------------------------------------------------------------- */
-    for (auto it=nics.begin(); it != nics.end() ; ++it)
+    for (auto vnic : nics)
     {
-        VectorAttribute * vnic = static_cast<VectorAttribute *>(*it);
-        std::string net_mode   = vnic->vector_value("NETWORK_MODE");
+        std::string net_mode = vnic->vector_value("NETWORK_MODE");
 
         one_util::toupper(net_mode);
 
@@ -392,8 +391,7 @@ int VirtualMachineNics::get_network_leases(int vm_id, int uid,
     /* ---------------------------------------------------------------------- */
     for (auto it=alias_nics.begin(); it != alias_nics.end() ; ++it, ++nic_id)
     {
-        VirtualMachineNic * nic = new
-        VirtualMachineNic(static_cast<VectorAttribute *>(*it), nic_id);
+        VirtualMachineNic * nic = new VirtualMachineNic(*it, nic_id);
 
         std::string pnic = nic->vector_value("PARENT");
 

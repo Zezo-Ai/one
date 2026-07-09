@@ -373,10 +373,7 @@ int VirtualMachine::parse_features(Template * tmpl, string& err)
 
         user_obj_template->remove("FEATURES", features_attr);
 
-        for (auto it = features_attr.begin(); it != features_attr.end(); ++it)
-        {
-            obj_template->set(*it);
-        }
+        obj_template->set(features_attr);
     }
 
     return 0;
@@ -611,12 +608,12 @@ int VirtualMachine::parse_graphics(string& error_str, Template * tmpl)
 {
     vector<unique_ptr<VectorAttribute>> vgraphics;
 
-    if (tmpl->remove("GRAPHICS", vgraphics) == 0)
+    if (tmpl->remove("GRAPHICS", vgraphics) == 0 || vgraphics.empty())
     {
         return 0;
     }
 
-    VectorAttribute * graphics = (*vgraphics.begin()).release();
+    VectorAttribute * graphics = vgraphics.begin()->release();
 
     obj_template->erase("GRAPHICS");
     obj_template->set(graphics);
@@ -667,12 +664,12 @@ int VirtualMachine::parse_video(string& error_str, Template * tmpl)
 {
     vector<unique_ptr<VectorAttribute>> vvideo;
 
-    if (tmpl->remove("VIDEO", vvideo) == 0)
+    if (tmpl->remove("VIDEO", vvideo) == 0 || vvideo.empty())
     {
         return 0;
     }
 
-    VectorAttribute* video = (*vvideo.begin()).release();
+    VectorAttribute* video = vvideo.begin()->release();
 
     obj_template->erase("VIDEO");
 
@@ -967,23 +964,16 @@ int VirtualMachine::parse_file_attribute(string       attribute,
 
 int VirtualMachine::parse_cpu_model(Template * tmpl)
 {
-    vector<VectorAttribute *> cm_attr;
+    vector<unique_ptr<VectorAttribute>> cm_attr;
 
-    int num = tmpl->remove("CPU_MODEL", cm_attr);
+    tmpl->remove("CPU_MODEL", cm_attr);
 
-    if ( num == 0 )
+    if ( cm_attr.empty())
     {
         return 0;
     }
 
-    auto it = cm_attr.begin();
-
-    obj_template->set(*it);
-
-    for ( ++it; it != cm_attr.end(); ++it)
-    {
-        delete *it;
-    }
+    obj_template->set(cm_attr.begin()->release());
 
     return 0;
 }
