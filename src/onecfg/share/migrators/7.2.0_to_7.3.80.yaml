@@ -2031,6 +2031,14 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - actions
+            key: create_dialog_string
+            old: true
+            state: rm
+            extra: {}
         content: |+
             ---
             # This file describes the information and actions available in the GROUP tab
@@ -2043,7 +2051,6 @@ patches:
 
             actions:
               create_dialog: true
-              create_dialog_string: true
               delete: true
 
             # Filters - List of criteria to filter the resources
@@ -2301,6 +2308,19 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            key: vlanrules
+            value:
+                enabled: true
+                actions:
+                    add_vlan_rule: true
+                    update_vlan_rule: true
+                    delete_vlan_rule: true
+            state: ins
+            extra: {}
         content: |-
             ---
             # This file describes the information and actions available in the GROUP tab
@@ -2359,11 +2379,33 @@ patches:
                 enabled: true
                 actions:
                   get_showback: true
+
+              vlanrules:
+                enabled: true
+                actions:
+                  add_vlan_rule: true
+                  update_vlan_rule: true
+                  delete_vlan_rule: true
     "/etc/one/fireedge/sunstone/views/admin/host-tab.yaml":
         class: Yaml
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            - info
+            key: nsx_panel
+            old:
+                enabled: true
+                actions:
+                    copy: true
+                    add: true
+                    edit: true
+                    delete: true
+            state: rm
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the HOST tab
@@ -2398,13 +2440,6 @@ patches:
                   enabled: true
                   actions:
                     rename: true
-                nsx_panel:
-                  enabled: true
-                  actions:
-                    copy: true
-                    add: true
-                    edit: true
-                    delete: true
                 monitoring_panel:
                   enabled: true
                   actions:
@@ -2752,6 +2787,67 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            - roles
+            key: actions
+            value:
+                add_role: true
+                scale: true
+                resume: true
+                release: true
+                hold: true
+                suspend: true
+                stop: true
+                poweroff: true
+                poweroff-hard: true
+                reboot: true
+                reboot-hard: true
+                undeploy: true
+                undeploy-hard: true
+                terminate: true
+                terminate-hard: true
+                snapshot-create: true
+                snapshot-revert: true
+                snapshot-delete: true
+                disk-snapshot-create: true
+                disk-snapshot-revert: true
+                disk-snapshot-delete: true
+            state: ins
+            extra: {}
+        -   path:
+            - info-tabs
+            - sched_actions
+            - actions
+            key: sched-update
+            value: true
+            old: false
+            state: set
+            extra: {}
+        -   path:
+            - info-tabs
+            - sched_actions
+            - actions
+            key: sched-delete
+            value: true
+            old: false
+            state: set
+            extra: {}
+        -   path: &1
+            - info-tabs
+            - sched_actions
+            - actions
+            key: charter_create
+            old: true
+            state: rm
+            extra: {}
+        -   path: *1
+            key: perform_action
+            old: true
+            state: rm
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the Service tab
@@ -2803,6 +2899,28 @@ patches:
 
               roles:
                 enabled: true
+                actions:
+                  add_role: true
+                  scale: true
+                  resume: true
+                  release: true
+                  hold: true
+                  suspend: true
+                  stop: true
+                  poweroff: true
+                  poweroff-hard: true
+                  reboot: true
+                  reboot-hard: true
+                  undeploy: true
+                  undeploy-hard: true
+                  terminate: true
+                  terminate-hard: true
+                  snapshot-create: true
+                  snapshot-revert: true
+                  snapshot-delete: true
+                  disk-snapshot-create: true
+                  disk-snapshot-revert: true
+                  disk-snapshot-delete: true
 
               log:
                 enabled: true
@@ -2811,10 +2929,8 @@ patches:
                 enabled: true
                 actions:
                   sched-add: true
-                  sched-update: false
-                  sched-delete: false
-                  charter_create: true
-                  perform_action: true
+                  sched-update: true
+                  sched-delete: true
 
             # Dialogs
 
@@ -2895,7 +3011,7 @@ patches:
         mode: '0640'
         content: |
             # -------------------------------------------------------------------------- #
-            # Copyright 2002-2025, OpenNebula Project, OpenNebula Systems                #
+            # Copyright 2002-2026, OpenNebula Project, OpenNebula Systems                #
             #                                                                            #
             # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
             # not use this file except in compliance with the License. You may obtain    #
@@ -3036,13 +3152,29 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path: &2
+            - info-tabs
+            - info
+            - ownership_panel
+            - actions
+            key: cgrp
+            old: true
+            state: rm
+            extra: {}
+        -   path: *2
+            key: chgrp
+            value: true
+            state: ins
+            extra: {}
         content: "---\n# This file describe the information add actions available in the VM GROUP TEMPLATES tab\n\n# Resource\n\nresource_name:
             \"VM-GROUP\"\n\n# Actions - Which buttons are visible to operate over the resource\n\nactions: \n  create_dialog:
             true\n  update_dialog: true\n  enable: true\n  disable: true\n  chgrp: true\n  chown: true\n  delete: true\n\n#
             Filters -  List of criteria to filter the resource\n\nfilters: \n  state: true\n\n\n\n# Info Tabs - Which info
             tabs are used to show extended information\n\ninfo-tabs:\n  info:\n    enabled: true\n    information_panel:\n
             \     enabled: true\n      actions:\n        rename: true\n    permissions_panel:\n      enabled: true\n      actions:\n
-            \       chmod: true\n    ownership_panel:\n      enabled: true\n      actions:\n        chown: true\n        cgrp:
+            \       chmod: true\n    ownership_panel:\n      enabled: true\n      actions:\n        chown: true\n        chgrp:
             true\n    roles_panel:\n      enabled: true\n    roles-affinity_panel:\n      enabled: true\n  vms:\n    enabled:
             true\n\n"
     "/etc/one/fireedge/sunstone/views/admin/vm-tab.yaml":
@@ -3050,6 +3182,55 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path: &3
+            - info-tabs
+            - storage
+            - actions
+            key: disk-attach
+            old:
+                enabled: true
+            state: rm
+            extra: {}
+        -   path:
+            - info-tabs
+            - storage
+            - actions
+            key: disk-saveas
+            value: true
+            old:
+                enabled: true
+            state: set
+            extra: {}
+        -   path: *3
+            key: disk-attach-image
+            value: true
+            state: ins
+            extra: {}
+        -   path: *3
+            key: disk-attach-volatile
+            value: true
+            state: ins
+            extra: {}
+        -   path:
+            - info-tabs
+            - network
+            - actions
+            key: nic-attach-alias
+            value: true
+            state: ins
+            extra: {}
+        -   path:
+            - info-tabs
+            - backup
+            key: actions
+            value:
+                backup-configure: true
+                backup-create: true
+                backup-restore: true
+            state: ins
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the VM tab
@@ -3150,21 +3331,21 @@ patches:
               storage:
                 enabled: true
                 actions:
-                  disk-attach:
-                    enabled: true
+                  disk-attach-image: true
+                  disk-attach-volatile: true
                   disk-detach: true
+                  disk-resize: true
+                  disk-saveas: true
                   disk-snapshot-create: true
                   disk-snapshot-delete: true
                   disk-snapshot-rename: true
                   disk-snapshot-revert: true
-                  disk-resize: true
-                  disk-saveas:
-                    enabled: true
 
               network:
                 enabled: true
                 actions:
                   nic-attach: true
+                  nic-attach-alias: true
                   nic-detach: true
                   nic-update: true
                   sg-attach: true
@@ -3185,6 +3366,10 @@ patches:
 
               backup:
                 enabled: true
+                actions:
+                  backup-configure: true
+                  backup-create: true
+                  backup-restore: true
 
               history:
                 enabled: true
@@ -3315,6 +3500,21 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path: []
+            key: create-tabs
+            value:
+                address:
+                    enabled: true
+                security:
+                    enabled: true
+                context:
+                    enabled: true
+                configuration:
+                    enabled: true
+            state: ins
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the VIRTUAL NETWORK tab
@@ -3399,11 +3599,36 @@ patches:
 
               cluster:
                 enabled: true
+
+            create-tabs:
+              address:
+                enabled: true
+              security:
+                enabled: true
+              context:
+                enabled: true
+              configuration:
+                enabled: true
     "/etc/one/fireedge/sunstone/views/admin/vnet-template-tab.yaml":
         class: Yaml
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path: []
+            key: instantiate-tabs
+            value:
+                address:
+                    enabled: true
+                security:
+                    enabled: true
+                context:
+                    enabled: true
+                configuration:
+                    enabled: true
+            state: ins
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the V. NETWORK TEMPLATE tab
@@ -3471,11 +3696,30 @@ patches:
 
               template:
                 enabled: true
+
+            instantiate-tabs:
+              address:
+                enabled: true
+              security:
+                enabled: true
+              context:
+                enabled: true
+              configuration:
+                enabled: true
     "/etc/one/fireedge/sunstone/views/admin/vrouter-tab.yaml":
         class: Yaml
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            key: nics
+            value:
+                enabled: true
+            state: ins
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the VRouter Template tab
@@ -3530,6 +3774,8 @@ patches:
                     edit: true
                     delete: true
               vms:
+                enabled: true
+              nics:
                 enabled: true
 
 
@@ -3745,6 +3991,67 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            - roles
+            key: actions
+            value:
+                add_role: true
+                scale: true
+                resume: true
+                release: true
+                hold: true
+                suspend: true
+                stop: true
+                poweroff: true
+                poweroff-hard: true
+                reboot: true
+                reboot-hard: true
+                undeploy: true
+                undeploy-hard: true
+                terminate: true
+                terminate-hard: true
+                snapshot-create: true
+                snapshot-revert: true
+                snapshot-delete: true
+                disk-snapshot-create: true
+                disk-snapshot-revert: true
+                disk-snapshot-delete: true
+            state: ins
+            extra: {}
+        -   path:
+            - info-tabs
+            - sched_actions
+            - actions
+            key: sched-update
+            value: true
+            old: false
+            state: set
+            extra: {}
+        -   path:
+            - info-tabs
+            - sched_actions
+            - actions
+            key: sched-delete
+            value: true
+            old: false
+            state: set
+            extra: {}
+        -   path: &4
+            - info-tabs
+            - sched_actions
+            - actions
+            key: charter_create
+            old: true
+            state: rm
+            extra: {}
+        -   path: *4
+            key: perform_action
+            old: true
+            state: rm
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the Service tab
@@ -3797,6 +4104,28 @@ patches:
 
               roles:
                 enabled: true
+                actions:
+                  add_role: true
+                  scale: true
+                  resume: true
+                  release: true
+                  hold: true
+                  suspend: true
+                  stop: true
+                  poweroff: true
+                  poweroff-hard: true
+                  reboot: true
+                  reboot-hard: true
+                  undeploy: true
+                  undeploy-hard: true
+                  terminate: true
+                  terminate-hard: true
+                  snapshot-create: true
+                  snapshot-revert: true
+                  snapshot-delete: true
+                  disk-snapshot-create: true
+                  disk-snapshot-revert: true
+                  disk-snapshot-delete: true
 
               log:
                 enabled: true
@@ -3805,10 +4134,8 @@ patches:
                 enabled: true
                 actions:
                   sched-add: true
-                  sched-update: false
-                  sched-delete: false
-                  charter_create: true
-                  perform_action: true
+                  sched-update: true
+                  sched-delete: true
 
             # Dialogs
 
@@ -4137,6 +4464,15 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            key: VLAN Group
+            value:
+                enabled: true
+            state: ins
+            extra: {}
         content: |-
             ---
             # This file describes the information and actions available in the GROUP tab
@@ -4193,6 +4529,9 @@ patches:
                 enabled: true
                 actions:
                   get_showback: true
+
+              'VLAN Group':
+                enabled: true
     "/etc/one/fireedge/sunstone/views/groupadmin/image-tab.yaml":
         class: Yaml
         owner: root
@@ -4394,6 +4733,67 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            - roles
+            key: actions
+            value:
+                add_role: true
+                scale: true
+                resume: true
+                release: true
+                hold: true
+                suspend: true
+                stop: true
+                poweroff: true
+                poweroff-hard: true
+                reboot: true
+                reboot-hard: true
+                undeploy: true
+                undeploy-hard: true
+                terminate: true
+                terminate-hard: true
+                snapshot-create: true
+                snapshot-revert: true
+                snapshot-delete: true
+                disk-snapshot-create: true
+                disk-snapshot-revert: true
+                disk-snapshot-delete: true
+            state: ins
+            extra: {}
+        -   path:
+            - info-tabs
+            - sched_actions
+            - actions
+            key: sched-update
+            value: true
+            old: false
+            state: set
+            extra: {}
+        -   path:
+            - info-tabs
+            - sched_actions
+            - actions
+            key: sched-delete
+            value: true
+            old: false
+            state: set
+            extra: {}
+        -   path: &5
+            - info-tabs
+            - sched_actions
+            - actions
+            key: charter_create
+            old: true
+            state: rm
+            extra: {}
+        -   path: *5
+            key: perform_action
+            old: true
+            state: rm
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the Service tab
@@ -4446,6 +4846,28 @@ patches:
 
               roles:
                 enabled: true
+                actions:
+                  add_role: true
+                  scale: true
+                  resume: true
+                  release: true
+                  hold: true
+                  suspend: true
+                  stop: true
+                  poweroff: true
+                  poweroff-hard: true
+                  reboot: true
+                  reboot-hard: true
+                  undeploy: true
+                  undeploy-hard: true
+                  terminate: true
+                  terminate-hard: true
+                  snapshot-create: true
+                  snapshot-revert: true
+                  snapshot-delete: true
+                  disk-snapshot-create: true
+                  disk-snapshot-revert: true
+                  disk-snapshot-delete: true
 
               log:
                 enabled: true
@@ -4454,10 +4876,8 @@ patches:
                 enabled: true
                 actions:
                   sched-add: true
-                  sched-update: false
-                  sched-delete: false
-                  charter_create: true
-                  perform_action: true
+                  sched-update: true
+                  sched-delete: true
 
             # Dialogs
 
@@ -4920,6 +5340,15 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            key: nics
+            value:
+                enabled: true
+            state: ins
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the VRouter Template tab
@@ -4974,6 +5403,8 @@ patches:
                     edit: true
                     delete: true
               vms:
+                enabled: true
+              nics:
                 enabled: true
 
 
@@ -5360,6 +5791,67 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            - roles
+            key: actions
+            value:
+                add_role: true
+                scale: true
+                resume: true
+                release: true
+                hold: true
+                suspend: true
+                stop: true
+                poweroff: true
+                poweroff-hard: true
+                reboot: true
+                reboot-hard: true
+                undeploy: true
+                undeploy-hard: true
+                terminate: true
+                terminate-hard: true
+                snapshot-create: true
+                snapshot-revert: true
+                snapshot-delete: true
+                disk-snapshot-create: true
+                disk-snapshot-revert: true
+                disk-snapshot-delete: true
+            state: ins
+            extra: {}
+        -   path:
+            - info-tabs
+            - sched_actions
+            - actions
+            key: sched-update
+            value: true
+            old: false
+            state: set
+            extra: {}
+        -   path:
+            - info-tabs
+            - sched_actions
+            - actions
+            key: sched-delete
+            value: true
+            old: false
+            state: set
+            extra: {}
+        -   path: &6
+            - info-tabs
+            - sched_actions
+            - actions
+            key: charter_create
+            old: true
+            state: rm
+            extra: {}
+        -   path: *6
+            key: perform_action
+            old: true
+            state: rm
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the Service tab
@@ -5412,6 +5904,28 @@ patches:
 
               roles:
                 enabled: true
+                actions:
+                  add_role: true
+                  scale: true
+                  resume: true
+                  release: true
+                  hold: true
+                  suspend: true
+                  stop: true
+                  poweroff: true
+                  poweroff-hard: true
+                  reboot: true
+                  reboot-hard: true
+                  undeploy: true
+                  undeploy-hard: true
+                  terminate: true
+                  terminate-hard: true
+                  snapshot-create: true
+                  snapshot-revert: true
+                  snapshot-delete: true
+                  disk-snapshot-create: true
+                  disk-snapshot-revert: true
+                  disk-snapshot-delete: true
 
               log:
                 enabled: true
@@ -5420,10 +5934,8 @@ patches:
                 enabled: true
                 actions:
                   sched-add: true
-                  sched-update: false
-                  sched-delete: false
-                  charter_create: true
-                  perform_action: true
+                  sched-update: true
+                  sched-delete: true
 
             # Dialogs
 
@@ -5434,32 +5946,77 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - actions
+            key: update-user-template
+            value: true
+            state: ins
+            extra: {}
+        -   path: &7
+            - info-tabs
+            - storage
+            - actions
+            key: disk-attach
+            old:
+                enabled: true
+            state: rm
+            extra: {}
+        -   path:
+            - info-tabs
+            - storage
+            - actions
+            key: disk-saveas
+            value: true
+            old:
+                enabled: true
+            state: set
+            extra: {}
+        -   path: *7
+            key: disk-attach-image
+            value: true
+            state: ins
+            extra: {}
+        -   path: *7
+            key: disk-attach-volatile
+            value: true
+            state: ins
+            extra: {}
+        -   path:
+            - info-tabs
+            - network
+            - actions
+            key: nic-attach-alias
+            value: true
+            state: ins
+            extra: {}
         content: "---\n# This file describes the information and actions available in the VM tab\n\n# Resource\n\nresource_name:
-            \"VM\"\n\n# Actions - Which buttons are visible to operate over the resources\n\nactions:\n  create_dialog: true\n
-            \ create_app_dialog: true # reference to create_dialog in marketplace-app-tab.yaml\n  deploy: false\n  migrate:
-            true\n  live-migrate: true\n  hold: true\n  release: true\n  suspend: true\n  resume: true\n  stop: true\n  recover:
-            true\n  reboot: true\n  reboot-hard: true\n  poweroff: true\n  poweroff-hard: true\n  undeploy: true\n  undeploy-hard:
-            true\n  terminate: true\n  terminate-hard: true\n  resched: true\n  unresched: true\n  save_as_template: false\n
-            \ chown: false\n  chgrp: false\n  lock: true\n  unlock: true\n  vnc: true\n  ssh: true\n  rdp: true\n  edit_labels:
-            false\n  backup: true  \n  restore: false\n\n# Filters - List of criteria to filter the resources\n\nfilters:\n
-            \ state: true\n  owner: true\n  group: true\n  type: true\n  locked: true\n  ips: true\n  hostname: true\n\n\n#
-            Info Tabs - Which info tabs are used to show extended information\n\ninfo-tabs:\n\n  info:\n    enabled: true\n
-            \   information_panel:\n      enabled: true\n      actions:\n        rename: true\n    permissions_panel:\n      enabled:
-            true\n      actions:\n        chmod: false\n    ownership_panel:\n      enabled: true\n      actions:\n        chown:
-            false\n        chgrp: false\n    capacity_panel:\n      enabled: true\n      actions:\n        resize: true\n
-            \   lxc_panel:\n      enabled: true\n      actions:\n        copy: true\n        add: false\n        edit: false\n
-            \       delete: false\n    monitoring_panel:\n      enabled: true\n      actions:\n        copy: true\n    attributes_panel:\n
-            \     enabled: true\n      actions:\n        copy: true\n        add: true\n        edit: false\n        delete:
-            false\n\n  storage:\n    enabled: true\n    actions:\n      disk-attach:\n        enabled: true\n      disk-detach:
-            true\n      disk-snapshot-create: true\n      disk-snapshot-delete: true\n      disk-snapshot-rename: true\n      disk-snapshot-revert:
-            true\n      disk-resize: true\n      disk-saveas:\n        enabled: true\n\n  network:\n    enabled: true\n    actions:\n
-            \     nic-attach: true\n      nic-detach: true\n      nic-update: true\n      sg-attach: true\n      sg-detach:
-            true\n      \n  pci:\n    enabled: true\n    actions:\n      pci-attach: true\n      pci-detach: true      \n\n
-            \ snapshot:\n    enabled: true\n    actions:\n      snapshot-create: true\n      snapshot-revert: true\n      snapshot-delete:
-            true\n\n  backup:\n    enabled: true\n\n  history:\n    enabled: true\n\n  sched_actions:\n    enabled: true\n
-            \   actions:\n      sched-add: true\n      sched-update: true\n      sched-delete: true\n      charter_create:
-            true\n\n  configuration:\n    enabled: true\n    actions:\n      update_configuration: true\n\n  template:\n    enabled:
-            true\n"
+            \"VM\"\n\n# Actions - Which buttons are visible to operate over the resources\n\nactions:\n  backup: true  \n
+            \ chgrp: false\n  chown: false\n  create_app_dialog: true # reference to create_dialog in marketplace-app-tab.yaml\n
+            \ create_dialog: true\n  deploy: false\n  edit_labels: false\n  hold: true\n  live-migrate: true\n  lock: true\n
+            \ migrate: true\n  poweroff-hard: true\n  poweroff: true\n  rdp: true\n  reboot-hard: true\n  reboot: true\n  recover:
+            true\n  release: true\n  resched: true\n  restore: false\n  resume: true\n  save_as_template: false\n  ssh: true\n
+            \ stop: true\n  suspend: true\n  terminate-hard: true\n  terminate: true\n  undeploy-hard: true\n  undeploy: true\n
+            \ unlock: true\n  unresched: true\n  update-user-template: true\n  vnc: true\n\n# Filters - List of criteria to
+            filter the resources\n\nfilters:\n  state: true\n  owner: true\n  group: true\n  type: true\n  locked: true\n
+            \ ips: true\n  hostname: true\n\n\n# Info Tabs - Which info tabs are used to show extended information\n\ninfo-tabs:\n\n
+            \ info:\n    enabled: true\n    information_panel:\n      enabled: true\n      actions:\n        rename: true\n
+            \   permissions_panel:\n      enabled: true\n      actions:\n        chmod: false\n    ownership_panel:\n      enabled:
+            true\n      actions:\n        chown: false\n        chgrp: false\n    capacity_panel:\n      enabled: true\n      actions:\n
+            \       resize: true\n    lxc_panel:\n      enabled: true\n      actions:\n        copy: true\n        add: false\n
+            \       edit: false\n        delete: false\n    monitoring_panel:\n      enabled: true\n      actions:\n        copy:
+            true\n    attributes_panel:\n      enabled: true\n      actions:\n        copy: true\n        add: true\n        edit:
+            false\n        delete: false\n\n  storage:\n    enabled: true\n    actions:\n      disk-attach-image: true\n      disk-attach-volatile:
+            true\n      disk-detach: true\n      disk-snapshot-create: true\n      disk-snapshot-delete: true\n      disk-snapshot-rename:
+            true\n      disk-snapshot-revert: true\n      disk-resize: true\n      disk-saveas: true\n\n  network:\n    enabled:
+            true\n    actions:\n      nic-attach: true\n      nic-attach-alias: true\n      nic-detach: true\n      nic-update:
+            true\n      sg-attach: true\n      sg-detach: true\n      \n  pci:\n    enabled: true\n    actions:\n      pci-attach:
+            true\n      pci-detach: true      \n\n  snapshot:\n    enabled: true\n    actions:\n      snapshot-create: true\n
+            \     snapshot-revert: true\n      snapshot-delete: true\n\n  backup:\n    enabled: true\n\n  history:\n    enabled:
+            true\n\n  sched_actions:\n    enabled: true\n    actions:\n      sched-add: true\n      sched-update: true\n      sched-delete:
+            true\n      charter_create: true\n\n  configuration:\n    enabled: true\n    actions:\n      update_configuration:
+            true\n\n  template:\n    enabled: true\n"
     "/etc/one/fireedge/sunstone/views/user/vm-template-tab.yaml":
         class: Yaml
         owner: root
@@ -5571,6 +6128,17 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - info-tabs
+            - address
+            - actions
+            key: add_ar
+            value: true
+            old: false
+            state: set
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the VIRTUAL NETWORK tab
@@ -5634,7 +6202,7 @@ patches:
               address:
                 enabled: true
                 actions:
-                  add_ar: false
+                  add_ar: true
                   update_ar: true
                   delete_ar: true
 
@@ -5677,6 +6245,36 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path: &8 []
+            key: ComponentsModule
+            old:
+                name: ComponentsModule
+                entry: __HOST__/fireedge/modules/ComponentsModule/remoteEntry.js
+            state: rm
+            extra: {}
+        -   path: *8
+            key: ResourcesModule
+            value:
+                name: ResourcesModule
+                entry: __HOST__/fireedge/modules/ResourcesModule/remoteEntry.js
+            state: ins
+            extra: {}
+        -   path: *8
+            key: ComponentsV2Module
+            value:
+                name: ComponentsV2Module
+                entry: __HOST__/fireedge/modules/ComponentsV2Module/remoteEntry.js
+            state: ins
+            extra: {}
+        -   path: *8
+            key: StylesModule
+            value:
+                name: StylesModule
+                entry: __HOST__/fireedge/modules/StylesModule/remoteEntry.js
+            state: ins
+            extra: {}
         content: |
             UtilsModule:
               name: UtilsModule
@@ -5687,15 +6285,21 @@ patches:
             ContainersModule:
               name: ContainersModule
               entry: __HOST__/fireedge/modules/ContainersModule/remoteEntry.js
-            ComponentsModule:
-              name: ComponentsModule
-              entry: __HOST__/fireedge/modules/ComponentsModule/remoteEntry.js
+            ResourcesModule:
+              name: ResourcesModule
+              entry: __HOST__/fireedge/modules/ResourcesModule/remoteEntry.js
+            ComponentsV2Module:
+              name: ComponentsV2Module
+              entry: __HOST__/fireedge/modules/ComponentsV2Module/remoteEntry.js
             FeaturesModule:
               name: FeaturesModule
               entry: __HOST__/fireedge/modules/FeaturesModule/remoteEntry.js
             ProvidersModule:
               name: ProvidersModule
               entry: __HOST__/fireedge/modules/ProvidersModule/remoteEntry.js
+            StylesModule:
+              name: StylesModule
+              entry: __HOST__/fireedge/modules/StylesModule/remoteEntry.js
             ModelsModule:
               name: ModelsModule
               entry: __HOST__/fireedge/modules/ModelsModule/remoteEntry.js
@@ -5709,7 +6313,106 @@ patches:
         mode: '0640'
         action: apply
         change:
-        -   path: &1 []
+        -   path: &9 []
+            key:
+            old:
+                title: Instances
+                icon: Cell2X2
+                routes:
+                -   title: VMs
+                    path: "/vm"
+                    sidebar: true
+                    icon: ModernTv
+                    Component: VirtualMachines
+                -   title: VMs
+                    path: "/vm/:id"
+                    Component: VirtualMachineDetail
+                -   title: Virtual Routers
+                    path: "/vrouter"
+                    sidebar: true
+                    icon: Shuffle
+                    Component: VirtualRouters
+                -   title: Instantiate Virtual Router
+                    path: "/vrouter/instantiate"
+                    Component: InstantiateVrTemplate
+                -   title: Virtual Routers
+                    path: "/vrouter/:id"
+                    Component: VirtualRouterDetail
+                -   title: Services
+                    path: "/service"
+                    sidebar: true
+                    icon: Packages
+                    Component: Services
+                -   title: Instantiate Service Template
+                    path: "/service/instantiate/"
+                    Component: InstantiateServiceTemplate
+                -   title: Service
+                    path: "/service/:id"
+                    Component: ServiceDetail
+            state: rm
+            extra: {}
+        -   path: *9
+            key:
+            old:
+                title: Templates
+                icon: Archive
+                routes:
+                -   title: VM Templates
+                    path: "/vm-template"
+                    sidebar: true
+                    icon: EmptyPage
+                    Component: VmTemplates
+                -   title: Instantiate VM Template
+                    path: "/vm-template/instantiate"
+                    Component: InstantiateVmTemplate
+                -   title: Create VM Template
+                    path: "/vm-template/create"
+                    Component: CreateVmTemplate
+                -   title: Update VM Template
+                    path: "/vm-template/update"
+                    Component: CreateVmTemplate
+                -   title: VM Template
+                    path: "/vm-template/:id"
+                    Component: VmTemplateDetail
+                -   title: Instantiate Service Template
+                    path: "/service-template/instantiate/"
+                    Component: InstantiateServiceTemplate
+                -   title: Service Templates
+                    path: "/service-template"
+                    sidebar: true
+                    icon: MultiplePagesEmpty
+                    Component: ServiceTemplates
+                -   title: Create Service Template
+                    path: "/service-template/create"
+                    Component: CreateServiceTemplate
+                -   title: Service Template
+                    path: "/service-template/:id"
+                    Component: ServiceTemplateDetail
+                -   title: Instantiate Virtual Router Template
+                    path: "/vrouter-template/instantiate/"
+                    Component: InstantiateVrTemplate
+                -   title: Virtual Routers
+                    path: "/vrouter-template"
+                    sidebar: true
+                    icon: Shuffle
+                    Component: VrTemplates
+                -   title: Create Virtual Router Template
+                    path: "/vrouter-template/create"
+                    Component: CreateVrTemplate
+                -   title: Virtual Router Template
+                    path: "/vrouter-template/:id"
+                    Component: VrTemplateDetail
+                -   title: Create VM group
+                    path: "/vm-group/create"
+                    Component: CreateVmGroup
+                -   title: VM Groups
+                    path: "/vm-group"
+                    icon: Folder
+                    sidebar: true
+                    Component: VmGroups
+            state: rm
+            extra: {}
+        -   path: *9
             key:
             old:
                 title: Storage
@@ -5785,11 +6488,254 @@ patches:
                     Component: BackupJobDetail
             state: rm
             extra: {}
-        -   path: *1
+        -   path: *9
+            key:
+            old:
+                title: Networks
+                icon: ServerConnection
+                routes:
+                -   title: Virtual networks
+                    path: "/virtual-network"
+                    sidebar: true
+                    icon: NetworkAlt
+                    Component: VirtualNetworks
+                -   title: Instantiate Network Template
+                    path: "/network-template/instantiate"
+                    Component: InstantiateVnTemplate
+                -   title: Create Virtual Network
+                    path: "/virtual-network/create"
+                    Component: CreateVirtualNetwork
+                -   title: Update Virtual Network
+                    path: "/virtual-network/update"
+                    Component: CreateVirtualNetwork
+                -   title: Virtual networks
+                    path: "/virtual-network/:id"
+                    Component: VirtualNetworkDetail
+                -   title: Network Templates
+                    path: "/network-template"
+                    sidebar: true
+                    icon: KeyframesCouple
+                    Component: VnTemplates
+                -   title: Create Virtual Network Template
+                    path: "/network-template/create"
+                    Component: CreateVnTemplate
+                -   title: Security groups
+                    path: "/security-group"
+                    sidebar: true
+                    icon: HistoricShield
+                    Component: SecurityGroups
+                -   title: Create Security Group
+                    path: "/security-group/create"
+                    Component: CreateSecurityGroup
+            state: rm
+            extra: {}
+        -   path: *9
+            key:
+            old:
+                title: Infrastructure
+                icon: CloudSync
+                routes:
+                -   title: Drivers
+                    path: "/driver"
+                    sidebar: false
+                    icon: DataTransferUp
+                    Component: Drivers
+                -   title: Providers
+                    path: "/provider"
+                    sidebar: true
+                    icon: SettingsProfiles
+                    Component: Providers
+                -   title: Create Provider
+                    path: "/provider/create"
+                    Component: CreateProvider
+                -   title: Clusters
+                    path: "/cluster"
+                    sidebar: true
+                    icon: Server
+                    Component: Clusters
+                -   title: Create Cluster
+                    path: "/cluster/create"
+                    Component: CreateCluster
+                -   title: Create Cluster
+                    path: "/cluster/create_cloud"
+                    Component: CreateClusterCloud
+                -   title: Cluster Logs
+                    path: "/cluster/create_cloud_logs/:id"
+                    Component: CreateClusterCloudLogs
+                -   title: Cluster
+                    path: "/cluster/:id"
+                    Component: ClusterDetail
+                -   title: Hosts
+                    path: "/host"
+                    sidebar: true
+                    icon: HardDrive
+                    Component: Hosts
+                -   title: Create Host
+                    path: "/host/create"
+                    Component: CreateHost
+                -   title: Host
+                    path: "/host/:id"
+                    Component: HostDetail
+                -   title: Zones
+                    path: "/zone"
+                    sidebar: true
+                    icon: MinusPinAlt
+                    Component: Zones
+            state: rm
+            extra: {}
+        -   path: *9
+            key:
+            old:
+                title: System
+                icon: Home
+                routes:
+                -   title: Create User
+                    path: "/user/create"
+                    Component: CreateUser
+                -   title: Users
+                    path: "/user"
+                    sidebar: true
+                    icon: User
+                    Component: Users
+                -   title: User
+                    path: "/user/:id"
+                    Component: UserDetail
+                -   title: Create Group
+                    path: "/group/create"
+                    Component: CreateGroup
+                -   title: Groups
+                    path: "/group"
+                    sidebar: true
+                    icon: Group
+                    Component: Groups
+                -   title: Group
+                    path: "/group/:id"
+                    Component: GroupDetail
+                -   title: Create VDC
+                    path: "/virtual-data-center/create"
+                    Component: CreateVDC
+                -   title: VDCs
+                    path: "/virtual-data-center"
+                    sidebar: true
+                    icon: List
+                    Component: VDCs
+                -   title: VDC
+                    path: "/virtual-data-center/:id"
+                    Component: VDCDetail
+                -   title: Create ACL
+                    path: "/acl/create"
+                    Component: CreateACL
+                -   title: ACLs
+                    path: "/acl"
+                    sidebar: true
+                    icon: KeyAlt
+                    Component: ACLs
+            state: rm
+            extra: {}
+        -   path: *9
+            key:
+            value:
+                title: Instances
+                icon: GridAdd
+                routes:
+                -   title: VMs
+                    path: "/vm"
+                    sidebar: true
+                    icon: ModernTv
+                    Component: VirtualMachines
+                -   title: Create VM
+                    path: "/vm/create"
+                    Component: CreateVm
+                -   title: Virtual Routers
+                    path: "/vrouter"
+                    sidebar: true
+                    icon: Shuffle
+                    Component: VirtualRouters
+                -   title: Instantiate Virtual Router
+                    path: "/vrouter/instantiate"
+                    Component: InstantiateVrTemplate
+                -   title: Virtual Routers
+                    path: "/vrouter/:id"
+                    Component: VirtualRouterDetail
+                -   title: Services
+                    path: "/service"
+                    sidebar: true
+                    icon: Packages
+                    Component: Services
+                -   title: Instantiate Service Template
+                    path: "/service/instantiate/"
+                    Component: InstantiateServiceTemplate
+                -   title: Service
+                    path: "/service/:id"
+                    Component: ServiceDetail
+            state: ins
+            extra: {}
+        -   path: *9
+            key:
+            value:
+                title: Templates
+                icon: ViewStructureDown
+                routes:
+                -   title: VM Templates
+                    path: "/vm-template"
+                    sidebar: true
+                    icon: EmptyPage
+                    Component: VmTemplates
+                -   title: Instantiate VM Template
+                    path: "/vm-template/instantiate"
+                    Component: InstantiateVmTemplate
+                -   title: Create VM Template
+                    path: "/vm-template/create"
+                    Component: CreateVmTemplate
+                -   title: Update VM Template
+                    path: "/vm-template/update"
+                    Component: CreateVmTemplate
+                -   title: VM Template
+                    path: "/vm-template/:id"
+                    Component: VmTemplateDetail
+                -   title: Instantiate Service Template
+                    path: "/service-template/instantiate/"
+                    Component: InstantiateServiceTemplate
+                -   title: Service Templates
+                    path: "/service-template"
+                    sidebar: true
+                    icon: MultiplePagesEmpty
+                    Component: ServiceTemplates
+                -   title: Create Service Template
+                    path: "/service-template/create"
+                    Component: CreateServiceTemplate
+                -   title: Service Template
+                    path: "/service-template/:id"
+                    Component: ServiceTemplateDetail
+                -   title: Instantiate VR Template
+                    path: "/vrouter-template/instantiate/"
+                    Component: InstantiateVrTemplate
+                -   title: Virtual Routers
+                    path: "/vrouter-template"
+                    sidebar: true
+                    icon: Shuffle
+                    Component: VrTemplates
+                -   title: Create VR Template
+                    path: "/vrouter-template/create"
+                    Component: CreateVrTemplate
+                -   title: VR Template
+                    path: "/vrouter-template/:id"
+                    Component: VrTemplateDetail
+                -   title: Create VM group
+                    path: "/vm-group/create"
+                    Component: CreateVmGroup
+                -   title: VM Groups
+                    path: "/vm-group"
+                    icon: Folder
+                    sidebar: true
+                    Component: VmGroups
+            state: ins
+            extra: {}
+        -   path: *9
             key:
             value:
                 title: Storage
-                icon: Box
+                icon: DatabaseStats
                 routes:
                 -   title: Datastores
                     path: "/datastore"
@@ -5864,18 +6810,170 @@ patches:
                     Component: BackupJobDetail
             state: ins
             extra: {}
+        -   path: *9
+            key:
+            value:
+                title: Networks
+                icon: Network
+                routes:
+                -   title: Virtual networks
+                    path: "/virtual-network"
+                    sidebar: true
+                    icon: NetworkAlt
+                    Component: VirtualNetworks
+                -   title: Instantiate Network Template
+                    path: "/network-template/instantiate"
+                    Component: InstantiateVnTemplate
+                -   title: Create Virtual Network
+                    path: "/virtual-network/create"
+                    Component: CreateVirtualNetwork
+                -   title: Update Virtual Network
+                    path: "/virtual-network/update"
+                    Component: CreateVirtualNetwork
+                -   title: Virtual networks
+                    path: "/virtual-network/:id"
+                    Component: VirtualNetworkDetail
+                -   title: Network Templates
+                    path: "/network-template"
+                    sidebar: true
+                    icon: KeyframesCouple
+                    Component: VnTemplates
+                -   title: Create Virtual Network Template
+                    path: "/network-template/create"
+                    Component: CreateVnTemplate
+                -   title: Security groups
+                    path: "/security-group"
+                    sidebar: true
+                    icon: HistoricShield
+                    Component: SecurityGroups
+                -   title: Create Security Group
+                    path: "/security-group/create"
+                    Component: CreateSecurityGroup
+            state: ins
+            extra: {}
+        -   path: *9
+            key:
+            value:
+                title: Infrastructure
+                icon: Cloud
+                routes:
+                -   title: Drivers
+                    path: "/driver"
+                    sidebar: false
+                    icon: DataTransferUp
+                    Component: Drivers
+                -   title: Providers
+                    path: "/provider"
+                    sidebar: true
+                    icon: SettingsProfiles
+                    Component: Providers
+                -   title: Create Provider
+                    path: "/provider/create"
+                    Component: CreateProvider
+                -   title: Clusters
+                    path: "/cluster"
+                    sidebar: true
+                    icon: Server
+                    Component: Clusters
+                -   title: Create Cluster
+                    path: "/cluster/create"
+                    Component: CreateCluster
+                -   title: Create Cluster
+                    path: "/cluster/create_cloud"
+                    Component: CreateClusterCloud
+                -   title: Cluster Logs
+                    path: "/cluster/create_cloud_logs/:id"
+                    Component: CreateClusterCloudLogs
+                -   title: Cluster
+                    path: "/cluster/:id"
+                    Component: ClusterDetail
+                -   title: Hosts
+                    path: "/host"
+                    sidebar: true
+                    icon: HardDrive
+                    Component: Hosts
+                -   title: Create Host
+                    path: "/host/create"
+                    Component: CreateHost
+                -   title: Host
+                    path: "/host/:id"
+                    Component: HostDetail
+                -   title: Zones
+                    path: "/zone"
+                    sidebar: true
+                    icon: MinusPinAlt
+                    Component: Zones
+            state: ins
+            extra: {}
+        -   path: *9
+            key:
+            value:
+                title: System
+                icon: Tools
+                routes:
+                -   title: Create User
+                    path: "/user/create"
+                    Component: CreateUser
+                -   title: Users
+                    path: "/user"
+                    sidebar: true
+                    icon: User
+                    Component: Users
+                -   title: User
+                    path: "/user/:id"
+                    Component: UserDetail
+                -   title: Create Group
+                    path: "/group/create"
+                    Component: CreateGroup
+                -   title: Groups
+                    path: "/group"
+                    sidebar: true
+                    icon: Group
+                    Component: Groups
+                -   title: Group
+                    path: "/group/:id"
+                    Component: GroupDetail
+                -   title: Create VDC
+                    path: "/virtual-data-center/create"
+                    Component: CreateVDC
+                -   title: VDCs
+                    path: "/virtual-data-center"
+                    sidebar: true
+                    icon: List
+                    Component: VDCs
+                -   title: VDC
+                    path: "/virtual-data-center/:id"
+                    Component: VDCDetail
+                -   title: Create ACL
+                    path: "/acl/create"
+                    Component: CreateACL
+                -   title: ACLs
+                    path: "/acl"
+                    sidebar: true
+                    icon: KeyAlt
+                    Component: ACLs
+            state: ins
+            extra: {}
+        -   path: *9
+            key:
+            value:
+                title: Create Ticket
+                path: "/support/create"
+                Component: CreateTicket
+            state: ins
+            extra: {}
         content: |
             - title: Instances
-              icon: Cell2X2
+              icon: GridAdd
               routes:
                 - title: VMs
                   path: /vm
                   sidebar: true
                   icon: ModernTv
                   Component: VirtualMachines
-                - title: VMs
-                  path: /vm/:id
-                  Component: VirtualMachineDetail
+                - title: Create VM
+                  path: /vm/create
+                  Component: CreateVm
                 - title: Virtual Routers
                   path: /vrouter
                   sidebar: true
@@ -5899,7 +6997,7 @@ patches:
                   path: /service/:id
                   Component: ServiceDetail
             - title: Templates
-              icon: Archive
+              icon: ViewStructureDown
               routes:
                 - title: VM Templates
                   path: /vm-template
@@ -5932,7 +7030,7 @@ patches:
                 - title: Service Template
                   path: /service-template/:id
                   Component: ServiceTemplateDetail
-                - title: Instantiate Virtual Router Template
+                - title: Instantiate VR Template
                   path: /vrouter-template/instantiate/
                   Component: InstantiateVrTemplate
                 - title: Virtual Routers
@@ -5940,10 +7038,10 @@ patches:
                   sidebar: true
                   icon: Shuffle
                   Component: VrTemplates
-                - title: Create Virtual Router Template
+                - title: Create VR Template
                   path: /vrouter-template/create
                   Component: CreateVrTemplate
-                - title: Virtual Router Template
+                - title: VR Template
                   path: /vrouter-template/:id
                   Component: VrTemplateDetail
                 - title: Create VM group
@@ -5955,7 +7053,7 @@ patches:
                   sidebar: true
                   Component: VmGroups
             - title: Storage
-              icon: Box
+              icon: DatabaseStats
               routes:
                 - title: Datastores
                   path: /datastore
@@ -6029,7 +7127,7 @@ patches:
                   path: /backupjobs/:id
                   Component: BackupJobDetail
             - title: Networks
-              icon: ServerConnection
+              icon: Network
               routes:
                 - title: Virtual networks
                   path: /virtual-network
@@ -6065,7 +7163,7 @@ patches:
                   path: /security-group/create
                   Component: CreateSecurityGroup
             - title: Infrastructure
-              icon: CloudSync
+              icon: Cloud
               routes:
                 - title: Drivers
                   path: /driver
@@ -6114,7 +7212,7 @@ patches:
                   icon: MinusPinAlt
                   Component: Zones
             - title: System
-              icon: Home
+              icon: Tools
               routes:
                 - title: Create User
                   path: /user/create
@@ -6162,6 +7260,9 @@ patches:
               sidebar: true
               icon: HeadsetHelp
               Component: Support
+            - title: Create Ticket
+              path: /support/create
+              Component: CreateTicket
             - title: Guacamole
               path: /guacamole/:id/:type
               sidebar: false
@@ -6355,6 +7456,15 @@ patches:
         mode: '0640'
         action: apply
         change:
+        -   path:
+            - DATASTORE_MAD
+            key: ARGUMENTS
+            value: >-
+                "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,restic,rsync,netapp,purefa,virtiofs,interactive -s dummy,lvm,shared,ssh,local,ceph,fs_lvm,fs_lvm_ssh,qcow2,netapp,purefa"
+            old: >-
+                "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,restic,rsync,netapp,purefa,virtiofs -s dummy,lvm,shared,ssh,local,ceph,fs_lvm,fs_lvm_ssh,qcow2,netapp,purefa"
+            state: set
+            extra: {}
         -   path: []
             key: VM_MANAGE_OPERATIONS
             value: |-
@@ -6370,11 +7480,83 @@ patches:
             state: set
             extra: {}
         -   path: []
+            key: VNET_RESTRICTED_ATTR
+            old: '"VLAN_ID"'
+            state: rm
+            extra:
+                multiple: true
+        -   path: []
+            key: VNET_RESTRICTED_ATTR
+            old: '"CVLANS"'
+            state: rm
+            extra:
+                multiple: true
+        -   path: []
+            key: VNET_RESTRICTED_ATTR
+            old: '"AR/VLAN_ID"'
+            state: rm
+            extra:
+                multiple: true
+        -   path: []
             key: VM_ENCRYPTED_ATTR
             value: '"ONEAPP_ONEKS_CLUSTER_SPEC"'
             state: ins
             extra:
                 multiple: true
+        -   path:
+            - TM_MAD_CONF
+            - '"lvm"'
+            key: LN_TARGET
+            value: '"NONE"'
+            old: '"SYSTEM"'
+            state: set
+            extra: {}
+        -   path:
+            - TM_MAD_CONF
+            - '"lvm"'
+            key: CLONE_TARGET
+            value: '"SELF"'
+            old: '"SYSTEM"'
+            state: set
+            extra: {}
+        -   path:
+            - DS_MAD_CONF
+            - '"interactive"'
+            key: NAME
+            value: '"interactive"'
+            state: ins
+            extra:
+                multiple: false
+        -   path:
+            - DS_MAD_CONF
+            - '"interactive"'
+            key: REQUIRED_ATTRS
+            value: '""'
+            state: ins
+            extra:
+                multiple: false
+        -   path:
+            - DS_MAD_CONF
+            - '"interactive"'
+            key: PERSISTENT_ONLY
+            value: '"NO"'
+            state: ins
+            extra:
+                multiple: false
+        -   path:
+            - DS_MAD_CONF
+            - '"interactive"'
+            key: DATASTORE_CAPACITY_CHECK
+            value: '"NO"'
+            state: ins
+            extra:
+                multiple: false
+        -   path: []
+            key: MAC_GLOBAL_SPACE
+            value: '"NO"'
+            state: ins
+            extra:
+                multiple: false
         content: |
             #*******************************************************************************
             #                       OpenNebula Configuration file
@@ -6675,6 +7857,12 @@ patches:
             #  addresses is defined here (this can be overwritten by the Virtual Network
             #  template)
             #
+            #  MAC_GLOBAL_SPACE: Enable the global MAC address space generation mode.
+            #  MAC addresses are generated from a global pool preventing collisions across
+            #  VNETs. This does not apply to IP networks and limits the number of VNETs to
+            #  2^20, with a max of 2^20 leases per VNET.
+            #  Values: YES or NO.
+            #
             #  VLAN_IDS: VLAN ID pool for the automatic VLAN_ID assignment. This pool
             #  is for 802.1Q networks (Open vSwitch and 802.1Q drivers). The driver
             #  will try first to allocate VLAN_IDS[START] + VNET_ID
@@ -6695,6 +7883,8 @@ patches:
             NETWORK_SIZE = 254
 
             MAC_PREFIX   = "02:00"
+
+            MAC_GLOBAL_SPACE = "NO"
 
             VLAN_IDS = [
                 START    = "2",
@@ -6940,7 +8130,7 @@ patches:
 
             DATASTORE_MAD = [
                 EXECUTABLE = "one_datastore",
-                ARGUMENTS  = "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,restic,rsync,netapp,purefa,virtiofs -s dummy,lvm,shared,ssh,local,ceph,fs_lvm,fs_lvm_ssh,qcow2,netapp,purefa"
+                ARGUMENTS  = "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,restic,rsync,netapp,purefa,virtiofs,interactive -s dummy,lvm,shared,ssh,local,ceph,fs_lvm,fs_lvm_ssh,qcow2,netapp,purefa"
             ]
 
             #*******************************************************************************
@@ -7308,8 +8498,6 @@ patches:
 
             VNET_RESTRICTED_ATTR = "VN_MAD"
             VNET_RESTRICTED_ATTR = "PHYDEV"
-            VNET_RESTRICTED_ATTR = "VLAN_ID"
-            VNET_RESTRICTED_ATTR = "CVLANS"
             VNET_RESTRICTED_ATTR = "QINQ_TYPE"
             VNET_RESTRICTED_ATTR = "BRIDGE"
             VNET_RESTRICTED_ATTR = "CONF"
@@ -7322,7 +8510,6 @@ patches:
 
             VNET_RESTRICTED_ATTR = "AR/VN_MAD"
             VNET_RESTRICTED_ATTR = "AR/PHYDEV"
-            VNET_RESTRICTED_ATTR = "AR/VLAN_ID"
             VNET_RESTRICTED_ATTR = "AR/BRIDGE"
             VNET_RESTRICTED_ATTR = "AR/FILTER"
             VNET_RESTRICTED_ATTR = "AR/FILTER_IP_SPOOFING"
@@ -7519,7 +8706,7 @@ patches:
             ]
 
             TM_MAD_CONF = [
-                NAME = "lvm", LN_TARGET = "SYSTEM", CLONE_TARGET = "SYSTEM", SHARED = "YES",
+                NAME = "lvm", LN_TARGET = "NONE", CLONE_TARGET = "SELF", SHARED = "YES",
                 DRIVER = "raw", DISK_TYPE = "BLOCK", ALLOW_ORPHANS = "YES", DS_MIGRATE = "YES",
                 DS_LIVE_MIGRATE = "NO", DS_MIGRATE_SNAP = "NO"
             ]
@@ -7652,8 +8839,13 @@ patches:
                 NAME = "purefa", PERSISTENT_ONLY = "NO",
                 REQUIRED_ATTRS = "PUREFA_HOST,PUREFA_API_TOKEN,PUREFA_TARGET"
             ]
+
             DS_MAD_CONF = [
                 NAME = "virtiofs", REQUIRED_ATTRS = "", PERSISTENT_ONLY = "NO", DATASTORE_CAPACITY_CHECK = "NO"
+            ]
+
+            DS_MAD_CONF = [
+                NAME = "interactive", REQUIRED_ATTRS = "", PERSISTENT_ONLY = "NO", DATASTORE_CAPACITY_CHECK = "NO"
             ]
 
             #*******************************************************************************
@@ -7942,6 +9134,25 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path: &10 []
+            key: :host
+            old: 127.0.0.1
+            state: rm
+            extra: {}
+        -   path: *10
+            key: :port
+            old: 5030
+            state: rm
+            extra: {}
+        -   path: *10
+            key: :server
+            value:
+                :bind: 127.0.0.1
+                :port: 5030
+            state: ins
+            extra: {}
         content: |
             ################################################################################
             # Server Configuration
@@ -7952,7 +9163,6 @@ patches:
             :one_xmlrpc: http://localhost:2633/RPC2
 
             # Sinatra server configuration
-            #
             :server:
               :bind: 127.0.0.1
               :port: 5030
@@ -8174,6 +9384,21 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path:
+            - DEFAULT_SCHED
+            key: SOLVER_PATH
+            value: "/usr/lib/one/python/pulp/solverdir/cbc/linux/$arch/cbc"
+            old: "/usr/lib/one/python/pulp/solverdir/cbc/linux/64/cbc"
+            state: set
+            extra: {}
+        -   path:
+            - OPTIMIZE
+            key: PRIORITIZE_STORAGE_MIGRATIONS
+            value: 'NO'
+            state: ins
+            extra: {}
         content: "#*******************************************************************************\n#                       OpenNebula
             Configuration file\n#*******************************************************************************\n\n#*******************************************************************************\n#
             ILP Optimizer configuration attributes\n#-------------------------------------------------------------------------------\n#
@@ -8181,26 +9406,27 @@ patches:
             used. Available options:\n#      \"CBC\"   -> CBC solver:  https://coin-or.github.io/pulp/technical/solvers.html#pulp.apis.PULP_CBC_CMD\n#
             \     \"GLPK\"  -> GLPK solver: https://coin-or.github.io/pulp/technical/solvers.html#pulp.apis.GLPK_CMD\n#      \"COINMP\"->
             COINMP_DLL solver: https://coin-or.github.io/pulp/technical/solvers.html#pulp.apis.COINMP_DLL\n#    - solver_path:
-            Specifies the path to the solver binary.\n#\n# PLACEMENT: The initial placement settings\n#    - POLICY:\n#         -
-            \"BALANCE\": Specifies that VMs should be distributed to ensure an even load across hosts.\n#         - \"PACK\":
-            Indicates that VMs should be placed onto the minimum number of hosts.\n#    - WEIGHTS:\n#         - CPU: Relative
-            importance of the total CPU.\n#         - MEMORY: Relative importance of total memory.\n#\n# OPTIMIZATION: The
-            optimization settings\n#    - POLICY: \n#         - \"BALANCE\": Specifies that VMs should be distributed to ensure
-            an even load across hosts.\n#         - \"PACK\": Indicates that VMs should be placed onto the minimum number
-            of hosts.\n#    - MIGRATION_THRESHOLD: Sets the threshold for the number of VMs that can be migrated.\n#      Default
-            is -1 that means no migration threshold is configured.\n#    - WEIGHTS:\n#         - CPU_USAGE: Relative importance
-            of the CPU usage metric.\n#         - CPU: Relative importance of the total CPU.\n#         - MEMORY: Relative
-            importance of total memory.\n#         - DISK: Relative importance of disk usage (read and written).\n#         -
-            NET: Relative importanve of network usage (transmitted and received)\n#\n#  PREDICTIVE: Integrates both current
-            and forecasted resource usage into scheduling decisions.\n#  A value of 0.3 means that 30% of the optimization
-            is based on predicted resource usage,\n#  with the remaining 70% derived from current resource usage.\n#\n#  MEMORY_SYSTEM_DS_SCALE:
-            This factor scales the VM usage of the system DS with\n#  the memory size. This factor can be use to make the
-            scheduler consider the\n#  overhead of checkpoint files:\n#       system_ds_usage = system_ds_usage + memory_system_ds_scale
-            * memory\n#\n#  DIFFERENT_VNETS: When set (YES) the NICs of a VM will be forced to be in\n#  different Virtual
-            Networks.\n#*******************************************************************************\n\nDEFAULT_SCHED:\n
-            \ SOLVER: \"CBC\"\n  SOLVER_PATH: \"/usr/lib/one/python/pulp/solverdir/cbc/linux/64/cbc\"\n\nPLACE:\n  POLICY:
-            \"BALANCE\"\n  WEIGHTS:\n    CPU: 1\n\nOPTIMIZE:\n  POLICY: \"BALANCE\"\n  MIGRATION_THRESHOLD: -1\n  WEIGHTS:\n
-            \   CPU_USAGE: 1\n\nPREDICTIVE: 0\n\nMEMORY_SYSTEM_DS_SCALE: 0\n\nDIFFERENT_VNETS: YES"
+            Specifies the path to the solver binary. The \"$arch\"\n#      placeholder is resolved at runtime to the host
+            architecture\n#      (\"i64\" on x86_64, \"arm64\" on aarch64).\n#\n# PLACEMENT: The initial placement settings\n#
+            \   - POLICY:\n#         - \"BALANCE\": Specifies that VMs should be distributed to ensure an even load across
+            hosts.\n#         - \"PACK\": Indicates that VMs should be placed onto the minimum number of hosts.\n#    - WEIGHTS:\n#
+            \        - CPU: Relative importance of the total CPU.\n#         - MEMORY: Relative importance of total memory.\n#\n#
+            OPTIMIZATION: The optimization settings\n#    - POLICY: \n#         - \"BALANCE\": Specifies that VMs should be
+            distributed to ensure an even load across hosts.\n#         - \"PACK\": Indicates that VMs should be placed onto
+            the minimum number of hosts.\n#    - MIGRATION_THRESHOLD: Sets the threshold for the number of VMs that can be
+            migrated.\n#      Default is -1 that means no migration threshold is configured.\n#    - WEIGHTS:\n#         -
+            CPU_USAGE: Relative importance of the CPU usage metric.\n#         - CPU: Relative importance of the total CPU.\n#
+            \        - MEMORY: Relative importance of total memory.\n#         - DISK: Relative importance of disk usage (read
+            and written).\n#         - NET: Relative importanve of network usage (transmitted and received)\n#\n#  PREDICTIVE:
+            Integrates both current and forecasted resource usage into scheduling decisions.\n#  A value of 0.3 means that
+            30% of the optimization is based on predicted resource usage,\n#  with the remaining 70% derived from current
+            resource usage.\n#\n#  MEMORY_SYSTEM_DS_SCALE: This factor scales the VM usage of the system DS with\n#  the memory
+            size. This factor can be use to make the scheduler consider the\n#  overhead of checkpoint files:\n#       system_ds_usage
+            = system_ds_usage + memory_system_ds_scale * memory\n#\n#  DIFFERENT_VNETS: When set (YES) the NICs of a VM will
+            be forced to be in\n#  different Virtual Networks.\n#*******************************************************************************\n\nDEFAULT_SCHED:\n
+            \ SOLVER: \"CBC\"\n  SOLVER_PATH: \"/usr/lib/one/python/pulp/solverdir/cbc/linux/$arch/cbc\"\n\nPLACE:\n  POLICY:
+            \"BALANCE\"\n  WEIGHTS:\n    CPU: 1\n\nOPTIMIZE:\n  POLICY: \"BALANCE\"\n  MIGRATION_THRESHOLD: -1\n  PRIORITIZE_STORAGE_MIGRATIONS:
+            \"NO\"\n  WEIGHTS:\n    CPU_USAGE: 1\n\nPREDICTIVE: 0\n\nMEMORY_SYSTEM_DS_SCALE: 0\n\nDIFFERENT_VNETS: YES"
     "/etc/one/onehem-server.conf":
         class: Yaml
         owner: root
@@ -9442,3 +10668,211 @@ patches:
             # - :service_port: 5030
             #   :remote_addr: 10.11.12.13 # HA VIP
             #   :remote_port: 5030
+    "/etc/one/fireedge/sunstone/views/user/group-tab.yaml":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        action: create
+        content: |-
+            ---
+            # This file describes the information and actions available in the GROUP tab
+
+            # Resource
+
+            resource_name: "GROUP"
+
+            # Actions - Which buttons are visible to operate over the resources
+
+            actions:
+              create_dialog: false
+              update_dialog: false
+              delete: false
+
+            # Filters - List of criteria to filter the resources
+
+            filters:
+
+
+            # Info Tabs - Which info tabs are used to show extended information
+
+            info-tabs:
+              info:
+                enabled: true
+                information_panel:
+                  enabled: true
+                  actions:
+                    rename: false
+                attributes_panel:
+                  enabled: true
+                  actions:
+                    copy: false
+                    add: false
+                    edit: false
+                    delete: false
+
+              user:
+                enabled: false
+                actions:
+                  edit_admins: false
+                  add_users: false
+                  remove_users: false
+
+              quota:
+                enabled: false
+                actions:
+                  quotas_dialog: false
+
+              accounting:
+                enabled: false
+                actions:
+                  get_accounting: false
+
+              showback:
+                enabled: false
+                actions:
+                  get_showback: false
+
+              vlanrules:
+                enabled: true
+                actions:
+                  add_vlan_rule: false
+                  update_vlan_rule: false
+                  delete_vlan_rule: false
+    "/etc/one/fireedge/sunstone/views/user/vnet-template-tab.yaml":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        action: create
+        content: |-
+            ---
+            # This file describes the information and actions available in the V. NETWORK TEMPLATE tab
+
+            # Resource
+
+            resource_name: "NETWORK-TEMPLATE"
+
+            # Actions - Which buttons are visible to operate over the resources
+
+            actions:
+              create_dialog: false
+              instantiate_dialog: true
+              update_dialog: false
+              delete: false
+              chown: false
+              chgrp: false
+              lock: false
+              unlock: false
+
+            # Filters - List of criteria to filter the resources
+
+            filters:
+
+            # Info Tabs - Which info tabs are used to show extended information
+
+            info-tabs:
+              info:
+                enabled: true
+                information_panel:
+                  enabled: true
+                  actions:
+                    rename: false
+                permissions_panel:
+                  enabled: true
+                  actions:
+                    chmod: false
+                ownership_panel:
+                  enabled: true
+                  actions:
+                    chown: false
+                    chgrp: false
+                qos_panel:
+                  enabled: true
+                attributes_panel:
+                  enabled: true
+                  actions:
+                    copy: false
+                    add: false
+                    edit: false
+                    delete: false
+
+              address:
+                enabled: true
+                actions:
+                  add_ar: false
+                  update_ar: false
+                  delete_ar: false
+
+              security:
+                enabled: false
+
+              cluster:
+                enabled: true
+
+              template:
+                enabled: true
+
+            instantiate-tabs:
+              address:
+                enabled: true
+              security:
+                enabled: true
+              context:
+                enabled: true
+              configuration:
+                enabled: true
+    "/var/lib/one/remotes/etc/onebex/onebex-server.conf":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        action: create
+        content: |
+            ################################################################################
+            # Server Configuration
+            ################################################################################
+
+            # Host and port where OneBEX server will run
+            :host: 0.0.0.0
+            :port: 13014
+
+            # Server shutdown timing, in seconds.
+            #
+            # shutdown_delay
+            #   Delay after the final /vms/:VM_ID/finish request before stopping
+            #   the OneBEX server.
+            #
+            # idle_timeout
+            #   Maximum time without receiving any HTTP request before the OneBEX server
+            #   stops automatically.
+            #
+            # onebex_timeout
+            #   Maximum time, in seconds, that interactive backups wait for the
+            #   OneBEX export to finish after it has started.
+            :shutdown_delay: 2
+            :idle_timeout: 300
+            :onebex_timeout: 1800
+
+            ################################################################################
+            # Log
+            ################################################################################
+
+            # Log debug level
+            #   0 = ERROR, 1 = WARNING, 2 = INFO, 3 = DEBUG
+            #
+            # System
+            #   - file: log to log file
+            #   - syslog: log to syslog
+            :log:
+              :level: 2
+              :system: file
+
+            ################################################################################
+            # Puma
+            ################################################################################
+
+            # Puma thread pool limits for concurrent OneBEX HTTP requests.
+            :puma:
+              :min_threads: 1
+              :max_threads: 4

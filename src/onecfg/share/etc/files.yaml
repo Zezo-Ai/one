@@ -536,6 +536,12 @@
   mode: '0640'
   src: src/vnm_mad/remotes/OpenNebulaNetwork.conf
 
+- name: /var/lib/one/remotes/etc/onebex/onebex-server.conf
+  class: Yaml
+  owner: root
+  group: oneadmin
+  mode: '0640'
+  src: src/onebex/etc/onebex-server.conf
 
 ### Dir: /var/lib/one/remotes/ (ONE < 5.6) #################
 
