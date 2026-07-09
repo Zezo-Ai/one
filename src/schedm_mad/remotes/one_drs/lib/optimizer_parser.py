@@ -270,12 +270,18 @@ class OptimizerParser:
                 )
                 criteria = self._normalize_weights(weights)
             allowed_migrations = -1
+            migration_priority = None
         else:
             cluster_config = self._parse_cluster()
             policy = cluster_config.get("POLICY", self.config["MODE"]["POLICY"])
             allowed_migrations = cluster_config.get(
                 "MIGRATION_THRESHOLD", self.config["MODE"]["MIGRATION_THRESHOLD"]
             )
+            smp = self.config["MODE"].get("PRIORITIZE_STORAGE_MIGRATIONS", "")
+            if smp is True or str(smp).upper() == "YES":
+                migration_priority = "storage"
+            else:
+                migration_priority = "host"
             self.config["PREDICTIVE"] = cluster_config.get(
                 "PREDICTIVE", self.config["PREDICTIVE"]
             )
@@ -327,6 +333,7 @@ class OptimizerParser:
             preemptive=False,
             allowed_migrations=migrations,
             allowed_storage_migrations=migrations,
+            migration_priority=migration_priority,
             solver=self.config["SOLVER"],
         )
 

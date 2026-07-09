@@ -86,6 +86,8 @@ class ILPOptimizer(Mapper):
         "_ns_migr_ub",
         "_max_n_migr_vms",
         "_max_ns_migr_vms",
+        "_w_migr",
+        "_ws_migr",
         "_opt_placement",
     )
 
@@ -133,6 +135,8 @@ class ILPOptimizer(Mapper):
         _ns_migr_ub: Optional[int]
         _max_n_migr_vms: int
         _max_ns_migr_vms: int
+        _w_migr: float
+        _ws_migr: float
         _opt_placement: dict[int, Optional[Allocation]]
 
     def __init__(
@@ -149,6 +153,7 @@ class ILPOptimizer(Mapper):
         # migrations: Optional[bool] = None,
         allowed_migrations: Optional[int] = None,
         allowed_storage_migrations: Optional[int] = 0,
+        migration_priority: Optional[Literal["host", "storage"]] = None,
         balance_constraints: Optional[Mapping[str, float]] = None,
         preemptive: bool = False,
         **kwargs
@@ -214,8 +219,20 @@ class ILPOptimizer(Mapper):
             self._migrations = not all_waiting
         else:
             self._migrations = bool(migrations)
+        # The number of total allowed host and storage migrations.
         self._n_migr_ub = allowed_migrations
+        # The number of allowed storage migrations.
         self._ns_migr_ub = 0 if all_waiting else allowed_storage_migrations
+
+        if migration_priority == "host":
+            self._w_migr = 0.9
+            self._ws_migr = 1.0
+        elif migration_priority == "storage":
+            self._w_migr = 1.0
+            self._ws_migr = 0.9
+        else:
+            self._w_migr = 1.0
+            self._ws_migr = 1.0
 
         # Whether preemptive scheduling is allowed.
         if preemptive:
@@ -968,15 +985,20 @@ class ILPOptimizer(Mapper):
                 f"vm_{vm_id}_nic_{nic_id}_vnet_{vnet_id}_cluster_constraint"
             )
 
+        sum_ns_migr: Optional[LinExpr] = None
+
         if self._n_migr_ub is not None:
+            sum_ns_migr = sum_(self._ns_migr.values())
             model += (
-                sum_(self._n_migr.values()) <= self._n_migr_ub,
-                f"max_number_of_migrations_{self._n_migr_ub}_constraint"
+                sum_(self._n_migr.values()) + sum_ns_migr <= self._n_migr_ub,
+                f"max_number_of_all_migrations_{self._n_migr_ub}_constraint"
             )
 
         if self._ns_migr_ub is not None:
+            if sum_ns_migr is None:
+                sum_ns_migr = sum_(self._ns_migr.values())
             model += (
-                sum_(self._ns_migr.values()) <= self._ns_migr_ub,
+                sum_ns_migr <= self._ns_migr_ub,
                 f"max_number_of_storage_migrations_{self._ns_migr_ub}_"
                 f"constraint"
             )
@@ -1229,10 +1251,10 @@ class ILPOptimizer(Mapper):
         # TODO: Reconsider the implementation of both penalties.
         n_pend_vms = sum_(self._x_pend.values())
         pend_penalty = 1.1 * n_pend_vms
-        n_migr_vms = sum_(self._n_migr.values())
+        n_migr_vms = self._w_migr * sum_(self._n_migr.values())
         max_n_migr_vms = self._max_n_migr_vms
         if self._ns_migr_ub != 0:
-            n_migr_vms += sum_(self._ns_migr.values())
+            n_migr_vms += self._ws_migr * sum_(self._ns_migr.values())
             max_n_migr_vms += self._max_ns_migr_vms
         migr_penalty = n_migr_vms / (max_n_migr_vms * 2 + 1)
         self._model.sense = _MIN
@@ -1244,6 +1266,7 @@ class ILPOptimizer(Mapper):
             self._add_balance_objectives(self._criteria)
         elif self._criteria == "migration_count":
             model.sense = _MIN
+            # TODO: Decide whether to penalize storage migrations.
             model += sum_(self._n_migr.values())
         elif self._criteria == "pack":
             # Minimize the number of used hosts.
@@ -1269,10 +1292,10 @@ class ILPOptimizer(Mapper):
             # `self._max_n_migr * number` because `self._max_n_migr`
             # might be zero.
             # CAVEAT: A very large divisor might be problematic.
-            n_migr_vms = sum_(self._n_migr.values())
+            n_migr_vms = self._w_migr * sum_(self._n_migr.values())
             max_n_migr_vms = self._max_n_migr_vms
             if self._ns_migr_ub != 0:
-                n_migr_vms += sum_(self._ns_migr.values())
+                n_migr_vms += self._ws_migr * sum_(self._ns_migr.values())
                 max_n_migr_vms += self._max_ns_migr_vms
             migr_penalty = n_migr_vms / (max_n_migr_vms * 2 + 1)
             model += n_hosts + pend_penalty + migr_penalty
