@@ -862,7 +862,7 @@ _onevnet() {
     if [ "${#COMP_WORDS[@]}" -gt "2" ]; then
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
-    opts="create delete addar addleases rmar rmleases free hold release release
+    opts="create delete addar rmar free hold release release
             chgrp chown chmod list show update updatear rename lock unlock orphans"
     cmd=onevnet
     if [ "$COMP_CWORD" == 1 ]; then
@@ -870,7 +870,7 @@ _onevnet() {
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        delete|addar|addleases|rmar|rmleases|free|hold|release|reserve|chgrp| \
+        delete|addar|rmar|free|hold|release|reserve|chgrp| \
         chown|chmod|show|update|updatear|rename|lock|unlock)
             _complete $cmd
         ;;

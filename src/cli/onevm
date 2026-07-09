@@ -1925,9 +1925,4 @@ CommandParser::CmdParser.new(ARGV) do
             vm.vmgroup_del
         end
     end
-
-    # Deprecated commands, remove these commands in release 8.x
-
-    deprecated_command(:'delete-chart', 'sched-delete')
-    deprecated_command(:'update-chart', 'sched-update')
 end
