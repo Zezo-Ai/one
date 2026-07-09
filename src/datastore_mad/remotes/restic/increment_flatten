@@ -53,8 +53,8 @@ begin
     exit(0) if image.snapshots.size <= image.keep_last
 
     rds = Restic.new action, :prefix    => 'DATASTORE/',
-                             :repo_type => :local,
-                             :host_type => :hypervisor
+                             :repo_type => :auto,
+                             :host_type => :auto
     rds.resticenv_rb
 rescue StandardError => e
     STDERR.puts e.full_message
@@ -70,12 +70,10 @@ def reconstruct_chains(rds, image, disks)
         script << image.class.reconstruct_chain(disk_paths)
     end
 
-    rc = TransferManager::Action.ssh 'reconstruct_chains',
-                                     :host     => "#{rds.user}@#{rds.sftp}",
-                                     :forward  => true,
-                                     :cmds     => script.join("\n"),
-                                     :nostdout => true,
-                                     :nostderr => false
+    rc = rds.repo_command 'reconstruct_chains',
+                          script.join("\n"),
+                          :nostdout => true,
+                          :nostderr => false
 
     raise StandardError, "Unable to rebase qcow2 images: #{rc.stderr}" if rc.code != 0
 end
@@ -133,12 +131,10 @@ def flatten_chains(rds, image, paths, snapshot)
         echo "$SNAP $SIZE"
     EOS
 
-    rc = TransferManager::Action.ssh 'flatten_chains',
-                                     :host     => "#{rds.user}@#{rds.sftp}",
-                                     :forward  => true,
-                                     :cmds     => script.join("\n"),
-                                     :nostdout => false,
-                                     :nostderr => false
+    rc = rds.repo_command 'flatten_chains',
+                          script.join("\n"),
+                          :nostdout => false,
+                          :nostderr => false
 
     raise StandardError, "Unable to flatten increments: #{rc.stderr}" if rc.code != 0
 

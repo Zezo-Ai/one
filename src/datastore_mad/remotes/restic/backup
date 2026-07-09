@@ -67,7 +67,6 @@ begin
     vm_host     = bridge_host || dir[0]
 
     rds = Restic.new ds_xml.to_s, :create_repo => true,
-                                  :repo_type   => :sftp,
                                   :host_type   => :hypervisor,
                                   :repo_id     => repo_id
     rds.resticenv_rb
@@ -161,7 +160,7 @@ script = <<~EOS
     #{rds.resticenv_sh}
     BKNAME=$(ls #{vm_dir}/disk.* | head -n 1)
 
-    RC=`#{ds.cmd_confinement(rcmd, vm_dir, ['SSH_AUTH_SOCK', 'RESTIC_PASSWORD', 'GOMAXPROCS'])}`
+    RC=`#{ds.cmd_confinement(rcmd, vm_dir, rds.confinement_env)}`
 
     INFO=`echo "$RC" | jq -r '.snapshot_id + " " + (.total_bytes_processed|tostring) | select ( . != " null" )'`
 

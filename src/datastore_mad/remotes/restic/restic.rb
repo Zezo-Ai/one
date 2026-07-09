@@ -30,13 +30,39 @@ require_relative '../../tm/lib/tm_action'
 # This class abstracts the interface with a Restic repo
 class Restic
 
-    attr_reader :doc, :path, :sftp, :tmp_dir, :sparsify, :user
+    attr_reader :doc, :path, :repo_type, :sftp, :tmp_dir, :sparsify, :user
 
     RESTIC_BIN_PATHS = {
         :frontend => "#{ENV['ONE_LOCATION']&.then {|p| "#{p}/var" } || '/var/lib/one'}" \
                      '/remotes/datastore/restic/restic',
         :hypervisor => '/var/tmp/one/datastore/restic/restic'
     }.freeze
+
+    class << self
+
+        def new(action, opts = {})
+            return super unless self == Restic
+
+            begin
+                prefix = opts[:prefix] || ''
+                doc    = REXML::Document.new(action).root
+                value  = doc.elements["#{prefix}TEMPLATE/RESTIC_BACKEND"]&.text || 'SFTP'
+
+                klass = case value.upcase
+                        when 'SFTP'
+                            Restic::SFTP
+                        when 'S3'
+                            Restic::S3
+                        else
+                            raise StandardError, "Unknown RESTIC_BACKEND: #{value}"
+                        end
+
+                klass.new(action, opts)
+            rescue StandardError => e
+                raise StandardError, "Wrong restic datastore configuration: #{e.message}"
+            end
+        end
+    end
 
     def self.mk_repo_id(backupjob_id)
         "job_#{backupjob_id}"
@@ -51,14 +77,15 @@ class Restic
             :repo_type   => :sftp
         }.merge!(opts)
 
-        @doc   = REXML::Document.new(action).root
-        prefix = @options[:prefix]
+        @doc    = REXML::Document.new(action).root
+        @prefix = @options[:prefix]
 
-        @ds_id = @doc.elements["#{prefix}ID"].text
+        @default_rhost = nil
 
-        @user = safe_get("#{prefix}TEMPLATE/RESTIC_SFTP_USER", 'oneadmin')
-        @sftp = @doc.elements["#{prefix}TEMPLATE/RESTIC_SFTP_SERVER"].text
-        base  = @doc.elements["#{prefix}BASE_PATH"].text
+        @host_type = @options[:host_type]
+        @repo_type = @options[:repo_type]
+
+        @ds_id = @doc.elements["#{@prefix}ID"].text
 
         if @options[:repo_id].nil?
             img_bj = @doc.elements['IMAGE/TEMPLATE/BACKUP_JOB_ID']&.text
@@ -80,57 +107,41 @@ class Restic
             @repo_id = @options[:repo_id]
         end
 
-        @path = if @repo_id.nil?
-                    Pathname.new(base).cleanpath.to_s
-                else
-                    Pathname.new("#{base}/#{@repo_id}").cleanpath.to_s
-                end
+        @restic_bin = RESTIC_BIN_PATHS[@host_type]
 
-        @repo = case @options[:repo_type]
-                when :sftp
-                    "sftp:#{@user}@#{@sftp}:#{@path}"
-                when :local
-                    @path
-                else
-                    raise StandardError, 'Unknown Restic repo type'
-                end
+        passwd_s = @doc.elements["#{@prefix}TEMPLATE/RESTIC_PASSWORD"]
+        @passwd  = passwd_s.text.sub(/\A['"](.*)['"]\z/, '\1')
 
-        @restic_bin = RESTIC_BIN_PATHS[@options[:host_type]]
+        @bwlimit = safe_get("#{@prefix}TEMPLATE/RESTIC_BWLIMIT", -1)
+        @maxproc = Integer(safe_get("#{@prefix}TEMPLATE/RESTIC_MAXPROC", -1))
 
-        passwd_s = @doc.elements["#{prefix}TEMPLATE/RESTIC_PASSWORD"]
-        @passwd = passwd_s.text.sub(/\A['"](.*)['"]\z/, '\1')
-
-        @bwlimit = safe_get("#{prefix}TEMPLATE/RESTIC_BWLIMIT", -1)
-        @maxproc = Integer(safe_get("#{prefix}TEMPLATE/RESTIC_MAXPROC", -1))
-
-        comp_s = safe_get("#{prefix}TEMPLATE/RESTIC_COMPRESSION", 'auto')
+        comp_s = safe_get("#{@prefix}TEMPLATE/RESTIC_COMPRESSION", 'auto')
         @comp  = comp_s.downcase
         @comp  = 'auto' unless ['auto', 'off', 'max'].include?(comp_s)
 
-        conn_s = safe_get("#{prefix}TEMPLATE/RESTIC_CONNECTIONS", 5)
+        conn_s = safe_get("#{@prefix}TEMPLATE/RESTIC_CONNECTIONS", 5)
         @conns = Integer(conn_s)
 
-        @tmp_dir = safe_get("#{prefix}TEMPLATE/RESTIC_TMP_DIR", '/var/tmp')
+        @tmp_dir = safe_get("#{@prefix}TEMPLATE/RESTIC_TMP_DIR", '/var/tmp')
 
-        sparsify_s = safe_get("#{prefix}TEMPLATE/RESTIC_SPARSIFY", 'no')
+        sparsify_s = safe_get("#{@prefix}TEMPLATE/RESTIC_SPARSIFY", 'no')
         @sparsify  = sparsify_s.downcase == 'yes'
 
         # By default we perform aggressive pruning.
 
         # --max-repack-size size if set limits the total size of files to repack.
-        @max_repack = safe_get("#{prefix}TEMPLATE/RESTIC_PRUNE_MAX_REPACK", nil)
+        @max_repack = safe_get("#{@prefix}TEMPLATE/RESTIC_PRUNE_MAX_REPACK", nil)
 
         raise StandardError, 'Invalid value for RESTIC_PRUNE_MAX_REPACK' \
             unless @max_repack.nil? || @max_repack.match(/^\d+[kKmMgGtT]?$/)
 
         # --max-unused limit allow unused data up to the specified limit within the repository.
         # If you want to minimize the space used by your repository, pass 0 to this option.
-        @max_unused = safe_get("#{prefix}TEMPLATE/RESTIC_PRUNE_MAX_UNUSED", '0')
+        @max_unused = safe_get("#{@prefix}TEMPLATE/RESTIC_PRUNE_MAX_UNUSED", '0')
 
         raise StandardError, 'Invalid value for RESTIC_PRUNE_MAX_UNUSED' \
             unless @max_unused.nil? || @max_unused.match(/^\d+[kKmMgGtT%]?$|^unlimited$/)
 
-        create_repo_if_not_exists if @options[:create_repo] && @repo_id
     rescue StandardError => e
         raise StandardError, "Wrong restic datastore configuration: #{e.message}"
     end
@@ -141,9 +152,10 @@ class Restic
             opts['limit-download'] = @bwlimit
         end
 
+        backend_options(cmd, opts)
+
         # Add connectins and compression options if different from defaults
         if cmd.match(/^backup|^restore|^dump/)
-            opts['option']      = "sftp.connections=#{@conns}" if @conns != 5
             opts['compression'] = @comp if @comp != 'auto'
         end
 
@@ -155,6 +167,7 @@ class Restic
         env << %(export RESTIC_BIN="#{restic_bin}")
         env << %(export RESTIC_PASSWORD='#{@passwd}')
         env << %(export GOMAXPROCS="#{@maxproc}") unless @maxproc == -1
+        env.concat(backend_env_sh)
 
         env.join("\n")
     end
@@ -163,10 +176,27 @@ class Restic
         ENV['RESTIC_BIN']      = restic_bin
         ENV['RESTIC_PASSWORD'] = @passwd
         ENV['GOMAXPROCS']      = @maxproc.to_s unless @maxproc == -1
+        backend_env_rb
     end
 
     def [](xpath)
         @doc.elements[xpath].text
+    end
+
+    def confinement_env
+        ['SSH_AUTH_SOCK', 'RESTIC_PASSWORD', 'GOMAXPROCS']
+    end
+
+    def repo_command(_name, _script, _opts = {})
+        raise StandardError, 'Unknown Restic backend'
+    end
+
+    def downloader_commands(_tmp_path, _tmp_dir)
+        raise StandardError, 'Unknown Restic backend'
+    end
+
+    def monitor_stats(_opts = {})
+        raise StandardError, 'Unknown Restic backend'
     end
 
     # Ensures that an instance of Restic repo is created for a VM.
@@ -191,7 +221,9 @@ class Restic
     # @param rhost [String] hostname/IP of a node to run restic commands on
     #
     # @return [Hash] data struct containing snapshot's details
-    def query_snapshot(snap, rhost = @sftp)
+    def query_snapshot(snap, rhost = nil)
+        rhost = resolve_rhost(rhost)
+
         script = <<~EOS
             set -e -o pipefail; shopt -qs failglob
             #{resticenv_sh}
@@ -221,7 +253,9 @@ class Restic
     # @param wdir [String, nil] directory to pull artifacts into (optional)
     #
     # @return [Hash] data structure containing all discovered paths
-    def pull_chain(snaps, index, rhost = @sftp, wdir = nil)
+    def pull_chain(snaps, index, rhost = nil, wdir = nil)
+        rhost = resolve_rhost(rhost)
+
         paths = parse_paths(snaps, rhost, /^disk\.#{index}\./)
         pull_disks(paths[:disks], rhost, wdir)
         paths
@@ -236,7 +270,9 @@ class Restic
     # @param rhost [String] hostname/IP of a node to run restic commands on
     #
     # @return [Hash, Hash] document contents and data struct containing all discovered paths
-    def read_document(snap, path_filter, rhost = @sftp)
+    def read_document(snap, path_filter, rhost = nil)
+        rhost = resolve_rhost(rhost)
+
         paths    = parse_paths([snap], rhost)
         document = read_other(snap, paths[:other], rhost, path_filter)
         [document, paths]
@@ -251,7 +287,9 @@ class Restic
     # @param wdir [String, nil] directory to pull artifacts into (optional)
     #
     # @return [Hash] data structure containing all discovered paths
-    def pull_snapshots(snaps, rhost = @sftp, wdir = nil)
+    def pull_snapshots(snaps, rhost = nil, wdir = nil)
+        rhost = resolve_rhost(rhost)
+
         paths = parse_paths(snaps, rhost)
         pull_disks(paths[:disks], rhost, wdir)
         pull_other(snaps.last, paths[:other], rhost, wdir)
@@ -266,16 +304,18 @@ class Restic
     # @param rhost [String] hostname/IP of a node to run restic commands on
     #
     # @return [nil]
-    def remove_snapshots(snaps, rhost = @sftp, opts = {})
+    def remove_snapshots(snaps, rhost = nil, opts = {})
+        rhost = resolve_rhost(rhost)
+
         options = {
             :retries => 60,
             :delay   => 5 # seconds
         }.merge!(opts)
 
         args = {}
-        args['prune'] = nil # always prune
+        args['prune']           = nil # always prune
         args['max-repack-size'] = @max_repack unless @max_repack.nil?
-        args['max-unused'] = @max_unused unless @max_unused.nil?
+        args['max-unused']      = @max_unused unless @max_unused.nil?
 
         forget_cmd = restic "forget #{snaps.join(' ')}", args
 
@@ -306,13 +346,15 @@ class Restic
     # @param rhost [String] hostname/IP of a node to run restic commands on
     #
     # @return [Object] RC struct
-    def run_action(name, script, rhost = @sftp)
-        case @options[:host_type]
+    def run_action(name, script, rhost = nil)
+        rhost = resolve_rhost(rhost)
+
+        case @host_type
         when :frontend
             # NOTE: The rhost param is ignored when running on a FE.
             LocalCommand.run '/bin/bash -s', nil, script
         when :hypervisor
-            host = if @options[:repo_type] == :local
+            host = if @repo_type == :local
                        "#{@user}@#{rhost}"
                    else
                        rhost
@@ -535,10 +577,268 @@ class Restic
         default
     end
 
+    def resolve_rhost(rhost)
+        rhost.nil? ? @default_rhost : rhost
+    end
+
+    def backend_options(_cmd, _opts); end
+
+    def backend_env_sh
+        []
+    end
+
+    def backend_env_rb; end
+
     def opts_to_str(opts = {})
-        opts.to_a.map do |kv|
+        opt_values = opts.to_a.flat_map do |key, value|
+            if value.is_a?(Array)
+                value.map {|v| [key, v] }
+            else
+                [[key, value]]
+            end
+        end
+
+        opt_values.map do |kv|
             "'--#{kv.compact.join('=').delete(%("'))}'" # paranoid about shell injection
         end.join(' ')
+    end
+
+end
+
+class Restic::SFTP < Restic
+
+    DOWNLOAD_SSH_OPTS = '-q -o ControlMaster=no -o ControlPath=none -o ForwardAgent=yes'
+
+    def initialize(action, opts = {})
+        super
+
+        @host_type = :hypervisor if @host_type == :auto
+        @repo_type = if @repo_type == :auto && @host_type == :frontend
+                         :sftp
+                     elsif @repo_type == :auto
+                         :local
+                     else
+                         @repo_type
+                     end
+
+        @restic_bin = RESTIC_BIN_PATHS[@host_type]
+
+        @user = safe_get("#{@prefix}TEMPLATE/RESTIC_SFTP_USER", 'oneadmin')
+        @sftp = @doc.elements["#{@prefix}TEMPLATE/RESTIC_SFTP_SERVER"].text
+        base  = @doc.elements["#{@prefix}BASE_PATH"].text
+
+        @default_rhost = @sftp
+
+        @path = if @repo_id.nil?
+                    Pathname.new(base).cleanpath.to_s
+                else
+                    Pathname.new("#{base}/#{@repo_id}").cleanpath.to_s
+                end
+
+        @repo = case @repo_type
+                when :sftp
+                    "sftp:#{@user}@#{@sftp}:#{@path}"
+                when :local
+                    @path
+                else
+                    raise StandardError, 'Unknown Restic repo type'
+                end
+
+        create_repo_if_not_exists if @options[:create_repo] && @repo_id
+    end
+
+    def repo_command(name, script, opts = {})
+        TransferManager::Action.ssh name,
+                                    :host     => "#{@user}@#{@sftp}",
+                                    :forward  => true,
+                                    :cmds     => script,
+                                    :nostdout => opts.fetch(:nostdout, false),
+                                    :nostderr => opts.fetch(:nostderr, false)
+    end
+
+    def downloader_commands(tmp_path, tmp_dir)
+        [
+            "ssh #{DOWNLOAD_SSH_OPTS} '#{@user}@#{@sftp}' cat '#{tmp_path}'",
+            "ssh #{DOWNLOAD_SSH_OPTS} '#{@user}@#{@sftp}' rm -rf '#{tmp_dir}/'"
+        ]
+    end
+
+    def monitor_stats(opts = {})
+        one_version = File.open(opts[:version_file], &:gets).strip
+
+        script = <<~EOS
+            set -e -o pipefail; shopt -qs failglob
+
+            mkdir -p '#{@path}/'
+
+            # Check if the correct restic binary is available.
+            [[ -x /var/tmp/one/datastore/restic/restic ]] && \
+            [[ -f /var/tmp/one/VERSION ]] && \
+            [[ '#{one_version}' = $(head -1 /var/tmp/one/VERSION) ]] && \
+            echo true || echo false
+
+            # Collect filesystem stats.
+            df -PBM '#{@path}/' | tail -1
+        EOS
+
+        rc = SSHCommand.run '/bin/bash -s',
+                            "#{@user}@#{@sftp}",
+                            nil,
+                            script,
+                            nil
+
+        raise StandardError, "Error parsing repo stats: #{rc.stderr}" \
+            if rc.code != 0
+
+        stdout_lines = rc.stdout.lines
+
+        raise StandardError, "Error parsing repo stats: #{rc.stdout}" \
+            if stdout_lines.size < 2
+
+        restic_found = stdout_lines[-2].strip
+        stats        = stdout_lines[-1].split
+
+        raise StandardError, "Error parsing repo stats: #{rc.stdout}" \
+            if stats.size < 4
+
+        if restic_found == 'false'
+            sync_manager = HostSyncManager.new
+            sync_manager.update_remotes "#{@user}@#{@sftp}",
+                                        nil,
+                                        :rsync,
+                                        ['VERSION', 'datastore/restic/restic']
+        end
+
+        {
+            :used_mb  => stats[2],
+            :total_mb => stats[1],
+            :free_mb  => stats[3]
+        }
+    end
+
+    private
+
+    def backend_options(cmd, opts)
+        return unless cmd.match(/^backup|^restore|^dump/)
+
+        opts['option'] = "sftp.connections=#{@conns}" if @conns != 5
+    end
+
+end
+
+class Restic::S3 < Restic
+
+    def initialize(action, opts = {})
+        super
+
+        @host_type  = :frontend if @host_type == :auto
+        @repo_type  = :s3
+
+        @restic_bin = RESTIC_BIN_PATHS[@host_type]
+
+        @s3_key    = safe_get("#{@prefix}TEMPLATE/RESTIC_S3_ACCESS_KEY_ID", nil)
+        @s3_secret = safe_get("#{@prefix}TEMPLATE/RESTIC_S3_SECRET_ACCESS_KEY", nil)
+        @s3_region = safe_get("#{@prefix}TEMPLATE/RESTIC_S3_REGION", 'us-east-1')
+        @s3_bucket = safe_get("#{@prefix}TEMPLATE/RESTIC_S3_BUCKET", nil)
+
+        @s3_endpoint = safe_get(
+            "#{@prefix}TEMPLATE/RESTIC_S3_ENDPOINT",
+            's3.amazonaws.com'
+        ).sub(%r{/*\z}, '')
+
+        @s3_force_path = safe_get(
+            "#{@prefix}TEMPLATE/RESTIC_S3_FORCE_PATH_STYLE",
+            'no'
+        ).downcase == 'yes'
+
+        @s3_cacert       = safe_get("#{@prefix}TEMPLATE/RESTIC_S3_CACERT", nil)
+        @s3_insecure_tls = safe_get(
+            "#{@prefix}TEMPLATE/RESTIC_S3_INSECURE_TLS",
+            'no'
+        ).downcase == 'yes'
+
+        raise StandardError, 'Missing RESTIC_S3_ACCESS_KEY_ID' if @s3_key.nil?
+        raise StandardError, 'Missing RESTIC_S3_SECRET_ACCESS_KEY' if @s3_secret.nil?
+        raise StandardError, 'Missing RESTIC_S3_BUCKET' if @s3_bucket.nil?
+
+        @path = @repo_id.to_s
+
+        @repo = if @s3_endpoint.start_with?('s3:')
+                  [@s3_endpoint, @s3_bucket, @path].reject(&:empty?).join('/')
+                else
+                  ["s3:#{@s3_endpoint}", @s3_bucket, @path].reject(&:empty?).join('/')
+                end
+
+        create_repo_if_not_exists if @options[:create_repo] && @repo_id
+    end
+
+    def confinement_env
+        super + [
+            'AWS_ACCESS_KEY_ID',
+            'AWS_SECRET_ACCESS_KEY',
+            'AWS_DEFAULT_REGION',
+            'AWS_REGION'
+        ]
+    end
+
+    def repo_command(_name, script, _opts = {})
+        LocalCommand.run '/bin/bash -s', nil, script
+    end
+
+    def downloader_commands(tmp_path, tmp_dir)
+        [
+            "cat '#{tmp_path}'",
+            "rm -rf '#{tmp_dir}/'"
+        ]
+    end
+
+    def monitor_stats(opts = {})
+        ipool = OpenNebula::ImagePool.new(OpenNebula::Client.new)
+        rc    = ipool.info_all
+
+        raise StandardError, rc.message if OpenNebula.is_error?(rc)
+
+        used_mb  = ipool.inject(0) do |sum, image|
+            next sum unless image['DATASTORE_ID'].to_i == opts[:ds_id].to_i
+            next sum unless image['TYPE'].to_i == 6 # BACKUP
+
+            sum + image['SIZE'].to_i
+        end
+
+        total_mb = safe_get("#{@prefix}TEMPLATE/TOTAL_MB", 1048576).to_i
+        free_mb  = [total_mb - used_mb, 0].max
+
+        {
+            :used_mb  => used_mb,
+            :total_mb => total_mb,
+            :free_mb  => free_mb
+        }
+    end
+
+    private
+
+    def backend_options(_cmd, opts)
+        options = []
+        options << 's3.bucket-lookup=path' if @s3_force_path
+        opts['option'] = [opts['option'], *options].compact unless options.empty?
+        opts['cacert'] = @s3_cacert unless @s3_cacert.nil? || @s3_cacert.empty?
+        opts['insecure-tls'] = nil if @s3_insecure_tls
+    end
+
+    def backend_env_sh
+        [
+            %(export AWS_ACCESS_KEY_ID='#{@s3_key}'),
+            %(export AWS_SECRET_ACCESS_KEY='#{@s3_secret}'),
+            %(export AWS_DEFAULT_REGION='#{@s3_region}'),
+            %(export AWS_REGION='#{@s3_region}')
+        ]
+    end
+
+    def backend_env_rb
+        ENV['AWS_ACCESS_KEY_ID']     = @s3_key
+        ENV['AWS_SECRET_ACCESS_KEY'] = @s3_secret
+        ENV['AWS_DEFAULT_REGION']    = @s3_region
+        ENV['AWS_REGION']            = @s3_region
     end
 
 end

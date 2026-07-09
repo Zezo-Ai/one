@@ -42,8 +42,6 @@ require 'securerandom'
 require_relative '../tm/lib/backup'
 require_relative '../tm/lib/tm_action'
 
-SSH_OPTS = '-q -o ControlMaster=no -o ControlPath=none -o ForwardAgent=yes'
-
 # Parse input data.
 
 # restic://<datastore_id>/<bj_id>/<id>:<snapshot_id>,.../<file_name>
@@ -85,8 +83,8 @@ begin
     # Pull from Restic, then post-process qcow2 disks.
     #---------------------------------------------------------------------------
     rds = Restic.new backup_ds.to_xml, :repo_id   => repo_id,
-                                       :repo_type => :local,
-                                       :host_type => :hypervisor
+                                       :repo_type => :auto,
+                                       :host_type => :auto
 rescue StandardError => e
     STDERR.puts e.full_message
     exit(-1)
@@ -96,7 +94,7 @@ end
 
 begin
     tmp_dir    = "#{rds.tmp_dir}/#{SecureRandom.uuid}"
-    paths      = rds.pull_chain(snaps, disk_index, rds.sftp, tmp_dir)
+    paths      = rds.pull_chain(snaps, disk_index, nil, tmp_dir)
     disk_paths = paths[:disks][:by_index][disk_index].map {|d| Pathname.new(d) }
     tmp_path   = "#{tmp_dir}/#{disk_paths.last.basename}"
 
@@ -111,12 +109,10 @@ begin
             rm #{disk_paths.map {|d| "#{tmp_dir}/#{d.basename}" }.join(' ')}
         EOS
 
-        rc = TransferManager::Action.ssh('prepare_image',
-                                         :host     => "#{rds.user}@#{rds.sftp}",
-                                         :forward  => true,
-                                         :cmds     => script,
-                                         :nostdout => false,
-                                         :nostderr => false)
+        rc = rds.repo_command 'prepare_image',
+                              script,
+                              :nostdout => false,
+                              :nostderr => false
 
         raise StandardError, "Unable to prepare image: #{rc.stderr}" if rc.code != 0
     elsif disk_paths.size == 1
@@ -134,20 +130,20 @@ begin
             #{TransferManager::BackupImage.merge_chain(disk_paths, :workdir => tmp_dir)}
         EOS
 
-        rc = TransferManager::Action.ssh('prepare_image',
-                                         :host     => "#{rds.user}@#{rds.sftp}",
-                                         :forward  => true,
-                                         :cmds     => script.join("\n"),
-                                         :nostdout => true,
-                                         :nostderr => false)
+        rc = rds.repo_command 'prepare_image',
+                              script.join("\n"),
+                              :nostdout => true,
+                              :nostderr => false
 
         raise StandardError, "Unable to prepare image: #{rc.stderr}" if rc.code != 0
     end
 
     # Return shell code snippets according to the downloader's interface.
+    command, clean_command = rds.downloader_commands(tmp_path, tmp_dir)
+
     STDOUT.puts <<~EOS
-        command="ssh #{SSH_OPTS} '#{rds.user}@#{rds.sftp}' cat '#{tmp_path}'"
-        clean_command="ssh #{SSH_OPTS} '#{rds.user}@#{rds.sftp}' rm -rf '#{tmp_dir}/'"
+        command="#{command}"
+        clean_command="#{clean_command}"
     EOS
 rescue StandardError => e
     STDERR.puts e.full_message
