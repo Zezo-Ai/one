@@ -551,6 +551,8 @@ void Nebula::start(bool bootstrap_only)
             }
             if ( LogDB::bootstrap(db_backend) != 0 )
             {
+                delete db_backend;
+
                 throw runtime_error("Error bootstrapping database.");
             }
         }

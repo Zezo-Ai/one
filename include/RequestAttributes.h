@@ -99,7 +99,7 @@ public:
     virtual unsigned int size() const = 0;
 
 protected:
-    const std::set<int>& _hidden;
+    const std::set<int> _hidden;
 
     virtual std::string api_value(int index) const = 0;
 };
@@ -278,4 +278,3 @@ public:
 /* -------------------------------------------------------------------------- */
 
 #endif //REQUEST_ATTRIBUTES_H_
-

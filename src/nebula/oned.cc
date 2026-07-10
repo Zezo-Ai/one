@@ -81,7 +81,7 @@ static void print_help()
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 
-static void oned_init()
+static int oned_init()
 {
     try
     {
@@ -92,8 +92,9 @@ static void oned_init()
     {
         cerr << e.what() << endl;
 
-        return;
+        return -1;
     }
+    return 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -153,8 +154,8 @@ int main(int argc, char **argv)
                 exit(0);
                 break;
             case 'i':
-                oned_init();
-                exit(0);
+                rc = oned_init();
+                exit(rc);
                 break;
             case 'f':
                 foreground = true;
