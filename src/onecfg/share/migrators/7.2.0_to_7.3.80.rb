@@ -22,7 +22,11 @@ module Migrator
 
     # Preupgrade steps
     def pre_up
-        #TBD
+        ['/var/lib/one/remotes/etc/onebex'].each do |dir|
+            @fops.mkdir(dir)
+            @fops.chown(dir, 'oneadmin', 'oneadmin')
+            @fops.chmod(dir, 0o750)
+        end
     end
 
     # Upgrade steps
