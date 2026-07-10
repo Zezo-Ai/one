@@ -53,41 +53,6 @@ function insert_sec() {
     fi
 }
 
-function get_disk_bus() {
-    local disk_bus=""
-
-    if [ -z "${TARGET}" ]; then
-        echo ""
-        return 0
-    fi
-
-    if [ "${DEVICE}" = "cdrom" ]; then
-        if [[ "${MACHINE}" == *q35* || "${MACHINE}" == *virt* ]]; then
-            disk_bus="sata"
-        else
-            disk_bus="ide"
-        fi
-    else
-        case "${TARGET:0:1}" in
-        s)
-            disk_bus="${SD_DISK_BUS,,}"
-            ;;
-        v)
-            disk_bus="virtio"
-            ;;
-        *)
-            if [[ "${MACHINE}" == *q35* || "${MACHINE}" == *virt* ]]; then
-                disk_bus="sata"
-            else
-                disk_bus="ide"
-            fi
-            ;;
-        esac
-    fi
-
-    echo "${disk_bus}"
-}
-
 function disk_target_number() {
     suffix="$1"
     target_number=0
@@ -113,11 +78,6 @@ function disk_target_number() {
 function get_driver_iothread() {
     local domain_iothreads
     local iothreadid_i
-
-    if [ "${DISK_BUS}" != "virtio" ]; then
-        echo ""
-        return
-    fi
 
     read -r domain_iothreads <<<"$(virsh --connect "${LIBVIRT_URI}" \
         dumpxml "${DOMAIN}" 2>/dev/null | \
@@ -179,13 +139,6 @@ if [ "${VIRTIO_BLK_QUEUES}" = "auto" ]; then
     VIRTIO_BLK_QUEUES="$VCPU"
 fi
 
-DISK_BUS=$(get_disk_bus)
-
-if [[ "${DISK_BUS}" == "sata" ]]; then
-    error_message "The SATA disks are not hot-pluggable!"
-    exit 1
-fi
-
 DRIVER_IOTHREAD=$(get_driver_iothread)
 
 # disk XML
@@ -197,10 +150,8 @@ XML+="<driver name='qemu' type='$(xml_esc "${DRIVER}")'"
 [ -n "${CACHE}" ] && XML+=" cache='$(xml_esc "${CACHE}")'"
 [ -n "${DISK_IO}" ] && XML+=" io='$(xml_esc "${DISK_IO}")'"
 [ -n "${DISCARD}" ] && XML+=" discard='$(xml_esc "${DISCARD}")'"
-if [ "${DISK_BUS}" = "virtio" ]; then
-    [ -n "${DRIVER_IOTHREAD}" ] && XML+=" iothread='$(xml_esc "${DRIVER_IOTHREAD}")'"
-    [ -n "${VIRTIO_BLK_QUEUES}" ] && XML+=" queues='$(xml_esc "${VIRTIO_BLK_QUEUES}")'"
-fi
+[ -n "${DRIVER_IOTHREAD}" ] && XML+=" iothread='$(xml_esc "${DRIVER_IOTHREAD}")'"
+[ -n "${VIRTIO_BLK_QUEUES}" ] && XML+=" queues='$(xml_esc "${VIRTIO_BLK_QUEUES}")'"
 XML+="/>"
 
 if [ "${TYPE_SOURCE}" == "file" ]; then
@@ -225,9 +176,7 @@ XML+="</source>"
 
 [ -n "${AUTH}" ] && XML+=" ${AUTH}"
 
-XML+="<target dev='$(xml_esc "${TARGET}")'"
-[ -n "${DISK_BUS}" ] && XML+=" bus='$(xml_esc "${DISK_BUS}")'"
-XML+="/>"
+XML+="<target dev='$(xml_esc "${TARGET}")'/>"
 [ -n "${ORDER}" ] && XML+=" <boot order='$(xml_esc "${ORDER}")'/>"
 [ "${READONLY}" = 'yes' ] && XML+="<readonly/>"
 [ "${SHAREABLE}" = 'yes' ] && XML+="<shareable/>"
@@ -280,9 +229,7 @@ if [ -z "${DISK_TARGET##sd*}" ]; then
 fi
 
 if [[ -n "${DISK_SERIAL}" ]]; then
-    if [ "${TYPE}" != "block" ] || [ "${DISK_BUS}" != "scsi" ]; then
-        XML+="<serial>${DISK_SERIAL//[^0-9a-zA-Z-._]/}</serial>"
-    fi
+    XML+="<serial>${DISK_SERIAL//[^0-9a-zA-Z-._]/}</serial>"
 fi
 
 XML+="</disk>"
