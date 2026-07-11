@@ -92,6 +92,8 @@ function get_driver_iothread() {
 
     if [[ "${IOTHREAD}" =~ ^[0-9]+$ ]] && [ "${IOTHREAD}" -gt 0 ]; then
         iothreadid_i="${IOTHREAD}"
+    elif [[ "${DISK_ID}" =~ ^[0-9]+$ ]]; then
+        iothreadid_i=$(( DISK_ID % domain_iothreads + 1 ))
     else
         iothreadid_i=1
     fi
@@ -127,19 +129,26 @@ WRITE_IOPS_SEC=${WRITE_IOPS_SEC:-${DEFAULT_ATTACH_WRITE_IOPS_SEC}}
 WRITE_IOPS_SEC_MAX_LENGTH=${WRITE_IOPS_SEC_MAX_LENGTH:-${DEFAULT_ATTACH_WRITE_IOPS_SEC_MAX_LENGTH}}
 WRITE_IOPS_SEC_MAX=${WRITE_IOPS_SEC_MAX:-${DEFAULT_ATTACH_WRITE_IOPS_SEC_MAX}}
 SIZE_IOPS_SEC=${SIZE_IOPS_SEC:-${DEFAULT_ATTACH_SIZE_IOPS_SEC}}
-IOTHREAD=${IOTHREAD:-${DEFAULT_ATTACH_VIRTIO_BLK_IOTHREAD}}
-VIRTIO_BLK_QUEUES=${VIRTIO_BLK_QUEUES:-${VM_VIRTIO_BLK_QUEUES}}
-VIRTIO_BLK_QUEUES=${VIRTIO_BLK_QUEUES:-${DEFAULT_ATTACH_VIRTIO_BLK_QUEUES}}
 
 if [ "${TYPE}" = "cdrom" ]; then
     DRIVER="raw"
 fi
 
-if [ "${VIRTIO_BLK_QUEUES}" = "auto" ]; then
-    VIRTIO_BLK_QUEUES="$VCPU"
-fi
+if [ "${DEVICE}" = "disk" ] && [ -z "${TARGET##vd*}" ]; then
+    IOTHREAD=${IOTHREAD:-${DEFAULT_ATTACH_VIRTIO_BLK_IOTHREAD}}
+    VIRTIO_BLK_QUEUES=${VIRTIO_BLK_QUEUES:-${VM_VIRTIO_BLK_QUEUES}}
+    VIRTIO_BLK_QUEUES=${VIRTIO_BLK_QUEUES:-${DEFAULT_ATTACH_VIRTIO_BLK_QUEUES}}
 
-DRIVER_IOTHREAD=$(get_driver_iothread)
+    if [ "${VIRTIO_BLK_QUEUES}" = "auto" ]; then
+        VIRTIO_BLK_QUEUES="$VCPU"
+    fi
+
+    DRIVER_IOTHREAD=$(get_driver_iothread)
+else
+    IOTHREAD=""
+    VIRTIO_BLK_QUEUES=""
+    DRIVER_IOTHREAD=""
+fi
 
 # disk XML
 XML=''
