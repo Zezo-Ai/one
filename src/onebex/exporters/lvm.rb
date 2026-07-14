@@ -247,8 +247,10 @@ module OneBEX
             def parse_thin_delta(xml)
                 doc = REXML::Document.new(xml)
 
-                block_size_sectors = doc.elements['//superblock']
-                                        .attributes['data_block_size'].to_i
+                superblock = doc.elements['//superblock']
+                raise 'Missing superblock in thin_delta XML' if superblock.nil?
+
+                block_size_sectors = superblock.attributes['data_block_size'].to_i
                 block_size_bytes   = block_size_sectors * SECTOR_SIZE
 
                 raise 'Invalid block size detected in thin_delta XML' \
@@ -257,16 +259,40 @@ module OneBEX
                 extents = []
 
                 doc.elements.each('//diff/different | //diff/right_only') do |range|
+                    begin_blocks  = range.attributes['begin'].to_i
+                    length_blocks = range.attributes['length'].to_i
+
+                    next if length_blocks <= 0
+
                     extents << {
-                        :start  => range.attributes['begin'].to_i * block_size_bytes,
-                        :length => range.attributes['length'].to_i * block_size_bytes,
+                        :start  => begin_blocks * block_size_bytes,
+                        :length => length_blocks * block_size_bytes,
                         :dirty  => true,
                         :zero   => false,
                         :hole   => false
                     }
                 end
 
-                extents
+                normalize_extents(extents)
+            end
+
+            def normalize_extents(extents)
+                sorted = extents.sort_by {|extent| extent[:start] }
+                return [] if sorted.empty?
+
+                merged = [sorted.shift.dup]
+
+                sorted.each do |extent|
+                    last = merged.last
+
+                    if extent[:start] <= last[:end]
+                        last[:end] = [last[:end], extent[:end]].max
+                    else
+                        merged << extent.dup
+                    end
+                end
+
+                merged
             end
 
             # Returns the device size in bytes, falling back to disk size in MiB.
