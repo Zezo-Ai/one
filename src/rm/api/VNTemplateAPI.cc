@@ -77,6 +77,11 @@ Request::ErrorCode VNTemplateAPI::instantiate(int oid,
         cluster_ids.insert(0);
     }
 
+    if (!str_tmpl.empty() && extended_tmpl.parse_str_or_xml(str_tmpl, att.resp_msg) != 0)
+    {
+        return Request::INTERNAL;
+    }
+
     Request::ErrorCode ec = merge(tmpl.get(), str_tmpl, att);
 
     if (ec != Request::SUCCESS)
@@ -103,7 +108,7 @@ Request::ErrorCode VNTemplateAPI::instantiate(int oid,
         return ec;
     }
 
-    ec = SharedAPI::validate_vlan_auth(tmpl.get(), oid, att);
+    ec = SharedAPI::validate_vlan_auth(&extended_tmpl, oid, att);
 
     if (ec != Request::SUCCESS)
     {
@@ -151,6 +156,11 @@ Request::ErrorCode VNTemplateAPI::merge(Template* tmpl,
                                         const string& str_uattrs,
                                         RequestAttributes& att)
 {
+    if (str_uattrs.empty())
+    {
+        return Request::SUCCESS;
+    }
+
     VirtualNetworkTemplate uattrs;
 
     int rc = uattrs.parse_str_or_xml(str_uattrs, att.resp_msg);
