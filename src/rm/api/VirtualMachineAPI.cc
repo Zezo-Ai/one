@@ -3984,8 +3984,16 @@ Request::ErrorCode VirtualMachineAPI::exec(int vid,
                                            const std::string& cmd_stdin,
                                            RequestAttributes& att)
 {
-    Nebula&           nd = Nebula::instance();
-    DispatchManager * dm = nd.get_dm();
+    // Authorize the operation
+    att.set_auth_op(VMActions::EXEC_ACTION);
+
+    if (auto ec = vm_authorization(vid, 0, 0, att, 0, 0, 0); ec != Request::SUCCESS)
+    {
+        return ec;
+    }
+
+    // Perform the exec
+    DispatchManager * dm = Nebula::instance().get_dm();
 
     int rc = dm->exec(vid, cmd, cmd_stdin, att, att.resp_msg);
 
@@ -4002,6 +4010,15 @@ Request::ErrorCode VirtualMachineAPI::exec(int vid,
 
 Request::ErrorCode VirtualMachineAPI::exec_retry(int vid, RequestAttributes& att)
 {
+    // Authorize the operation
+    att.set_auth_op(VMActions::EXEC_RETRY_ACTION);
+
+    if (auto ec = vm_authorization(vid, 0, 0, att, 0, 0, 0); ec != Request::SUCCESS)
+    {
+        return ec;
+    }
+
+    // Perform the exec retry
     auto vm = vmpool->get_ro(vid);
 
     if (!vm) {
@@ -4013,8 +4030,7 @@ Request::ErrorCode VirtualMachineAPI::exec_retry(int vid, RequestAttributes& att
     string cmd       = vm->get_vm_exec_command();
     string cmd_stdin = vm->get_vm_exec_stdin();
 
-    Nebula&           nd = Nebula::instance();
-    DispatchManager * dm = nd.get_dm();
+    DispatchManager * dm = Nebula::instance().get_dm();
 
     int rc = dm->exec(vid, cmd, cmd_stdin, att, att.resp_msg);
 
@@ -4031,8 +4047,16 @@ Request::ErrorCode VirtualMachineAPI::exec_retry(int vid, RequestAttributes& att
 
 Request::ErrorCode VirtualMachineAPI::exec_cancel(int vid, RequestAttributes& att)
 {
-    Nebula&           nd = Nebula::instance();
-    DispatchManager * dm = nd.get_dm();
+    // Authorize the operation
+    att.set_auth_op(VMActions::EXEC_CANCEL_ACTION);
+
+    if (auto ec = vm_authorization(vid, 0, 0, att, 0, 0, 0); ec != Request::SUCCESS)
+    {
+        return ec;
+    }
+
+    // Perform the exec cancel
+    DispatchManager * dm = Nebula::instance().get_dm();
 
     int rc = dm->exec_cancel(vid, att, att.resp_msg);
 
