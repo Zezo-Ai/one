@@ -17,6 +17,7 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   ResourceActionConfirmation,
   SummarySlot,
@@ -31,6 +32,7 @@ import { RESOURCE_NAMES, T, VROUTER_ACTIONS } from '@ConstantsModule'
 import { useModalsApi, useViews, VrAPI } from '@FeaturesModule'
 import { cloneObject, getActionsAvailable, jsonToXml, set } from '@UtilsModule'
 import {
+  getLabelTags,
   getVirtualRouterTotalNics,
   getVirtualRouterTotalVms,
 } from '@ModelsModule'
@@ -198,6 +200,7 @@ export const SingleView = ({
             resourceType={T.VirtualRouters}
           />
         ),
+        confirmLabel: T.Lock,
       },
       onSubmit: handleLock,
     })
@@ -214,6 +217,7 @@ export const SingleView = ({
             resourceType={T.VirtualRouters}
           />
         ),
+        confirmLabel: T.Unlock,
       },
       onSubmit: handleUnlock,
     })
@@ -230,6 +234,10 @@ export const SingleView = ({
             resourceType={T.VirtualRouters}
           />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: vrouter?.ID })
@@ -249,6 +257,7 @@ export const SingleView = ({
             isTitleEditDisabled: isActionsDisabled,
             title: vrouter?.NAME,
             id: vrouter?.ID,
+            tags: getLabelTags(vrouter?.LABELS),
             labels: [
               [T.Owner, vrouter?.UNAME],
               [T.Group, vrouter?.GNAME],
@@ -288,6 +297,13 @@ export const SingleView = ({
                   options={[
                     [
                       {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [vrouter],
+                          resourceType: RESOURCE_NAMES.VROUTER,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
+                      {
                         startIcon: <RefreshDouble width="16px" height="16px" />,
                         onClick: handleRefresh,
                         value: 'refresh',
@@ -311,6 +327,7 @@ export const SingleView = ({
                         onClick: handleDeleteForm,
                         value: 'delete',
                         tooltip: T.Delete,
+                        isDestructive: true,
                         isDisabled: isDeleteDisabled,
                       },
                       {

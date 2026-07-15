@@ -18,6 +18,7 @@ import {
   Button,
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   MenuButton,
   SummarySlot,
@@ -29,8 +30,14 @@ import { useModalsApi, VmAPI } from '@FeaturesModule'
 import { Box, useTheme } from '@mui/material'
 import { Component, useCallback, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { Cancel, Lock, NoLock, Play, RefreshDouble, Trash } from 'iconoir-react'
-import { T, UNITS, VM_ACTION_ENUM, VM_ACTIONS } from '@ConstantsModule'
+import { Cancel, Lock, NoLock, Play, Trash } from 'iconoir-react'
+import {
+  RESOURCE_NAMES,
+  T,
+  UNITS,
+  VM_ACTION_ENUM,
+  VM_ACTIONS,
+} from '@ConstantsModule'
 import { VirtualMachine } from '@ResourcesModule'
 import {
   aggregateLockState,
@@ -258,6 +265,7 @@ export const AggregatedView = ({
                       title={T.Resume}
                       onClick={handleResume}
                       isDisabled={isResumeDisabled}
+                      compactable
                     />
                   </span>
                 </Tooltip>
@@ -265,9 +273,14 @@ export const AggregatedView = ({
                 <MenuButton
                   placeholder={T.VMActions}
                   options={[generalOptions]}
+                  compactable
                 />
 
-                <MenuButton placeholder={T.VMState} options={[stateOptions]} />
+                <MenuButton
+                  placeholder={T.VMState}
+                  options={[stateOptions]}
+                  compactable
+                />
 
                 <ButtonGroup
                   selected={allLocked ? ['lock'] : noneLocked ? ['unlock'] : []}
@@ -277,12 +290,14 @@ export const AggregatedView = ({
                       startIcon: <Lock width="16px" height="16px" />,
                       ...lockAction,
                       tooltip: T.Lock,
+                      compactable: true,
                     },
                     {
                       value: 'unlock',
                       startIcon: <NoLock width="16px" height="16px" />,
                       ...unlockAction,
                       tooltip: T.Unlock,
+                      compactable: true,
                     },
                   ]}
                 />
@@ -292,11 +307,11 @@ export const AggregatedView = ({
                   options={[
                     [
                       {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isActionsDisabled,
+                        ...getLabelMenuButtonProps({
+                          selectedRows: selectedVms,
+                          resourceType: RESOURCE_NAMES.VM,
+                          isDisabled: isActionsDisabled,
+                        }),
                       },
                     ],
                     [
@@ -327,6 +342,11 @@ export const AggregatedView = ({
                           terminateActions.every(
                             ({ isDisabled }) => isDisabled
                           ),
+                      },
+                      {
+                        value: 'compact-overflow',
+                        compactToolbarOverflow: true,
+                        isDisabled: isActionsDisabled,
                       },
                       {
                         startIcon: <Cancel width="16px" height="16px" />,

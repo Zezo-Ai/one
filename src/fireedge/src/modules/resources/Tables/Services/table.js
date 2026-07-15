@@ -14,7 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Alert } from '@mui/material'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+import { timeFromMilliseconds, getServiceState } from '@UtilsModule'
 import { StatusCircle } from '@modules/resources/Status'
 import EnhancedTable, {
   createColumns,
@@ -25,7 +26,7 @@ import ServiceRow from '@modules/resources/Tables/Services/row'
 import Timer from '@modules/resources/Timer'
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { useViews, ServiceAPI } from '@FeaturesModule'
-import { timeFromMilliseconds, getServiceState } from '@UtilsModule'
+
 import { ReactElement, useMemo } from 'react'
 
 const DEFAULT_DATA_CY = 'services'

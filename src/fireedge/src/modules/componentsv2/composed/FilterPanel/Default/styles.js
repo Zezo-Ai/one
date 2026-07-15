@@ -17,11 +17,20 @@
 /**
  * @param {object} root0 - Params
  * @param {object} root0.theme - Current theme in use
+ * @returns {object} - Filter dropdown popper styles
+ */
+export const getPopperStyles = ({ theme }) => ({
+  zIndex: theme.zIndex.modal + 3,
+})
+
+/**
+ * @param {object} root0 - Params
+ * @param {object} root0.theme - Current theme in use
  * @returns {object} - Filter panel styles
  */
 export const getStyles = ({ theme }) => {
   const baseStyles = {
-    zIndex: theme.zIndex.topBar + 1,
+    zIndex: theme.zIndex.modal + 1,
   }
 
   const backdrop = {
@@ -29,14 +38,14 @@ export const getStyles = ({ theme }) => {
       backgroundColor: 'transparent',
       backdropFilter: 'blur(6px)',
       WebkitBackdropFilter: 'blur(6px)',
-      zIndex: theme.zIndex.topBar + 1,
+      zIndex: theme.zIndex.modal + 1,
     },
   }
 
   const paper = {
     '& .filterpanel-paper': {
       boxShadow: 'none',
-      zIndex: theme.zIndex.topBar + 2,
+      zIndex: theme.zIndex.modal + 2,
       width: {
         xs: '100vw',
         sm: '420px',

@@ -35,7 +35,7 @@ import {
   T,
   PATH,
 } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const ListServiceTemplateNames = ({ rows = [] }) =>
   rows?.map?.(({ id, original }) => {

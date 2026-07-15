@@ -37,6 +37,7 @@ const gapScale = (theme, size) =>
  */
 export const getStyles = ({ type, theme, iconOnly, size, isDestructive }) => {
   const sizeKey = size === 'medium' ? 'md' : 'sm'
+  const iconOnlySize = theme.scale[size === 'small' ? 700 : 800]
 
   const baseStyle = {
     width: 'fit-content',
@@ -44,17 +45,26 @@ export const getStyles = ({ type, theme, iconOnly, size, isDestructive }) => {
     minWidth: 0,
     boxSizing: 'border-box',
     textTransform: 'none',
+    whiteSpace: 'nowrap',
     display: 'flex',
+    flexWrap: 'nowrap',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: iconOnly ? `${theme.scale[150]}px` : paddingScale(theme, size),
+    padding: iconOnly ? 0 : paddingScale(theme, size),
     gap: iconOnly ? `${theme.scale[0]}px` : gapScale(theme, size),
 
     ...(iconOnly && {
-      minWidth: 'unset',
-      minHeight: 'unset',
-      width: 'fit-content',
-      height: 'fit-content',
+      minWidth: `${iconOnlySize}px`,
+      minHeight: `${iconOnlySize}px`,
+      width: `${iconOnlySize}px`,
+      height: `${iconOnlySize}px`,
+      flexShrink: 0,
+
+      '& svg': {
+        width: `${theme.scale[500]}px`,
+        height: `${theme.scale[500]}px`,
+        flexShrink: 0,
+      },
     }),
     borderRadius: `${theme.borderRadius.xlg}px`,
     '& .MuiButton-startIcon, & .MuiButton-endIcon': {
@@ -62,6 +72,7 @@ export const getStyles = ({ type, theme, iconOnly, size, isDestructive }) => {
       height: '16px',
       aspectRatio: '1/1',
       display: 'flex',
+      flexShrink: 0,
       alignItems: 'center',
       justifyContent: 'center',
       margin: 0,

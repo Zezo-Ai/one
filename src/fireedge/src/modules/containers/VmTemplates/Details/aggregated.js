@@ -17,6 +17,7 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   SummarySlot,
   TabSlot,
   ButtonGroup,
@@ -27,7 +28,7 @@ import {
 import { useModalsApi, VmTemplateAPI } from '@FeaturesModule'
 import { Component, useMemo } from 'react'
 import { prettyBytes, aggregateLockState, aggregateMetrics } from '@UtilsModule'
-import { T, UNITS, STYLE_BUTTONS } from '@ConstantsModule'
+import { RESOURCE_NAMES, T, UNITS, STYLE_BUTTONS } from '@ConstantsModule'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import {
@@ -82,15 +83,45 @@ export const AggregatedView = ({
       selectedTemplates.map(({ ID }) => refreshTemplate({ id: ID }))
     )
 
-  const handleLock = async () => {
-    await Promise.all(selectedTemplates.map(({ ID }) => lock({ id: ID })))
-    await handleRefresh()
-  }
+  const handleLock = () =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Lock,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.lock.confirmation']}
+            resources={selectedTemplates}
+            resourceType={T.VMTemplates}
+          />
+        ),
+        confirmLabel: T.Lock,
+      },
+      onSubmit: async () => {
+        await Promise.all(selectedTemplates.map(({ ID }) => lock({ id: ID })))
+        await handleRefresh()
+      },
+    })
 
-  const handleUnlock = async () => {
-    await Promise.all(selectedTemplates.map(({ ID }) => unlock({ id: ID })))
-    await handleRefresh()
-  }
+  const handleUnlock = () =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Unlock,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.unlock.confirmation']}
+            resources={selectedTemplates}
+            resourceType={T.VMTemplates}
+          />
+        ),
+        confirmLabel: T.Unlock,
+      },
+      onSubmit: async () => {
+        await Promise.all(selectedTemplates.map(({ ID }) => unlock({ id: ID })))
+        await handleRefresh()
+      },
+    })
 
   const handleChangePermission = async (newPermission) => {
     await Promise.all(
@@ -123,7 +154,7 @@ export const AggregatedView = ({
         dataCy: 'modal-clone',
         description: (
           <ResourceActionConfirmation
-            description={T.DoYouWantProceed}
+            description={T['resource.clone.confirmation']}
             resources={selectedTemplates}
             resourceType={T.VMTemplates}
           />
@@ -155,7 +186,7 @@ export const AggregatedView = ({
         title: `${T.Delete} ${T.VMTemplates}`,
         description: (
           <ResourceActionConfirmation
-            description={T['template.delete.confirmation']}
+            description={T['resource.delete.confirmation']}
             resources={selectedTemplates}
             resourceType={T.VMTemplates}
           />
@@ -241,6 +272,11 @@ export const AggregatedView = ({
                   </span>
                 </Tooltip>
 
+                <LabelButton
+                  selectedRows={selectedTemplates}
+                  resourceType={RESOURCE_NAMES.VM_TEMPLATE}
+                  isDisabled={isMutating}
+                />
                 <Tooltip title={T.DeleteSelected}>
                   <span>
                     <Button
@@ -260,7 +296,7 @@ export const AggregatedView = ({
                   <span>
                     <Button
                       type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                      size="medium"
+                      size="small"
                       iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                       onClick={handleClose}
                     />

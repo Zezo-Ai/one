@@ -23,11 +23,12 @@ import {
   EditOneKsNodeGroupForm,
 } from '@modules/resources/resources/OneKs/Forms'
 import { generatePath, useHistory } from 'react-router-dom'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, ONEKS_OPERATIONS, PATH } from '@ConstantsModule'
-import { MenuButton } from '@ComponentsV2Module'
+import { MenuButton, ResourceActionConfirmation } from '@ComponentsV2Module'
 
 const RowAction = memo(({ node, id }) => {
+  const { translate } = useTranslation()
   const history = useHistory()
   const { showModal } = useModalsApi()
   const { enqueueSuccess, enqueueError } = useGeneralApi()
@@ -122,6 +123,14 @@ const RowAction = memo(({ node, id }) => {
       dialogProps: {
         title: T.RecoverNodeGroup,
         dataCy: 'modal-recover-node',
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.recover.confirmation']}
+            resources={{ ID: nodeId, NAME: node?.name }}
+            resourceType={T.NodeGroups}
+          />
+        ),
+        confirmLabel: T.Recover,
       },
       onSubmit: handleRecover,
     })
@@ -132,6 +141,17 @@ const RowAction = memo(({ node, id }) => {
       dialogProps: {
         title: T.DeleteNodeGroup,
         dataCy: 'modal-delete-node',
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={{ ID: nodeId, NAME: node?.name }}
+            resourceType={T.NodeGroups}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: handleRemove,
     })
@@ -139,22 +159,22 @@ const RowAction = memo(({ node, id }) => {
   const options = [
     {
       'data-cy': `edit-${nodeId}`,
-      title: Tr(T.EditNodeGroup),
+      title: translate(T.EditNodeGroup),
       onClick: handleOpenEditForm,
     },
     {
       'data-cy': `scaling-${nodeId}`,
-      title: Tr(T.ResizeNodeGroup),
+      title: translate(T.ResizeNodeGroup),
       onClick: handleOpenScalingForm,
     },
     {
       'data-cy': `recover-${nodeId}`,
-      title: Tr(T.RecoverNodeGroup),
+      title: translate(T.RecoverNodeGroup),
       onClick: handleOpenRecoverForm,
     },
     {
       'data-cy': `delete-${nodeId}`,
-      title: Tr(T.DeleteNodeGroup),
+      title: translate(T.DeleteNodeGroup),
       onClick: handleOpenRemoveForm,
     },
   ]

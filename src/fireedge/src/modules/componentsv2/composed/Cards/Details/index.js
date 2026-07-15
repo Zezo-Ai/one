@@ -22,6 +22,14 @@ import { Tooltip } from '@modules/componentsv2/primitives/Tooltip/Default'
 import { useClipboard } from '@HooksModule'
 import { T } from '@ConstantsModule'
 
+const getOptionDataCy = (label, dataCy) => {
+  const optionDataCy = dataCy ?? label
+
+  return ['string', 'number'].includes(typeof optionDataCy)
+    ? String(optionDataCy).toLowerCase()
+    : undefined
+}
+
 /**
  * DetailsCard component.
  *
@@ -48,7 +56,7 @@ export const DetailsCard = forwardRef(({ title, options = [] }, ref) => {
         {[]
           .concat(options)
           ?.filter(Boolean)
-          ?.map(([label, value], idx) => (
+          ?.map(([label, value, dataCy], idx) => (
             <Box key={idx} className="card-detail--row">
               <Box className="card-detail--label">{label}</Box>
               <Tooltip
@@ -63,6 +71,7 @@ export const DetailsCard = forwardRef(({ title, options = [] }, ref) => {
               >
                 <Box
                   className="card-detail--value"
+                  data-cy={getOptionDataCy(label, dataCy)}
                   onClick={() => {
                     if (!isValueCopyable(value)) return
                     copy(value)

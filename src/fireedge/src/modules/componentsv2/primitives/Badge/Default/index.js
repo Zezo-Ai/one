@@ -27,7 +27,10 @@ import { getStyles } from '@modules/componentsv2/primitives/Badge/Default/styles
  * @returns {Component} - Custom MUI Badge component
  */
 export const Badge = forwardRef(
-  ({ status = 'default', type = 'dot', title = '', ...opts }, ref) => (
+  (
+    { children, status = 'default', type = 'dot', title = '', ...opts },
+    ref
+  ) => (
     <Box
       ref={ref}
       sx={(theme) =>
@@ -39,12 +42,13 @@ export const Badge = forwardRef(
       }
       {...opts}
     >
-      <Box className="badge-title">{title}</Box>
+      <Box className="badge-title">{children ?? title}</Box>
     </Box>
   )
 )
 
 Badge.propTypes = {
+  children: PropTypes.node,
   status: PropTypes.string,
   type: PropTypes.string,
   title: PropTypes.string,

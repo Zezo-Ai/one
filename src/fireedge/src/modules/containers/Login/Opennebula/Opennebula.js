@@ -14,7 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { Tr } from '@ResourcesModule'
+import { useTranslation } from '@ProvidersModule'
 import { InteractiveGrid, OpenNebulaIcon } from '@ComponentsV2Module'
 import { T } from '@ConstantsModule'
 import { AuthAPI, useAuth, useAuthApi } from '@FeaturesModule'
@@ -29,7 +29,7 @@ import {
   useTheme,
 } from '@mui/material'
 import PropTypes from 'prop-types'
-import { ReactElement, useMemo, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 
 import { styles } from '@modules/containers/Login/styles'
 
@@ -58,6 +58,8 @@ const getResponseErrorMessage = (error, fallback) => {
  * @returns {ReactElement} The login form.
  */
 export function OpenNebulaLoginHandler({ data = {} }) {
+  const { translate } = useTranslation()
+  const isMountedRef = useRef(true)
   const [isLoading, setIsLoading] = useState(false)
   const { remoteRedirect } = data
 
@@ -89,6 +91,13 @@ export function OpenNebulaLoginHandler({ data = {} }) {
     needGroupToContinue ? STEPS.GROUP_FORM : STEPS.USER_FORM
   )
 
+  useEffect(
+    () => () => {
+      isMountedRef.current = false
+    },
+    []
+  )
+
   const handleSubmit = async (formData) => {
     setIsLoading(true)
     setFormError(null)
@@ -96,11 +105,14 @@ export function OpenNebulaLoginHandler({ data = {} }) {
     setLoginParams((prev) => ({ ...prev, ...formData }))
     try {
       const response = await login({ ...loginParams, ...formData }).unwrap()
+      if (!isMountedRef.current) return
+
       const { isLoginInProgress, img, imgUrl, status } = response || {}
 
       switch (status) {
         case 'ok': {
           const authUserResponse = await getAuthUser()
+          if (!isMountedRef.current) return
 
           if (authUserResponse?.error) {
             setFormError({
@@ -130,6 +142,8 @@ export function OpenNebulaLoginHandler({ data = {} }) {
         }
       }
     } catch (error) {
+      if (!isMountedRef.current) return
+
       const isTfaError = step === STEPS.FA2_FORM || !!formData?.tfatoken
       const message =
         error?.status === 401
@@ -145,7 +159,7 @@ export function OpenNebulaLoginHandler({ data = {} }) {
         message,
       })
     } finally {
-      setIsLoading(false)
+      if (isMountedRef.current) setIsLoading(false)
     }
   }
 
@@ -238,7 +252,7 @@ export function OpenNebulaLoginHandler({ data = {} }) {
         {![STEPS.FA2_FORM, STEPS.REGISTER_2FA]?.includes(step) && (
           <Box data-login-title display="flex" overflow="hidden" width="100%">
             <Typography className={classes.loginTitle} variant="h6">
-              {Tr(T.LogIn)}
+              {translate(T.LogIn)}
             </Typography>
           </Box>
         )}

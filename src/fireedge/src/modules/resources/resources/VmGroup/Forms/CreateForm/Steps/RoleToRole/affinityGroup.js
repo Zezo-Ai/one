@@ -17,7 +17,7 @@ import PropTypes from 'prop-types'
 import { Box, Stack } from '@mui/material'
 import { Cancel, Group, Trash } from 'iconoir-react'
 import { Component } from 'react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import { Button, CollapsiblePanel, Tag, Tooltip } from '@ComponentsV2Module'
 
@@ -140,93 +140,97 @@ export const AffinityGroup = ({
   useCases = [],
   onDeleteGroup,
   onDeleteRole,
-}) => (
-  <Stack gap={2}>
-    {groups.length === 0 ? (
-      <Box
-        sx={(theme) => ({
-          alignItems: 'center',
-          border: `${theme.borderWidth.sm}px dashed ${theme.palette.border.primary}`,
-          borderRadius: `${theme.borderRadius.xlg}px`,
-          color: 'text.disabled',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1,
-          justifyContent: 'center',
-          minHeight: 180,
-          p: 3,
-          textAlign: 'center',
-        })}
-      >
-        <Group width={EMPTY_ICON_SIZE} height={EMPTY_ICON_SIZE} />
-        <Box sx={getTitleStyles}>{emptyTitle}</Box>
-        <Box sx={getSubtitleStyles}>{emptyText}</Box>
-      </Box>
-    ) : (
-      <Stack gap={1.5}>
-        {groups.map((group, groupIndex) => (
-          <Box
-            key={`${groupType}-${groupIndex}-${group.join('-')}`}
-            sx={(theme) => ({
-              alignItems: 'center',
-              border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
-              borderRadius: `${theme.borderRadius.xlg}px`,
-              display: 'flex',
-              gap: 1,
-              justifyContent: 'space-between',
-              p: 1,
-            })}
-          >
-            <Stack direction="row" flexWrap="wrap" gap={1} minWidth={0}>
-              {group.map((role, roleIndex) => (
-                <RoleChip
-                  key={`${groupType}-${groupIndex}-${role}`}
-                  role={role}
-                  onDelete={() =>
-                    onDeleteRole(roleIndex, groupIndex, groupType)
-                  }
-                />
-              ))}
-            </Stack>
-            <Tooltip title="Remove group">
-              <Box component="span" sx={{ flex: '0 0 auto' }}>
-                <Button
-                  aria-label="remove group"
-                  iconOnly={<Trash />}
-                  isDestructive
-                  onClick={() => onDeleteGroup(groupIndex, groupType)}
-                  size="small"
-                  type="transparent"
-                />
-              </Box>
-            </Tooltip>
-          </Box>
-        ))}
-      </Stack>
-    )}
+}) => {
+  const { translate } = useTranslation()
 
-    <Box>
-      <CollapsiblePanel
-        title={Tr(T.PotentialUseCases)}
-        isDefaultCollapsed
-        contentProps={{ sx: { py: 2 } }}
-      >
+  return (
+    <Stack gap={2}>
+      {groups.length === 0 ? (
         <Box
-          component="ul"
           sx={(theme) => ({
-            ...getDropdownTextStyles(theme),
-            m: 0,
-            pl: 3,
+            alignItems: 'center',
+            border: `${theme.borderWidth.sm}px dashed ${theme.palette.border.primary}`,
+            borderRadius: `${theme.borderRadius.xlg}px`,
+            color: 'text.disabled',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            justifyContent: 'center',
+            minHeight: 180,
+            p: 3,
+            textAlign: 'center',
           })}
         >
-          {useCases.map((useCase) => (
-            <li key={useCase}>{Tr(useCase)}</li>
-          ))}
+          <Group width={EMPTY_ICON_SIZE} height={EMPTY_ICON_SIZE} />
+          <Box sx={getTitleStyles}>{emptyTitle}</Box>
+          <Box sx={getSubtitleStyles}>{emptyText}</Box>
         </Box>
-      </CollapsiblePanel>
-    </Box>
-  </Stack>
-)
+      ) : (
+        <Stack gap={1.5}>
+          {groups.map((group, groupIndex) => (
+            <Box
+              key={`${groupType}-${groupIndex}-${group.join('-')}`}
+              sx={(theme) => ({
+                alignItems: 'center',
+                border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
+                borderRadius: `${theme.borderRadius.xlg}px`,
+                display: 'flex',
+                gap: 1,
+                justifyContent: 'space-between',
+                p: 1,
+              })}
+            >
+              <Stack direction="row" flexWrap="wrap" gap={1} minWidth={0}>
+                {group.map((role, roleIndex) => (
+                  <RoleChip
+                    key={`${groupType}-${groupIndex}-${role}`}
+                    role={role}
+                    onDelete={() =>
+                      onDeleteRole(roleIndex, groupIndex, groupType)
+                    }
+                  />
+                ))}
+              </Stack>
+              <Tooltip title="Remove group">
+                <Box component="span" sx={{ flex: '0 0 auto' }}>
+                  <Button
+                    aria-label="remove group"
+                    iconOnly={<Trash />}
+                    isDestructive
+                    onClick={() => onDeleteGroup(groupIndex, groupType)}
+                    size="small"
+                    type="transparent"
+                  />
+                </Box>
+              </Tooltip>
+            </Box>
+          ))}
+        </Stack>
+      )}
+
+      <Box>
+        <CollapsiblePanel
+          title={translate(T.PotentialUseCases)}
+          isDefaultCollapsed
+          contentProps={{ sx: { py: 2 } }}
+        >
+          <Box
+            component="ul"
+            sx={(theme) => ({
+              ...getDropdownTextStyles(theme),
+              m: 0,
+              pl: 3,
+            })}
+          >
+            {useCases.map((useCase) => (
+              <li key={useCase}>{translate(useCase)}</li>
+            ))}
+          </Box>
+        </CollapsiblePanel>
+      </Box>
+    </Stack>
+  )
+}
 
 AffinityGroup.propTypes = {
   groupType: PropTypes.oneOf(['AFFINED', 'ANTI_AFFINED']).isRequired,

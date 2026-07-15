@@ -28,7 +28,7 @@ import {
   WEEKLY_FIELD,
   YEARLY_FIELD,
 } from '@modules/resources/resources/BackupJobs/Forms/SchedActionForm/fields'
-import { getObjectSchemaFromFields } from '@UtilsModule'
+import { Field, getObjectSchemaFromFields } from '@UtilsModule'
 
 const BACKUPJOB_SCHED_FORM_FIELDS = [
   PERIODIC_FIELD,

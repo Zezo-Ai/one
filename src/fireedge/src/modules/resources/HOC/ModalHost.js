@@ -29,7 +29,9 @@ const ModalWrapper = ({ modal, hideModal }) => {
   const {
     id,
     isConfirmDialog = false,
+    isCustomDialog = false,
     isFormDialog = false,
+    customDialogProps = {},
     dialogProps = {},
     form: Form,
     onSubmit: handleSubmit = () => {},
@@ -99,6 +101,19 @@ const ModalWrapper = ({ modal, hideModal }) => {
     )
   }
 
+  if (isCustomDialog && Form) {
+    return (
+      <Form
+        {...dialogProps}
+        {...customDialogProps}
+        open
+        onClose={cancel}
+        onSubmit={handleTriggerSubmit}
+        isLoading={isLoading}
+      />
+    )
+  }
+
   if (!Form) {
     return null
   }
@@ -151,7 +166,9 @@ ModalWrapper.propTypes = {
   modal: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     isConfirmDialog: PropTypes.bool,
+    isCustomDialog: PropTypes.bool,
     isFormDialog: PropTypes.bool,
+    customDialogProps: PropTypes.object,
     dialogProps: PropTypes.object,
     form: PropTypes.elementType,
     onSubmit: PropTypes.func,

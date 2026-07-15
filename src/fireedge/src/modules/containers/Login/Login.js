@@ -14,7 +14,6 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { TranslateProvider } from '@ResourcesModule'
 import { OpenNebulaLogin } from '@modules/containers/Login/Opennebula'
 import { RemoteLogin } from '@modules/containers/Login/Remote'
 import { ReactElement } from 'react'
@@ -25,11 +24,11 @@ import { ReactElement } from 'react'
  * @returns {ReactElement} The login form.
  */
 export const Login = () => (
-  <TranslateProvider>
+  <>
     {window?.__REMOTE_AUTH__?.remote ? (
       <RemoteLogin data={window?.__REMOTE_AUTH__} />
     ) : (
       <OpenNebulaLogin data={window?.__REMOTE_AUTH__} />
     )}
-  </TranslateProvider>
+  </>
 )

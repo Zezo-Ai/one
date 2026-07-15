@@ -41,6 +41,7 @@ export const SearchSlot = forwardRef(
       autoFocus = true,
       disabled,
       isDisabled,
+      dataCy,
     },
     ref
   ) => {
@@ -80,6 +81,7 @@ export const SearchSlot = forwardRef(
           value={value}
           inputRef={inputRef}
           disabled={isSearchDisabled}
+          inputProps={{ 'data-cy': dataCy }}
         />
       </Box>
     )
@@ -91,6 +93,7 @@ SearchSlot.propTypes = {
   autoFocus: PropTypes.bool,
   disabled: PropTypes.bool,
   isDisabled: PropTypes.bool,
+  dataCy: PropTypes.string,
   searchIcon: PropTypes.node,
   placeholder: PropTypes.string,
   value: PropTypes.string,

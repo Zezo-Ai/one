@@ -16,14 +16,17 @@
 import PropTypes from 'prop-types'
 import { memo, useCallback, useEffect, useState } from 'react'
 
-import { Grid, TextField } from '@mui/material'
 import { useController, useWatch } from 'react-hook-form'
 
-import { ErrorHelper } from '@modules/componentsv2/composed/Forms/FormControl/ErrorHelper'
-import { AdornmentWithTooltip as Tooltip } from '@modules/componentsv2/composed/Forms/FormControl/Tooltip'
-import { Tr } from '@ProvidersModule'
+import { UnitInput } from '@modules/componentsv2/primitives/Inputs'
+import {
+  generateKey,
+  isTranslationInput,
+  prettyBytes,
+  sentenceCase,
+} from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { T, UNITS } from '@ConstantsModule'
-import { labelCanBeTranslated, generateKey, prettyBytes } from '@UtilsModule'
 
 const ARRAY_UNITS = Object.values(UNITS)
 const DEFAULT_UNIT = ARRAY_UNITS[0]
@@ -48,6 +51,7 @@ export const InformationUnitControllerKB = memo(
     readOnly = false,
     onConditionChange,
   }) => {
+    const { translate } = useTranslation()
     const watch = useWatch({
       name: dependencies,
       disabled: dependencies == null,
@@ -58,6 +62,28 @@ export const InformationUnitControllerKB = memo(
       field: { ref, value = '', onChange, ...inputProps },
       fieldState: { error },
     } = useController({ name, control })
+
+    const safeFieldProps =
+      fieldProps && typeof fieldProps === 'object' ? fieldProps : {}
+
+    const {
+      InputProps: fieldInputProps = {},
+      disabled: fieldDisabled = false,
+      hint,
+      helperText,
+      inputProps: fieldHtmlInputProps = {},
+      isOptional = false,
+      isRequired = false,
+      max,
+      min,
+      placeholder,
+      readOnly: fieldReadOnly = false,
+      step,
+      ...restFieldProps
+    } = safeFieldProps
+
+    const isReadOnly =
+      readOnly || fieldReadOnly || fieldDisabled || fieldInputProps.readOnly
 
     useEffect(() => {
       if (!watcher || !dependencies || !watch) return
@@ -93,70 +119,46 @@ export const InformationUnitControllerKB = memo(
           onConditionChange(valueMB)
         }
       },
-      [onChange, onConditionChange]
+      [internalValue, onChange, onConditionChange, unit]
     )
 
+    const trLabel = isTranslationInput(label) ? translate(label) : label
+
     return (
-      <div>
-        <Grid container spacing={1} width={1}>
-          <Grid item style={{ flexGrow: 1 }}>
-            <TextField
-              {...inputProps}
-              fullWidth
-              inputRef={ref}
-              value={internalValue}
-              onChange={(e) => handleChange('value', e.target.value)}
-              rows={3}
-              type="number"
-              label={labelCanBeTranslated(label) ? Tr(label) : label}
-              InputProps={{
-                readOnly,
-                endAdornment: tooltip && <Tooltip title={tooltip} />,
-              }}
-              inputProps={{
-                'data-cy': cy,
-                ...{
-                  min: fieldProps.min,
-                  max: fieldProps.max,
-                  step: fieldProps.step,
-                },
-              }}
-              error={Boolean(error)}
-              helperText={
-                error ? (
-                  <ErrorHelper label={error?.message} />
-                ) : (
-                  fieldProps.helperText
-                )
-              }
-              FormHelperTextProps={{ 'data-cy': `${cy}-error` }}
-              {...fieldProps}
-            />
-          </Grid>
-          <Grid item>
-            <TextField
-              select
-              value={unit}
-              InputProps={{
-                readOnly,
-                'data-cy': `${cy}-unit`,
-              }}
-              label={Tr(T.MemoryUnit)}
-              onChange={(e) => handleChange('unit', e.target.value)}
-            >
-              {ARRAY_UNITS.map((option, index) => (
-                <option
-                  key={`${option}-${index}`}
-                  value={option}
-                  data-cy={`${cy}-unit-${option}`}
-                >
-                  {option}
-                </option>
-              ))}
-            </TextField>
-          </Grid>
-        </Grid>
-      </div>
+      <UnitInput
+        {...restFieldProps}
+        {...inputProps}
+        inputRef={ref}
+        value={internalValue}
+        onChange={(nextValue) => handleChange('value', nextValue)}
+        onUnitChange={(nextUnit) => handleChange('unit', nextUnit)}
+        unit={unit}
+        units={ARRAY_UNITS}
+        type="number"
+        cy={cy}
+        label={trLabel}
+        tooltip={tooltip}
+        placeholder={placeholder || `${T.Enter} ${trLabel}`}
+        hint={hint ?? helperText}
+        isDisabled={isReadOnly}
+        isOptional={isOptional}
+        isRequired={isRequired}
+        InputProps={fieldInputProps}
+        inputProps={{
+          'data-cy': cy,
+          min,
+          max,
+          step,
+          ...fieldHtmlInputProps,
+        }}
+        errorDataCy={`${cy}-error`}
+        error={sentenceCase(
+          [error?.message]
+            ?.flat()
+            ?.map((s) => s?.trim())
+            ?.join(' ')
+        )}
+      />
     )
   },
   (prevProps, nextProps) =>

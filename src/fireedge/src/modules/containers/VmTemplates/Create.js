@@ -32,11 +32,9 @@ import {
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  TranslateProvider,
   VmTemplate,
 } from '@ResourcesModule'
 
-import { STEP_MAP, T, TAB_FORM_MAP, PATH } from '@ConstantsModule'
 import {
   jsonToXml,
   deepmerge,
@@ -44,6 +42,8 @@ import {
   isDevelopment,
   transformActionsCreate,
 } from '@UtilsModule'
+
+import { STEP_MAP, T, TAB_FORM_MAP, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
 
@@ -284,7 +284,7 @@ export function CreateVmTemplate() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {templateId &&
       (!apiTemplateDataExtended ||
         !apiTemplateData ||
@@ -307,6 +307,6 @@ export function CreateVmTemplate() {
           {(config) => <DefaultFormStepper {...config} update={!!templateId} />}
         </VmTemplate.Forms.CreateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

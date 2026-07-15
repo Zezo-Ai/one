@@ -20,7 +20,7 @@ import { TextField, Box } from '@mui/material'
 import { useSearch } from '@HooksModule'
 import { ListInfiniteScroll } from '@modules/resources/List'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const Search = ({
@@ -30,6 +30,7 @@ const Search = ({
   startAdornment,
   searchBoxProps,
 }) => {
+  const { translate } = useTranslation()
   const { result, query, handleChange } = useSearch({ list, listOptions })
 
   return (
@@ -42,7 +43,7 @@ const Search = ({
           value={query}
           onChange={handleChange}
           fullWidth
-          placeholder={`${Tr(T.Search)}...`}
+          placeholder={`${translate(T.Search)}...`}
         />
       </Box>
       {result?.length === 0 ? (

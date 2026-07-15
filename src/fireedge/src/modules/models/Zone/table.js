@@ -17,6 +17,7 @@ import { createTable } from '@UtilsModule'
 import { ZoneAPI } from '@FeaturesModule'
 import { getZoneState } from '@modules/models/Zone/general'
 import { T } from '@ConstantsModule'
+import { StatusTag } from '@ComponentsV2Module'
 import { createLabelColumn } from '@modules/models/labels'
 
 /* eslint-disable jsdoc/require-jsdoc */
@@ -27,6 +28,11 @@ export const ZONE_COLUMNS = [
     header: T.State,
     id: 'STATE',
     accessorFn: (row) => getZoneState(row)?.name,
+    cell: ({ row }) => {
+      const { color, name } = getZoneState(row.original) ?? {}
+
+      return <StatusTag statusColor={color} statusName={name} />
+    },
   },
   {
     header: T.Endpoint,
@@ -41,4 +47,6 @@ export const ZONE_COLUMNS = [
   createLabelColumn(),
 ]
 
-export const zoneTable = createTable(ZONE_COLUMNS, ZoneAPI.useGetZonesQuery)
+export const zoneTable = createTable(ZONE_COLUMNS, ZoneAPI.useGetZonesQuery, {
+  dataCy: 'zones',
+})

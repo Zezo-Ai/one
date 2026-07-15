@@ -15,6 +15,7 @@
  * ------------------------------------------------------------------------- */
 
 import PropTypes from 'prop-types'
+import { Translate } from '@ProvidersModule'
 
 import { css } from '@emotion/css'
 import { timeFromSeconds } from '@UtilsModule'
@@ -584,7 +585,7 @@ const Chartist = ({
               ?.some((v) => typeof v !== 'number' || Number.isNaN(v)) ? (
             <Stack direction="row" justifyContent="center" alignItems="center">
               <Typography sx={{ color: 'text.headings' }}>
-                {T.NoDataAvailable}
+                <Translate word={T.NoDataAvailable} />
               </Typography>
             </Stack>
           ) : (
@@ -609,21 +610,27 @@ const Chartist = ({
   )
 }
 
+const chartSeriesType = PropTypes.arrayOf(
+  PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)])
+)
+
+const legendNamesType = PropTypes.oneOfType([
+  PropTypes.arrayOf(PropTypes.string),
+  PropTypes.objectOf(PropTypes.string),
+])
+
 Chartist.propTypes = {
   name: PropTypes.string,
   data: PropTypes.array,
   x: PropTypes.arrayOf(PropTypes.func),
-  y: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.string),
-    PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
-  ]),
+  y: chartSeriesType,
   yRangeOffset: PropTypes.number,
   xRangeOffset: PropTypes.number,
   interpolationY: PropTypes.func,
   shouldFill: PropTypes.array,
   enableLegend: PropTypes.bool,
   zoomFactor: PropTypes.number,
-  legendNames: PropTypes.arrayOf(PropTypes.string),
+  legendNames: legendNamesType,
   setTransform: PropTypes.func,
   serieScale: PropTypes.number,
   trendLineOnly: PropTypes.arrayOf(PropTypes.string),

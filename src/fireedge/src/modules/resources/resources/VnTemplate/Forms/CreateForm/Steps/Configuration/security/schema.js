@@ -38,7 +38,8 @@ const SECURITY_GROUP_COLUMNS = [
 
 const securityGroupTemplateTable = createTable(
   SECURITY_GROUP_COLUMNS,
-  SecurityGroupAPI.useGetSecGroupsQuery
+  SecurityGroupAPI.useGetSecGroupsQuery,
+  { dataCy: 'security-groups' }
 )
 
 /** @type {Field} Security groups field */

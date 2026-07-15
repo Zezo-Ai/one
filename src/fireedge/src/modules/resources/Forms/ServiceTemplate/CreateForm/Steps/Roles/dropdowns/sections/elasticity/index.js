@@ -29,7 +29,7 @@ import {
 } from '@mui/material'
 import { STEP_ID as ROLES_ID } from '@modules/resources/Forms/ServiceTemplate/CreateForm/Steps/Roles'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 import { Cancel } from 'iconoir-react'
 
@@ -47,6 +47,7 @@ import {
 } from '@modules/resources/Forms/ServiceTemplate/CreateForm/Steps/Roles/dropdowns/sections/elasticity/schema'
 
 const ElasticityPolicies = ({ roles, selectedRole }) => {
+  const { translate } = useTranslation()
   const { watch } = useFormContext()
 
   const wPolicies = watch(`${ROLES_ID}.${selectedRole}.${SECTION_ID}`)
@@ -168,15 +169,18 @@ const ElasticityPolicies = ({ roles, selectedRole }) => {
 
                       const secondaryFields = [
                         type &&
-                          `${Tr(T.Type)}: ${Tr(ELASTICITY_TYPES?.[type])}`,
+                          `${translate(T.Type)}: ${translate(
+                            ELASTICITY_TYPES?.[type]
+                          )}`,
 
-                        adjust && `${Tr(T.Adjust)}: ${adjust}`,
-                        min && `${Tr(T.Min)}: ${min}`,
-                        cooldown && `${Tr(T.Cooldown)}: ${cooldown}`,
-                        period && `${Tr(T.Period)}: ${period}`,
+                        adjust && `${translate(T.Adjust)}: ${adjust}`,
+                        min && `${translate(T.Min)}: ${min}`,
+                        cooldown && `${translate(T.Cooldown)}: ${cooldown}`,
+                        period && `${translate(T.Period)}: ${period}`,
                         // eslint-disable-next-line camelcase
                         period_number && `#: ${period_number}`,
-                        expression && `${Tr(T.Expression)}: ${expression}`,
+                        expression &&
+                          `${translate(T.Expression)}: ${expression}`,
                       ].filter(Boolean)
 
                       return (

@@ -24,9 +24,9 @@ import { memo } from 'react'
 import { AddRangeForm } from '@modules/resources/Forms/VNetwork'
 import { VnAPI, useModalsApi } from '@FeaturesModule'
 
-import { Tr } from '@modules/resources/HOC'
-import { RESTRICTED_ATTRIBUTES_TYPE, T, VN_ACTIONS } from '@ConstantsModule'
 import { jsonToXml, hasRestrictedAttributes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { RESTRICTED_ATTRIBUTES_TYPE, T, VN_ACTIONS } from '@ConstantsModule'
 
 import { SubmitButton } from '@ComponentsV2Module'
 
@@ -79,6 +79,7 @@ const AddAddressRangeAction = memo(
 
 const UpdateAddressRangeAction = memo(
   ({ vnetId, ar, onSubmit, oneConfig, adminGroup }) => {
+    const { translate } = useTranslation()
     const { showModal } = useModalsApi()
 
     const [updateAR] = VnAPI.useUpdateVNetRangeMutation()
@@ -97,8 +98,8 @@ const UpdateAddressRangeAction = memo(
       showModal({
         dialogProps: {
           title: AR_ID
-            ? `${Tr(T.AddressRange)}: #${AR_ID}`
-            : `${Tr(T.AddressRange)}`,
+            ? `${translate(T.AddressRange)}: #${AR_ID}`
+            : `${translate(T.AddressRange)}`,
           dataCy: 'modal-update-ar',
         },
 
@@ -129,6 +130,7 @@ const UpdateAddressRangeAction = memo(
 
 const DeleteAddressRangeAction = memo(
   ({ vnetId, ar, onSubmit, oneConfig, adminGroup, submit }) => {
+    const { translate } = useTranslation()
     const { showModal } = useModalsApi()
 
     const [removeAR] = VnAPI.useRemoveRangeFromVNetMutation()
@@ -156,9 +158,9 @@ const DeleteAddressRangeAction = memo(
 
         dialogProps: {
           title: AR_ID
-            ? `${Tr(T.DeleteAddressRange)}: #${AR_ID}`
-            : `${Tr(T.DeleteAddressRange)}`,
-          children: <p>{Tr(T.DoYouWantProceed)}</p>,
+            ? `${translate(T.DeleteAddressRange)}: #${AR_ID}`
+            : `${translate(T.DeleteAddressRange)}`,
+          children: <p>{translate(T.DoYouWantProceed)}</p>,
         },
 
         onSubmit: handleRemove,
@@ -168,7 +170,9 @@ const DeleteAddressRangeAction = memo(
       <SubmitButton
         data-cy={`${VN_ACTIONS.DELETE_AR}-${AR_ID}`}
         iconOnly={<TrashIcon />}
-        tooltip={!disabledAction ? Tr(T.Detach) : Tr(T.DetachRestricted)}
+        tooltip={
+          !disabledAction ? translate(T.Detach) : translate(T.DetachRestricted)
+        }
         disabled={disabledAction}
         onClick={handleOpenForm}
       />

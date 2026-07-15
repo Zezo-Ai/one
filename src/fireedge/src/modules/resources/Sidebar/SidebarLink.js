@@ -28,7 +28,7 @@ import {
 
 import { useGeneralApi } from '@FeaturesModule'
 import { DevTypography } from '@modules/resources/Typography'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import clsx from 'clsx'
 import sidebarStyles from '@modules/resources/Sidebar/styles'
 

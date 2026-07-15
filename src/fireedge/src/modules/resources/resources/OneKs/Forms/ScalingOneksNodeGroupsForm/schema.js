@@ -16,9 +16,10 @@
 import { number, object } from 'yup'
 
 import { getValidationFromFields } from '@UtilsModule'
+import { Translate } from '@ProvidersModule'
 import { INPUT_TYPES, T } from '@ConstantsModule'
 import { Alert } from '@mui/material'
-import { Translate } from '@modules/resources/HOC'
+
 import PropTypes from 'prop-types'
 
 const VisualAlert = ({ children }) => <Alert severity="info">{children}</Alert>

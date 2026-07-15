@@ -25,6 +25,7 @@ import {
   Cancel,
 } from 'iconoir-react'
 import { getStyles } from '@modules/componentsv2/primitives/AlertNotification/Default/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Get status icon based on the status type.
@@ -69,6 +70,7 @@ export const AlertNotification = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const StatusIcon = getStatusIcon(status)
     const showStatusIcon = type !== 'inline'
     const showCloseButton = isDismissible && type !== 'inline'
@@ -83,10 +85,14 @@ export const AlertNotification = forwardRef(
         <Box className="alert-content">
           {showStatusIcon && <StatusIcon className="status-icon" />}
           <Box className="text-content">
-            {title && <Typography className="alert-title">{title}</Typography>}
+            {title && (
+              <Typography className="alert-title">
+                {translate(title)}
+              </Typography>
+            )}
             {description && (
               <Typography className="alert-description">
-                {description}
+                {translate(description)}
               </Typography>
             )}
           </Box>

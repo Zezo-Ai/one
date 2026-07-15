@@ -28,6 +28,7 @@ import {
   LabelSlot,
   Legend,
   MetadataSlot,
+  ResourceActionConfirmation,
   TitleSlot,
 } from '@ComponentsV2Module'
 
@@ -429,7 +430,17 @@ const Storage = ({ hypervisor, oneConfig, adminGroup, vmTemplate }) => {
         dialogProps: {
           title: `${T.DetachSomething} #${disk?.DISK_ID} - ${diskName}`,
           dataCy: 'modal-detach-disk',
-          children: <p>{T.DoYouWantProceed}</p>,
+          description: (
+            <ResourceActionConfirmation
+              description={T['resource.detach.confirmation']}
+              resources={{ ID: disk?.DISK_ID, NAME: diskName }}
+              resourceType={T.Disk}
+            />
+          ),
+          confirmLabel: T.Detach,
+          confirmButtonProps: {
+            isDestructive: true,
+          },
         },
         onSubmit: () => removeAndReorder(disk),
       })

@@ -21,7 +21,7 @@ import NodeGroupRecordCard from '@modules/resources/Tabs/OneKs/NodeGroups/NodeGr
 import { AddNodeGroupAction } from '@modules/resources/Tabs/OneKs/NodeGroups/Actions'
 import { getVirtualOneKsState, showDataByState } from '@ModelsModule'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Renders Node Groups tab showing the node groups of the cluster.
@@ -31,6 +31,7 @@ import { Tr } from '@modules/resources/HOC'
  * @returns {ReactElement} Node Groups tab
  */
 const NodeGroups = ({ id }) => {
+  const { translate } = useTranslation()
   const { data: cluster = {}, isLoading } = OneKsAPI.useGetOneKsClusterQuery({
     id,
     expand: true,
@@ -63,7 +64,7 @@ const NodeGroups = ({ id }) => {
           ))
         ) : (
           <Alert severity="error" variant="outlined">
-            {Tr(T['oneks.tab.info.nodegroups.help.paragraph'])}
+            {translate(T['oneks.tab.info.nodegroups.help.paragraph'])}
           </Alert>
         )}
       </Stack>

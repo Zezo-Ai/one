@@ -16,7 +16,7 @@
 import PropTypes from 'prop-types'
 
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { MultiValueInput } from '@ComponentsV2Module'
 
 const toText = (value) => (value == null ? '' : String(value))
@@ -53,6 +53,7 @@ export const ResourceIDAutocomplete = ({
   filteredResourceIDs,
   nameMaps,
 }) => {
+  const { translate } = useTranslation()
   const values = state.globalIds ?? []
 
   const handleValuesChange = (nextValues = []) => {
@@ -74,11 +75,11 @@ export const ResourceIDAutocomplete = ({
     <MultiValueInput
       mode="select"
       allowCustomValues
-      label={Tr(selectedType === 'VM' ? T.ClusterIds : T.ResourceIds)}
-      placeholder={Tr(
+      label={translate(selectedType === 'VM' ? T.ClusterIds : T.ResourceIds)}
+      placeholder={translate(
         selectedType === 'VM' ? T.ClusterIdsConcept : T.ResourceIdsConcept
       )}
-      error={!state.isValid ? Tr(T.ResourceIdsInvalid) : ''}
+      error={!state.isValid ? translate(T.ResourceIdsInvalid) : ''}
       values={values}
       markedValues={state.markedForDeletion ?? []}
       options={(filteredResourceIDs ?? []).map((resourceId) =>

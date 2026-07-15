@@ -22,12 +22,92 @@ import { renderIcon } from '@UtilsModule'
 import { useControllableState } from '@HooksModule'
 import clsx from 'clsx'
 import { Tooltip } from '@modules/componentsv2/primitives/Tooltip/Default'
+import {
+  useCompactToolbarAction,
+  useCompactToolbarId,
+} from '@modules/componentsv2/primitives/Buttons/CompactToolbar/context'
+import { useTranslation } from '@ProvidersModule'
 
 const normalizeSelected = (value) => {
   if (value == null) return undefined
   if (value instanceof Set) return new Set(value)
 
   return new Set([].concat(value))
+}
+
+const ButtonGroupItem = ({ button = {}, isSelected = false, onToggle }) => {
+  const { translate } = useTranslation()
+  const {
+    _id,
+    value,
+    title = '',
+    htmlType = 'button',
+    isDisabled = false,
+    startIcon,
+    endIcon,
+    isDestructive,
+    dataCy,
+    tooltip,
+    onClick,
+    compactable,
+  } = button
+  const compactOption = useMemo(
+    () => ({
+      title,
+      tooltip,
+      startIcon,
+      isDisabled,
+      isDestructive,
+      isSelected,
+      onClick,
+    }),
+    [isDestructive, isDisabled, isSelected, onClick, startIcon, title, tooltip]
+  )
+  const isCompacted = useCompactToolbarAction(_id, compactOption, compactable)
+
+  if (isCompacted) return null
+
+  return (
+    <Tooltip title={tooltip}>
+      <Box
+        className={clsx('button-container', {
+          selected: isSelected,
+          disabled: isDisabled,
+          destructive: isDestructive,
+        })}
+        data-cy={dataCy}
+        aria-disabled={isDisabled}
+        onClick={(event) => {
+          if (isDisabled) return
+
+          onClick?.(event)
+          onToggle?.(value)
+        }}
+      >
+        {startIcon && (
+          <span className="buttongroup-button-icon">
+            {renderIcon(startIcon)}
+          </span>
+        )}
+
+        {title && (
+          <Button type={htmlType} className={'buttongroup-button'}>
+            {translate(title)}
+          </Button>
+        )}
+
+        {endIcon && (
+          <span className="buttongroup-button-icon">{renderIcon(endIcon)}</span>
+        )}
+      </Box>
+    </Tooltip>
+  )
+}
+
+ButtonGroupItem.propTypes = {
+  button: PropTypes.object,
+  isSelected: PropTypes.bool,
+  onToggle: PropTypes.func,
 }
 
 /**
@@ -47,6 +127,7 @@ export const ButtonGroup = forwardRef(
     ref
   ) => {
     const hasChildren = children != null
+    const groupId = useCompactToolbarId('compact-button-group')
 
     const items = useMemo(
       () =>
@@ -54,9 +135,10 @@ export const ButtonGroup = forwardRef(
           ? []
           : buttons.map((button, index) => ({
               ...button,
-              _id: button.value ?? index,
+              _id: `${groupId}-${button.value ?? index}`,
+              value: button.value ?? index,
             })),
-      [buttons, hasChildren]
+      [buttons, groupId, hasChildren]
     )
 
     const selectedValue = useMemo(
@@ -65,7 +147,7 @@ export const ButtonGroup = forwardRef(
     )
 
     const selectedFromButtons = useMemo(
-      () => new Set(items.filter((b) => b?.selected).map((b) => b._id)),
+      () => new Set(items.filter((b) => b?.selected).map((b) => b.value)),
       [items]
     )
 
@@ -102,52 +184,14 @@ export const ButtonGroup = forwardRef(
       >
         {hasChildren
           ? children
-          : items?.map(
-              ({
-                _id,
-                title = '',
-                htmlType = 'button',
-                isDisabled = false,
-                startIcon,
-                endIcon,
-                tooltip,
-                onClick,
-              }) => (
-                <Tooltip key={_id} title={tooltip}>
-                  <Box
-                    className={clsx('button-container', {
-                      selected: selected?.has(_id),
-                      disabled: isDisabled,
-                    })}
-                    aria-disabled={isDisabled}
-                    onClick={(event) => {
-                      if (isDisabled) return
-
-                      onClick?.(event)
-                      toggle(_id)
-                    }}
-                  >
-                    {startIcon && (
-                      <span className="buttongroup-button-icon">
-                        {renderIcon(startIcon)}
-                      </span>
-                    )}
-
-                    {title && (
-                      <Button type={htmlType} className={'buttongroup-button'}>
-                        {title}
-                      </Button>
-                    )}
-
-                    {endIcon && (
-                      <span className="buttongroup-button-icon">
-                        {renderIcon(endIcon)}
-                      </span>
-                    )}
-                  </Box>
-                </Tooltip>
-              )
-            )}
+          : items?.map((button) => (
+              <ButtonGroupItem
+                key={button._id}
+                button={button}
+                isSelected={selected?.has(button.value)}
+                onToggle={toggle}
+              />
+            ))}
       </MUIButtonGroup>
     )
   }

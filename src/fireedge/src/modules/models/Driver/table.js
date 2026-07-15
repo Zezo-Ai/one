@@ -50,5 +50,6 @@ export const DRIVER_COLUMNS = [
 
 export const driverTable = createTable(
   DRIVER_COLUMNS,
-  DriverAPI.useGetDriversQuery
+  DriverAPI.useGetDriversQuery,
+  { dataCy: 'drivers' }
 )

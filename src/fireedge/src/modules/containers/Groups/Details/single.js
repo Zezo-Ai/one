@@ -17,6 +17,7 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  ResourceActionConfirmation,
   TabSlot,
   ToggleGroup,
 } from '@ComponentsV2Module'
@@ -69,8 +70,18 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: [T.Delete, T.Group].filter(Boolean).join(' '),
-        description: T.DoYouWantProceed,
+        dataCy: 'modal-delete-group',
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={group}
+            resourceType={T.Groups}
+          />
+        ),
         confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: ID })
@@ -106,6 +117,7 @@ export const SingleView = ({
                         startIcon: <Edit width="16px" height="16px" />,
                         onClick: handleUpdate,
                         value: 'update',
+                        'data-cy': 'action-update_dialog',
                         isDisabled: isActionsDisabled,
                       },
                       {
@@ -130,6 +142,7 @@ export const SingleView = ({
                         ),
                         onClick: handleOpenDeleteForm,
                         value: 'delete',
+                        'data-cy': 'action-group-delete',
                         isDisabled: isActionsDisabled,
                       },
                       {

@@ -16,6 +16,7 @@
 import {
   stringToBoolean,
   createTable,
+  getLockIcon,
   timeFromMilliseconds,
   prettyBytes,
 } from '@UtilsModule'
@@ -32,28 +33,64 @@ import {
   getPcis,
   getSnapshotList,
   getScheduleActions,
-  getVMLocked,
   getVirtualMachineState,
   getVirtualMachineType,
 } from '@modules/models/VirtualMachine/general'
 import { getRepeatInformation } from '@modules/models/Scheduler/general'
 import { getDiskType, getDiskName } from '@modules/models/Image/general'
 import { getPciDevices } from '@modules/models/Host/general'
-import { T, UNITS, DEFAULT_TIMESTAMP_FORMAT } from '@ConstantsModule'
-import { Tag } from '@ComponentsV2Module'
+import {
+  T,
+  UNITS,
+  DEFAULT_TIMESTAMP_FORMAT,
+  STATIC_FILES_URL,
+  DEFAULT_TEMPLATE_LOGO,
+} from '@ConstantsModule'
+import { Image, StatusTag, Tag } from '@ComponentsV2Module'
 import { createLabelColumn } from '@modules/models/labels'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const VM_COLUMNS = [
-  { header: T.ID, id: 'id', accessorKey: 'ID' },
-  { header: T.Name, id: 'name', accessorKey: 'NAME' },
+  { header: T.ID, id: 'id', accessorKey: 'ID', width: '5%' },
+  {
+    header: T.Name,
+    id: 'name',
+    accessorKey: 'NAME',
+    cell: ({ row }) => {
+      const logo =
+        row?.original?.USER_TEMPLATE?.LOGO ??
+        row?.original?.USER_TEMPLATE?.USER_TEMPLATE?.LOGO ??
+        row?.original?.TEMPLATE?.LOGO ??
+        DEFAULT_TEMPLATE_LOGO
+      const src = `${STATIC_FILES_URL}/${logo}`
+
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Image
+            src={src}
+            width={32}
+            height={32}
+            alt={'list-image-identifier'}
+          />
+          <span>{row.original?.NAME}</span>
+          {getLockIcon(row.original)}
+        </Box>
+      )
+    },
+  },
   {
     header: T.State,
     id: 'state',
     accessorFn: (row) => getVirtualMachineState(row)?.name,
+    cell: ({ row }) => {
+      const { color, name } = getVirtualMachineState(row.original) ?? {}
+
+      return <StatusTag statusColor={color} statusName={name} />
+    },
   },
+  { header: T.Type, id: 'type', accessorFn: getVirtualMachineType },
   {
-    header: `${T.CPU}/${T.VCPU}`,
+    header: `${T.CPU} / ${T.VCPU}`,
     id: 'cpu',
     cell: ({ row }) => {
       const { CPU = 1, VCPU = 1 } = row?.original?.TEMPLATE
@@ -67,19 +104,6 @@ export const VM_COLUMNS = [
     cell: ({ row }) =>
       prettyBytes(row?.original?.TEMPLATE?.MEMORY ?? 0, UNITS.MB),
   },
-  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
-  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
-  {
-    header: T.StartTime,
-    id: 'time',
-    cell: ({ row }) => timeFromMilliseconds(row.original.STIME).toRelative(),
-  },
-  {
-    header: T.Locked,
-    id: 'locked',
-    accessorFn: getVMLocked,
-  },
-  { header: T.Type, id: 'type', accessorFn: getVirtualMachineType },
   {
     header: T.IP,
     id: 'ips',
@@ -89,6 +113,13 @@ export const VM_COLUMNS = [
     header: T.Host,
     id: 'hostname',
     accessorFn: (row) => getLastHistory(row)?.HOSTNAME,
+  },
+  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
+  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
+  {
+    header: T.StartTime,
+    id: 'time',
+    cell: ({ row }) => timeFromMilliseconds(row.original.STIME).toRelative(),
   },
   createLabelColumn(),
 ]
@@ -438,75 +469,87 @@ export const VM_SCHED_ACTION_COLUMNS = [
   },
 ]
 
-export const vmsTable = createTable(VM_COLUMNS, VmAPI.useGetVmsPaginatedQuery)
-export const vmdisksTable = createTable(VM_DISK_COLUMNS, (args, options) =>
-  VmAPI.useGetVmQuery(args, {
-    ...options,
-    selectFromResult: ({ data, isFetching, isLoading }) => ({
-      data: getDisks(data),
-      isFetching,
-      isLoading,
-    }),
-  })
-)
-export const vmnicsTable = createTable(VM_NIC_COLUMNS, (args, options) =>
-  VmAPI.useGetVmQuery(args, {
-    ...options,
-    selectFromResult: ({ data, isFetching, isLoading }) => ({
-      data: getNics(data),
-      isFetching,
-      isLoading,
-    }),
-  })
-)
-
-export const vmpcisTable = createTable(VM_PCI_COLUMNS, (args, options) => {
-  const {
-    data: vmPcis,
-    isFetching: isFetchingVm,
-    isLoading: isLoadingVm,
-  } = VmAPI.useGetVmQuery(args, {
-    ...options,
-    selectFromResult: ({ data, isFetching, isLoading }) => ({
-      data: getPcis(data)
-        ?.map(({ SHORT_ADDRESS, PCI_ID } = {}) => ({ SHORT_ADDRESS, PCI_ID }))
-        ?.filter(Boolean),
-      isFetching,
-      isLoading,
-    }),
-  })
-
-  const {
-    data: hostPcis,
-    isFetching: isFetchingHosts,
-    isLoading: isLoadingHosts,
-  } = HostAPI.useGetHostsQuery(undefined, {
-    ...options,
-    skip: options?.skip || !vmPcis,
-    selectFromResult: ({ data, isFetching, isLoading }) => ({
-      data: []
-        .concat(data)
-        ?.map(getPciDevices)
-        ?.flat()
-        ?.map((d) => {
-          const vmPci = vmPcis?.find(
-            (p) => p?.SHORT_ADDRESS === d?.SHORT_ADDRESS
-          )
-
-          return vmPci ? { ...d, PCI_ID: vmPci.PCI_ID } : null
-        })
-        ?.filter(Boolean),
-      isFetching,
-      isLoading,
-    }),
-  })
-
-  return {
-    data: hostPcis,
-    isFetching: isFetchingVm || isFetchingHosts,
-    isLoading: isLoadingVm || isLoadingHosts,
-  }
+export const vmsTable = createTable(VM_COLUMNS, VmAPI.useGetVmsPaginatedQuery, {
+  dataCy: 'vms',
 })
+export const vmdisksTable = createTable(
+  VM_DISK_COLUMNS,
+  (args, options) =>
+    VmAPI.useGetVmQuery(args, {
+      ...options,
+      selectFromResult: ({ data, isFetching, isLoading }) => ({
+        data: getDisks(data),
+        isFetching,
+        isLoading,
+      }),
+    }),
+  { dataCy: 'vm-disks' }
+)
+export const vmnicsTable = createTable(
+  VM_NIC_COLUMNS,
+  (args, options) =>
+    VmAPI.useGetVmQuery(args, {
+      ...options,
+      selectFromResult: ({ data, isFetching, isLoading }) => ({
+        data: getNics(data),
+        isFetching,
+        isLoading,
+      }),
+    }),
+  { dataCy: 'vm-nics' }
+)
+
+export const vmpcisTable = createTable(
+  VM_PCI_COLUMNS,
+  (args, options) => {
+    const {
+      data: vmPcis,
+      isFetching: isFetchingVm,
+      isLoading: isLoadingVm,
+    } = VmAPI.useGetVmQuery(args, {
+      ...options,
+      selectFromResult: ({ data, isFetching, isLoading }) => ({
+        data: getPcis(data)
+          ?.map(({ SHORT_ADDRESS, PCI_ID } = {}) => ({ SHORT_ADDRESS, PCI_ID }))
+          ?.filter(Boolean),
+        isFetching,
+        isLoading,
+      }),
+    })
+
+    const {
+      data: hostPcis,
+      isFetching: isFetchingHosts,
+      isLoading: isLoadingHosts,
+    } = HostAPI.useGetHostsQuery(undefined, {
+      ...options,
+      skip: options?.skip || !vmPcis,
+      selectFromResult: ({ data, isFetching, isLoading }) => ({
+        data: []
+          .concat(data)
+          ?.map(getPciDevices)
+          ?.flat()
+          ?.map((d) => {
+            const vmPci = vmPcis?.find(
+              (p) => p?.SHORT_ADDRESS === d?.SHORT_ADDRESS
+            )
+
+            return vmPci ? { ...d, PCI_ID: vmPci.PCI_ID } : null
+          })
+          ?.filter(Boolean),
+        isFetching,
+        isLoading,
+      }),
+    })
+
+    return {
+      data: hostPcis,
+      isFetching: isFetchingVm || isFetchingHosts,
+      isLoading: isLoadingVm || isLoadingHosts,
+    }
+  },
+  { dataCy: 'vm-pcis' }
+)
 
 export const vmsnapshotsTable = createTable(
   VM_SNAPSHOT_COLUMNS,
@@ -518,7 +561,8 @@ export const vmsnapshotsTable = createTable(
         isFetching,
         isLoading,
       }),
-    })
+    }),
+  { dataCy: 'vm-snapshots' }
 )
 
 export const vmschedactionsTable = createTable(
@@ -531,7 +575,8 @@ export const vmschedactionsTable = createTable(
         isFetching,
         isLoading,
       }),
-    })
+    }),
+  { dataCy: 'vm-scheduled-actions' }
 )
 
 export const vmbackupsTable = createTable(
@@ -573,7 +618,8 @@ export const vmbackupsTable = createTable(
       isFetching: isFetchingVm || isFetchingImages,
       isLoading: isLoadingVm || isLoadingImages,
     }
-  }
+  },
+  { dataCy: 'vm-backups' }
 )
 
 export const vmhistoryTable = createTable(
@@ -622,5 +668,6 @@ export const vmhistoryTable = createTable(
       isFetching: isFetchingVm || isFetchingDatastores,
       isLoading: isLoadingVm || isLoadingDatastores,
     }
-  }
+  },
+  { dataCy: 'vm-history' }
 )

@@ -20,7 +20,7 @@ import { styled, keyframes, lighten, darken } from '@mui/material'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
 
-import { Translate, Tr } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { SCHEMES } from '@ConstantsModule'
 
 const Card = styled(Paper)(({ theme, bgcolor, onClick }) => {
@@ -89,23 +89,31 @@ const Wave = styled('span')(({ theme, bgcolor, duration = 1 }) => {
 })
 
 const WavesCard = memo(
-  ({ text, value, bgColor, icon: Icon, onClick }) => (
-    <Card title={Tr(text)} bgcolor={bgColor} onClick={onClick || undefined}>
-      <Typography variant="h6" zIndex={2} noWrap>
-        <Translate word={text} />
-      </Typography>
-      <Typography variant="h4" zIndex={2}>
-        {value}
-      </Typography>
-      <Wave bgcolor={bgColor} duration={7} />
-      <Wave bgcolor={bgColor} duration={5} />
-      {Icon && (
-        <OverSizeIcon>
-          <Icon />
-        </OverSizeIcon>
-      )}
-    </Card>
-  ),
+  ({ text, value, bgColor, icon: Icon, onClick }) => {
+    const { translate } = useTranslation()
+
+    return (
+      <Card
+        title={translate(text)}
+        bgcolor={bgColor}
+        onClick={onClick || undefined}
+      >
+        <Typography variant="h6" zIndex={2} noWrap>
+          <Translate word={text} />
+        </Typography>
+        <Typography variant="h4" zIndex={2}>
+          {value}
+        </Typography>
+        <Wave bgcolor={bgColor} duration={7} />
+        <Wave bgcolor={bgColor} duration={5} />
+        {Icon && (
+          <OverSizeIcon>
+            <Icon />
+          </OverSizeIcon>
+        )}
+      </Card>
+    )
+  },
   (prev, next) => prev.value === next.value
 )
 

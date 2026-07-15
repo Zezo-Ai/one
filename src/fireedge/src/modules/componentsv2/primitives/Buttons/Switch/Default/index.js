@@ -27,6 +27,7 @@ import { ThumbSvg } from '@modules/componentsv2/primitives/Buttons/Switch/Defaul
 import { Tooltip } from '@modules/componentsv2/primitives/Tooltip/Default'
 import { HelpCircle } from 'iconoir-react'
 import PropTypes from 'prop-types'
+import { useTranslation } from '@ProvidersModule'
 
 const getDimensions = ({ scale, size }) => {
   const sizeMap = {
@@ -73,13 +74,16 @@ export const Switch = forwardRef(
       isChecked,
       onChange,
       switchProps = {},
+      inputProps,
       ...opts
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const hasLabel = !!label
     const { knob, ...dimensions } = getDimensions({ scale: theme.scale, size })
+    const { inputProps: switchInputProps, ...restSwitchProps } = switchProps
 
     const [isCheckedInternal, setIsCheckedInternal] = useControllableState({
       value: isChecked,
@@ -94,7 +98,7 @@ export const Switch = forwardRef(
         {...opts}
       >
         <FormControlLabel
-          label={label}
+          label={typeof label === 'string' ? translate(label) : label}
           className={'switch-container'}
           control={
             <MUISwitch
@@ -111,7 +115,8 @@ export const Switch = forwardRef(
                 track: 'switch-track',
                 input: 'switch-input',
               }}
-              {...switchProps}
+              {...restSwitchProps}
+              inputProps={{ ...switchInputProps, ...inputProps }}
               onChange={(_, val) => {
                 const next = isCheckedInternal === null ? false : val
                 setIsCheckedInternal(next)
@@ -136,6 +141,7 @@ const SwitchPropTypes = {
   isDisabled: PropTypes.bool,
   isChecked: PropTypes.bool,
   switchProps: PropTypes.object,
+  inputProps: PropTypes.object,
   onChange: PropTypes.func,
 }
 

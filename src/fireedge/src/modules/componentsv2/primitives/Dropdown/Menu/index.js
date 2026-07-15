@@ -23,6 +23,7 @@ import {
   Paper,
   Popper,
   Typography,
+  useTheme,
 } from '@mui/material'
 
 import { getStyles } from '@modules/componentsv2/primitives/Dropdown/Menu/styles'
@@ -46,6 +47,7 @@ import { getStyles } from '@modules/componentsv2/primitives/Dropdown/Menu/styles
  * @param {React.ElementType} [props.openIcon] - Icon component to display when opened.
  * @param {React.ReactNode} [props.children] - Dropdown content.
  * @param {string} [props.className] - Component class name
+ * @param {string} [props.dataCy] - Cypress selector prefix
  * @returns {React.Element} The rendered dropdown menu component.
  */
 export const MenuDropdown = ({
@@ -64,7 +66,9 @@ export const MenuDropdown = ({
   onClose = () => {},
   onOpen = () => {},
   children,
+  dataCy,
 }) => {
+  const muiTheme = useTheme()
   const [open, setOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState(null)
   const CurrentIcon = open && OpenIcon ? OpenIcon : Icon
@@ -103,6 +107,7 @@ export const MenuDropdown = ({
         ]
           .filter(Boolean)
           .join(' ')}
+        data-cy={dataCy}
         onClick={handleToggle}
       >
         <Avatar src={image} className="avatar">
@@ -127,7 +132,7 @@ export const MenuDropdown = ({
         anchorEl={anchorEl}
         placement={placement}
         disablePortal
-        sx={(theme) => ({ zIndex: theme.zIndex.drawer + 1 })}
+        style={{ zIndex: muiTheme.zIndex.drawer + 1 }}
         modifiers={[
           {
             name: 'offset',
@@ -140,6 +145,7 @@ export const MenuDropdown = ({
         <ClickAwayListener onClickAway={handleClose}>
           <Paper
             className="popup"
+            data-cy={dataCy && `${dataCy}-list`}
             sx={(theme) => {
               const styles = getStyles({
                 theme,
@@ -182,6 +188,7 @@ MenuDropdown.propTypes = {
   onClose: PropTypes.func,
   onOpen: PropTypes.func,
   className: PropTypes.string,
+  dataCy: PropTypes.string,
   children: PropTypes.node,
 }
 

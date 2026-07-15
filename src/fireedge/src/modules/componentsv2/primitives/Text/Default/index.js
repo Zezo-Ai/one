@@ -19,6 +19,7 @@ import PropTypes from 'prop-types'
 import { Typography as MUITypography } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/primitives/Text/Default/styles'
 import { TEXT_COMPONENTS, TEXT_VARIANTS, TEXT_WEIGHTS } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} root0 - Params
@@ -39,6 +40,7 @@ export const Text = forwardRef(
     },
     ref
   ) => {
+    const { translateText } = useTranslation()
     const { sx, ...typographyProps } = opts
     const textComponent = component ?? TEXT_COMPONENTS[variant]
 
@@ -52,7 +54,7 @@ export const Text = forwardRef(
           ...(Array.isArray(sx) ? sx : [sx]),
         ].filter(Boolean)}
       >
-        {value}
+        {typeof value === 'string' ? translateText(value) : value}
       </MUITypography>
     )
   }

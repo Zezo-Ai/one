@@ -15,13 +15,13 @@
  * ------------------------------------------------------------------------- */
 
 import { HostAPI, useGeneralApi } from '@FeaturesModule'
-import { T } from '@ConstantsModule'
+import { T, TEXT_WEIGHTS, TEXT_VARIANTS } from '@ConstantsModule'
 import { debounce } from 'lodash'
 import PropTypes from 'prop-types'
 import { Component, useState, useEffect } from 'react'
-import { Alert, Box, Typography } from '@mui/material'
+import { Alert, Box } from '@mui/material'
 import { FormWithSchema } from '@modules/componentsv2/composed'
-import { SubmitButton } from '@modules/componentsv2/primitives'
+import { SubmitButton, Text } from '@modules/componentsv2/primitives'
 import {
   PCI_PROFILE_FIELD,
   PCI_FILTER_FIELDS,
@@ -30,6 +30,14 @@ import {
 import { useForm, FormProvider } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { jsonToXml } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+
+const getPciProfile = (resource) => resource?.TEMPLATE?.PCI_GPU_PROFILE ?? ''
+
+const getPciShortAddresses = (resource) =>
+  String(resource?.TEMPLATE?.PCI_SHORT_ADDRESS ?? '')
+    .split(',')
+    .filter(Boolean)
 
 /**
  * @param {object} root0 - Params
@@ -47,6 +55,7 @@ export const PciProfileSelector = ({
   resource,
   forceSync = false,
 }) => {
+  const { translate } = useTranslation()
   const [offline] = HostAPI.useOfflineHostMutation()
   const [enable] = HostAPI.useEnableHostMutation()
   const [refresh] = HostAPI.useLazyGetHostsQuery()
@@ -61,29 +70,32 @@ export const PciProfileSelector = ({
   const { enqueueSuccess } = useGeneralApi()
 
   const onSubmit = async (data) => {
-    if (!Object.hasOwn(resource, 'TEMPLATE')) return
+    if (!resource || !Object.hasOwn(resource, 'TEMPLATE')) return
     const { TEMPLATE } = resource
 
-    setUpdating((prev) => !prev)
-    const fmtData = Object.fromEntries(
-      [...Object.entries(TEMPLATE), ...Object.entries(data)].filter(Boolean)
-    )
+    setUpdating(true)
 
-    if (Array.isArray(fmtData.PCI_SHORT_ADDRESS)) {
-      fmtData.PCI_SHORT_ADDRESS = fmtData.PCI_SHORT_ADDRESS.join(',')
+    try {
+      const fmtData = Object.fromEntries(
+        [...Object.entries(TEMPLATE), ...Object.entries(data)].filter(Boolean)
+      )
+
+      if (Array.isArray(fmtData.PCI_SHORT_ADDRESS)) {
+        fmtData.PCI_SHORT_ADDRESS = fmtData.PCI_SHORT_ADDRESS.join(',')
+      }
+
+      const template = jsonToXml(fmtData)
+
+      const { data: response } = await update({ id, template, replace: 0 })
+
+      const isSuccess = +response === +id
+
+      forceSync && (await forceUpdate())
+
+      isSuccess && enqueueSuccess(T.PciConfigUpdated, id)
+    } finally {
+      setUpdating(false)
     }
-
-    const template = jsonToXml(fmtData)
-
-    const { data: response } = await update({ id, template, replace: 0 })
-
-    const isSuccess = +response === +id
-
-    forceSync && (await forceUpdate())
-
-    isSuccess && enqueueSuccess([T.PciConfigUpdated, id])
-
-    setUpdating((prev) => !prev)
   }
 
   const { handleSubmit, setValue, watch, ...methods } = useForm({
@@ -94,25 +106,19 @@ export const PciProfileSelector = ({
 
   useEffect(() => {
     if (resource) {
-      const fieldIdentifiers = [
-        'PCI_FILTER',
-        'PCI_GPU_PROFILE',
-        'PCI_SHORT_ADDRESS',
-      ]
-      fieldIdentifiers?.forEach((field) => {
-        if (field === 'PCI_SHORT_ADDRESS') {
-          setValue(
-            field,
-            [].concat(resource?.TEMPLATE?.[field]?.split(',')).filter(Boolean)
-          )
-        } else {
-          setValue(field, resource?.TEMPLATE?.[field])
-        }
-      })
+      setValue('PCI_FILTER', resource?.TEMPLATE?.PCI_FILTER ?? '')
+      setValue('PCI_GPU_PROFILE', getPciProfile(resource))
+      setValue('PCI_SHORT_ADDRESS', getPciShortAddresses(resource))
     }
-  }, [])
+  }, [
+    resource?.TEMPLATE?.PCI_FILTER,
+    resource?.TEMPLATE?.PCI_GPU_PROFILE,
+    resource?.TEMPLATE?.PCI_SHORT_ADDRESS,
+    setValue,
+  ])
 
   const watchedPciProfileSelector = watch('PCI_GPU_PROFILE')
+  const resourcePciProfile = getPciProfile(resource)
 
   useEffect(() => {
     const debouncedSubmit = debounce(() => {
@@ -121,7 +127,7 @@ export const PciProfileSelector = ({
 
     if (
       (watchedPciProfileSelector || watchedPciProfileSelector === '') &&
-      watchedPciProfileSelector !== resource?.TEMPLATE?.PCI_GPU_PROFILE
+      watchedPciProfileSelector !== resourcePciProfile
     ) {
       debouncedSubmit()
     }
@@ -129,7 +135,7 @@ export const PciProfileSelector = ({
     return () => {
       debouncedSubmit.cancel()
     }
-  }, [watchedPciProfileSelector])
+  }, [resourcePciProfile, watchedPciProfileSelector])
 
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)}>
@@ -140,21 +146,18 @@ export const PciProfileSelector = ({
             px: '8px',
           }}
         >
-          <Typography
-            variant="h6"
-            component="legend"
-            sx={{
-              mb: 2,
-            }}
-          >
-            {T.vGPUProfile}
-          </Typography>
+          <Text
+            component="h6"
+            variant={TEXT_VARIANTS.H6}
+            weight={TEXT_WEIGHTS.SEMIBOLD}
+            value={translate(T.vGPUProfile)}
+          />
           <FormWithSchema
             cy="pci-profile-selector"
             fields={PCI_PROFILE_FIELD(host)}
           />
           <Alert severity="info" sx={{ mb: 2 }}>
-            {T.vGPUConcept}
+            {translate(T.vGPUConcept)}
           </Alert>
         </Box>
         <Box
@@ -165,15 +168,12 @@ export const PciProfileSelector = ({
             my: 2,
           }}
         >
-          <Typography
-            variant="h6"
-            component="legend"
-            sx={{
-              mb: 2,
-            }}
-          >
-            {T.FilterPCIDevices}
-          </Typography>
+          <Text
+            component="h6"
+            variant={TEXT_VARIANTS.H6}
+            weight={TEXT_WEIGHTS.SEMIBOLD}
+            value={translate(T.FilterPCIDevices)}
+          />
           <FormWithSchema
             cy="pci-filter-selector"
             fields={PCI_FILTER_FIELDS(host)}

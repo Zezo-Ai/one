@@ -21,6 +21,7 @@ import { Stack, Box, Typography } from '@mui/material'
 import { DEFAULT_OTP_LENGTH } from '@ConstantsModule'
 import { getDigits } from '@UtilsModule'
 import { getStyles } from '@modules/componentsv2/primitives/Inputs/Otp/styles'
+import { useTranslation } from '@ProvidersModule'
 
 const getDigitValues = (value, length) => {
   const digits = getDigits(value, length)
@@ -67,6 +68,7 @@ export const OtpInput = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const inputsRef = useRef([])
     const didAutoFocusRef = useRef(false)
     const [values, setValues] = useState(() => getDigitValues(value, length))
@@ -183,7 +185,7 @@ export const OtpInput = forwardRef(
             isDisabled ? 'disabled' : ''
           }`}
         >
-          {label}
+          {translate(label)}
         </Typography>
         <Box className="input-wrapper">
           {values.map((digit, index) => {
@@ -216,11 +218,11 @@ export const OtpInput = forwardRef(
           variant="caption"
           className={clsx('text', 'hint', isDisabled && 'disabled')}
         >
-          {hint}
+          {translate(hint)}
         </Typography>
         {error && (
           <Typography variant="caption" className="text hint error">
-            {error}
+            {typeof error === 'string' ? translate(error) : error}
           </Typography>
         )}
       </Stack>

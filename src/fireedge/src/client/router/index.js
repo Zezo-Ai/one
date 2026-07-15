@@ -21,6 +21,7 @@ import { LinearProgress } from '@mui/material'
 import { TransitionGroup } from 'react-transition-group'
 import { PATH } from '@ConstantsModule'
 import { useFunctionalityApi, useSupportAuth } from '@FeaturesModule'
+import { ResourceSingleViewHost } from '@ContainersModule'
 import {
   ENDPOINTS as COMMON_ENDPOINTS,
   PATH as COMMON_PATH,
@@ -31,9 +32,11 @@ import { InternalLayout, NoAuthRoute, ProtectedRoute } from '@ResourcesModule'
 const renderRoute = () => {
   const RouteRenderer = ({ Component, ...route }) => (
     <ProtectedRoute key={route.path} exact {...route}>
-      <InternalLayout {...route}>
-        <Component fallback={<LinearProgress />} />
-      </InternalLayout>
+      <ResourceSingleViewHost>
+        <InternalLayout {...route}>
+          <Component fallback={<LinearProgress />} />
+        </InternalLayout>
+      </ResourceSingleViewHost>
     </ProtectedRoute>
   )
   RouteRenderer.propTypes = {
@@ -44,6 +47,41 @@ const renderRoute = () => {
   return RouteRenderer
 }
 
+const getResourceFromLocationState = (state) => {
+  if (!state) return null
+
+  if (Array.isArray(state)) {
+    return state.find(
+      (item) => item && typeof item === 'object' && 'ID' in item
+    )
+  }
+
+  return typeof state === 'object' ? state : null
+}
+
+const getResourceBreadcrumbLabel = (state) => {
+  const resource = getResourceFromLocationState(state)
+  const id = resource?.ID ?? resource?.DOCUMENT?.ID
+
+  if (id === undefined || id === null || id === '') return null
+
+  const name = resource?.NAME ?? resource?.DOCUMENT?.NAME
+
+  return [`#${id}`, name].filter(Boolean).join(' ')
+}
+
+const appendResourceToLastBreadcrumb = (breadcrumbs, state) => {
+  const resourceLabel = getResourceBreadcrumbLabel(state)
+
+  if (!resourceLabel) return breadcrumbs
+
+  return breadcrumbs?.map((breadcrumb, index) =>
+    index === breadcrumbs.length - 1
+      ? { ...breadcrumb, label: `${breadcrumb.label} - ${resourceLabel}` }
+      : { ...breadcrumb }
+  )
+}
+
 /**
  * @param {object} props - Props
  * @param {string} props.redirectWhenAuth
@@ -52,7 +90,7 @@ const renderRoute = () => {
  * @returns {JSXElementConstructor} Router
  */
 const Router = ({ redirectWhenAuth, endpoints }) => {
-  const { pathname } = useLocation()
+  const { pathname, state } = useLocation()
   const { user: supportUser } = useSupportAuth()
   const getBreadcrumbs = useMemo(
     () => buildBreadcrumbMap(endpoints),
@@ -62,12 +100,15 @@ const Router = ({ redirectWhenAuth, endpoints }) => {
   const { setBreadcrumbs, setResourceCreatePath } = useFunctionalityApi()
 
   useEffect(() => {
-    const breadCrumbs = getBreadcrumbs(pathname)
+    const breadCrumbs = appendResourceToLastBreadcrumb(
+      getBreadcrumbs(pathname),
+      state
+    )
     setBreadcrumbs(breadCrumbs)
     const createPath = getBreadcrumbs(`${pathname}/create`)?.at(-1) ?? null
     const isSupportPath = pathname === PATH.SUPPORT
     setResourceCreatePath(isSupportPath && !supportUser ? null : createPath)
-  }, [pathname, supportUser])
+  }, [pathname, state, supportUser])
 
   return (
     <TransitionGroup>

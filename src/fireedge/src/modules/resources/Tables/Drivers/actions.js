@@ -18,7 +18,7 @@ import { useMemo } from 'react'
 
 import { DRIVER_ACTIONS, RESOURCE_NAMES, STATES, T } from '@ConstantsModule'
 import { DriverAPI, useViews } from '@FeaturesModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import {
   createActions,
   GlobalAction,

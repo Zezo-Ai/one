@@ -20,17 +20,17 @@ import { css } from '@emotion/css'
 import { FormWithSchema } from '@ComponentsV2Module'
 import { T } from '@ConstantsModule'
 import { SCHEMA, FIELDS } from './schema'
-import { Tr } from '@modules/resources/HOC'
+import { generateDocLink } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 import { useWatch } from 'react-hook-form'
 
 import { translateACL, validACL } from '@ModelsModule'
 
-import { generateDocLink } from '@UtilsModule'
-
 export const STEP_ID = 'stringEditor'
 
 const Content = (version, users, groups, clusters, zones) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const [ruleString, setRuleString] = useState('')
 
@@ -65,26 +65,36 @@ const Content = (version, users, groups, clusters, zones) => {
       }}
     >
       <Alert severity="info" variant="outlined" className={classes.groupInfo}>
-        {Tr(T['acls.form.create.stringEditor.info'])}
+        {translate(T['acls.form.create.stringEditor.info'])}
         <ul>
           <li>
-            <b>{Tr(T['acls.form.create.stringEditor.info.user.title'])}</b>
-            {Tr(T['acls.form.create.stringEditor.info.user.info'])}
+            <b>
+              {translate(T['acls.form.create.stringEditor.info.user.title'])}
+            </b>
+            {translate(T['acls.form.create.stringEditor.info.user.info'])}
           </li>
           <li>
-            <b>{Tr(T['acls.form.create.stringEditor.info.resource.title'])}</b>
-            {Tr(T['acls.form.create.stringEditor.info.resource.info'])}
+            <b>
+              {translate(
+                T['acls.form.create.stringEditor.info.resource.title']
+              )}
+            </b>
+            {translate(T['acls.form.create.stringEditor.info.resource.info'])}
           </li>
           <li>
-            <b>{Tr(T['acls.form.create.stringEditor.info.rights.title'])}</b>
-            {Tr(T['acls.form.create.stringEditor.info.rights.info'])}
+            <b>
+              {translate(T['acls.form.create.stringEditor.info.rights.title'])}
+            </b>
+            {translate(T['acls.form.create.stringEditor.info.rights.info'])}
           </li>
           <li>
-            <b>{Tr(T['acls.form.create.stringEditor.info.zone.title'])}</b>
-            {Tr(T['acls.form.create.stringEditor.info.zone.info'])}
+            <b>
+              {translate(T['acls.form.create.stringEditor.info.zone.title'])}
+            </b>
+            {translate(T['acls.form.create.stringEditor.info.zone.info'])}
           </li>
         </ul>
-        {Tr(T['acls.form.create.stringEditor.info.more'])}
+        {translate(T['acls.form.create.stringEditor.info.more'])}
         <a
           target="_blank"
           href={generateDocLink(
@@ -93,7 +103,7 @@ const Content = (version, users, groups, clusters, zones) => {
           )}
           rel="noreferrer"
         >
-          {Tr(T['acls.form.create.stringEditor.info.more.link'])}
+          {translate(T['acls.form.create.stringEditor.info.more.link'])}
         </a>
       </Alert>
       <Stack
@@ -120,7 +130,7 @@ const Content = (version, users, groups, clusters, zones) => {
               variant="outlined"
               className={classes.groupInfo}
             >
-              {Tr(T['acls.translate.error'])}
+              {translate(T['acls.translate.error'])}
             </Alert>
           )}
         </Typography>

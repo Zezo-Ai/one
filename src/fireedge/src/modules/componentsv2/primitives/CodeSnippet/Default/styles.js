@@ -29,6 +29,8 @@ export const getStyles = ({ theme, isDisabled }) => {
     alignItems: 'flex-start',
     gap: `${theme.scale[100]}px`,
     alignSelf: 'stretch',
+    minWidth: 0,
+    minHeight: 0,
 
     borderRadius: `${theme.scale[400]}px`,
     border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
@@ -70,6 +72,8 @@ export const getStyles = ({ theme, isDisabled }) => {
     '& .code-container': {
       overflow: 'auto',
       display: 'flex',
+      flex: '1 1 auto',
+      minHeight: 0,
       gap: `${theme.scale[500]}px`,
       alignSelf: 'stretch',
       alignItems: 'flex-start',

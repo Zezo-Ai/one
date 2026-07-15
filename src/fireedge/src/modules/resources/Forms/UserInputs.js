@@ -30,8 +30,9 @@ import {
   arrayToOptions,
   responseDataToArray,
 } from '@UtilsModule'
+import { Translate } from '@ProvidersModule'
 import { BaseTab as Tabs } from '@modules/resources/Tabs'
-import { Translate } from '@modules/resources/HOC'
+
 import { FormWithSchema } from '@ComponentsV2Module'
 import { useFormContext } from 'react-hook-form'
 import { Alert } from '@mui/material'

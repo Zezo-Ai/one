@@ -32,8 +32,8 @@ import {
 } from '@mui/material'
 import { ServiceAPI } from '@FeaturesModule'
 import { timeFromMilliseconds } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { SERVICE_LOG_SEVERITY, T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
 
 const PAGE_SIZE = 10
 
@@ -55,6 +55,7 @@ const sortOptions = {
  * @returns {Component} - Logging component
  */
 const LogTab = ({ id }) => {
+  const { translate } = useTranslation()
   const { data: service = {} } = ServiceAPI.useGetServiceQuery({ id })
   const { TEMPLATE: { BODY: { log = [] } = {} } = {} } = service
 
@@ -126,24 +127,26 @@ const LogTab = ({ id }) => {
       >
         <TextField
           fullWidth
-          label={Tr(T.Search)}
+          label={translate(T.Search)}
           variant="outlined"
           size="small"
           onChange={(e) => setFilter(e.target.value)}
         />
 
         <FormControl fullWidth size="small">
-          <InputLabel id="severity-select-label">{Tr(T.Severity)}</InputLabel>
+          <InputLabel id="severity-select-label">
+            {translate(T.Severity)}
+          </InputLabel>
           <Select
             labelId="severity-select-label"
-            label={Tr(T.Severity)}
+            label={translate(T.Severity)}
             value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
           >
-            <MenuItem value="ALL">{Tr(T.AllSeverities)}</MenuItem>
+            <MenuItem value="ALL">{translate(T.AllSeverities)}</MenuItem>
             {Object.entries(severityDisplayNames).map(([key, name]) => (
               <MenuItem key={key} value={key}>
-                {Tr(T[name])}
+                {translate(T[name])}
               </MenuItem>
             ))}
           </Select>
@@ -155,7 +158,7 @@ const LogTab = ({ id }) => {
               onClick={() => handleSortChange(key)}
               variant={sortType === key ? 'contained' : 'outlined'}
             >
-              {Tr(T[name])}
+              {translate(T[name])}
             </Button>
           ))}
         </ButtonGroup>
@@ -166,7 +169,7 @@ const LogTab = ({ id }) => {
               onChange={() => setSortAscending(!sortAscending)}
             />
           }
-          label={sortAscending ? Tr(T.Asc) : Tr(T.Desc)}
+          label={sortAscending ? translate(T.Asc) : translate(T.Desc)}
         />
       </Stack>
 

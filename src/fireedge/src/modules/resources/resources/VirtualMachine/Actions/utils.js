@@ -16,6 +16,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { T, VM_ACTIONS, _APPS, PATH } from '@ConstantsModule'
+import { ResourceActionConfirmation } from '@ComponentsV2Module'
 import {
   getVmActionAvailableStates,
   isVmAvailableAction,
@@ -72,7 +73,11 @@ const generateOption = ({
     params: _params, // Injected by useAction
     dialogProps = {},
     isFormDialog = false,
+    description,
+    confirmLabel,
+    resourceType,
     success,
+    tooltip: actionTooltip,
     ...optionProps
   } = action ?? {}
 
@@ -84,16 +89,40 @@ const generateOption = ({
   const stateTooltip = !isAvailableByState
     ? getAvailabilityTooltip(getVmActionAvailableStates(actionType, vm))
     : undefined
+  const isDisabledByOption = optionProps?.isDisabled
+  const isDisabledByView = !viewConfig?.actions?.[actionType]
+  const isDisabledByState = !isAvailableByState
+  const disabledTooltip = isDisabledByView
+    ? T.ActionNotAllowedInCurrentView
+    : isDisabledByState
+    ? stateTooltip
+    : undefined
+  const tooltip = actionTooltip ?? disabledTooltip
+  const confirmDialogProps =
+    !isFormDialog && !form
+      ? {
+          description: (
+            <ResourceActionConfirmation
+              description={description ?? T['resource.action.confirmation']}
+              resources={formContext ?? vm ?? paramsContext}
+              resourceType={resourceType ?? T.VirtualMachines}
+            />
+          ),
+          confirmLabel: confirmLabel ?? title,
+          ...(optionProps?.isDestructive && {
+            confirmButtonProps: {
+              isDestructive: true,
+            },
+          }),
+        }
+      : {}
 
   return {
     eACTION,
     title,
-    tooltip: stateTooltip ?? action?.tooltip ?? title,
     ...optionProps,
-    isDisabled:
-      optionProps?.isDisabled ||
-      !viewConfig?.actions?.[actionType] ||
-      !isAvailableByState,
+    tooltip,
+    isDisabled: isDisabledByOption || isDisabledByView || isDisabledByState,
     onClick: () =>
       showModal({
         name: title,
@@ -102,6 +131,7 @@ const generateOption = ({
         dialogProps: {
           title,
           dataCy: `modal-${actionType}`,
+          ...confirmDialogProps,
           ...(isFormDialog && { steps: actionForm }),
           ...dialogProps,
         },

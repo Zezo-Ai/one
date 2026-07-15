@@ -23,44 +23,67 @@ export const getStyles = ({ theme }) => ({
   '& .MuiPaper-root': {
     display: 'flex',
     minWidth: '220px',
+    width: 'max-content',
+    maxWidth: 'none',
+    maxHeight: 'none',
+    overflow: 'hidden',
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
 
     borderRadius: `${theme.borderRadius.xlg}px`,
-    border: `${theme.borderWidth.md}px solid ${theme.palette.border.primary}`,
+    border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
     bgcolor: 'surface.primary',
     boxShadow:
-      '0 4px 6px -4px rgba(0, 0, 0, 0.10), 0 10px 15px -13px rgba(0, 0, 0, 0.10)',
+      '0 6px 12px -6px rgba(0, 0, 0, 0.18), 0 14px 24px -18px rgba(0, 0, 0, 0.24)',
 
     '& .MuiMenu-list': {
-      display: 'flex',
-      flexDirection: 'column',
+      display: 'grid',
+      gridAutoFlow: 'row',
       alignSelf: 'stretch',
-      minWidth: 0,
+      minWidth: '220px',
       flex: '1 1 auto',
-      maxHeight: `min(calc(100vh - ${theme.scale[1200]}px), ${
-        theme.scale[1200] + theme.scale[1700]
-      }px)`,
-      overflowY: 'auto',
+      width: 'max-content',
+      maxHeight: 'none',
+      paddingTop: 0,
+      paddingBottom: 0,
+      overflow: 'hidden',
     },
 
     '& .menu-button-option': {
       display: 'flex',
-      padding: `${theme.scale[150]}px ${theme.scale[200]}px ${theme.scale[150]}px ${theme.scale[300]}px `,
+      padding: `${theme.scale[150]}px ${theme.scale[200]}px ${theme.scale[150]}px ${theme.scale[300]}px`,
       alignItems: 'center',
       gap: `${theme.scale[200]}px`,
       alignSelf: 'stretch',
       flex: '0 0 auto',
-      minWidth: 0,
+      minWidth: 'max-content',
+      width: '100%',
+      whiteSpace: 'nowrap',
+      boxSizing: 'border-box',
       cursor: 'pointer',
 
       color: 'text.body',
       bgcolor: 'surface.primary',
-      borderRadius: `${theme.borderRadius.xlg}px`,
       '&:hover': {
         color: 'text.actionHover2',
         bgcolor: 'surface.actionHover4',
       },
+
+      '& .menu-button-option-label': {
+        minWidth: 'max-content',
+        flex: '1 1 auto',
+      },
+
+      '& .option-starticon': {
+        width: '16px',
+        height: '16px',
+        flex: '0 0 16px',
+      },
+    },
+
+    '& .menu-button-option.selected': {
+      color: 'text.selected',
+      bgcolor: 'surface.focus',
     },
 
     '& .menu-button-option.disabled': {
@@ -68,6 +91,10 @@ export const getStyles = ({ theme }) => ({
       cursor: 'not-allowed',
       color: 'text.onDisabled',
       bgcolor: 'surface.disabled',
+    },
+
+    '& .menu-button-option.destructive': {
+      color: 'text.onDestructive',
     },
 
     '& .menu-group-divider': {

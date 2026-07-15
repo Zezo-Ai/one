@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 
 import { Component, useEffect, useMemo, useState } from 'react'
-import { generatePath, useHistory } from 'react-router-dom'
 import { Dropdown, Table } from '@ComponentsV2Module'
 import { ALL_SELECTED, T } from '@ConstantsModule'
 import { VdcAPI, ZoneAPI } from '@FeaturesModule'
@@ -145,25 +144,26 @@ ZoneSelector.propTypes = {
  * @param {object} root0 - Params
  * @param {Array} root0.columns - Table columns
  * @param {string} root0.idKey - VDC resource id key
- * @param {string} root0.path - Detail route path
  * @param {string} root0.poolKey - VDC resource pool key
  * @param {string} root0.resourceKey - VDC resource list key
+ * @param {string} root0.rowDetailsResourceId - Row details resource id
  * @param {string} root0.title - Table title
  * @param {Function} root0.useQuery - Resource list query hook
  * @param {string} root0.vdcId - VDC id
+ * @param {string} root0.dataCy - Table data-cy
  * @returns {Component} VDC zone resource tab
  */
 export const VdcZoneResourceTab = ({
   columns,
   idKey,
-  path,
   poolKey,
   resourceKey,
+  rowDetailsResourceId,
   title,
   useQuery,
   vdcId,
+  dataCy,
 }) => {
-  const history = useHistory()
   const [selectedZone, setSelectedZone] = useState('0')
   const {
     data: zones = [],
@@ -222,12 +222,6 @@ export const VdcZoneResourceTab = ({
     isLoadingResources ||
     isFetchingResources
 
-  const handleRowClick = (rowId) => {
-    if (rowId === undefined) return
-
-    history.push(generatePath(path, { id: String(rowId) }))
-  }
-
   if (isLoadingVdc || isFetchingVdc || !vdc) {
     return (
       <LoadingDisplay
@@ -263,6 +257,7 @@ export const VdcZoneResourceTab = ({
         onChange={setSelectedZone}
       />
       <Table
+        dataCy={dataCy}
         title={title}
         data={filteredResources}
         columns={columns}
@@ -272,7 +267,8 @@ export const VdcZoneResourceTab = ({
         defaultPageSize={5}
         pageSizeOptions={[5, 10, 25]}
         getRowId={(row) => String(row.ID)}
-        onRowClick={({ ID }) => handleRowClick(ID)}
+        openRowDetailsOnClick
+        rowDetailsResourceId={rowDetailsResourceId}
       />
     </Box>
   )
@@ -281,10 +277,11 @@ export const VdcZoneResourceTab = ({
 VdcZoneResourceTab.propTypes = {
   columns: PropTypes.array,
   idKey: PropTypes.string,
-  path: PropTypes.string,
   poolKey: PropTypes.string,
   resourceKey: PropTypes.string,
+  rowDetailsResourceId: PropTypes.string,
   title: PropTypes.string,
   useQuery: PropTypes.func,
   vdcId: PropTypes.string,
+  dataCy: PropTypes.string,
 }

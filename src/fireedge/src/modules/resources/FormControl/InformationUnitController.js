@@ -20,9 +20,9 @@ import { Grid, TextField } from '@mui/material'
 import { useController, useWatch } from 'react-hook-form'
 
 import { ErrorHelper, Tooltip } from '@modules/resources/FormControl'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
+import { isTranslationInput, generateKey, prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { T, UNITS } from '@ConstantsModule'
-import { generateKey, prettyBytes } from '@UtilsModule'
 
 const ARRAY_UNITS = Object.values(UNITS)
 ARRAY_UNITS.splice(0, 1) // remove KB
@@ -48,6 +48,7 @@ const InformationUnitController = memo(
     readOnly = false,
     onConditionChange,
   }) => {
+    const { translate } = useTranslation()
     const watch = useWatch({
       name: dependencies,
       disabled: dependencies == null,
@@ -108,7 +109,7 @@ const InformationUnitController = memo(
               onChange={(e) => handleChange('value', e.target.value)}
               rows={3}
               type="number"
-              label={labelCanBeTranslated(label) ? Tr(label) : label}
+              label={isTranslationInput(label) ? translate(label) : label}
               InputProps={{
                 readOnly,
                 endAdornment: tooltip && <Tooltip title={tooltip} />,
@@ -141,7 +142,7 @@ const InformationUnitController = memo(
                 readOnly,
                 'data-cy': `${cy}-unit`,
               }}
-              label={Tr(T.MemoryUnit)}
+              label={translate(T.MemoryUnit)}
               onChange={(e) => handleChange('unit', e.target.value)}
             >
               {ARRAY_UNITS.map((option, index) => (

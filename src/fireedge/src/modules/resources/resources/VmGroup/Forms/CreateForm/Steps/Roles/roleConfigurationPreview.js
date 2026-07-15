@@ -17,7 +17,7 @@ import PropTypes from 'prop-types'
 import { Alert, Box, Stack } from '@mui/material'
 import { Cancel, InfoEmpty } from 'iconoir-react'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Button, Tooltip } from '@ComponentsV2Module'
 
 const POLICY_LABELS = {
@@ -45,49 +45,57 @@ const HostListPreview = ({
   affinityKey,
   hostIds,
   onRemoveHost,
-}) => (
-  <Stack gap={1}>
-    <Box sx={{ color: 'text.secondary', fontWeight: 600 }}>{title}:</Box>
-    {hostIds?.length > 0 ? (
-      <Stack gap={1} sx={{ alignItems: 'flex-start' }}>
-        {hostIds.map((hostId) => (
-          <Box
-            key={`${affinityKey}-${hostId}`}
-            sx={{
-              alignItems: 'center',
-              columnGap: 2,
-              display: 'grid',
-              gridTemplateColumns: 'minmax(8rem, max-content) 2rem',
-            }}
-          >
-            <Box>
-              {Tr(T.Host)} {hostId}
+}) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Stack gap={1}>
+      <Box sx={{ color: 'text.secondary', fontWeight: 600 }}>{title}:</Box>
+      {hostIds?.length > 0 ? (
+        <Stack gap={1} sx={{ alignItems: 'flex-start' }}>
+          {hostIds.map((hostId) => (
+            <Box
+              key={`${affinityKey}-${hostId}`}
+              sx={{
+                alignItems: 'center',
+                columnGap: 2,
+                display: 'grid',
+                gridTemplateColumns: 'minmax(8rem, max-content) 2rem',
+              }}
+            >
+              <Box>
+                {translate(T.Host)} {hostId}
+              </Box>
+              <Button
+                aria-label="remove"
+                iconOnly={<Cancel />}
+                isDestructive
+                onClick={() => onRemoveHost(affinityKey, hostId)}
+                size="small"
+                type="transparent"
+              />
             </Box>
-            <Button
-              aria-label="remove"
-              iconOnly={<Cancel />}
-              isDestructive
-              onClick={() => onRemoveHost(affinityKey, hostId)}
-              size="small"
-              type="transparent"
-            />
-          </Box>
-        ))}
-      </Stack>
-    ) : (
-      <Box
-        sx={{ alignItems: 'center', color: 'text.secondary', display: 'flex' }}
-      >
-        {emptyText}
-        <Tooltip title={emptyTooltip}>
-          <Box component="span" sx={{ display: 'inline-flex', ml: 0.5 }}>
-            <InfoEmpty width="16px" height="16px" />
-          </Box>
-        </Tooltip>
-      </Box>
-    )}
-  </Stack>
-)
+          ))}
+        </Stack>
+      ) : (
+        <Box
+          sx={{
+            alignItems: 'center',
+            color: 'text.secondary',
+            display: 'flex',
+          }}
+        >
+          {emptyText}
+          <Tooltip title={emptyTooltip}>
+            <Box component="span" sx={{ display: 'inline-flex', ml: 0.5 }}>
+              <InfoEmpty width="16px" height="16px" />
+            </Box>
+          </Tooltip>
+        </Box>
+      )}
+    </Stack>
+  )
+}
 
 HostListPreview.propTypes = {
   title: PropTypes.string,
@@ -112,9 +120,12 @@ const RoleConfigurationPreview = ({
   selectedRoleIndex,
   onRemoveHost,
 }) => {
-  const title = `#${(selectedRoleIndex ?? 0) + 1} ${Tr(T.RoleConfiguration)}`
-  const name = role?.NAME || Tr(T.RoleEnterName)
-  const policy = Tr(POLICY_LABELS[role?.POLICY] ?? T.None)
+  const { translate } = useTranslation()
+  const title = `#${(selectedRoleIndex ?? 0) + 1} ${translate(
+    T.RoleConfiguration
+  )}`
+  const name = role?.NAME || translate(T.RoleEnterName)
+  const policy = translate(POLICY_LABELS[role?.POLICY] ?? T.None)
   const affinedHosts = [].concat(role?.HOST_AFFINED ?? [])
   const antiAffinedHosts = [].concat(role?.HOST_ANTI_AFFINED ?? [])
 
@@ -127,23 +138,23 @@ const RoleConfigurationPreview = ({
           {title}
         </Box>
         <Box>
-          <strong>{Tr(T.Name)}:</strong> {name}
+          <strong>{translate(T.Name)}:</strong> {name}
         </Box>
         <Box>
-          <strong>{Tr(T.Policy)}:</strong> {policy}
+          <strong>{translate(T.Policy)}:</strong> {policy}
         </Box>
         <HostListPreview
-          title={Tr(T.AffinedHosts)}
-          emptyText={Tr(T.NoAffinedHosts)}
-          emptyTooltip={Tr(T.NoAffinedHostsConcept)}
+          title={translate(T.AffinedHosts)}
+          emptyText={translate(T.NoAffinedHosts)}
+          emptyTooltip={translate(T.NoAffinedHostsConcept)}
           affinityKey="HOST_AFFINED"
           hostIds={affinedHosts}
           onRemoveHost={onRemoveHost}
         />
         <HostListPreview
-          title={Tr(T.AntiAffinedHosts)}
-          emptyText={Tr(T.NoAntiAffinedHosts)}
-          emptyTooltip={Tr(T.NoAntiAffinedHostsConcept)}
+          title={translate(T.AntiAffinedHosts)}
+          emptyText={translate(T.NoAntiAffinedHosts)}
+          emptyTooltip={translate(T.NoAntiAffinedHostsConcept)}
           affinityKey="HOST_ANTI_AFFINED"
           hostIds={antiAffinedHosts}
           onRemoveHost={onRemoveHost}

@@ -25,7 +25,7 @@ import {
   Box,
   Typography,
 } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, STYLE_BUTTONS } from '@ConstantsModule'
 import { SubmitButton } from '@ComponentsV2Module'
 
@@ -40,6 +40,7 @@ import { SubmitButton } from '@ComponentsV2Module'
  * @returns {Component} The scale dialog component
  */
 export const ScaleDialog = ({ open, onClose, onScale, roleName }) => {
+  const { translate } = useTranslation()
   const {
     register,
     handleSubmit,
@@ -71,7 +72,7 @@ export const ScaleDialog = ({ open, onClose, onScale, roleName }) => {
             <TextField
               margin="normal"
               fullWidth
-              label={Tr(T.NumberOfVms)}
+              label={translate(T.NumberOfVms)}
               type="number"
               {...register('numberOfVms', {
                 required: 'Number of VMs is required',
@@ -81,7 +82,7 @@ export const ScaleDialog = ({ open, onClose, onScale, roleName }) => {
             />
             <FormControlLabel
               control={<Switch {...register('force')} />}
-              label={Tr(T.Force)}
+              label={translate(T.Force)}
             />
             <SubmitButton
               type={STYLE_BUTTONS.TYPE.PRIMARY}

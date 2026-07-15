@@ -13,62 +13,183 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable jsdoc/require-jsdoc */
 import { Settings } from 'luxon'
 import PropTypes from 'prop-types'
-import { useEffect } from 'react'
+import {
+  ReactElement,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import root from 'window-or-global'
-import { sprintf } from 'sprintf-js'
-import { LANGUAGES, LANGUAGES_URL } from '@ConstantsModule'
+
+import { DEFAULT_LANGUAGE, LANGUAGES, LANGUAGES_URL } from '@ConstantsModule'
 import { useAuth } from '@FeaturesModule'
 import { isDevelopment } from '@UtilsModule'
+import { getSharedTranslationContext } from '@modules/providers/translationContext'
+import {
+  formatTranslation,
+  formatTranslationText,
+} from '@modules/providers/translationFormat'
 
-const translation = { hash: {} }
+export {
+  formatTranslation,
+  formatTranslationText,
+} from '@modules/providers/translationFormat'
 
-export const setTranslationHash = (hash) => {
-  translation.hash = hash
+const TranslationContext = getSharedTranslationContext({
+  error: null,
+  isLoading: false,
+  locale: DEFAULT_LANGUAGE,
+  messages: {},
+  translate: (message, values) => formatTranslation({}, message, values),
+  translateText: (message, values) =>
+    formatTranslationText({}, message, values),
+})
+
+const loadMessages = (locale) => {
+  const document = root.document
+
+  if (!document?.body) {
+    return { cancel: () => undefined, promise: Promise.resolve({}) }
+  }
+
+  const script = document.createElement('script')
+  let cancelled = false
+
+  script.src = `${LANGUAGES_URL}/${locale}.js`
+  script.async = true
+  script.dataset.translationLocale = locale
+
+  const cleanup = () => {
+    script.onload = null
+    script.onerror = null
+    script.remove()
+  }
+
+  const promise = new Promise((resolve, reject) => {
+    script.onload = () => {
+      const messages = root.locale ?? {}
+
+      delete root.lang
+      delete root.locale
+      cleanup()
+      !cancelled && resolve(messages)
+    }
+    script.onerror = () => {
+      cleanup()
+      !cancelled && reject(new Error(`Unable to load locale "${locale}"`))
+    }
+
+    document.body.appendChild(script)
+  })
+
+  return {
+    promise,
+    cancel: () => {
+      cancelled = true
+      cleanup()
+    },
+  }
 }
 
-export const Tr = (key, values) => {
-  const word = translation.hash?.[key] ?? key
-
-  return values ? sprintf(word, ...[].concat(values)) : word
-}
-
-export const TranslateProvider = ({ children = [] }) => {
-  const { settings: { FIREEDGE: fireedge = {} } = {} } = useAuth()
-  const { LANG: lang } = fireedge
+/**
+ * Provides the active locale and translation function.
+ *
+ * @param {object} props - Provider props
+ * @param {any} props.children - Application tree
+ * @returns {ReactElement} Translation context provider
+ */
+export const TranslationProvider = ({ children }) => {
+  const { settings = {} } = useAuth()
+  const requestedLocale =
+    settings.LANG ?? settings.FIREEDGE?.LANG ?? DEFAULT_LANGUAGE
+  const fallbackLocale = LANGUAGES[DEFAULT_LANGUAGE] ? DEFAULT_LANGUAGE : 'en'
+  const locale = LANGUAGES[requestedLocale] ? requestedLocale : fallbackLocale
+  const [state, setState] = useState({
+    error: null,
+    isLoading: true,
+    locale,
+    messages: {},
+  })
 
   useEffect(() => {
-    if (!lang || !LANGUAGES[lang]) return
-    try {
-      Settings.defaultLocale = lang.replace('_', '-')
-      const script = root.document.createElement('script', {})
-      script.src = `${LANGUAGES_URL}/${lang}.js`
-      script.async = true
-      /**
-       *
-       */
-      script.onload = () => {
-        setTranslationHash(window.locale)
-        delete window.lang
-        delete window.locale
-        window.document.body.removeChild(script)
-      }
-      window.document.body.appendChild(script)
+    Settings.defaultLocale = locale.replace('_', '-')
+    setState((current) => ({ ...current, error: null, isLoading: true }))
 
-      return () => {
-        if (window.document.body.contains(script)) {
-          window.document.body.removeChild(script)
-        }
-      }
-    } catch (error) {
-      isDevelopment() &&
-        console.error('Error while generating script language', error)
+    const request = loadMessages(locale)
+    let active = true
+    request.promise
+      .then((messages) => {
+        active && setState({ error: null, isLoading: false, locale, messages })
+      })
+      .catch((error) => {
+        if (!active) return
+        isDevelopment() && console.error(error)
+        setState((current) => ({ ...current, error, isLoading: false }))
+      })
+
+    return () => {
+      active = false
+      request.cancel()
     }
-  }, [lang])
+  }, [locale])
 
-  return children
+  const translate = useCallback(
+    (message, values) => formatTranslation(state.messages, message, values),
+    [state.messages]
+  )
+  const translateText = useCallback(
+    (message, values) => formatTranslationText(state.messages, message, values),
+    [state.messages]
+  )
+  const context = useMemo(
+    () => ({ ...state, translate, translateText }),
+    [state, translate, translateText]
+  )
+
+  return (
+    <TranslationContext.Provider value={context}>
+      {children}
+    </TranslationContext.Provider>
+  )
 }
 
-TranslateProvider.propTypes = { children: PropTypes.any }
+/**
+ * @returns {object} Active translation state and translator
+ */
+export const useTranslation = () => useContext(TranslationContext)
+
+/**
+ * Renders a translated string.
+ *
+ * @param {object} props - Component props
+ * @param {string|string[]|object} props.word - Translation input
+ * @param {any|any[]} props.values - Interpolation values
+ * @returns {ReactElement} Translated text
+ */
+export const Translate = memo(({ word = '', values = [] }) => {
+  const { translate } = useTranslation()
+
+  return <>{translate(word, values)}</>
+})
+
+TranslationProvider.propTypes = { children: PropTypes.node }
+Translate.propTypes = {
+  values: PropTypes.any,
+  word: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.array,
+    PropTypes.shape({
+      message: PropTypes.string,
+      values: PropTypes.any,
+      word: PropTypes.string,
+    }),
+  ]),
+}
+
+TranslationProvider.displayName = 'TranslationProvider'
+Translate.displayName = 'Translate'

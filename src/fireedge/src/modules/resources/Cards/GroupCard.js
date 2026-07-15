@@ -21,7 +21,7 @@ import { Typography, Grid, Box, Tooltip } from '@mui/material'
 import { LinearProgressWithTooltip } from '@modules/resources/Status'
 import { getGroupQuotaUsage } from '@ModelsModule'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -33,6 +33,7 @@ import { T } from '@ConstantsModule'
  * @returns {Component} GroupCard component
  */
 const GroupCard = ({ group, rootProps }) => {
+  const { translate } = useTranslation()
   const {
     ID,
     NAME,
@@ -87,7 +88,7 @@ const GroupCard = ({ group, rootProps }) => {
         >
           <Typography variant="caption">{`#${ID}`}</Typography>
           <Box display="flex" alignItems="center" mt={1}>
-            <Tooltip title={Tr([T['groups.users.total'], TOTAL_USERS])}>
+            <Tooltip title={translate([T['groups.users.total'], TOTAL_USERS])}>
               <Box display="flex" alignItems="center" mr={2}>
                 <Group />
                 <Typography variant="caption" ml={1}>

@@ -21,9 +21,9 @@ import { VnTemplateAPI, useGeneralApi, useSystemData } from '@FeaturesModule'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  TranslateProvider,
   VnTemplate,
 } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 const _ = require('lodash')
 
@@ -69,7 +69,7 @@ export const InstantiateVnTemplate = () => {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {!dataTemplateExtended || _.isEmpty(oneConfig) ? (
         <SkeletonStepsForm />
       ) : (
@@ -92,6 +92,6 @@ export const InstantiateVnTemplate = () => {
           )}
         </VnTemplate.Forms.InstantiateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

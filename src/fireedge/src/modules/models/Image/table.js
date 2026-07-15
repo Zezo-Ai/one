@@ -14,52 +14,71 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { createTable, getImageType } from '@UtilsModule'
+import {
+  createTable,
+  getImageType,
+  getLockIcon,
+  timeFromMilliseconds,
+} from '@UtilsModule'
 import { ImageAPI } from '@FeaturesModule'
 import { getImageState } from '@modules/models/Image/general'
 import { T } from '@ConstantsModule'
 import { createLabelColumn } from '@modules/models/labels'
+import { StatusTag } from '@ComponentsV2Module'
+import { Box } from '@mui/material'
+import { getBackupRunningVms } from '@modules/models/Backup/general'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const IMAGE_COLUMNS = [
   {
-    header: 'ID',
+    header: T.ID,
     id: 'id',
     accessorKey: 'ID',
     width: '10%',
   },
   {
-    header: 'Name',
+    header: T.Name,
     id: 'name',
     accessorKey: 'NAME',
     width: '22%',
+    cell: ({ row }) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>{row.original?.NAME}</span>
+        {getLockIcon(row.original)}
+      </Box>
+    ),
   },
   {
-    header: 'Datastore',
-    id: 'datastore',
-    accessorKey: 'DATASTORE',
-    width: '16%',
+    header: T.State,
+    id: 'state',
+    accessorFn: (row) => getImageState(row)?.name,
+    width: '12%',
+    cell: ({ row }) => {
+      const { color, name } = getImageState(row.original) ?? {}
+
+      return <StatusTag statusColor={color} statusName={name} />
+    },
   },
   {
-    header: 'Type',
+    header: T.Type,
     id: 'type',
     accessorFn: (row) => getImageType(row),
     width: '10%',
   },
   {
-    header: 'State',
-    id: 'state',
-    accessorFn: (row) => getImageState(row)?.name,
-    width: '12%',
-  },
-  {
     header: T.VMs,
     id: 'vms',
-    accessorKey: 'RUNNING_VMS',
+    accessorFn: (row) => getBackupRunningVms(row),
     width: '8%',
   },
   {
-    header: 'Owner',
+    header: T.Datastore,
+    id: 'datastore',
+    accessorKey: 'DATASTORE',
+    width: '16%',
+  },
+  {
+    header: T.Owner,
     id: 'owner',
     accessorKey: 'UNAME',
     width: '11%',
@@ -70,7 +89,18 @@ export const IMAGE_COLUMNS = [
     accessorKey: 'GNAME',
     width: '11%',
   },
+  {
+    accessorKey: 'REGTIME',
+    header: T.RegistrationTime,
+    cell: ({ row }) => timeFromMilliseconds(row.original.REGTIME).toRelative(),
+  },
   createLabelColumn(),
 ]
 
-export const imageTable = createTable(IMAGE_COLUMNS, ImageAPI.useGetImagesQuery)
+export const imageTable = createTable(
+  IMAGE_COLUMNS,
+  ImageAPI.useGetImagesQuery,
+  {
+    dataCy: 'images',
+  }
+)

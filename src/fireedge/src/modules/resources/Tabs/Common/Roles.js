@@ -23,7 +23,7 @@ import {
   Typography,
   styled,
 } from '@mui/material'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { PrettyVmGroupRole, T } from '@ConstantsModule'
 import PropTypes from 'prop-types'
 import { ReactElement, memo, useMemo } from 'react'
@@ -58,6 +58,7 @@ const useStyles = () => ({
 })
 
 const RolesVmGroupsTable = memo(({ title, roles }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => useStyles(theme), [theme])
 
@@ -67,7 +68,7 @@ const RolesVmGroupsTable = memo(({ title, roles }) => {
         {title && (
           <Title>
             {typeof title === 'string' ? (
-              <Typography noWrap>{Tr(title)}</Typography>
+              <Typography noWrap>{translate(title)}</Typography>
             ) : (
               title
             )}

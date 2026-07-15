@@ -371,19 +371,3 @@ export const THROTTLING_IOPS_FIELDS = [
       .default(() => undefined),
   },
 ]
-
-/** @type {Field[]} List of edge cluster fields */
-export const EDGE_CLUSTER_FIELDS = [
-  {
-    name: 'RECOVERY_SNAPSHOT_FREQ',
-    label: T.SnapshotFrequency,
-    type: INPUT_TYPES.TEXT,
-    htmlType: 'number',
-    notOnHypervisors: [lxc],
-    validation: number()
-      .min(0)
-      .notRequired()
-      .default(() => undefined),
-    grid: { md: 12 },
-  },
-]

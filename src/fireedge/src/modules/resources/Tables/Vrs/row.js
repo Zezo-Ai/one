@@ -23,9 +23,9 @@ import { EmptyPage, Group, ModernTv, User } from 'iconoir-react'
 
 import { rowStyles } from '@modules/resources/Tables/styles'
 import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { useAuth } from '@FeaturesModule'
 
-import { Tr } from '@modules/resources/HOC'
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { getColorFromString } from '@ModelsModule'
 
@@ -39,6 +39,7 @@ const Row = ({
   toggleRowSelected,
   ...props
 }) => {
+  const { translate } = useTranslation()
   const { labels } = useAuth()
   const LABELS = getResourceLabels(labels, original?.ID, RESOURCE_NAMES.VROUTER)
 
@@ -85,19 +86,21 @@ const Row = ({
         </div>
         <div className={classes.caption}>
           <span>{`#${ID}`}</span>
-          <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+          <span title={`${translate(T.Owner)}: ${UNAME}`}>
             <User />
             <span>{` ${UNAME}`}</span>
           </span>
-          <span title={`${Tr(T.Group)}: ${GNAME}`}>
+          <span title={`${translate(T.Group)}: ${GNAME}`}>
             <Group />
             <span>{` ${GNAME}`}</span>
           </span>
-          <span title={`${Tr(T.Template)}${Tr(T.ID)}: ${TEMPLATE_ID}`}>
+          <span
+            title={`${translate(T.Template)}${translate(T.ID)}: ${TEMPLATE_ID}`}
+          >
             <EmptyPage />
             <span>{` ${TEMPLATE_ID}`}</span>
           </span>
-          <span title={`${Tr(T.TotalVms)}: ${VMS}`}>
+          <span title={`${translate(T.TotalVms)}: ${VMS}`}>
             <ModernTv />
             <span>{` ${VMS}`}</span>
           </span>

@@ -26,8 +26,8 @@ import {
 } from '@modules/resources/resources/VirtualMachine/Forms'
 import { VmAPI, useGeneralApi, useModalsApi } from '@FeaturesModule'
 import { sentenceCase, hasRestrictedAttributes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
-import { Tr } from '@modules/resources/HOC'
 import { T, STYLE_BUTTONS } from '@ConstantsModule'
 
 import { useDisableStep } from '@modules/resources/FormStepper'
@@ -48,6 +48,7 @@ const AttachAction = memo(
     isAlias,
     disableNetworkAutoMode,
   }) => {
+    const { translate } = useTranslation()
     const { setFieldPath } = useGeneralApi()
     const disableSteps = useDisableStep()
     const { showModal } = useModalsApi()
@@ -90,7 +91,7 @@ const AttachAction = memo(
           ? {
               'data-cy': `edit-${nic.NIC_ID}`,
               iconOnly: <Edit />,
-              tooltip: Tr(T.Edit),
+              tooltip: translate(T.Edit),
             }
           : {
               'data-cy': 'add-nic',
@@ -104,6 +105,7 @@ const AttachAction = memo(
 )
 
 const DetachAction = memo(({ nic, onSubmit, oneConfig, adminGroup, vmId }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
   // Disable action if is a regular user and is dettaching a nic in a template and if the nic has a restricted attribute on the template
   const disabledAction =
@@ -126,7 +128,9 @@ const DetachAction = memo(({ nic, onSubmit, oneConfig, adminGroup, vmId }) => {
     <SubmitButton
       data-cy={`detach-nic-${nic.NIC_ID}`}
       iconOnly={<Trash />}
-      tooltip={!disabledAction ? Tr(T.Detach) : Tr(T.DetachRestricted)}
+      tooltip={
+        !disabledAction ? translate(T.Detach) : translate(T.DetachRestricted)
+      }
       disabled={disabledAction}
       onClick={openDetachForm}
     />
@@ -134,6 +138,7 @@ const DetachAction = memo(({ nic, onSubmit, oneConfig, adminGroup, vmId }) => {
 })
 
 const UpdateAction = memo(({ nic, onSubmit, oneConfig, adminGroup }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
 
   const openUpdateForm = () =>
@@ -154,13 +159,14 @@ const UpdateAction = memo(({ nic, onSubmit, oneConfig, adminGroup }) => {
     <SubmitButton
       data-cy={`update-nic-${nic.NIC_ID}`}
       iconOnly={<Edit />}
-      tooltip={Tr(T.Update)}
+      tooltip={translate(T.Update)}
       onClick={openUpdateForm}
     />
   )
 })
 
 const AliasAction = memo(({ nic, alias, vmId, methods }) => {
+  const { translate } = useTranslation()
   const { NIC_ID, NAME } = nic
   const { showModal } = useModalsApi()
 
@@ -186,7 +192,7 @@ const AliasAction = memo(({ nic, alias, vmId, methods }) => {
     <SubmitButton
       data-cy={`alias-nic-${NIC_ID}`}
       iconOnly={<EyeAlt />}
-      tooltip={Tr(T.Alias)}
+      tooltip={translate(T.Alias)}
       onClick={openAliasForm}
     />
   )
@@ -203,6 +209,7 @@ const AttachAliasAction = memo(
     indexAlias,
     indexNicAlias,
   }) => {
+    const { translate } = useTranslation()
     const { setFieldPath } = useGeneralApi()
     const { showModal } = useModalsApi()
 
@@ -232,7 +239,7 @@ const AttachAliasAction = memo(
           ? {
               'data-cy': `edit-${indexNicAlias}`,
               iconOnly: <Edit />,
-              tooltip: Tr(T.Edit),
+              tooltip: translate(T.Edit),
             }
           : {
               'data-cy': 'add-alias',
@@ -246,6 +253,7 @@ const AttachAliasAction = memo(
 
 const DetachAliasAction = memo(
   ({ alias, onSubmit, oneConfig, adminGroup, indexNicAlias }) => {
+    const { translate } = useTranslation()
     const { showModal } = useModalsApi()
     // Disable action if the nic has a restricted attribute on the template
     const disabledAction =
@@ -267,7 +275,9 @@ const DetachAliasAction = memo(
       <SubmitButton
         data-cy={`detach-alias-${indexNicAlias}-action`}
         iconOnly={<Trash />}
-        tooltip={!disabledAction ? Tr(T.Detach) : Tr(T.DetachRestricted)}
+        tooltip={
+          !disabledAction ? translate(T.Detach) : translate(T.DetachRestricted)
+        }
         disabled={disabledAction}
         onClick={openDetachAliasForm}
       />
@@ -276,6 +286,7 @@ const DetachAliasAction = memo(
 )
 
 const AttachSecGroupAction = memo(({ vmId, nic, onSubmit }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
   const [attachSecGroup] = VmAPI.useAttachSecurityGroupMutation()
   const { NIC_ID } = nic
@@ -302,7 +313,7 @@ const AttachSecGroupAction = memo(({ vmId, nic, onSubmit }) => {
     <SubmitButton
       data-cy={`attach-secgroup-${NIC_ID}`}
       iconOnly={<ShieldAdd />}
-      tooltip={Tr(T.AttachSecurityGroup)}
+      tooltip={translate(T.AttachSecurityGroup)}
       onClick={handleOpenAttachForm}
     />
   )
@@ -310,6 +321,7 @@ const AttachSecGroupAction = memo(({ vmId, nic, onSubmit }) => {
 
 const DetachSecGroupAction = memo(
   ({ vmId, nic, securityGroupId, onSubmit }) => {
+    const { translate } = useTranslation()
     const { showModal } = useModalsApi()
     const [detachSecGroup] = VmAPI.useDetachSecurityGroupMutation()
     const { NIC_ID } = nic
@@ -336,7 +348,7 @@ const DetachSecGroupAction = memo(
       <SubmitButton
         data-cy={`detach-secgroup-${securityGroupId}-from-${NIC_ID}`}
         iconOnly={<ShieldCross />}
-        tooltip={Tr(T.DetachSecurityGroup)}
+        tooltip={translate(T.DetachSecurityGroup)}
         onClick={handleOpenDetachForm}
       />
     )

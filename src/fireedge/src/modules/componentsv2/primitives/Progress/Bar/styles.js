@@ -21,7 +21,7 @@
  * @param {string} size - Size variant (sx, sm, md, lg).
  * @returns {string} - Bar height in pixels.
  */
-const getBarHeight = (theme, size) => {
+export const getBarHeight = (theme, size) => {
   const heightMap = {
     extraSmall: `${theme.scale[100]}px`,
     small: `${theme.scale[200]}px`,

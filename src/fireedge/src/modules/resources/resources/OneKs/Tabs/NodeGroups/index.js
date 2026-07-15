@@ -37,7 +37,7 @@ import {
   showDataByState,
 } from '@ModelsModule'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Table } from '@ComponentsV2Module'
 import Timer from '@modules/resources/Timer'
 import { find, isEmpty } from 'lodash'
@@ -61,6 +61,7 @@ const getFamilyData = (families = [], { family, flavour } = {}) => {
  * @returns {ReactElement} Node Groups tab
  */
 const NodeGroups = ({ data }) => {
+  const { translate } = useTranslation()
   const id = data?.selected?.ID ?? data?.id
   const { data: cluster = {}, isLoading } = OneKsAPI.useGetOneKsClusterQuery({
     id,
@@ -236,7 +237,7 @@ const NodeGroups = ({ data }) => {
           />
         ) : (
           <Alert severity="info" variant="outlined">
-            {Tr(T['oneks.tab.info.nodegroups.help.paragraph'])}
+            {translate(T['oneks.tab.info.nodegroups.help.paragraph'])}
           </Alert>
         )}
       </Stack>

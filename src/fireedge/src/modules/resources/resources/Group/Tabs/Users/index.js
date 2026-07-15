@@ -15,14 +15,13 @@
  * ------------------------------------------------------------------------- */
 import PropTypes from 'prop-types'
 import { ReactElement, useMemo } from 'react'
-import { generatePath, useHistory } from 'react-router-dom'
 
 import { GroupAPI, UserAPI, useGeneralApi } from '@FeaturesModule'
 import { getActionsAvailable } from '@UtilsModule'
 
 import { AddUsersAction, EditAdminsAction, RemoveUsersAction } from './Action'
 
-import { GROUP_ACTIONS, PATH, T } from '@ConstantsModule'
+import { GROUP_ACTIONS, RESOURCE_NAMES, T } from '@ConstantsModule'
 import { LoadingDisplay } from '@modules/resources/LoadingState'
 import { UserGroupsTab, Table } from '@ComponentsV2Module'
 import {
@@ -97,8 +96,6 @@ const getRemovableUsers = (users = [], groupId) =>
  * @returns {ReactElement} Group users tab
  */
 const GroupUsersInfoTab = ({ tabProps: { actions } = {}, id: groupId }) => {
-  const path = PATH.SYSTEM.USERS.DETAIL
-  const history = useHistory()
   const { enqueueSuccess } = useGeneralApi()
   const [addAdmin] = GroupAPI.useAddAdminToGroupMutation()
   const [removeAdmin] = GroupAPI.useRemoveAdminFromGroupMutation()
@@ -130,12 +127,6 @@ const GroupUsersInfoTab = ({ tabProps: { actions } = {}, id: groupId }) => {
   const isLoading =
     isLoadingUsers || isFetchingUsers || isLoadingGroup || isFetchingGroup
   const actionsAvailable = getActionsAvailable(actions)
-
-  const handleRowClick = (rowId) => {
-    if (rowId === undefined) return
-
-    history.push(generatePath(path, { id: String(rowId) }))
-  }
 
   if (isLoading || !group) {
     return (
@@ -234,7 +225,8 @@ const GroupUsersInfoTab = ({ tabProps: { actions } = {}, id: groupId }) => {
           defaultPageSize={10}
           pageSizeOptions={[5, 10, 20]}
           getRowId={(row) => String(row.ID)}
-          onRowClick={({ ID }) => handleRowClick(ID)}
+          openRowDetailsOnClick
+          rowDetailsResourceId={RESOURCE_NAMES.USER}
         />
       }
     />

@@ -26,6 +26,7 @@ import {
   isVmAvailableAction,
   getPciDevices,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { VM_ACTIONS, T } from '@ConstantsModule'
 import {
   AttachPciAction,
@@ -33,7 +34,7 @@ import {
 } from '@modules/resources/Tabs/Vm/Pci/Actions'
 import { PciCard } from '@modules/resources/Cards'
 import { transformPciToString } from '@modules/resources/resources/VirtualMachine/Forms/AttachPciForm/schema'
-import { Tr } from '@modules/resources/HOC'
+
 import { useGeneralApi, VmAPI, HostAPI } from '@FeaturesModule'
 import { find } from 'lodash'
 import { css } from '@emotion/css'
@@ -52,6 +53,7 @@ const { ATTACH_PCI, DETACH_PCI } = VM_ACTIONS
  * @returns {ReactElement} Storage tab
  */
 const PciTab = ({ tabProps: { actions } = {}, id, oneConfig, adminGroup }) => {
+  const { translate } = useTranslation()
   const useStyles = ({ palette }) => ({
     warningInfo: css({
       '&': {
@@ -77,12 +79,12 @@ const PciTab = ({ tabProps: { actions } = {}, id, oneConfig, adminGroup }) => {
     VmAPI.useDetachPciMutation()
 
   // Success messages
-  const successMessageAttachPci = `${Tr(T.AttachPciSuccess, [id])}`
+  const successMessageAttachPci = `${translate(T.AttachPciSuccess, [id])}`
   useEffect(
     () => isSuccessAttachPci && enqueueSuccess(successMessageAttachPci),
     [isSuccessAttachPci]
   )
-  const successMessageDetachPci = `${Tr(T.DetachPciSuccess, [id])}`
+  const successMessageDetachPci = `${translate(T.DetachPciSuccess, [id])}`
   useEffect(
     () => isSuccessDetachPci && enqueueSuccess(successMessageDetachPci),
     [isSuccessDetachPci]
@@ -234,7 +236,7 @@ const PciTab = ({ tabProps: { actions } = {}, id, oneConfig, adminGroup }) => {
       alignSelf="center"
     >
       <Alert severity="info" variant="outlined" className={classes.warningInfo}>
-        {Tr(T.NicPciWarning)}
+        {translate(T.NicPciWarning)}
       </Alert>
 
       {isPciSupported ? (
@@ -256,7 +258,7 @@ const PciTab = ({ tabProps: { actions } = {}, id, oneConfig, adminGroup }) => {
           variant="outlined"
           className={classes.warningInfo}
         >
-          {Tr(T.PciAttachWarning)}
+          {translate(T.PciAttachWarning)}
         </Alert>
       )}
       <Box flexDirection="column" display="flex" gap={3} width="100%">
@@ -268,7 +270,7 @@ const PciTab = ({ tabProps: { actions } = {}, id, oneConfig, adminGroup }) => {
           >
             <Box pr={'0.125rem'}>
               <Chartist
-                name={`${Tr(T.Gpu)} ${Tr(T.Wattage)}`}
+                name={`${translate(T.Gpu)} ${translate(T.Wattage)}`}
                 data={monitoring}
                 isFetching={isFetching}
                 y={yAccessorPower}
@@ -286,7 +288,7 @@ const PciTab = ({ tabProps: { actions } = {}, id, oneConfig, adminGroup }) => {
 
             <Box pl={'0.125rem'} pr={'0.5rem'}>
               <Chartist
-                name={`${Tr(T.Gpu)} ${Tr(T.Memory)}`}
+                name={`${translate(T.Gpu)} ${translate(T.Memory)}`}
                 data={monitoring}
                 isFetching={isFetching}
                 y={yAccessorMemory}

@@ -23,7 +23,8 @@ import { DeleteCircle, Plus } from 'iconoir-react'
 import { useFieldArray, useForm, FormProvider } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Legend } from '@modules/resources/Forms'
-import { Tr } from '@modules/resources/HOC'
+import { hasRestrictedAttributes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 import {
   INPUTS_FIELDS,
@@ -33,8 +34,6 @@ import {
 } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/inputOutput/schema'
 import { T, HYPERVISORS, STYLE_BUTTONS } from '@ConstantsModule'
 import { SubmitButton, FormWithSchema } from '@ComponentsV2Module'
-
-import { hasRestrictedAttributes } from '@UtilsModule'
 
 export const SECTION_ID = 'INPUT'
 
@@ -48,6 +47,7 @@ const InputsSection = memo(
    * @returns {ReactElement} - Inputs section
    */
   ({ stepId, hypervisor, oneConfig, adminGroup }) => {
+    const { translate } = useTranslation()
     const fields = useMemo(
       () => INPUTS_FIELDS(hypervisor, oneConfig, adminGroup),
       [hypervisor]
@@ -129,7 +129,9 @@ const InputsSection = memo(
                 'INPUT',
                 oneConfig?.VM_RESTRICTED_ATTR
               )
-            const tooltip = !disabledAction ? null : Tr(T.DetachRestricted)
+            const tooltip = !disabledAction
+              ? null
+              : translate(T.DetachRestricted)
 
             return (
               <ListItem

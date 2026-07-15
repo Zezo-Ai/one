@@ -17,7 +17,7 @@ import { memo } from 'react'
 import PropTypes from 'prop-types'
 
 import { styled, Card, CardHeader, Fade } from '@mui/material'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const Title = styled(CardHeader)(({ theme }) => ({

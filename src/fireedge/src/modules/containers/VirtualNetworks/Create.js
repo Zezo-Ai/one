@@ -22,7 +22,6 @@ import { useSystemData, useGeneralApi, VnAPI } from '@FeaturesModule'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  TranslateProvider,
   VirtualNetwork,
 } from '@ResourcesModule'
 
@@ -71,7 +70,7 @@ export function CreateVirtualNetwork() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {shouldSelectCreateType ? (
         <>
           <VirtualNetworks />
@@ -99,6 +98,6 @@ export function CreateVirtualNetwork() {
       ) : (
         <SkeletonStepsForm />
       )}
-    </TranslateProvider>
+    </>
   )
 }

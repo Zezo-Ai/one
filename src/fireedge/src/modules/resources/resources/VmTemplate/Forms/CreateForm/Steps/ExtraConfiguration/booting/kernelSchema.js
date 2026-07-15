@@ -37,7 +37,10 @@ export const KERNEL_PATH_ENABLED = {
   notOnHypervisors: [lxc],
   type: INPUT_TYPES.SWITCH,
   fieldProps: (context, form) => {
-    if (context?.extra?.OS?.KERNEL) {
+    if (
+      context?.extra?.OS?.KERNEL &&
+      form?.getValues(`extra.${KERNEL_PATH_ENABLED_NAME}`) !== true
+    ) {
       // first render!
       form?.setValue(`extra.${KERNEL_PATH_ENABLED_NAME}`, true)
     }
@@ -81,6 +84,7 @@ export const KERNEL_DS = {
   value: (_, form) => {
     if (
       form?.getValues(`extra.${KERNEL_PATH_ENABLED_NAME}`) &&
+      form?.getValues(`extra.${KERNEL_DS_NAME}`) !== undefined &&
       form?.setValue
     ) {
       form?.setValue(`extra.${KERNEL_DS_NAME}`, undefined)

@@ -32,7 +32,7 @@ import {
 } from '@mui/material'
 import { HostAPI, useGeneralApi } from '@FeaturesModule'
 import { HOST_STATES, T, STYLE_BUTTONS } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { SubmitButton } from '@ComponentsV2Module'
 
 /**
@@ -45,6 +45,7 @@ import { SubmitButton } from '@ComponentsV2Module'
  * @returns {Component} The HostAffinityPanel component.
  */
 const HostAffinityPanel = ({ roles, selectedRoleIndex, onChange }) => {
+  const { translate } = useTranslation()
   const { enqueueError } = useGeneralApi()
   const [hosts, setHosts] = useState([])
   const [fetch, { data, error }] = HostAPI.useLazyGetHostsQuery()
@@ -130,7 +131,7 @@ const HostAffinityPanel = ({ roles, selectedRoleIndex, onChange }) => {
       }}
     >
       <Typography variant="h6" gutterBottom>
-        {Tr(T.HostAffinity)}
+        {translate(T.HostAffinity)}
       </Typography>
       <Box>
         <ToggleButtonGroup
@@ -141,13 +142,13 @@ const HostAffinityPanel = ({ roles, selectedRoleIndex, onChange }) => {
           sx={{ marginBottom: 2 }}
         >
           <ToggleButton value="Affined" aria-label="Affined">
-            {Tr(T.Affined)}
+            {translate(T.Affined)}
           </ToggleButton>
           <ToggleButton value="Anti-Affined" aria-label="Anti-Affined">
-            {Tr(T.AntiAffined)}
+            {translate(T.AntiAffined)}
           </ToggleButton>
         </ToggleButtonGroup>
-        <Tooltip title={Tr(T.AddRoleAffinity)} placement="right">
+        <Tooltip title={translate(T.AddRoleAffinity)} placement="right">
           <span>
             <SubmitButton
               type={STYLE_BUTTONS.TYPE.PRIMARY}
@@ -164,10 +165,10 @@ const HostAffinityPanel = ({ roles, selectedRoleIndex, onChange }) => {
           <TableHead>
             <TableRow>
               <TableCell padding="checkbox"></TableCell>
-              <TableCell>{Tr(T.ID)}</TableCell>
-              <TableCell>{Tr(T.Name)}</TableCell>
-              <TableCell>{Tr(T.Cluster)}</TableCell>
-              <TableCell>{Tr(T.Status)}</TableCell>
+              <TableCell>{translate(T.ID)}</TableCell>
+              <TableCell>{translate(T.Name)}</TableCell>
+              <TableCell>{translate(T.Cluster)}</TableCell>
+              <TableCell>{translate(T.Status)}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -208,7 +209,7 @@ const HostAffinityPanel = ({ roles, selectedRoleIndex, onChange }) => {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage={Tr(T.RowsPerPage)}
+        labelRowsPerPage={translate(T.RowsPerPage)}
       />
     </Box>
   )

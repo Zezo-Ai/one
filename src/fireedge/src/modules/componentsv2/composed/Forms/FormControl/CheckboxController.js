@@ -39,7 +39,7 @@ export const CheckboxController = memo(
       fieldState: { error },
     } = useController({ name, control })
 
-    const { disabled } = fieldProps
+    const { disabled, ...checkboxProps } = fieldProps
 
     const handleChange = useCallback(
       (checked) => {
@@ -72,6 +72,7 @@ export const CheckboxController = memo(
     return (
       <Tooltip title={tooltip ?? ''}>
         <Checkbox
+          {...checkboxProps}
           text={label}
           value={name}
           onChange={handleChange}

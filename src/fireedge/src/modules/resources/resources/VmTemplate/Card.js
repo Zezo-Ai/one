@@ -24,7 +24,7 @@ import {
   MetadataSlot,
   LabelSlot,
 } from '@ComponentsV2Module'
-import { timeFromMilliseconds } from '@UtilsModule'
+import { getLockIcon, timeFromMilliseconds } from '@UtilsModule'
 import { getLabelSlotLabels } from '@ModelsModule'
 
 /**
@@ -36,7 +36,6 @@ import { getLabelSlotLabels } from '@ModelsModule'
  * @param {string} root0.GNAME - Group name
  * @param {string} root0.UNAME - Owner name
  * @param {string} root0.REGTIME - Registration time
- * @param {boolean|object} root0.LOCK - Lock status
  * @param {string} root0.LOGO - Template logo path
  * @param {boolean} root0.isSelected - Whether card is selected
  * @param {Function} root0.onCheck - Check handler
@@ -44,69 +43,72 @@ import { getLabelSlotLabels } from '@ModelsModule'
  * @param {object} ref - Forwarded ref
  * @returns {Component} VmTemplateCard component
  */
-export const VmTemplateCard = forwardRef(
-  (
-    {
-      NAME,
-      ID,
-      GNAME,
-      UNAME,
-      REGTIME,
-      LOCK,
-      LOGO = DEFAULT_TEMPLATE_LOGO,
-      LABELS,
-      isSelected,
-      onCheck,
-      onClick,
-    },
-    ref
-  ) => {
-    const labelSlotLabels = getLabelSlotLabels(LABELS)
-    const lockStatus = LOCK ? { status: 'disabled', statusName: T.Locked } : {}
+export const VmTemplateCard = forwardRef((data = {}, ref) => {
+  const {
+    NAME,
+    ID,
+    GNAME,
+    UNAME,
+    REGTIME,
+    LOGO = DEFAULT_TEMPLATE_LOGO,
+    LABELS,
+    isSelected,
+    onCheck,
+    onClick,
+  } = data
+  const labelSlotLabels = getLabelSlotLabels(LABELS)
 
-    return (
-      <Card
-        ref={ref}
-        onCheck={onCheck}
-        onClick={onClick}
-        isSelected={isSelected}
-        icon={`${STATIC_FILES_URL}/${LOGO}`}
-        slots={[
-          [TitleSlot, { title: NAME, ...lockStatus }],
-          [
-            OwnershipSlot,
-            {
-              labels: [
-                ['ID', ID],
-                ['Owner', UNAME],
-                ['Group', GNAME],
-              ],
-            },
-          ],
-          [
-            MetadataSlot,
-            {
-              labels: [
-                [
-                  REGTIME &&
-                    `${T.Registered} ${timeFromMilliseconds(
-                      +REGTIME
-                    ).toRelative()}`,
-                ]?.filter(Boolean),
-              ],
-            },
-          ],
-          labelSlotLabels.length > 0 && [
-            LabelSlot,
-            {
-              labels: labelSlotLabels,
-            },
-          ],
-        ].filter(Boolean)}
-      />
-    )
-  }
-)
+  return (
+    <Card
+      ref={ref}
+      onCheck={onCheck}
+      onClick={onClick}
+      isSelected={isSelected}
+      icon={`${STATIC_FILES_URL}/${LOGO}`}
+      slots={[
+        [
+          TitleSlot,
+          {
+            title: (
+              <>
+                {NAME} {getLockIcon(data)}
+              </>
+            ),
+          },
+        ],
+        [
+          OwnershipSlot,
+          {
+            labels: [
+              ['ID', ID],
+              ['Owner', UNAME],
+              ['Group', GNAME],
+            ],
+          },
+        ],
+        [
+          MetadataSlot,
+          {
+            labels: [
+              [
+                REGTIME &&
+                  `${T.Registered} ${timeFromMilliseconds(
+                    +REGTIME
+                  ).toRelative()}`,
+              ]?.filter(Boolean),
+            ],
+          },
+        ],
+        labelSlotLabels.length > 0 && [
+          LabelSlot,
+          {
+            labels: labelSlotLabels,
+          },
+        ],
+      ].filter(Boolean)}
+    />
+  )
+})
 
 VmTemplateCard.propTypes = {
   NAME: PropTypes.string,
@@ -114,7 +116,6 @@ VmTemplateCard.propTypes = {
   GNAME: PropTypes.string,
   UNAME: PropTypes.string,
   REGTIME: PropTypes.string,
-  LOCK: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
   LOGO: PropTypes.string,
   LABELS: PropTypes.object,
   isSelected: PropTypes.bool,

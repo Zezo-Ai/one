@@ -17,15 +17,13 @@
 /**
  * @param {object} root0 - Params
  * @param {object} root0.theme - Current theme in use
- * @param {string} root0.label - Visible sort label
  * @returns {object} - Slot styles
  */
-export const getStyles = ({ theme, label = '' }) => {
+export const getStyles = ({ theme }) => {
   const baseStyles = {
     display: 'flex',
     flex: '0 0 auto',
-    width: `calc(${label.length}ch + ${theme.scale[1300]}px)`,
-    maxWidth: `min(${theme.scale[1800]}px, 45vw)`,
+    width: 'auto',
 
     fontSize: {
       xs: theme.fontSize.body.sm.mobile,
@@ -46,14 +44,66 @@ export const getStyles = ({ theme, label = '' }) => {
 
   const dropdown = {
     '& .dropdown': {
-      flex: '1 1 auto',
-      width: '100%',
+      flex: '0 0 auto',
+      width: 'auto',
       minWidth: 0,
+    },
+
+    '& .dropdown-input-wrapper .MuiInput-input': {
+      flex: '0 0 auto',
+      width: 'auto',
+      minWidth: 0,
+      fieldSizing: 'content',
     },
   }
 
   return {
     ...baseStyles,
     ...dropdown,
+  }
+}
+
+/**
+ * @param {object} root0 - Params
+ * @param {object} root0.theme - Current theme in use
+ * @param {string} root0.label - Longest sort option label
+ * @returns {object} - Sort dropdown popper styles
+ */
+export const getPopperStyles = ({ theme, label = '' }) => {
+  const width = `calc(${label.length}ch + ${
+    theme.scale[1500] + theme.scale[500]
+  }px)`
+
+  return {
+    width: 'max-content',
+    minWidth: width,
+
+    '& .dropdown-menu-paper, & .MuiAutocomplete-listbox': {
+      width: '100%',
+      minWidth: width,
+    },
+
+    '& .dropdown-menu-option': {
+      minWidth: 'max-content',
+    },
+
+    '& .dropdown-option-starticon': {
+      width: `${theme.scale[500]}px`,
+      height: `${theme.scale[500]}px`,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    '& .dropdown-option-starticon svg': {
+      width: `${theme.scale[500]}px`,
+      height: `${theme.scale[500]}px`,
+    },
+
+    '& .dropdown-option-text': {
+      flex: '0 0 auto',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    },
   }
 }

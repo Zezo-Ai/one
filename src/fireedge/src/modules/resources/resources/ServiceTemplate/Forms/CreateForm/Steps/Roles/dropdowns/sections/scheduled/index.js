@@ -20,7 +20,7 @@ import { useFieldArray, useFormContext } from 'react-hook-form'
 import { Stack } from '@mui/material'
 import { STEP_ID as ROLES_ID } from '@modules/resources/resources/ServiceTemplate/Forms/CreateForm/Steps/Roles'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 import { Calendar as PolicyIcon } from 'iconoir-react'
 
@@ -38,7 +38,8 @@ import {
   SECTION_ID,
 } from '@modules/resources/resources/ServiceTemplate/Forms/CreateForm/Steps/Roles/dropdowns/sections/scheduled/schema'
 
-const renderPolicyTitle = (_, idx) => `${Tr(T.Policy)} #${idx}`
+const renderPolicyTitle = (translate) => (_, idx) =>
+  `${translate(T.Policy)} #${idx}`
 
 const renderStartTime = (startTime) => {
   if (!startTime) return undefined
@@ -48,24 +49,25 @@ const renderStartTime = (startTime) => {
   return startTime
 }
 
-const renderPolicySubtitle = (watchedPolicies) => (policy, idx) => {
+const renderPolicySubtitle = (watchedPolicies, translate) => (policy, idx) => {
   const policyValues = watchedPolicies?.[idx] ?? policy
   const startTime = renderStartTime(policyValues?.start_time)
 
   const secondaryFields = [
     policyValues?.type &&
-      `${Tr(T.Type)}: ${Tr(SCHED_TYPES?.[policyValues.type])}`,
-    policyValues?.adjust && `${Tr(T.Adjust)}: ${policyValues.adjust}`,
-    policyValues?.min && `${Tr(T.Min)}: ${policyValues.min}`,
+      `${translate(T.Type)}: ${translate(SCHED_TYPES?.[policyValues.type])}`,
+    policyValues?.adjust && `${translate(T.Adjust)}: ${policyValues.adjust}`,
+    policyValues?.min && `${translate(T.Min)}: ${policyValues.min}`,
     policyValues?.recurrence &&
-      `${Tr(T.Recurrence)}: ${policyValues.recurrence}`,
-    startTime && `${Tr(T.StartTime)}: ${startTime}`,
+      `${translate(T.Recurrence)}: ${policyValues.recurrence}`,
+    startTime && `${translate(T.StartTime)}: ${startTime}`,
   ].filter(Boolean)
 
   return secondaryFields.join(' | ')
 }
 
 const ScheduledPolicies = ({ roles, selectedRole }) => {
+  const { translate } = useTranslation()
   const { watch } = useFormContext()
 
   const wPolicies = watch(`${ROLES_ID}.${selectedRole}.${SECTION_ID}`)
@@ -117,8 +119,8 @@ const ScheduledPolicies = ({ roles, selectedRole }) => {
         addButtonCy="roles-add-scheduled-policy"
         getItemKey={(policy, idx) => `spolicy-${idx}-${policy?.id}`}
         cardIcon={PolicyIcon}
-        renderCardTitle={renderPolicyTitle}
-        renderCardSubtitle={renderPolicySubtitle(wPolicies)}
+        renderCardTitle={renderPolicyTitle(translate)}
+        renderCardSubtitle={renderPolicySubtitle(wPolicies, translate)}
         sidebarPosition="bottom"
       >
         {selectedPolicy != null && wPolicies?.length > 0 && (

@@ -20,6 +20,7 @@ import { Box, TextField as MUITextField } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/primitives/TextField/styles'
 import { adornments } from '@modules/componentsv2/primitives/TextField/adornments'
 import { useControllableState } from '@HooksModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * TextField input component .
@@ -58,6 +59,7 @@ export const TextField = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const [currentValue, setCurrentValue] = useControllableState({
       value,
       defaultValue: defaultValue ?? initialValue ?? '',
@@ -86,9 +88,12 @@ export const TextField = forwardRef(
           value={currentValue}
           className={'textfield-root'}
           variant="standard"
-          placeholder={placeholder}
+          placeholder={translate(placeholder)}
           inputProps={{
             ...inputProps,
+            ...(typeof inputProps?.['aria-label'] === 'string' && {
+              'aria-label': translate(inputProps['aria-label']),
+            }),
             className: 'textfield-input',
           }}
           InputProps={{
@@ -98,6 +103,12 @@ export const TextField = forwardRef(
             ...adornments({ startIcon, endIcon, preTab, postTab }),
           }}
           {...opts}
+          {...(typeof opts.label === 'string' && {
+            label: translate(opts.label),
+          })}
+          {...(typeof opts.helperText === 'string' && {
+            helperText: translate(opts.helperText),
+          })}
         >
           {children}
         </MUITextField>

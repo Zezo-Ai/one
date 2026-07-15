@@ -25,7 +25,12 @@ import {
   TitleSlot,
 } from '@ComponentsV2Module'
 import { getImageState, getLabelSlotLabels } from '@ModelsModule'
-import { getImageType, prettyBytes, timeFromMilliseconds } from '@UtilsModule'
+import {
+  getImageType,
+  getLockIcon,
+  prettyBytes,
+  timeFromMilliseconds,
+} from '@UtilsModule'
 
 /**
  * @param {object} root0 - Params
@@ -68,7 +73,11 @@ export const FileCard = forwardRef(
           [
             TitleSlot,
             {
-              title: NAME,
+              title: (
+                <>
+                  {NAME} {getLockIcon(data)}
+                </>
+              ),
               status: stateColor,
               statusName: stateName,
             },

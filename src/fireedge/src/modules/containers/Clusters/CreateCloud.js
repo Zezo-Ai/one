@@ -17,11 +17,12 @@ import {
   Cluster,
   DefaultFormStepper,
   SkeletonStepsForm,
-  TranslateProvider,
 } from '@ResourcesModule'
+
+import { createFieldsFromDeploymentConfs } from '@UtilsModule'
 import { ReactElement } from 'react'
 import { generatePath, useHistory, useLocation } from 'react-router'
-import { createFieldsFromDeploymentConfs } from '@UtilsModule'
+
 import { T, CLUSTER_CLOUD_OPERATIONS, PATH } from '@ConstantsModule'
 import {
   ProvisionAPI,
@@ -82,7 +83,7 @@ export function CreateClusterCloud() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {!providers || !drivers ? (
         <SkeletonStepsForm />
       ) : (
@@ -98,6 +99,6 @@ export function CreateClusterCloud() {
           {(config) => <DefaultFormStepper {...config} />}
         </Cluster.Forms.CreateCloudForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

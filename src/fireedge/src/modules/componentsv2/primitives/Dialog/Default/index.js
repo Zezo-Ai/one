@@ -23,29 +23,41 @@ import {
 import PropTypes from 'prop-types'
 import { forwardRef, Component } from 'react'
 import { getStyles } from '@modules/componentsv2/primitives/Dialog/Default/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} root0 - Props
  * @param {string} root0.title - Dialog title
  * @param {Component} root0.children - Dialog content
  * @param {Component} root0.actions - Dialog actions
+ * @param {string} root0.dataCy - Cypress selector
  * @param {object} root0.opt - Other props to pass to the dialog
  * @returns {Component} - Dialog component
  */
 export const Dialog = forwardRef(
-  ({ title, children, actions, ...opt }, ref) => (
-    <MuiDialog {...opt} sx={(theme) => getStyles({ theme })}>
-      {title && <DialogTitle>{title}</DialogTitle>}
-      <DialogContent>{children}</DialogContent>
-      <DialogActions>{actions}</DialogActions>
-    </MuiDialog>
-  )
+  ({ title, children, actions, dataCy, ...opt }, ref) => {
+    const { translate } = useTranslation()
+
+    return (
+      <MuiDialog
+        ref={ref}
+        {...opt}
+        data-cy={dataCy}
+        sx={(theme) => getStyles({ theme })}
+      >
+        {title && <DialogTitle>{translate(title)}</DialogTitle>}
+        <DialogContent>{children}</DialogContent>
+        <DialogActions>{actions}</DialogActions>
+      </MuiDialog>
+    )
+  }
 )
 
 Dialog.propTypes = {
   title: PropTypes.string,
   children: PropTypes.node,
   actions: PropTypes.node,
+  dataCy: PropTypes.string,
   opt: PropTypes.object,
 }
 

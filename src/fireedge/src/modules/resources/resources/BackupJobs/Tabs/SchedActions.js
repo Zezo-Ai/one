@@ -18,7 +18,12 @@ import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import { ReactElement, useMemo } from 'react'
 import { EditPencil, Plus, Trash } from 'iconoir-react'
-import { Button, Table, ToggleGroup } from '@ComponentsV2Module'
+import {
+  Button,
+  ResourceActionConfirmation,
+  Table,
+  ToggleGroup,
+} from '@ComponentsV2Module'
 import { BackupJobAPI, useModalsApi } from '@FeaturesModule'
 import { TEMPLATE_SCHEDULE_TYPE_STRING, T, VM_ACTIONS } from '@ConstantsModule'
 import * as BackupJobs from '@modules/resources/resources/BackupJobs'
@@ -166,7 +171,20 @@ export const SchedActions = ({ data, config }) => {
         title: `${T.Delete} ${T.ScheduleAction} #${schedule?.ID} ${sentenceCase(
           schedule?.ACTION
         )}`,
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={{
+              ID: schedule?.ID,
+              NAME: sentenceCase(schedule?.ACTION),
+            }}
+            resourceType={T.ScheduleAction}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: () => handleRemove(schedule?.ID),
     })
@@ -255,6 +273,7 @@ export const SchedActions = ({ data, config }) => {
                   onClick: () => handleOpenDeleteForm(row.original),
                   tooltip: T.Delete,
                   value: 'delete',
+                  isDestructive: true,
                   isDisabled,
                   sx: {
                     padding: '0 0 0 8px',

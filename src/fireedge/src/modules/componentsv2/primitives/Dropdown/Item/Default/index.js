@@ -19,6 +19,7 @@ import PropTypes from 'prop-types'
 import { MenuItem, Typography } from '@mui/material'
 
 import { getStyles } from '@modules/componentsv2/primitives/Dropdown/Item/Default/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Dropdown item component.
@@ -35,17 +36,21 @@ export const DropdownItem = ({
   label,
   onClick,
   control = null,
-}) => (
-  <MenuItem
-    className="dropdown-item"
-    onClick={onClick}
-    sx={(theme) => getStyles({ theme })}
-  >
-    <Icon className="icon" />
-    <Typography className="label">{label}</Typography>
-    {control}
-  </MenuItem>
-)
+}) => {
+  const { translateText } = useTranslation()
+
+  return (
+    <MenuItem
+      className="dropdown-item"
+      onClick={onClick}
+      sx={(theme) => getStyles({ theme })}
+    >
+      <Icon className="icon" />
+      <Typography className="label">{translateText(label)}</Typography>
+      {control}
+    </MenuItem>
+  )
+}
 
 DropdownItem.propTypes = {
   expanded: PropTypes.bool,

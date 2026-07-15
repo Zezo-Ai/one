@@ -132,6 +132,7 @@ export function Groups() {
 
   return (
     <ResourceContainer
+      dataCy={groupTable.dataCy}
       resourceName={T.Groups}
       onRefresh={refresh}
       isRefreshing={isRefreshing}
@@ -147,6 +148,7 @@ export function Groups() {
           case TABLE_VIEW_MODE.LIST:
             return (
               <Table
+                dataCy={groupTable.dataCy}
                 columns={groupTable.columns(GROUP_LIST_COLUMNS)}
                 data={items}
                 isLoading={isRefreshing}
@@ -193,6 +195,7 @@ export function Groups() {
                   return (
                     <Card
                       key={id}
+                      dataCy={`${groupTable.dataCy}-${id}`}
                       isSelected={selectedItems?.includes(id)}
                       onCheck={() =>
                         setSelectedItems(
@@ -226,7 +229,6 @@ export function Groups() {
                                 label: `${T.DatastoreSize} ${
                                   datastoreQuotaUsage?.size?.percentLabel ?? '-'
                                 }`,
-                                size: 'extraSmall',
                                 value:
                                   datastoreQuotaUsage?.size?.percentOfUsed ?? 0,
                                 isLabelVisible: true,
@@ -235,7 +237,6 @@ export function Groups() {
                                 label: `${T.VMCount} ${
                                   vmQuotaUsage?.vms?.percentLabel ?? '-'
                                 }`,
-                                size: 'extraSmall',
                                 value: vmQuotaUsage?.vms?.percentOfUsed ?? 0,
                                 isLabelVisible: true,
                               },
@@ -243,7 +244,6 @@ export function Groups() {
                                 label: `${T.NetworkLeases} ${
                                   networkQuotaUsage?.leases?.percentLabel ?? '-'
                                 }`,
-                                size: 'extraSmall',
                                 value:
                                   networkQuotaUsage?.leases?.percentOfUsed ?? 0,
                                 isLabelVisible: true,
@@ -252,7 +252,6 @@ export function Groups() {
                                 label: `${T.ImageRVMS} ${
                                   imageQuotaUsage?.rvms?.percentLabel ?? '-'
                                 }`,
-                                size: 'extraSmall',
                                 value:
                                   imageQuotaUsage?.rvms?.percentOfUsed ?? 0,
                                 isLabelVisible: true,

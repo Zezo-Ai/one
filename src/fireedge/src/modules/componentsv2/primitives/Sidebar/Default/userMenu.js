@@ -49,6 +49,7 @@ import {
 } from '@FeaturesModule'
 import { SCHEMES, SERVER_CONFIG, T } from '@ConstantsModule'
 import { jsonToXml, generateDocLink } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const SETTINGS_PATH = '/settings'
 
@@ -69,6 +70,7 @@ const getInitials = (name = '') =>
  * @returns {object} Sidebar user menu component
  */
 export const SidebarUserMenu = ({ isExpanded = false }) => {
+  const { translate } = useTranslation()
   const { user, groups, settings: { SCHEME = SCHEMES.LIGHT } = {} } = useAuth()
   const { changeAuthUser } = useAuthApi()
   const { enqueueError } = useGeneralApi()
@@ -179,7 +181,9 @@ export const SidebarUserMenu = ({ isExpanded = false }) => {
               {initials}
             </Avatar>
             <Box className="user-info">
-              <Typography className="name">{userName || T.User}</Typography>
+              <Typography className="name">
+                {userName || translate(T.User)}
+              </Typography>
               {primaryGroupName && (
                 <Typography className="subtitle">{primaryGroupName}</Typography>
               )}
@@ -192,13 +196,13 @@ export const SidebarUserMenu = ({ isExpanded = false }) => {
         <MenuList className="section" disablePadding>
           <DropdownItem
             icon={Settings}
-            label={`${T.Profile} ${T.Settings}`}
+            label={`${translate(T.Profile)} ${translate(T.Settings)}`}
             onClick={handleSettings}
           />
 
           <DropdownItem
             icon={FolderSettings}
-            label={T.Resources}
+            label={translate(T.Resources)}
             onClick={handleDocumentation}
           />
         </MenuList>
@@ -208,7 +212,7 @@ export const SidebarUserMenu = ({ isExpanded = false }) => {
         <Box className="section sidebar-user-menu-item sidebar-user-menu-switch-row">
           <DropdownItem
             icon={SunLight}
-            label={`${T.Light} ${T.Mode}`}
+            label={`${translate(T.Light)} ${translate(T.Mode)}`}
             onClick={handleThemeToggle}
             control={
               <Switch
@@ -217,7 +221,7 @@ export const SidebarUserMenu = ({ isExpanded = false }) => {
                 onChange={handleSwitchThemeChange}
                 switchProps={{
                   inputProps: {
-                    'aria-label': `${T.Light} ${T.Mode}`,
+                    'aria-label': `${translate(T.Light)} ${translate(T.Mode)}`,
                   },
                   onClick: handleSwitchClick,
                 }}
@@ -231,7 +235,7 @@ export const SidebarUserMenu = ({ isExpanded = false }) => {
         <MenuList className="section" disablePadding>
           <DropdownItem
             icon={LogOut}
-            label={T.SignOut}
+            label={translate(T.SignOut)}
             onClick={handleLogout}
           />
         </MenuList>
@@ -247,7 +251,9 @@ export const SidebarUserMenu = ({ isExpanded = false }) => {
               isSupported ? 'supported' : 'unsuported'
             }`}
           >
-            {isSupported ? T.OfficiallySupport : T.NotOfficiallySupport}
+            {translate(
+              isSupported ? T.OfficiallySupport : T.NotOfficiallySupport
+            )}
           </Typography>
         </Box>
       )}

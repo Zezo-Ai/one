@@ -32,7 +32,8 @@ import {
   VM_ACTIONS,
   VM_ACTIONS_IN_CHARTER,
 } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+import { sentenceCase, timeFromMilliseconds } from '@UtilsModule'
 
 import { Component, memo, useMemo } from 'react'
 import {
@@ -41,12 +42,13 @@ import {
   getTypeScheduleAction,
   isRelative,
 } from '@ModelsModule'
-import { sentenceCase, timeFromMilliseconds } from '@UtilsModule'
+
 import { useModalsApi, useSystemData } from '@FeaturesModule'
 import { Clock, Edit, MoreVert, Plus, Trash } from 'iconoir-react'
 import {
   CollapsiblePanel,
   MenuButton,
+  ResourceActionConfirmation,
   SubmitButton,
   Table,
   Tag,
@@ -183,11 +185,17 @@ const ScheduleActionMenu = memo(function ScheduleActionMenu({
             <Translate word={T.Delete} /> #{ID}
           </>
         ),
-        children: (
-          <p>
-            <Translate word={T.DoYouWantProceed} />
-          </p>
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={{ ID, NAME: sentenceCase(ACTION) }}
+            resourceType={T.ScheduleAction}
+          />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: onRemove,
     })

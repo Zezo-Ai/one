@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { TranslateProvider } from '@ResourcesModule'
-import { useViews } from '@FeaturesModule'
-import { ReactElement } from 'react'
+import DatastoresTable, {
+  STEP_ID as DATASTORE_ID,
+} from '@modules/resources/resources/VrTemplate/Forms/ExportForm/Steps/DatastoresTable'
+import { DATASTORE_FIELD } from '@modules/resources/resources/VrTemplate/Forms/ExportForm/Steps/DatastoresTable/schema'
+import { createSteps } from '@UtilsModule'
 
-import CloudDashboard from '@modules/containers/Dashboard/Sunstone/Cloud'
-import SunstoneDashboard from '@modules/containers/Dashboard/Sunstone/General'
+const Steps = createSteps(() => [DatastoresTable].filter(Boolean), {
+  transformInitialValue: (app, schema) => schema.cast({}, { context: { app } }),
+  transformBeforeSubmit: (formData) => {
+    const { [DATASTORE_ID]: { [DATASTORE_FIELD]: datastore } = {} } = formData
 
-/** @returns {ReactElement} Dashboard container */
-export function Dashboard() {
-  const { view } = useViews()
+    return {
+      datastore,
+    }
+  },
+})
 
-  return (
-    <TranslateProvider>
-      {view === 'cloud' ? (
-        <CloudDashboard view={view} />
-      ) : (
-        <SunstoneDashboard view={view} />
-      )}
-    </TranslateProvider>
-  )
-}
+export default Steps

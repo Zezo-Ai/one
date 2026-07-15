@@ -19,4 +19,3 @@ export { default as InternalLayout } from '@modules/resources/HOC/InternalLayout
 export { default as ModalHost } from '@modules/resources/HOC/ModalHost'
 
 export * from '@modules/resources/HOC/AsyncLoadForm'
-export * from '@modules/resources/HOC/Translate'

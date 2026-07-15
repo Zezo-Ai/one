@@ -118,11 +118,11 @@ export const getStyles = ({ theme }) => ({
   },
 
   '& .datastores-card': {
-    overflow: 'auto',
+    overflow: 'visible',
     display: 'flex',
-    flex: '1 1 0',
+    flex: '0 0 auto',
     minWidth: 0,
-    minHeight: 0,
+    minHeight: 'auto',
     padding: `${theme.scale[550]}px ${theme.scale[600]}px`,
     flexDirection: 'column',
     alignItems: 'flex-start',

@@ -22,9 +22,9 @@ import {
   generateKey,
   getDigits,
   sentenceCase,
-  labelCanBeTranslated,
+  isTranslationInput,
 } from '@UtilsModule'
-import { Tr } from '@ProvidersModule'
+import { useTranslation } from '@ProvidersModule'
 
 export const OtpController = memo(
   ({
@@ -35,6 +35,7 @@ export const OtpController = memo(
     fieldProps = {},
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const { clearErrors, trigger } = useFormContext()
     const {
       hint = '',
@@ -70,8 +71,8 @@ export const OtpController = memo(
         ?.map((message) => message?.trim())
         ?.join(' ')
     )
-    const trHint = labelCanBeTranslated(hint) ? Tr(hint) : hint
-    const trLabel = labelCanBeTranslated(label) ? Tr(label) : label
+    const trHint = isTranslationInput(hint) ? translate(hint) : hint
+    const trLabel = isTranslationInput(label) ? translate(label) : label
 
     return (
       <OtpInput

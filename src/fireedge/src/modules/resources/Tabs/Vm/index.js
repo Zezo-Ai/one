@@ -23,7 +23,7 @@ import { memo, useMemo } from 'react'
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { useSystemData, useViews, VmAPI } from '@FeaturesModule'
 import { getAvailableInfoTabs, getErrorMessage, jsonToXml } from '@UtilsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 import { SubmitButton } from '@ComponentsV2Module'
 import { BaseTab as Tabs } from '@modules/resources/Tabs'

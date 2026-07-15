@@ -30,8 +30,8 @@ import { object, string } from 'yup'
 import { GuacamoleSession, INPUT_TYPES, T, VM_ACTIONS } from '@ConstantsModule'
 import { VmAPI, useModalsApi } from '@FeaturesModule'
 import { createForm, downloadFile, getValidationFromFields } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { ButtonGroup, ToggleGroup } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
 
 const ICON_SIZE = '16px'
 const LOADING_SIZE = 20
@@ -114,6 +114,7 @@ const getSshCommandForm = (initialValues) => {
  * @returns {ReactElement} Grouped Guacamole console action buttons
  */
 const GuacamoleActionButtons = (session) => {
+  const { translate } = useTranslation()
   const {
     id,
     vmID,
@@ -298,16 +299,16 @@ const GuacamoleActionButtons = (session) => {
   const downloadTooltip = useMemo(
     () => (
       <>
-        {Tr(T.DownloadConecctionFile)}
+        {translate(T.DownloadConecctionFile)}
         <br />
-        {Tr(
+        {translate(
           typeConnection === VM_ACTIONS.RDP
             ? T.DownloadConnectionRDP
             : T.DownloadConnectionVNC
         )}
       </>
     ),
-    [typeConnection]
+    [typeConnection, translate]
   )
 
   const statusButtons = useMemo(
@@ -316,18 +317,24 @@ const GuacamoleActionButtons = (session) => {
         startIcon: <Lock {...getIconProps()} />,
         onClick: handleLockSession,
         value: 'lock',
-        tooltip: Tr(T.Lock),
+        tooltip: translate(T.Lock),
         isDisabled: isReadOnly || !handleReconnect,
       },
       {
         startIcon: <UnLock {...getIconProps()} />,
         onClick: handleUnlockSession,
         value: 'unlock',
-        tooltip: Tr(T.Unlock),
+        tooltip: translate(T.Unlock),
         isDisabled: !isReadOnly || !handleReconnect,
       },
     ],
-    [handleLockSession, handleUnlockSession, handleReconnect, isReadOnly]
+    [
+      handleLockSession,
+      handleUnlockSession,
+      handleReconnect,
+      isReadOnly,
+      translate,
+    ]
   )
 
   const toggleOptions = useMemo(
@@ -343,7 +350,7 @@ const GuacamoleActionButtons = (session) => {
               ),
             onClick: handleReconnectSession,
             value: 'reconnect',
-            tooltip: Tr(T.Reconnect),
+            tooltip: translate(T.Reconnect),
             isDisabled: isLoading || reconnecting || !handleReconnect,
             'data-cy': `${id}-reconnect-button`,
           },
@@ -354,7 +361,7 @@ const GuacamoleActionButtons = (session) => {
                   onClick: handleDownloadConnection,
                   value: 'download',
                   title: downloadTooltip,
-                  'aria-label': Tr(T.DownloadConecctionFile),
+                  'aria-label': translate(T.DownloadConecctionFile),
                   isDisabled: !client,
                   'data-cy': `${id}-download-button`,
                 },
@@ -373,7 +380,7 @@ const GuacamoleActionButtons = (session) => {
                     ),
                   onClick: handleOpenSshParamsForm,
                   value: 'ssh-params',
-                  tooltip: Tr(T.SSHCommand),
+                  tooltip: translate(T.SSHCommand),
                   isDisabled: isLoading || sshReconnecting,
                   'data-cy': `${id}-edit-params-ssh`,
                 },
@@ -383,7 +390,7 @@ const GuacamoleActionButtons = (session) => {
             startIcon: <Camera {...getIconProps()} />,
             onClick: handleScreenshot,
             value: 'screenshot',
-            tooltip: Tr(T.Screenshot),
+            tooltip: translate(T.Screenshot),
             isDisabled: !client,
             'data-cy': `${id}-screenshot-button`,
           },
@@ -391,17 +398,17 @@ const GuacamoleActionButtons = (session) => {
             startIcon: <Maximize {...getIconProps()} />,
             onClick: handleFullScreen,
             value: 'fullscreen',
-            tooltip: Tr(T.FullScreen),
+            tooltip: translate(T.FullScreen),
             isDisabled: !viewport,
             'data-cy': `${id}-fullscreen-button`,
           },
         ],
         [
           {
-            text: Tr(T.CtrlAltDel),
+            text: translate(T.CtrlAltDel),
             onClick: handleCtrlAltDel,
             value: 'ctrl-alt-del',
-            tooltip: Tr(T.CtrlAltDel),
+            tooltip: translate(T.CtrlAltDel),
             isDisabled: !client,
             'data-cy': `${id}-ctrl-alt-del-button`,
           },
@@ -424,6 +431,7 @@ const GuacamoleActionButtons = (session) => {
       reconnecting,
       sshReconnecting,
       viewport,
+      translate,
     ]
   )
 

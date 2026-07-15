@@ -18,7 +18,7 @@ import PropTypes from 'prop-types'
 import { isValidElement, memo } from 'react'
 
 import AdornmentWithTooltip from '@modules/resources/FormControl/Tooltip'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const StyledLegend = styled((props) => (
   <Typography variant="underline" component="legend" {...props} />

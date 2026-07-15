@@ -26,7 +26,7 @@ import {
 import { OneKsAPI } from '@FeaturesModule'
 import { Actions } from '@modules/resources/Tabs/Common/Attribute'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { isEmpty } from 'lodash'
 
 const CodeBox = styled(Box)(({ theme }) => ({
@@ -47,6 +47,7 @@ const CodeBox = styled(Box)(({ theme }) => ({
  * @returns {ReactElement} Configuration tab
  */
 const KubernetesConfig = ({ id }) => {
+  const { translate } = useTranslation()
   const { data: cluster = {} } = OneKsAPI.useGetOneKsClusterQuery({
     id,
     expand: true,
@@ -60,7 +61,7 @@ const KubernetesConfig = ({ id }) => {
   if (isEmpty(DOCUMENT) || !data || error) {
     return (
       <Alert severity="error" variant="outlined">
-        {Tr(T['oneks.tab.info.kubeconfig.help.paragraph'])}
+        {translate(T['oneks.tab.info.kubeconfig.help.paragraph'])}
       </Alert>
     )
   }

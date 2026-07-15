@@ -20,7 +20,7 @@ import {
   SCHEMA,
 } from '@modules/resources/Forms/VrTemplate/InstantiateForm/Steps/Networking/NicMenu/informationSchema'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Box, Typography } from '@mui/material'
 import { useState, useMemo } from 'react'
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form'
@@ -29,6 +29,7 @@ import NicColumn from '@modules/resources/Forms/VrTemplate/InstantiateForm/Steps
 
 export const STEP_ID = 'networking'
 const Content = () => {
+  const { translate } = useTranslation()
   const [activeNic, setActiveNic] = useState(0)
   const { control } = useFormContext()
 
@@ -80,18 +81,18 @@ const Content = () => {
             gutterBottom
             style={{ color: '#1976d', fontWeight: 'bold' }}
           >
-            {Tr(T.VirtualRouterNICStart)}
+            {translate(T.VirtualRouterNICStart)}
           </Typography>
           <Typography variant="body1" paragraph style={{ marginTop: '16px' }}>
-            {Tr(T.VirtualRouterNICStart1)}
+            {translate(T.VirtualRouterNICStart1)}
           </Typography>
           <Typography variant="body1" paragraph style={{ marginTop: '16px' }}>
-            {Tr(T.VirtualRouterNICStart2)}
+            {translate(T.VirtualRouterNICStart2)}
           </Typography>
         </Box>
       ) : (
         <FormWithSchema
-          legend={Tr(T.VirtualRouterNICNetworkConfiguration)}
+          legend={translate(T.VirtualRouterNICNetworkConfiguration)}
           key={`${STEP_ID}-${activeNic}`}
           cy={STEP_ID}
           fields={FIELDS}
@@ -99,7 +100,7 @@ const Content = () => {
           id={`${STEP_ID}.${activeNic}`}
         />
       ),
-    [nics, activeNic]
+    [nics, activeNic, translate]
   )
 
   return (

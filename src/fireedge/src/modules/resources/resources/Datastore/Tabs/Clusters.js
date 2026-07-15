@@ -16,7 +16,7 @@
 import PropTypes from 'prop-types'
 import { Component, useMemo } from 'react'
 import { Table } from '@ComponentsV2Module'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { clusterTable } from '@ModelsModule'
 
 /**
@@ -55,6 +55,8 @@ export const Clusters = ({ data: tabData }) => {
       isEnableSearchBar={true}
       isEnableSort={true}
       isEnableFilters={true}
+      openRowDetailsOnClick
+      rowDetailsResourceId={RESOURCE_NAMES.CLUSTER}
     />
   )
 }

@@ -19,12 +19,19 @@ import {
   ButtonGroup,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
+  ResourceActionConfirmation,
   TabSlot,
 } from '@ComponentsV2Module'
 import { BackupJobAPI, useModalsApi } from '@FeaturesModule'
 import { Component } from 'react'
 import { aggregateLockState, createActions } from '@UtilsModule'
-import { BACKUPJOB_ACTIONS, STYLE_BUTTONS, T } from '@ConstantsModule'
+import {
+  BACKUPJOB_ACTIONS,
+  RESOURCE_NAMES,
+  STYLE_BUTTONS,
+  T,
+} from '@ConstantsModule'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import {
@@ -86,15 +93,24 @@ export const AggregatedView = ({
   const handleRefresh = async () =>
     await Promise.all(selectedData.map(({ ID }) => refresh({ id: ID })))
 
-  const getConfirmationDescription = () =>
-    `${selectedData.length} ${T.BackupJobs}. ${T.DoYouWantProceed}`
-
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({ title, description, onSubmit }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
-        description: getConfirmationDescription(),
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={selectedData}
+            resourceType={T.BackupJobs}
+          />
+        ),
+        confirmLabel: `${title}`.startsWith(T.Delete) ? T.Delete : title,
+        ...(`${title}`.startsWith(T.Delete) && {
+          confirmButtonProps: {
+            isDestructive: true,
+          },
+        }),
       },
       onSubmit,
     })
@@ -107,30 +123,35 @@ export const AggregatedView = ({
   const handleStart = () =>
     handleConfirmAction({
       title: T.Start,
+      description: T['resource.start.confirmation'],
       onSubmit: () => handleActionForSelected((id) => start({ id })),
     })
 
   const handleCancel = () =>
     handleConfirmAction({
       title: T.Cancel,
+      description: T['resource.cancel.confirmation'],
       onSubmit: () => handleActionForSelected((id) => cancel({ id })),
     })
 
   const handleLock = () =>
     handleConfirmAction({
       title: T.Lock,
+      description: T['resource.lock.confirmation'],
       onSubmit: () => handleActionForSelected((id) => lock({ id })),
     })
 
   const handleUnlock = () =>
     handleConfirmAction({
       title: T.Unlock,
+      description: T['resource.unlock.confirmation'],
       onSubmit: () => handleActionForSelected((id) => unlock({ id })),
     })
 
   const handleOpenDeleteForm = () =>
     handleConfirmAction({
       title: `${T.Delete} ${T.BackupJobs}`,
+      description: T['resource.delete.confirmation'],
       onSubmit: async () => {
         await Promise.all(selectedData.map(({ ID }) => remove({ id: ID })))
         handleClose()
@@ -241,6 +262,11 @@ export const AggregatedView = ({
                     buttons={lockButtons}
                   />
                 )}
+                <LabelButton
+                  selectedRows={selectedData}
+                  resourceType={RESOURCE_NAMES.BACKUPJOBS}
+                  isDisabled={isMutating}
+                />
                 {deleteButtons.length > 0 && (
                   <Button
                     type={STYLE_BUTTONS.TYPE.PRIMARY}
@@ -256,7 +282,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

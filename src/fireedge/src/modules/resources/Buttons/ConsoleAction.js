@@ -40,7 +40,7 @@ import {
   isVmAvailableAction,
   nicsIncludesTheConnectionType,
 } from '@ModelsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const GUACAMOLE_BUTTONS = {
   [VM_ACTIONS.VNC]: { tooltip: T.Vnc, icon: <VncIcon /> },

@@ -62,6 +62,8 @@ export const SearchBar = forwardRef(
       isEnableSort = true,
       isEnableView = true,
       searchPlaceholder = T.Search,
+      searchDataCy,
+      refreshDataCy,
       searchValue = '',
       sortOptions = [],
       sortValue = null,
@@ -137,13 +139,22 @@ export const SearchBar = forwardRef(
 
         return value != null && String(optionValue) === String(value)
       }) ?? null
+    const selectedSortDesc = Array.isArray(sortValue)
+      ? !!sortValue?.[0]?.desc
+      : typeof sortValue === 'object'
+      ? !!sortValue?.desc
+      : false
 
     const defaultSlots = []
 
     if (onRefresh) {
       defaultSlots.push([
         RefreshSlot,
-        { onRefresh: onRefresh, isRefreshing: isRefreshing },
+        {
+          onRefresh: onRefresh,
+          isRefreshing: isRefreshing,
+          dataCy: refreshDataCy,
+        },
         { flex: '0 1 auto' },
       ])
     }
@@ -154,6 +165,7 @@ export const SearchBar = forwardRef(
         {
           onChange: handleSearchChange,
           placeholder: searchPlaceholder,
+          dataCy: searchDataCy,
           value: searchValue,
         },
         { flex: 10 },
@@ -168,6 +180,7 @@ export const SearchBar = forwardRef(
           placeholder: T.Sort,
           options: sortOptions,
           initialValue: selectedSortValue,
+          sortDesc: selectedSortDesc,
         },
         { flex: '0 0 auto' },
       ])
@@ -238,6 +251,8 @@ SearchBar.propTypes = {
   isEnableSort: PropTypes.bool,
   isEnableView: PropTypes.bool,
   searchPlaceholder: PropTypes.string,
+  searchDataCy: PropTypes.string,
+  refreshDataCy: PropTypes.string,
   searchValue: PropTypes.string,
   sortOptions: PropTypes.array,
   sortValue: PropTypes.any,

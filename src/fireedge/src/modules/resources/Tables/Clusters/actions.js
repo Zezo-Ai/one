@@ -34,7 +34,7 @@ import {
   T,
   PATH,
 } from '@ConstantsModule'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 
 const ListClusterNames = ({ rows = [] }) =>
   rows?.map?.(({ id, original }) => {
@@ -52,8 +52,10 @@ const ListClusterNames = ({ rows = [] }) =>
     )
   })
 
-const ListCloudClustersNames = ({ rows = [] }) =>
-  rows?.map?.(({ id, original }) => {
+const ListCloudClustersNames = ({ rows = [] }) => {
+  const { translate } = useTranslation()
+
+  return rows?.map?.(({ id, original }) => {
     const { ID, NAME } = original
 
     return (
@@ -77,12 +79,13 @@ const ListCloudClustersNames = ({ rows = [] }) =>
             variant="outlined"
             sx={{ bgcolor: 'background.paper' }}
           >
-            {`#${ID} ${NAME} ${Tr(T['oneform.provision.delete'])}`}
+            {`#${ID} ${NAME} ${translate(T['oneform.provision.delete'])}`}
           </Alert>
         </Box>
       </Typography>
     )
   })
+}
 
 const MessageToConfirmAction = (rows, description) => (
   <>

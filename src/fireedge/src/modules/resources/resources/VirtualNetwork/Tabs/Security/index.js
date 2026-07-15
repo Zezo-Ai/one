@@ -113,6 +113,7 @@ export const Security = ({ data, config }) => {
                 [
                   {
                     title: T.Remove,
+                    isDestructive: true,
                     isDisabled: !canRemoveSecGroup || areActionsDisabled,
                     onClick: () => handleRemoveSecurityGroupForm(securityGroup),
                   },
@@ -184,8 +185,11 @@ export const Security = ({ data, config }) => {
             resourceType={T.SecurityGroups}
           />
         ),
-        confirmLabel: T.Accept,
+        confirmLabel: T.Remove,
         cancelLabel: T.Cancel,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: () => handleRemoveSecurityGroup(securityGroup?.ID),
     })

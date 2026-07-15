@@ -21,8 +21,14 @@
  */
 export const getStyles = ({ theme }) => {
   const baseStyles = {
+    display: 'flex',
+    flex: '1 1 0',
+    flexDirection: 'column',
     gap: '16px',
-    height: '100%',
+    minWidth: 0,
+    minHeight: 0,
+    overflowX: 'hidden',
+    overflowY: 'auto',
   }
 
   return {

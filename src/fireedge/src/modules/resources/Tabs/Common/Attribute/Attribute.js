@@ -24,7 +24,7 @@ import { AlertDialog } from '@ComponentsV2Module'
 import { Actions, Inputs } from '@modules/resources/Tabs/Common/Attribute'
 
 import { T } from '@ConstantsModule'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 
 const Column = (props) => {
   const { isEditing, ...restProps } = props
@@ -82,6 +82,7 @@ const Attribute = memo(
     fullWidth = false,
     isDisabled = false,
   }) => {
+    const { translate } = useTranslation()
     const numberOfParents = useMemo(() => path.split('.').length - 1, [path])
 
     const [isEditing, setIsEditing] = useState(() => false)
@@ -160,7 +161,7 @@ const Attribute = memo(
             }}
           >
             {icon}
-            {Tr(name)}
+            {translate(name)}
           </Typography>
           <ActionWrapper {...(showActionsOnHover && { display: 'none' })}>
             {canCopy && <Actions.Copy name={name} value={name} />}
@@ -226,7 +227,7 @@ const Attribute = memo(
                     {value}
                   </Link>
                 ) : (
-                  Tr(value)
+                  translate(value)
                 )}
               </Typography>
               <ActionWrapper {...(showActionsOnHover && { display: 'none' })}>

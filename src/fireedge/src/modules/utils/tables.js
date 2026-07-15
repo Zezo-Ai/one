@@ -50,6 +50,8 @@ const getColumnFilterKeys = ({ id, accessorKey } = {}) => {
 }
 
 const isFilterEnabled = (column, filters = {}) => {
+  if (filters === true) return true
+
   const activeFilters = Object.entries(filters ?? {})
     .filter(([, enabled]) => enabled === true)
     .map(([key]) => normalizeKey(key))
@@ -116,11 +118,13 @@ export const getOptionText = (option) =>
  * @returns {object} Values without empty entries
  */
 export const cleanFilterValues = (values = {}) =>
-  Object.fromEntries(
-    Object.entries(values).filter(
-      ([, value]) => value !== undefined && value !== null && value !== ''
-    )
-  )
+  typeof values === 'object' && !Array.isArray(values)
+    ? Object.fromEntries(
+        Object.entries(values).filter(
+          ([, value]) => value !== undefined && value !== null && value !== ''
+        )
+      )
+    : {}
 
 /**
  * @param {object} values - Filter values
@@ -237,7 +241,7 @@ export const sortTableData = (data = [], sortExpression, columns = []) => {
 
 /**
  * @param {Array} data - Rows to build filter options from
- * @param {object} filters - Filters enabled in the resource view
+ * @param {object|boolean} filters - Filters enabled in the resource view, or true for all columns
  * @param {Array} columns - Column definitions
  * @returns {Array} - Filter options
  */
@@ -246,6 +250,7 @@ export const getTableFilterOptions = (data = [], filters = {}, columns = []) =>
     .filter(
       (column) =>
         column?.header &&
+        column?.enableColumnFilter !== false &&
         (column?.accessorKey || column?.accessorFn) &&
         isFilterEnabled(column, filters)
     )
@@ -306,18 +311,25 @@ export const filterTableData = (
 /**
  * @param {Array} columns - List of table column definitions
  * @param {Function} useQuery - RTK data fetching function
+ * @param {object} tableOptions - Table descriptor options
+ * @param {string} tableOptions.dataCy - Cypress selector prefix
  * @returns {object} - Table descriptor
  */
-export const createTable = (columns, useQuery) => ({
-  columns: (override) => override ?? columns,
-  sortOptions: (override) => getTableSortOptions(override ?? columns),
-  sortData: (data, sortExpression, override) =>
-    sortTableData(data, sortExpression, override ?? columns),
-  filterOptions: (data, filters, override, extraColumns = []) =>
-    getTableFilterOptions(data, filters, [
-      ...(override ?? columns),
-      ...extraColumns,
-    ]),
-  filterData: filterTableData,
-  useData: (args, options) => useQuery(args, options),
-})
+export const createTable = (columns, useQuery, tableOptions = {}) => {
+  const { dataCy } = tableOptions
+
+  return {
+    dataCy,
+    columns: (override) => override ?? columns,
+    sortOptions: (override) => getTableSortOptions(override ?? columns),
+    sortData: (data, sortExpression, override) =>
+      sortTableData(data, sortExpression, override ?? columns),
+    filterOptions: (data, filters, override, extraColumns = []) =>
+      getTableFilterOptions(data, filters, [
+        ...(override ?? columns),
+        ...extraColumns,
+      ]),
+    filterData: filterTableData,
+    useData: (args, options) => useQuery(args, options),
+  }
+}

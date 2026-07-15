@@ -25,9 +25,9 @@ import {
 } from '@modules/resources/Tabs/Common'
 import Information from '@modules/resources/Tabs/Backup/Info/information'
 
-import { Tr } from '@modules/resources/HOC'
-import { T } from '@ConstantsModule'
 import { getActionsAvailable, jsonToXml, cloneObject, set } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { T } from '@ConstantsModule'
 
 /**
  * Renders mainly information tab.
@@ -38,6 +38,7 @@ import { getActionsAvailable, jsonToXml, cloneObject, set } from '@UtilsModule'
  * @returns {ReactElement} Information tab
  */
 const ImageInfoTab = ({ tabProps = {}, id }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     permissions_panel: permissionsPanel,
@@ -122,7 +123,7 @@ const ImageInfoTab = ({ tabProps = {}, id }) => {
           {...ATTRIBUTE_FUNCTION}
           attributes={TEMPLATE === '' ? {} : TEMPLATE}
           actions={getActions(attributesPanel?.actions)}
-          title={Tr(T.Attributes)}
+          title={translate(T.Attributes)}
         />
       )}
     </Stack>

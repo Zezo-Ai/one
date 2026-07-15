@@ -18,7 +18,7 @@ import { useState, Component } from 'react'
 import { Box, Menu, MenuItem } from '@mui/material'
 import PropTypes from 'prop-types'
 import { NavArrowDown } from 'iconoir-react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { SubmitButton } from '@ComponentsV2Module'
 
 /**
@@ -28,6 +28,7 @@ import { SubmitButton } from '@ComponentsV2Module'
  * @returns {Component} - Custom Button
  */
 export const ButtonGenerator = ({ items, options = {} }) => {
+  const { translate } = useTranslation()
   const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
 
@@ -61,7 +62,9 @@ export const ButtonGenerator = ({ items, options = {} }) => {
             onClick={handleClick}
             endIcon={items.length > 1 ? <NavArrowDown /> : null}
             {...options?.button}
-            label={options?.button?.title ? Tr(options?.button?.title) : ''}
+            label={
+              options?.button?.title ? translate(options?.button?.title) : ''
+            }
           />
         )}
         <Menu
@@ -81,7 +84,7 @@ export const ButtonGenerator = ({ items, options = {} }) => {
               }}
               {...options?.menuItem}
             >
-              {Tr(name)}
+              {translate(name)}
             </MenuItem>
           ))}
         </Menu>
@@ -109,9 +112,9 @@ export const ButtonGenerator = ({ items, options = {} }) => {
         }}
         label={
           options?.singleButton?.title
-            ? Tr(options?.singleButton?.title)
+            ? translate(options?.singleButton?.title)
             : items.name
-            ? Tr(items.name)
+            ? translate(items.name)
             : ''
         }
       />

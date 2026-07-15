@@ -27,6 +27,7 @@ import {
   LabelSlot,
   Legend,
   MetadataSlot,
+  ResourceActionConfirmation,
   TitleSlot,
 } from '@ComponentsV2Module'
 
@@ -530,7 +531,17 @@ const Networking = ({ hypervisor, oneConfig, adminGroup }) => {
       dialogProps: {
         title: `${T.DetachSomething} ${T.NIC} #${nic?.NIC_ID}`,
         dataCy: 'modal-detach-nic',
-        children: <p>{T.DoYouWantProceed}</p>,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.detach.confirmation']}
+            resources={{ ID: nic?.NIC_ID, NAME: nic?.NAME }}
+            resourceType={T.NIC}
+          />
+        ),
+        confirmLabel: T.Detach,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: () => removeAndReorder(nic, nic?.id),
     })

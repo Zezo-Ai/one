@@ -76,7 +76,10 @@ const SECTIONS = (
       legend: T.OsProfile,
       required: true,
       fields: disableFields(
-        [OS_PROFILE(isUpdate, lastOsProfile), VROUTER_FIELD],
+        [
+          OS_PROFILE(isUpdate, lastOsProfile),
+          !isVrouter && VROUTER_FIELD,
+        ].filter(Boolean),
         '',
         oneConfig,
         adminGroup

@@ -19,26 +19,12 @@ import PropTypes from 'prop-types'
 import { TagsInput } from '@modules/componentsv2/primitives/Fields/Tags'
 import { Dropdown } from '@modules/componentsv2/primitives/Dropdown'
 import { useController, useWatch, useFormContext } from 'react-hook-form'
-import { sentenceCase, generateKey, labelCanBeTranslated } from '@UtilsModule'
-import { Tr } from '@ProvidersModule'
+import { sentenceCase, generateKey } from '@UtilsModule'
 import { T } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const getOptionValue = (option) =>
   typeof option === 'object' ? option?.value ?? option?.text : option
-
-const translate = (value) => {
-  if (!labelCanBeTranslated(value)) return value
-
-  if (Array.isArray(value)) {
-    return Tr(value[0], value[1])
-  }
-
-  if (typeof value === 'object') {
-    return Tr(value.word, value.values)
-  }
-
-  return Tr(value)
-}
 
 export const AutocompleteController = memo(
   ({
@@ -59,6 +45,7 @@ export const AutocompleteController = memo(
     disableEnter = false,
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const {
       hint,
       placeholder,
@@ -70,12 +57,13 @@ export const AutocompleteController = memo(
       ...restFieldProps
     } = fieldProps
     const trLabel = translate(label)
+    const resolvedPlaceholder = placeholder || `${T.Enter} ${trLabel}`
     const trHint =
       hint ??
       (tooltip
         ? translate(tooltip)
         : multiple
-        ? Tr(T.PressKeysToAddAValue, ['ENTER'])
+        ? translate(T.PressKeysToAddAValue, ['ENTER'])
         : undefined)
     const resolvedFreeSolo = freeSolo ?? !optionsOnly
 
@@ -197,7 +185,7 @@ export const AutocompleteController = memo(
         onChange={handleChange}
         label={trLabel}
         hint={trHint}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         options={values}
         rowsDisplayed={rowsDisplayed}
         error={errorText}
@@ -211,12 +199,13 @@ export const AutocompleteController = memo(
     ) : (
       <Dropdown
         {...restFieldProps}
+        dataCy={cy}
         onBlur={onBlur}
         initialValue={resolvedValue}
         onChange={handleChange}
         label={trLabel}
         hint={hint}
-        placeholder={placeholder || 'Placeholder'}
+        placeholder={resolvedPlaceholder}
         menuTitle={menuTitle}
         options={values}
         rowsDisplayed={rowsDisplayed}

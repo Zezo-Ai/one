@@ -20,7 +20,7 @@ import { ReactElement } from 'react'
 import { T } from '@ConstantsModule'
 import { VmAPI } from '@FeaturesModule'
 import Chartist from '@modules/resources/Charts/Chartist'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { prettyBytes } from '@UtilsModule'
 
 const interpolationBytesSeg = (value) =>
@@ -34,6 +34,7 @@ const interpolationBytesSeg = (value) =>
  * @returns {ReactElement} Capacity Graphs.
  */
 const Graphs = ({ id }) => {
+  const { translate } = useTranslation()
   const { data: monitoring = [], isFetching } = VmAPI.useGetMonitoringQuery(id)
   const { data: vm = {} } = VmAPI.useGetVmQuery({ id })
 
@@ -71,7 +72,7 @@ const Graphs = ({ id }) => {
     <Grid container spacing={1} sx={{ overflow: 'hidden' }}>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.NetDownloadSpeed)}
+          name={translate(T.NetDownloadSpeed)}
           data={monitoring}
           isFetching={isFetching}
           y={netRxY}
@@ -121,7 +122,7 @@ const Graphs = ({ id }) => {
       </Grid>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.NetUploadSpeed)}
+          name={translate(T.NetUploadSpeed)}
           data={monitoring}
           isFetching={isFetching}
           y={netTxY}

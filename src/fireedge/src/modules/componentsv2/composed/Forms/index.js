@@ -26,3 +26,5 @@ export {
   ChangeGroupForm,
   getChangeGroupForm,
 } from '@modules/componentsv2/composed/Forms/ChangeGroupForm'
+export { CreateLabelForm } from '@modules/componentsv2/composed/Forms/CreateLabelForm'
+export { ManageLabelForm } from '@modules/componentsv2/composed/Forms/ManageLabelForm'

@@ -18,6 +18,7 @@ import { forwardRef, Component } from 'react'
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/composed/Cards/Default/slots/ownership/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * OwnershipSlot component.
@@ -26,23 +27,31 @@ import { getStyles } from '@modules/componentsv2/composed/Cards/Default/slots/ow
  * @param {string} root0.label - Label text
  * @returns {Component} - OwnershipSlot component
  */
-export const OwnershipSlot = forwardRef(({ labels = [] }, ref) => (
-  <Box
-    sx={(theme) =>
-      getStyles({
-        theme,
-      })
-    }
-    ref={ref}
-  >
-    {labels?.map(([title, value], idx) => (
-      <Box key={idx} className="region-label">
-        {title && <span className="region-label--title">{title}</span>}
-        {value && <span className="region-label--value">{value}</span>}
-      </Box>
-    ))}
-  </Box>
-))
+export const OwnershipSlot = forwardRef(({ labels = [] }, ref) => {
+  const { translateText } = useTranslation()
+
+  return (
+    <Box
+      sx={(theme) =>
+        getStyles({
+          theme,
+        })
+      }
+      ref={ref}
+    >
+      {labels?.map(([title, value], idx) => (
+        <Box key={idx} className="region-label">
+          {title && (
+            <span className="region-label--title">
+              {typeof title === 'string' ? translateText(title) : title}
+            </span>
+          )}
+          {value && <span className="region-label--value">{value}</span>}
+        </Box>
+      ))}
+    </Box>
+  )
+})
 
 OwnershipSlot.propTypes = {
   labels: PropTypes.array,

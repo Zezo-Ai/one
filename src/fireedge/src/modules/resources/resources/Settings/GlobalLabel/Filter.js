@@ -23,7 +23,7 @@ import { Check as CheckIcon, Lock as LockIcon } from 'iconoir-react'
 import { AuthAPI } from '@FeaturesModule'
 
 import { SubmitButton } from '@ComponentsV2Module'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { StatusCircle } from '@modules/resources/Status'
 import {
   PopperComponent,
@@ -33,6 +33,7 @@ import { T } from '@ConstantsModule'
 import { getColorFromString } from '@ModelsModule'
 
 const Label = memo(({ label, selected, unknown, filterByLabel, ...props }) => {
+  const { translate } = useTranslation()
   const [addLabel, { isLoading }] = AuthAPI.useAddLabelMutation()
 
   /**
@@ -67,7 +68,7 @@ const Label = memo(({ label, selected, unknown, filterByLabel, ...props }) => {
             <SubmitButton
               onClick={unknown ? handleLockLabel : undefined}
               isSubmitting={isLoading}
-              title={Tr(T.SavesInTheUserTemplate)}
+              title={translate(T.SavesInTheUserTemplate)}
               iconOnly={<LockIcon />}
               sx={{ p: 0, visibility: unknown ? 'visible' : 'hidden' }}
             />
@@ -106,53 +107,57 @@ const FilterByLabel = ({
   handleChange,
   handleClose,
   handleFilterByLabel,
-}) => (
-  <Autocomplete
-    open
-    multiple
-    value={pendingValue}
-    onClose={(event, reason) => {
-      reason === 'escape' && handleClose()
-    }}
-    onChange={(event, newValue, reason) => {
-      if (
-        event.type === 'keydown' &&
-        event.key === 'Backspace' &&
-        reason === 'removeOption'
-      ) {
-        return
-      }
+}) => {
+  const { translate } = useTranslation()
 
-      handleChange(newValue)
-      handleFilterByLabel(newValue)
-    }}
-    disableCloseOnSelect
-    PopperComponent={PopperComponent}
-    renderTags={() => null}
-    noOptionsText={<Translate word={T.NoLabels} />}
-    renderOption={(props, option, { selected }) => (
-      <Label
-        {...props}
-        key={option}
-        label={option}
-        selected={selected}
-        unknown={unknownLabels.includes(option)}
-      />
-    )}
-    isOptionEqualToValue={(option, value) =>
-      Array.isArray(value) ? value.includes(option) : value === option
-    }
-    options={labels}
-    renderInput={(params) => (
-      <StyledInput
-        ref={params.InputProps.ref}
-        inputProps={params.inputProps}
-        autoFocus
-        placeholder={Tr(T.Search)}
-      />
-    )}
-  />
-)
+  return (
+    <Autocomplete
+      open
+      multiple
+      value={pendingValue}
+      onClose={(event, reason) => {
+        reason === 'escape' && handleClose()
+      }}
+      onChange={(event, newValue, reason) => {
+        if (
+          event.type === 'keydown' &&
+          event.key === 'Backspace' &&
+          reason === 'removeOption'
+        ) {
+          return
+        }
+
+        handleChange(newValue)
+        handleFilterByLabel(newValue)
+      }}
+      disableCloseOnSelect
+      PopperComponent={PopperComponent}
+      renderTags={() => null}
+      noOptionsText={<Translate word={T.NoLabels} />}
+      renderOption={(props, option, { selected }) => (
+        <Label
+          {...props}
+          key={option}
+          label={option}
+          selected={selected}
+          unknown={unknownLabels.includes(option)}
+        />
+      )}
+      isOptionEqualToValue={(option, value) =>
+        Array.isArray(value) ? value.includes(option) : value === option
+      }
+      options={labels}
+      renderInput={(params) => (
+        <StyledInput
+          ref={params.InputProps.ref}
+          inputProps={params.inputProps}
+          autoFocus
+          placeholder={translate(T.Search)}
+        />
+      )}
+    />
+  )
+}
 
 FilterByLabel.propTypes = {
   labels: PropTypes.array,

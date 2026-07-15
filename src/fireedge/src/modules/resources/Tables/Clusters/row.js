@@ -23,7 +23,7 @@ import { rowStyles } from '@modules/resources/Tables/styles'
 import { useMemo } from 'react'
 
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const TagType = styled(Typography, {
   shouldForwardProp: (prop) => !['provision'].includes(prop),
@@ -52,6 +52,7 @@ const Row = ({
   toggleRowSelected,
   ...props
 }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => rowStyles(theme), [theme])
   const { ID, NAME, HOSTS, DATASTORES, VNETS, TEMPLATE } = value
@@ -83,21 +84,25 @@ const Row = ({
           <span data-cy="cluster-card-id">{`#${ID}`}</span>
           <span
             data-cy="cluster-card-hosts"
-            title={`${Tr(T.Total)} ${Tr(T.Hosts)}: ${HOSTS}`}
+            title={`${translate(T.Total)} ${translate(T.Hosts)}: ${HOSTS}`}
           >
             <HardDrive />
             <span>{`${HOSTS}`}</span>
           </span>
           <span
             data-cy="cluster-card-vnets"
-            title={`${Tr(T.Total)} ${Tr(T.VirtualNetworks)}: ${VNETS}`}
+            title={`${translate(T.Total)} ${translate(
+              T.VirtualNetworks
+            )}: ${VNETS}`}
           >
             <NetworkAlt />
             <span>{`${VNETS}`}</span>
           </span>
           <span
             data-cy="cluster-card-datastores"
-            title={`${Tr(T.Total)} ${Tr(T.Datastores)}: ${DATASTORES}`}
+            title={`${translate(T.Total)} ${translate(
+              T.Datastores
+            )}: ${DATASTORES}`}
           >
             <Folder />
             <span>{`${DATASTORES}`}</span>

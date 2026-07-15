@@ -16,7 +16,12 @@
 import { INPUT_TYPES, T } from '@ConstantsModule'
 import { Field, getObjectSchemaFromFields } from '@UtilsModule'
 import { string, boolean } from 'yup'
-import { FIELDS as USER_FIELDS } from '@modules/resources/resources/User/Forms/CreateForm/Steps/General/schema'
+import {
+  AUTH_TYPE_FIELD,
+  CONFIRM_PASSWORD_FIELD,
+  PASSWORD_FIELD,
+  USERNAME_FIELD,
+} from '@modules/resources/resources/User/Forms/CreateForm/Steps/General/schema'
 
 /** @type {Field} Name field */
 const NAME = {
@@ -44,7 +49,7 @@ const ADMIN_USER = {
 }
 
 const ADMIN_USERNAME_FIELD = {
-  ...USER_FIELDS.USERNAME_FIELD,
+  ...USERNAME_FIELD,
   name: `username`,
   dependOf: ADMIN_USER.name,
   type: INPUT_TYPES.TEXT,
@@ -68,7 +73,7 @@ const ADMIN_USERNAME_FIELD = {
 }
 
 const ADMIN_AUTH_TYPE_FIELD = {
-  ...USER_FIELDS.AUTH_TYPE_FIELD,
+  ...AUTH_TYPE_FIELD,
   name: `authType`,
   dependOf: ADMIN_USER.name,
   htmlType: (type) => !type && INPUT_TYPES.HIDDEN,
@@ -86,7 +91,7 @@ const ADMIN_AUTH_TYPE_FIELD = {
 }
 
 const ADMIN_PASSWORD_FIELD = {
-  ...USER_FIELDS.PASSWORD_FIELD,
+  ...PASSWORD_FIELD,
   name: `password`,
   dependOf: ADMIN_USER.name,
   htmlType: (type) => !type && INPUT_TYPES.HIDDEN,
@@ -104,7 +109,7 @@ const ADMIN_PASSWORD_FIELD = {
 }
 
 const ADMIN_CONFIRM_PASSWORD_FIELD = {
-  ...USER_FIELDS.CONFIRM_PASSWORD_FIELD,
+  ...CONFIRM_PASSWORD_FIELD,
   name: `confirmPassword`,
   dependOf: ADMIN_USER.name,
   htmlType: (type) => !type && INPUT_TYPES.HIDDEN,

@@ -21,6 +21,7 @@ import { getStyles } from '@modules/componentsv2/primitives/Fields/Default/style
 import { TextField } from '@modules/componentsv2/primitives/TextField'
 import { AlertNotification } from '@modules/componentsv2/primitives/AlertNotification'
 import { Label } from '@modules/componentsv2/primitives/Labels/Default'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Text input field component.
@@ -45,6 +46,7 @@ export const InputField = forwardRef(
       tooltip = '',
       hint,
       error,
+      errorDataCy,
       defaultValue,
       initialValue,
       children,
@@ -52,6 +54,7 @@ export const InputField = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const resolvedStatus = error ? 'error' : isDisabled ? 'disabled' : status
 
     return (
@@ -82,9 +85,10 @@ export const InputField = forwardRef(
         >
           {children}
         </TextField>
-        {hint && <Box className="inputfield-hint">{hint}</Box>}
+        {hint && <Box className="inputfield-hint">{translate(hint)}</Box>}
         {error && (
           <AlertNotification
+            data-cy={errorDataCy}
             description={error}
             type={'inline'}
             status={'error'}
@@ -101,6 +105,7 @@ InputField.propTypes = {
   label: PropTypes.string,
   status: PropTypes.string,
   error: PropTypes.string,
+  errorDataCy: PropTypes.string,
   hint: PropTypes.string,
   children: PropTypes.array,
   defaultValue: PropTypes.string,

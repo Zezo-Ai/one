@@ -14,7 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { FormWithSchema, Tr, Translate } from '@ResourcesModule'
+import { FormWithSchema } from '@ResourcesModule'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { Button, SubmitButton } from '@ComponentsV2Module'
 import { AUTH_APPS, STYLE_BUTTONS, T } from '@ConstantsModule'
 import {
@@ -99,6 +100,7 @@ const Qr = ({
   cancelFn = () => undefined,
   refreshUserData = () => undefined,
 }) => {
+  const { translate } = useTranslation()
   const { data = '', isSuccess } = TfaAPI.useGetQrQuery()
   const theme = useTheme()
   const classes = useMemo(() => styles(theme), [theme])
@@ -133,7 +135,7 @@ const Qr = ({
                 <img
                   className={classes.qr}
                   src={data}
-                  alt={Tr(T.ScanThisQr)}
+                  alt={translate(T.ScanThisQr)}
                   data-cy="qrTfa"
                 />
               )}

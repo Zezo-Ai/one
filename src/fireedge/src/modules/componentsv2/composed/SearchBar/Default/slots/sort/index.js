@@ -14,12 +14,41 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { forwardRef, Component } from 'react'
+import { forwardRef, Component, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { Box } from '@mui/material'
-import { getStyles } from '@modules/componentsv2/composed/SearchBar/Default/slots/sort/styles'
+import { Box, Popper } from '@mui/material'
+import {
+  getStyles,
+  getPopperStyles,
+} from '@modules/componentsv2/composed/SearchBar/Default/slots/sort/styles'
 import { Dropdown } from '@modules/componentsv2/primitives/Dropdown'
-import { Sort as SortIcon } from 'iconoir-react'
+import { Sort as SortIcon, SortDown, SortUp } from 'iconoir-react'
+
+const SortPopper = forwardRef(
+  (
+    { style: { width: anchorWidth, ...style } = {}, sortLabel = '', ...props },
+    ref
+  ) => (
+    <Popper
+      {...props}
+      ref={ref}
+      placement="bottom-start"
+      style={{
+        ...style,
+        minWidth:
+          typeof anchorWidth === 'number' ? `${anchorWidth}px` : anchorWidth,
+      }}
+      sx={(theme) => getPopperStyles({ theme, label: sortLabel })}
+    />
+  )
+)
+
+SortPopper.propTypes = {
+  sortLabel: PropTypes.string,
+  style: PropTypes.object,
+}
+
+SortPopper.displayName = 'SortPopper'
 
 /**
  * SortSlot component.
@@ -38,6 +67,7 @@ export const SortSlot = forwardRef(
       sortIcon = SortIcon,
       options = [],
       initialValue,
+      sortDesc = false,
       onChange,
     },
     ref
@@ -50,23 +80,72 @@ export const SortSlot = forwardRef(
         (longest, label) => (label.length > longest.length ? label : longest),
         ''
       )
+    const PopperComponent = useMemo(
+      () =>
+        forwardRef(function SortSlotPopper(props, popperRef) {
+          return (
+            <SortPopper {...props} ref={popperRef} sortLabel={longestLabel} />
+          )
+        }),
+      [longestLabel]
+    )
+    const selectedValue =
+      typeof initialValue === 'object'
+        ? initialValue?.value ?? initialValue?.text
+        : initialValue
+    const sortOptions = useMemo(
+      () =>
+        options.map((option) => {
+          const optionValue =
+            typeof option === 'object' ? option?.value ?? option?.text : option
+          const isSelected =
+            selectedValue != null &&
+            String(optionValue) === String(selectedValue)
+
+          if (!isSelected) return option
+
+          const DirectionIcon = sortDesc ? SortDown : SortUp
+
+          return {
+            ...(typeof option === 'object'
+              ? option
+              : { text: option, value: optionValue }),
+            startIcon: (
+              <DirectionIcon width="16px" height="16px" strokeWidth={1.6} />
+            ),
+          }
+        }),
+      [options, selectedValue, sortDesc]
+    )
+    const handleChange = (option) => {
+      if (option && typeof option === 'object') {
+        const { startIcon, ...sortOption } = option
+
+        onChange?.(sortOption)
+
+        return
+      }
+
+      onChange?.(option)
+    }
 
     return (
       <Box
         sx={(theme) =>
           getStyles({
             theme,
-            label: longestLabel,
           })
         }
         ref={ref}
       >
         <Dropdown
-          onChange={onChange}
+          onChange={handleChange}
           startIcon={sortIcon}
           placeholder={placeholder}
-          options={options}
+          options={sortOptions}
           initialValue={initialValue}
+          PopperComponent={PopperComponent}
+          disableCloseOnSelect
         />
       </Box>
     )
@@ -79,6 +158,7 @@ SortSlot.propTypes = {
   sortIcon: PropTypes.node,
   options: PropTypes.array,
   initialValue: PropTypes.any,
+  sortDesc: PropTypes.bool,
 }
 
 SortSlot.displayName = 'SortSlot'

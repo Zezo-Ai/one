@@ -32,9 +32,7 @@ export const History = ({ data, config }) => {
   const { selectedVm } = data || {}
 
   const { data: history = [], isFetching: isFetchingHistory } =
-    vmhistoryTable.useData({
-      id: selectedVm?.ID,
-    })
+    vmhistoryTable.useData({ id: selectedVm?.ID }, { skip: !selectedVm?.ID })
 
   return (
     <Box sx={(theme) => getStyles({ theme })}>

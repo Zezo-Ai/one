@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Cluster } from '@ConstantsModule'
+import { Cluster, RESOURCE_NAMES } from '@ConstantsModule'
 import { updateOwnershipOnResource } from '@modules/features/OneApi/common'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import { oneApi } from '@modules/features/OneApi/oneApi'
 import {
   ONE_RESOURCES,
@@ -36,6 +40,18 @@ const PERMISSION_VALUES = [4, 2, 1]
 const hasResourceId = (id) => id !== undefined && id !== null
 
 const getOneKsResource = (resource) => resource?.DOCUMENT ?? resource
+
+const withOneKsLabels = (resource, meta) => {
+  const labeledResource = withResourceLabels(
+    getOneKsResource(resource),
+    RESOURCE_NAMES.ONEKS,
+    meta
+  )
+
+  return resource?.DOCUMENT
+    ? { ...resource, DOCUMENT: labeledResource }
+    : labeledResource
+}
 
 const getOneKsResourceId = (resource) => getOneKsResource(resource)?.ID
 
@@ -171,11 +187,14 @@ const oneKsApi = oneApi.injectEndpoints({
         const name = Actions.LIST
         const command = { name, ...Commands[name] }
 
-        return { command, params }
+        return { command, params, needStateInMeta: true }
       },
-      transformResponse: (data) => [data ?? []].flat(),
+      transformResponse: (data, meta) =>
+        [data ?? []].flat().map((resource) => withOneKsLabels(resource, meta)),
       providesTags: (clusters) =>
-        clusters ? getOneKsPoolTags(clusters) : [ONEKS_POOL],
+        withProfileLabelsTags(
+          clusters ? getOneKsPoolTags(clusters) : [ONEKS_POOL]
+        ),
     }),
     getOneKsCluster: builder.query({
       /**
@@ -191,10 +210,11 @@ const oneKsApi = oneApi.injectEndpoints({
         const name = Actions.SHOW
         const command = { name, ...Commands[name] }
 
-        return { params, command }
+        return { params, command, needStateInMeta: true }
       },
-      transformResponse: (data) => data ?? {},
-      providesTags: (_, __, { id }) => [oneKsDetailTag(id)],
+      transformResponse: (data, meta) => withOneKsLabels(data ?? {}, meta),
+      providesTags: (_, __, { id }) =>
+        withProfileLabelsTags([oneKsDetailTag(id)]),
       async onQueryStarted({ id }, { dispatch, getState, queryFulfilled }) {
         try {
           const { data: resourceFromQuery } = await queryFulfilled

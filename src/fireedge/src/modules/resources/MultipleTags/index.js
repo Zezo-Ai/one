@@ -14,7 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { T } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { StatusChip } from '@modules/resources/Status'
 import { Stack, Tooltip, Typography, styled } from '@mui/material'
 import PropTypes from 'prop-types'

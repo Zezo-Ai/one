@@ -20,9 +20,11 @@ import { useEffect } from 'react'
 import { Box, Divider, Link, Slide, Stack } from '@mui/material'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
-import { FormWithSchema, Translate, TranslateProvider } from '@ResourcesModule'
-import { DEFAULT_OTP_LENGTH, INPUT_TYPES, T } from '@ConstantsModule'
+import { FormWithSchema } from '@ResourcesModule'
+import { Translate } from '@ProvidersModule'
 import { getDigits } from '@UtilsModule'
+import { DEFAULT_OTP_LENGTH, INPUT_TYPES, T } from '@ConstantsModule'
+
 import { SubmitButton } from '@ComponentsV2Module'
 
 const getErrorMessage = (error) =>
@@ -81,7 +83,7 @@ export const Form = ({
   }, [clearErrors, error, errorField, fields, setError])
 
   return (
-    <TranslateProvider>
+    <>
       <Slide
         timeout={{ enter: 400 }}
         mountOnEnter
@@ -148,7 +150,7 @@ export const Form = ({
           )}
         </Box>
       </Slide>
-    </TranslateProvider>
+    </>
   )
 }
 

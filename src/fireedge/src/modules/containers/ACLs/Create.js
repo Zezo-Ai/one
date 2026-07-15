@@ -20,8 +20,8 @@ import {
   DefaultFormStepper,
   SkeletonStepsForm,
   ACLs,
-  TranslateProvider,
 } from '@ResourcesModule'
+
 import { createAclObjectFromString } from '@ModelsModule'
 
 import { useHistory, useLocation } from 'react-router'
@@ -99,7 +99,7 @@ export function CreateACL() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {shouldSelectCreateType ? (
         <ACLsTable.CreateAction />
       ) : version &&
@@ -126,7 +126,7 @@ export function CreateACL() {
       ) : (
         <SkeletonStepsForm />
       )}
-    </TranslateProvider>
+    </>
   )
 }
 

@@ -21,10 +21,11 @@ import { rowStyles } from '@modules/resources/Tables/styles'
 import * as Helper from '@ModelsModule'
 import { Snapshot, T } from '@ConstantsModule'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const SnapshotCard = memo(
   ({ snapshot, actions = [], extraActionProps = {} }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -32,7 +33,7 @@ const SnapshotCard = memo(
     const { SNAPSHOT_ID, NAME, TIME } = snapshot
 
     const time = Helper.timeFromMilliseconds(+TIME)
-    const timeAgo = `${Tr(T.Created)} ${time.toRelative()}`
+    const timeAgo = `${translate(T.Created)} ${time.toRelative()}`
 
     return (
       <Paper

@@ -17,15 +17,17 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   SummarySlot,
   TabSlot,
   ButtonGroup,
   Button,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
 import { useModalsApi, VmGroupAPI } from '@FeaturesModule'
 import { Component, useMemo } from 'react'
 import { aggregateLockState } from '@UtilsModule'
-import { T, STYLE_BUTTONS } from '@ConstantsModule'
+import { RESOURCE_NAMES, T, STYLE_BUTTONS } from '@ConstantsModule'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import { Lock, NoLock, Trash, Cancel as CloseIcon } from 'iconoir-react'
@@ -70,15 +72,45 @@ export const AggregatedView = ({
       selectedVmGroups.map(({ ID }) => refreshVmGroup({ id: ID }))
     )
 
-  const handleLock = async () => {
-    await Promise.all(selectedVmGroups.map(({ ID }) => lock({ id: ID })))
-    await handleRefresh()
-  }
+  const handleLock = () =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Lock,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.lock.confirmation']}
+            resources={selectedVmGroups}
+            resourceType={T.VMGroups}
+          />
+        ),
+        confirmLabel: T.Lock,
+      },
+      onSubmit: async () => {
+        await Promise.all(selectedVmGroups.map(({ ID }) => lock({ id: ID })))
+        await handleRefresh()
+      },
+    })
 
-  const handleUnlock = async () => {
-    await Promise.all(selectedVmGroups.map(({ ID }) => unlock({ id: ID })))
-    await handleRefresh()
-  }
+  const handleUnlock = () =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Unlock,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.unlock.confirmation']}
+            resources={selectedVmGroups}
+            resourceType={T.VMGroups}
+          />
+        ),
+        confirmLabel: T.Unlock,
+      },
+      onSubmit: async () => {
+        await Promise.all(selectedVmGroups.map(({ ID }) => unlock({ id: ID })))
+        await handleRefresh()
+      },
+    })
 
   const handleChangePermission = async (newPermission) => {
     await Promise.all(
@@ -105,7 +137,17 @@ export const AggregatedView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.VMGroup}`,
-        description: T['template.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedVmGroups}
+            resourceType={T.VMGroups}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(selectedVmGroups.map(({ ID }) => remove({ id: ID })))
@@ -168,6 +210,11 @@ export const AggregatedView = ({
                   ]}
                 />
 
+                <LabelButton
+                  selectedRows={selectedVmGroups}
+                  resourceType={RESOURCE_NAMES.VM_GROUP}
+                  isDisabled={isMutating}
+                />
                 <Button
                   type={STYLE_BUTTONS.TYPE.PRIMARY}
                   size="small"
@@ -181,7 +228,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

@@ -50,30 +50,30 @@ export const getVdcVnetsCount = (vdc = {}) =>
   formatCount(toArray(vdc?.VNETS?.VNET).map((vnet) => vnet?.VNET_ID))
 
 export const VDC_COLUMNS = [
-  { header: 'ID', accessorKey: 'ID' },
-  { header: 'Name', accessorKey: 'NAME' },
+  { header: T.ID, accessorKey: 'ID' },
+  { header: T.Name, accessorKey: 'NAME' },
   {
-    header: 'Groups',
+    header: T.Groups,
     id: 'GROUPS',
     accessorFn: getVdcGroupsCount,
   },
   {
-    header: 'Clusters',
+    header: T.Clusters,
     id: 'CLUSTERS',
     accessorFn: getVdcClustersCount,
   },
   {
-    header: 'Hosts',
+    header: T.Hosts,
     id: 'HOSTS',
     accessorFn: getVdcHostsCount,
   },
   {
-    header: 'Datastores',
+    header: T.Datastores,
     id: 'DATASTORES',
     accessorFn: getVdcDatastoresCount,
   },
   {
-    header: 'VNets',
+    header: T.Vnets,
     id: 'VNETS',
     accessorFn: getVdcVnetsCount,
   },
@@ -95,4 +95,6 @@ export const VDC_LIST_COLUMNS = [
   createLabelColumn(),
 ]
 
-export const vdcTable = createTable(VDC_COLUMNS, VdcAPI.useGetVDCsQuery)
+export const vdcTable = createTable(VDC_COLUMNS, VdcAPI.useGetVDCsQuery, {
+  dataCy: 'vdcs',
+})

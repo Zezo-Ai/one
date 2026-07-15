@@ -21,8 +21,8 @@ import { useController, useWatch } from 'react-hook-form'
 
 import { ErrorHelper } from '@modules/componentsv2/composed/Forms/FormControl/ErrorHelper'
 import { AdornmentWithTooltip as Tooltip } from '@modules/componentsv2/composed/Forms/FormControl/Tooltip'
-import { Tr } from '@ProvidersModule'
-import { labelCanBeTranslated, generateKey } from '@UtilsModule'
+import { isTranslationInput, generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 export const SliderController = memo(
   ({
@@ -38,6 +38,7 @@ export const SliderController = memo(
     onConditionChange,
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const watch = useWatch({
       name: dependencies,
       disabled: dependencies == null,
@@ -108,7 +109,7 @@ export const SliderController = memo(
             value={value}
             type="number"
             error={Boolean(error)}
-            label={labelCanBeTranslated(label) ? Tr(label) : label}
+            label={isTranslationInput(label) ? translate(label) : label}
             InputLabelProps={{ shrink: true }}
             InputProps={{
               readOnly,

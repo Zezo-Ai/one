@@ -21,6 +21,7 @@ import { ButtonGenerator } from '@modules/resources/Tabs/Service/ButtonGenerator
 import { ServiceAPI, useGeneralApi } from '@FeaturesModule'
 
 import { deepClean } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 import { VmsTable } from '@modules/resources/Tables'
 import { StatusCircle } from '@modules/resources/Status'
@@ -41,7 +42,6 @@ import {
 } from 'iconoir-react'
 
 import { T, STYLE_BUTTONS } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
 
 // Filters actions based on the data-cy key
 const filterActions = ['vm_resume', 'vm-manage', 'vm-host', 'vm-terminate']
@@ -415,6 +415,7 @@ RolesTab.propTypes = { tabProps: PropTypes.object, id: PropTypes.string }
 RolesTab.displayName = 'RolesTab'
 
 const RoleComponent = memo(({ role, selected, status }) => {
+  const { translate } = useTranslation()
   const { name, cardinality, template_id: templateId } = role
 
   return (
@@ -444,10 +445,10 @@ const RoleComponent = memo(({ role, selected, status }) => {
           {name}
         </Typography>
         <Typography variant="body1" mb={1}>
-          {Tr(T.VMTemplate)} {Tr(T.ID)}: {templateId}
+          {translate(T.VMTemplate)} {translate(T.ID)}: {templateId}
         </Typography>
         <Typography variant="body1">
-          {Tr(T.Cardinality)}: {cardinality}
+          {translate(T.Cardinality)}: {cardinality}
         </Typography>
       </Box>
     </Box>

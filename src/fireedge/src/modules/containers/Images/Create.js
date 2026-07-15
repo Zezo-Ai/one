@@ -23,13 +23,7 @@ import {
   useSystemData,
 } from '@FeaturesModule'
 import { jsonToXml } from '@UtilsModule'
-
-import {
-  DefaultFormStepper,
-  SkeletonStepsForm,
-  Image,
-  TranslateProvider,
-} from '@ResourcesModule'
+import { DefaultFormStepper, SkeletonStepsForm, Image } from '@ResourcesModule'
 
 import { T, PATH } from '@ConstantsModule'
 
@@ -85,7 +79,7 @@ export function CreateImage() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {!_.isEmpty(oneConfig) ? (
         <Image.Forms.CreateForm
           onSubmit={onSubmit}
@@ -100,6 +94,6 @@ export function CreateImage() {
       ) : (
         <SkeletonStepsForm />
       )}
-    </TranslateProvider>
+    </>
   )
 }

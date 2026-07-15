@@ -29,10 +29,10 @@ import {
 import { Typography, Box } from '@mui/material'
 import {
   ServiceTemplate,
-  TranslateProvider,
   DefaultFormStepper,
   SkeletonStepsForm,
 } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
@@ -126,7 +126,7 @@ export function InstantiateServiceTemplate() {
 
   return (
     <>
-      <TranslateProvider>
+      <>
         {templateId && !dataTemplate ? (
           <SkeletonStepsForm />
         ) : (
@@ -165,7 +165,7 @@ export function InstantiateServiceTemplate() {
             </ServiceTemplate.Forms.InstantiateForm>
           </>
         )}
-      </TranslateProvider>
+      </>
     </>
   )
 }

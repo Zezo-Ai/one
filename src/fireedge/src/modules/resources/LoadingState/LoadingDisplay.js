@@ -18,7 +18,7 @@ import { Component, useEffect } from 'react'
 import { Box, Typography, CircularProgress } from '@mui/material'
 import { InfoEmpty, CloudError } from 'iconoir-react'
 import { useGeneralApi } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -31,6 +31,7 @@ import { T } from '@ConstantsModule'
  * @returns {Component} The rendered loading display component.
  */
 export const LoadingDisplay = ({ isLoading, error, isEmpty }) => {
+  const { translate } = useTranslation()
   const { enqueueError } = useGeneralApi()
 
   useEffect(() => {
@@ -53,14 +54,14 @@ export const LoadingDisplay = ({ isLoading, error, isEmpty }) => {
     )
   }
 
-  let displayMessage = Tr(T.NoDataAvailable)
+  let displayMessage = translate(T.NoDataAvailable)
   let DisplayIcon = InfoEmpty
 
   if (error && error.length > 0) {
     displayMessage = error
     DisplayIcon = CloudError
   } else if (isEmpty) {
-    displayMessage = Tr(T.NoDataAvailable)
+    displayMessage = translate(T.NoDataAvailable)
     DisplayIcon = InfoEmpty
   }
 

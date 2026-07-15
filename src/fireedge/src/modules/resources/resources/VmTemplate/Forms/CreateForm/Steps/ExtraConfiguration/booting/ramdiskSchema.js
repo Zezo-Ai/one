@@ -49,7 +49,12 @@ export const RAMDISK_PATH_ENABLED = {
     const options = {}
 
     !(ds || path) && (options.disabled = true)
-    ramdisk && form?.setValue(`extra.${RAMDISK_PATH_ENABLED_NAME}`, true)
+    if (
+      ramdisk &&
+      form?.getValues(`extra.${RAMDISK_PATH_ENABLED_NAME}`) !== true
+    ) {
+      form?.setValue(`extra.${RAMDISK_PATH_ENABLED_NAME}`, true)
+    }
 
     return options
   },
@@ -111,6 +116,7 @@ export const RAMDISK_DS = {
         !form?.getValues(`extra.${KERNEL_PATH_ENABLED_NAME}`) ||
         !form?.getValues(`extra.${KERNEL_NAME}`) ||
         !form?.getValues(`extra.${KERNEL_DS_NAME}`)) &&
+      form?.getValues(`extra.${RAMDISK_DS_NAME}`) !== undefined &&
       form?.setValue
     ) {
       form?.setValue(`extra.${RAMDISK_DS_NAME}`, undefined)

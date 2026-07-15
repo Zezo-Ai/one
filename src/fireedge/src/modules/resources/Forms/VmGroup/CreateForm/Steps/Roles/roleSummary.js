@@ -27,8 +27,9 @@ import {
 import PropTypes from 'prop-types'
 import { Cancel, InfoEmpty } from 'iconoir-react'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Component } from 'react'
+
 /**
  * RoleSummary displays detailed information about a VM role, including its configuration and affinity settings.
  *
@@ -39,6 +40,7 @@ import { Component } from 'react'
  * @returns {Component} - Role summary component.
  */
 const RoleSummary = ({ role, selectedRoleIndex, onRemoveAffinity }) => {
+  const { translate } = useTranslation()
   const handleRemoveAffinity = (affinityType, hostId) => () => {
     onRemoveAffinity(affinityType, hostId)
   }
@@ -71,7 +73,7 @@ const RoleSummary = ({ role, selectedRoleIndex, onRemoveAffinity }) => {
         }}
       >
         <Typography variant="h6" component="div" gutterBottom>
-          #{selectedRoleIndex + 1 ?? 0} {Tr(T.RoleConfiguration)}
+          #{selectedRoleIndex + 1 ?? 0} {translate(T.RoleConfiguration)}
         </Typography>
 
         <Typography
@@ -79,7 +81,7 @@ const RoleSummary = ({ role, selectedRoleIndex, onRemoveAffinity }) => {
           color={role?.NAME ? 'text.primary' : 'text.disabled'}
           gutterBottom
         >
-          {Tr(T.Name)}: {role?.NAME || Tr(T.RoleEnterName)}
+          {translate(T.Name)}: {role?.NAME || translate(T.RoleEnterName)}
         </Typography>
 
         <Typography
@@ -91,19 +93,19 @@ const RoleSummary = ({ role, selectedRoleIndex, onRemoveAffinity }) => {
           }
           gutterBottom
         >
-          {Tr(T.Policy)}: {Tr(formatPolicy(role?.POLICY))}
+          {translate(T.Policy)}: {translate(formatPolicy(role?.POLICY))}
         </Typography>
 
         {role?.HOST_AFFINED && role.HOST_AFFINED.length > 0 ? (
           <>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {Tr(T.AffinedHosts)}:
+              {translate(T.AffinedHosts)}:
             </Typography>
             <List sx={{ bgcolor: 'background.paper' }}>
               {role.HOST_AFFINED.map((hostId, index) => (
                 <ListItem key={hostId} sx={{ p: 0, pl: 1 }}>
                   <ListItemText
-                    primary={`${Tr(T.Host)} ${hostId}`}
+                    primary={`${translate(T.Host)} ${hostId}`}
                     sx={{ mr: 1 }}
                   />
                   <IconButton
@@ -120,8 +122,8 @@ const RoleSummary = ({ role, selectedRoleIndex, onRemoveAffinity }) => {
           </>
         ) : (
           <Typography variant="body2" color="text.disabled" gutterBottom>
-            {Tr(T.NoAffinedHosts)}
-            <Tooltip title={Tr(T.NoAffinedHostsConcept)}>
+            {translate(T.NoAffinedHosts)}
+            <Tooltip title={translate(T.NoAffinedHostsConcept)}>
               <InfoEmpty fontSize="small" />
             </Tooltip>
           </Typography>
@@ -130,7 +132,7 @@ const RoleSummary = ({ role, selectedRoleIndex, onRemoveAffinity }) => {
         {role?.HOST_ANTI_AFFINED && role.HOST_ANTI_AFFINED.length > 0 ? (
           <>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {Tr(T.AntiAffinedHosts)}:
+              {translate(T.AntiAffinedHosts)}:
             </Typography>
             <List sx={{ bgcolor: 'background.paper' }}>
               {role.HOST_ANTI_AFFINED.map((hostId, index) => (
@@ -150,8 +152,8 @@ const RoleSummary = ({ role, selectedRoleIndex, onRemoveAffinity }) => {
           </>
         ) : (
           <Typography variant="body2" color="text.disabled" gutterBottom>
-            {Tr(T.NoAntiAffinedHosts)}
-            <Tooltip title={Tr(T.NoAntiAffinedHostsConcept)}>
+            {translate(T.NoAntiAffinedHosts)}
+            <Tooltip title={translate(T.NoAntiAffinedHostsConcept)}>
               <InfoEmpty fontSize="small" />
             </Tooltip>
           </Typography>
@@ -163,11 +165,11 @@ const RoleSummary = ({ role, selectedRoleIndex, onRemoveAffinity }) => {
           color="textSecondary"
           sx={{ opacity: 0.7 }}
         >
-          <strong>{Tr(T.VMGroupConfiguration)}:</strong>
+          <strong>{translate(T.VMGroupConfiguration)}:</strong>
           <ul>
-            <li>{Tr(T.RoleDefineRoles)}</li>
-            <li>{Tr(T.RoleOptimize)}</li>
-            <li>{Tr(T.RoleManageApps)}</li>
+            <li>{translate(T.RoleDefineRoles)}</li>
+            <li>{translate(T.RoleOptimize)}</li>
+            <li>{translate(T.RoleManageApps)}</li>
           </ul>
         </Typography>
       </CardActions>

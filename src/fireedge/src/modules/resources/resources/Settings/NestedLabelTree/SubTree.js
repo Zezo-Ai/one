@@ -23,7 +23,7 @@ import {
 import { TreeItem } from '@mui/lab'
 import { Box } from '@mui/material'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Checkbox as SelectCheckbox, Tooltip } from '@ComponentsV2Module'
 
 const getLabelText = (label, isRoot = false) => {
@@ -58,8 +58,10 @@ export const RenderTree = ({
   path = [],
   isRoot = true,
   actions,
-}) =>
-  Object.entries(baseState).map(([key, node]) => {
+}) => {
+  const { translate } = useTranslation()
+
+  return Object.entries(baseState).map(([key, node]) => {
     const { rowIds = [] } = info
     const { toggleSelected } = actions
     const currentPath = [...path, key]
@@ -112,7 +114,7 @@ export const RenderTree = ({
             )}
 
             {isRoot && (
-              <Tooltip placement="right" title={Tr(getTooltipText(key))}>
+              <Tooltip placement="right" title={translate(getTooltipText(key))}>
                 <HintIcon width={18} height={18} style={{ strokeWidth: 1.3 }} />
               </Tooltip>
             )}
@@ -120,7 +122,7 @@ export const RenderTree = ({
             {!isRoot && isGroupName && (
               <Tooltip
                 placement="right"
-                title={Tr(isEditable ? T.Editable : T.ReadOnly)}
+                title={translate(isEditable ? T.Editable : T.ReadOnly)}
               >
                 <Box
                   sx={(theme) => ({
@@ -166,3 +168,4 @@ export const RenderTree = ({
       </TreeItem>
     )
   })
+}

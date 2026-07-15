@@ -107,6 +107,7 @@ export function VDCs() {
 
   return (
     <ResourceContainer
+      dataCy={vdcTable.dataCy}
       resourceName={T.VDCs}
       onRefresh={refresh}
       isRefreshing={isRefreshing}
@@ -122,6 +123,7 @@ export function VDCs() {
           case TABLE_VIEW_MODE.LIST:
             return (
               <Table
+                dataCy={vdcTable.dataCy}
                 columns={vdcTable.columns(VDC_LIST_COLUMNS)}
                 data={items}
                 isLoading={isRefreshing}
@@ -152,6 +154,7 @@ export function VDCs() {
                   return (
                     <Card
                       key={id}
+                      dataCy={`${vdcTable.dataCy}-${id}`}
                       isSelected={selectedItems?.includes(id)}
                       onCheck={() =>
                         setSelectedItems(

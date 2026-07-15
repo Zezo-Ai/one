@@ -20,13 +20,13 @@ import { ModernTv } from 'iconoir-react'
 
 import { StatusChip } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
-import { Tr, Translate } from '@modules/resources/HOC'
-
+import { Translate, useTranslation } from '@ProvidersModule'
 import {
   timeFromMilliseconds,
   prettyBytes,
   stringToBoolean,
 } from '@UtilsModule'
+
 import { T, DiskSnapshot } from '@ConstantsModule'
 
 const DiskSnapshotCard = memo(
@@ -37,6 +37,7 @@ const DiskSnapshotCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ snapshot = {}, actions }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -82,7 +83,9 @@ const DiskSnapshotCard = memo(
           <div className={classes.caption}>
             <span title={timeFormat}>{`#${ID} ${timeAgo}`}</span>
             <span
-              title={`${Tr(T.Monitoring)} / ${Tr(T.DiskSize)}: ${sizeInfo}`}
+              title={`${translate(T.Monitoring)} / ${translate(
+                T.DiskSize
+              )}: ${sizeInfo}`}
             >
               <ModernTv />
               <span>{` ${sizeInfo}`}</span>

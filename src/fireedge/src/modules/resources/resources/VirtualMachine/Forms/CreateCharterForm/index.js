@@ -17,7 +17,7 @@ import { useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { Stack, Divider } from '@mui/material'
 import { T, TEXT_VARIANTS } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   timeToSecondsByPeriodicity,
   transformChartersToSchedActions,
@@ -33,20 +33,23 @@ import {
   RELATIVE_CHARTER_SCHEMA,
 } from '@modules/resources/resources/VirtualMachine/Forms/CreateCharterForm/schema'
 
-const formatRelativeCharter = ({
-  ACTION,
-  TIME,
-  PERIOD,
-  WARNING,
-  WARNING_PERIOD,
-}) => (
+const formatRelativeCharter = (
+  { ACTION, TIME, PERIOD, WARNING, WARNING_PERIOD },
+  translate
+) => (
   <>
-    {`> ${Tr(sentenceCase(ACTION))} ${Tr(T.In)} ${TIME} ${Tr(PERIOD)}`}
-    {WARNING && ` | ${Tr(T.WarningBefore)} ${WARNING} ${Tr(WARNING_PERIOD)}`}
+    {`> ${translate(sentenceCase(ACTION))} ${translate(
+      T.In
+    )} ${TIME} ${translate(PERIOD)}`}
+    {WARNING &&
+      ` | ${translate(T.WarningBefore)} ${WARNING} ${translate(
+        WARNING_PERIOD
+      )}`}
   </>
 )
 
 const CharterLeasesText = ({ leases, onlyFixed = true }) => {
+  const { translate } = useTranslation()
   const displayLeases = useMemo(
     () => (onlyFixed ? getFixedLeases(leases) : leases),
     [leases, onlyFixed]
@@ -71,7 +74,7 @@ const CharterLeasesText = ({ leases, onlyFixed = true }) => {
               <Text
                 noWrap
                 sx={{ px: 2, py: 1 }}
-                value={formatRelativeCharter(action)}
+                value={formatRelativeCharter(action, translate)}
                 variant={TEXT_VARIANTS.BODY_LARGE}
               />
             </Stack>

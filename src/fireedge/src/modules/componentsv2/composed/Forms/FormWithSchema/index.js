@@ -23,6 +23,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -51,6 +52,7 @@ import { TypographyController } from '@modules/componentsv2/composed/Forms/FormC
 import { RadioController } from '@modules/componentsv2/composed/Forms/FormControl/RadioController'
 import {
   useDisableStep,
+  useRegisterModifiedFields,
   Legend,
 } from '@modules/componentsv2/composed/Forms/FormStepper'
 
@@ -125,150 +127,174 @@ export const FormWithSchema = ({
   const { setModifiedFields, setFieldPath } = useGeneralApi()
   const { sx: sxRoot, ...restOfRootProps } = rootProps ?? {}
   const formContext = useFormContext()
+  const registerModifiedFields = useRegisterModifiedFields()
+  const saveModifiedFieldsRef = useRef(() => {})
   const { touchedFields, dirtyFields } = useFormState({
     control: formContext.control,
   })
-
-  useEffect(
-    () => () => {
-      if (saveState) {
-        // Fields to add to the modifiedFields
-        let fieldsToMerge = {}
-
-        // Get the fields that are dirty
-        const touchedDirtyFields = dirtyFields
-
-        // Add to the fieldsToMerge
-        if (!isDeeplyEmpty(touchedDirtyFields)) {
-          fieldsToMerge = touchedDirtyFields
-        }
-
-        // Check hidden fields that have a dependOf that is a field touched or dirty so the hidden field has to be add to the modifiedFields
-        const fieldsHiddenMerge = {}
-
-        // Fields that have a value on dependOf attribute (if depend is in a different schema, the name of the field will contain the step id and starts with $)
-        const fieldWithDepend = fields.filter((item) =>
-          item.dependOf && Array.isArray(item.dependOf)
-            ? item.dependOf.some((dependItem) =>
-                get(
-                  id ? fieldsToMerge[id] : fieldsToMerge,
-                  startsWith(dependItem, '$' + id)
-                    ? dependItem.substring(id.length + 2)
-                    : dependItem
-                )
-              )
-            : get(
-                id ? fieldsToMerge[id] : fieldsToMerge,
-                startsWith(item.dependOf, '$' + id)
-                  ? item.dependOf.substring(id.length + 2)
-                  : item.dependOf
-              )
-        )
-
-        // The fields that has a dependOf and has htmlType hidden has to be deleted
-        fieldWithDepend
-          .filter((field) => {
-            const htmlTypeFunction = typeof field.htmlType === 'function'
-
-            const valueDependOf = Array.isArray(field.dependOf)
-              ? field.dependOf.map((depend) =>
-                  formContext?.getValues(
-                    `${id}.` +
-                      (startsWith(depend, '$' + id)
-                        ? depend.substring(id.length + 2)
-                        : depend)
-                  )
-                )
-              : formContext?.getValues(
-                  `${id}.` +
-                    (startsWith(field.dependOf, '$' + id)
-                      ? field.dependOf.substring(id.length + 2)
-                      : field.dependOf)
-                )
-
-            const hidden =
-              (htmlTypeFunction &&
-                field.htmlType(valueDependOf, formContext) === 'hidden') ||
-              (!htmlTypeFunction && field.htmlType === 'hidden')
-
-            return field.htmlType && hidden
-          })
-          .map((item) => item.name)
-          .forEach((element) => {
-            set(fieldsHiddenMerge, id ? `${id}.${element}` : `${element}`, {
-              __delete__: true,
-            })
-          })
-
-        // The fields that has a dependOf and has htmlType different that hidden has to be added
-        fieldWithDepend
-          .filter((field) => {
-            const htmlTypeFunction = typeof field.htmlType === 'function'
-
-            const valueDependOf = Array.isArray(field.dependOf)
-              ? field.dependOf.map((depend) =>
-                  formContext?.getValues(
-                    `${id}.` +
-                      (startsWith(depend, '$' + id)
-                        ? depend.substring(id.length + 2)
-                        : depend)
-                  )
-                )
-              : formContext?.getValues(
-                  `${id}.` +
-                    (startsWith(field.dependOf, '$' + id)
-                      ? field.dependOf.substring(id.length + 2)
-                      : field.dependOf)
-                )
-
-            const notHidden =
-              (htmlTypeFunction &&
-                field.htmlType(valueDependOf, formContext) !== 'hidden') ||
-              (!htmlTypeFunction && field.htmlType !== 'hidden')
-
-            // return field.htmlType && notHidden
-            return notHidden
-          })
-          .map((item) => item.name)
-          .forEach((element) => {
-            set(fieldsHiddenMerge, id ? `${id}.${element}` : `${element}`, true)
-          })
-
-        const fieldsToMergeinSchema = {}
-        const fieldPathOverrides = {}
-
-        fields.forEach((field) => {
-          const value = get(fieldsToMerge, `${id}.${field.name}`)
-          if (value) {
-            if (field?.fieldPath) {
-              set(fieldPathOverrides, field.fieldPath, value)
-            } else {
-              set(fieldsToMergeinSchema, `${id}.${field.name}`, value)
-            }
-          }
-        })
-
-        const mix = merge({}, fieldsToMergeinSchema, fieldsHiddenMerge)
-        if (!isDeeplyEmpty(mix)) {
-          setModifiedFields(mix)
-        }
-
-        if (!isDeeplyEmpty(fieldPathOverrides)) {
-          setModifiedFields(fieldPathOverrides, { direct: true })
-        }
-
-        if (fieldPath) {
-          setFieldPath(fieldPath)
-        }
-      }
-    },
-    [touchedFields, dirtyFields]
-  )
 
   const getFields = useMemo(
     () => (typeof fields === 'function' ? fields() : fields),
     [fields]
   )
+
+  const saveModifiedFields = useCallback(() => {
+    if (!saveState) return
+
+    // Fields to add to the modifiedFields
+    let fieldsToMerge = {}
+
+    // Get the fields that are dirty
+    const touchedDirtyFields = dirtyFields
+
+    // Add to the fieldsToMerge
+    if (!isDeeplyEmpty(touchedDirtyFields)) {
+      fieldsToMerge = touchedDirtyFields
+    }
+
+    // Check hidden fields that have a dependOf that is a field touched or dirty so the hidden field has to be add to the modifiedFields
+    const fieldsHiddenMerge = {}
+    const ensuredFields = getFields ?? []
+
+    // Fields that have a value on dependOf attribute (if depend is in a different schema, the name of the field will contain the step id and starts with $)
+    const fieldWithDepend = ensuredFields.filter((item) =>
+      item.dependOf && Array.isArray(item.dependOf)
+        ? item.dependOf.some((dependItem) =>
+            get(
+              id ? fieldsToMerge[id] : fieldsToMerge,
+              startsWith(dependItem, '$' + id)
+                ? dependItem.substring(id.length + 2)
+                : dependItem
+            )
+          )
+        : get(
+            id ? fieldsToMerge[id] : fieldsToMerge,
+            startsWith(item.dependOf, '$' + id)
+              ? item.dependOf.substring(id.length + 2)
+              : item.dependOf
+          )
+    )
+
+    // The fields that has a dependOf and has htmlType hidden has to be deleted
+    fieldWithDepend
+      .filter((field) => {
+        const htmlTypeFunction = typeof field.htmlType === 'function'
+
+        const valueDependOf = Array.isArray(field.dependOf)
+          ? field.dependOf.map((depend) =>
+              formContext?.getValues(
+                `${id}.` +
+                  (startsWith(depend, '$' + id)
+                    ? depend.substring(id.length + 2)
+                    : depend)
+              )
+            )
+          : formContext?.getValues(
+              `${id}.` +
+                (startsWith(field.dependOf, '$' + id)
+                  ? field.dependOf.substring(id.length + 2)
+                  : field.dependOf)
+            )
+
+        const hidden =
+          (htmlTypeFunction &&
+            field.htmlType(valueDependOf, formContext) === 'hidden') ||
+          (!htmlTypeFunction && field.htmlType === 'hidden')
+
+        return field.htmlType && hidden
+      })
+      .map((item) => item.name)
+      .forEach((element) => {
+        set(fieldsHiddenMerge, id ? `${id}.${element}` : `${element}`, {
+          __delete__: true,
+        })
+      })
+
+    // The fields that has a dependOf and has htmlType different that hidden has to be added
+    fieldWithDepend
+      .filter((field) => {
+        const htmlTypeFunction = typeof field.htmlType === 'function'
+
+        const valueDependOf = Array.isArray(field.dependOf)
+          ? field.dependOf.map((depend) =>
+              formContext?.getValues(
+                `${id}.` +
+                  (startsWith(depend, '$' + id)
+                    ? depend.substring(id.length + 2)
+                    : depend)
+              )
+            )
+          : formContext?.getValues(
+              `${id}.` +
+                (startsWith(field.dependOf, '$' + id)
+                  ? field.dependOf.substring(id.length + 2)
+                  : field.dependOf)
+            )
+
+        const notHidden =
+          (htmlTypeFunction &&
+            field.htmlType(valueDependOf, formContext) !== 'hidden') ||
+          (!htmlTypeFunction && field.htmlType !== 'hidden')
+
+        // return field.htmlType && notHidden
+        return notHidden
+      })
+      .map((item) => item.name)
+      .forEach((element) => {
+        set(fieldsHiddenMerge, id ? `${id}.${element}` : `${element}`, true)
+      })
+
+    const fieldsToMergeinSchema = {}
+    const fieldPathOverrides = {}
+
+    ensuredFields.forEach((field) => {
+      const value = get(fieldsToMerge, `${id}.${field.name}`)
+      if (value) {
+        if (field?.fieldPath) {
+          set(fieldPathOverrides, field.fieldPath, value)
+        } else {
+          set(fieldsToMergeinSchema, `${id}.${field.name}`, value)
+        }
+      }
+    })
+
+    const mix = merge({}, fieldsToMergeinSchema, fieldsHiddenMerge)
+    if (!isDeeplyEmpty(mix)) {
+      setModifiedFields(mix)
+    }
+
+    if (!isDeeplyEmpty(fieldPathOverrides)) {
+      setModifiedFields(fieldPathOverrides, { direct: true })
+    }
+
+    if (fieldPath) {
+      setFieldPath(fieldPath)
+    }
+  }, [
+    dirtyFields,
+    fieldPath,
+    formContext,
+    getFields,
+    id,
+    saveState,
+    setFieldPath,
+    setModifiedFields,
+  ])
+
+  saveModifiedFieldsRef.current = saveModifiedFields
+
+  useEffect(
+    () => () => {
+      saveModifiedFieldsRef.current()
+    },
+    [touchedFields, dirtyFields]
+  )
+
+  useEffect(() => {
+    if (!saveState) return undefined
+
+    return registerModifiedFields(() => saveModifiedFieldsRef.current())
+  }, [registerModifiedFields, saveState])
 
   const fieldsByName = useMemo(
     () => new Map(getFields?.map?.((field) => [field?.name, field]) ?? []),

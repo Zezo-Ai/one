@@ -19,7 +19,11 @@ import { Component, useCallback, useMemo } from 'react'
 
 import { Box } from '@mui/material'
 
-import { DetailsCard, SubmitButton } from '@ComponentsV2Module'
+import {
+  DetailsCard,
+  ResourceActionConfirmation,
+  SubmitButton,
+} from '@ComponentsV2Module'
 import { DRS_AUTOMATION, DRS_CONFIG_ATTRIBUTES, T } from '@ConstantsModule'
 import {
   ClusterAPI,
@@ -284,7 +288,13 @@ export const Drs = ({ data = {} }) => {
       isConfirmDialog: true,
       dialogProps: {
         title: T.DisableDrs,
-        description: T.DoYouWantDisableDRS,
+        description: (
+          <ResourceActionConfirmation
+            description={T.DoYouWantDisableDRS}
+            resourceType={T.Drs}
+          />
+        ),
+        confirmLabel: T.Disable,
       },
       onSubmit: handleDisableDrs,
     })
@@ -294,6 +304,7 @@ export const Drs = ({ data = {} }) => {
       <Box className="drs-configuration">
         <Box className="drs-actions">
           <SubmitButton
+            type={'secondary'}
             data-cy="update-conf"
             label={isDrsEnabled ? T.UpdatePlanConfiguration : T.EnableDrs}
             isDisabled={

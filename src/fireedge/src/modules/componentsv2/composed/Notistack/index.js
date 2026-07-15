@@ -18,12 +18,13 @@ import PropTypes from 'prop-types'
 import { SnackbarProvider as NotistackProvider } from 'notistack'
 import { AlertNotification, Snackbar } from '@modules/componentsv2/primitives'
 import { forwardRef } from 'react'
-import { sprintf } from 'sprintf-js'
+import { useTranslation } from '@ProvidersModule'
 
 const NotistackComponent = forwardRef((props, ref) => {
+  const { translate } = useTranslation()
   const { word, values } = props?.message?.props ?? {}
   const isUrgent = props?.urgent
-  const fTitle = values ? sprintf(word, ...[].concat(values)) : word
+  const fTitle = translate(word, values)
 
   return isUrgent ? (
     <AlertNotification

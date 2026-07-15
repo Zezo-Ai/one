@@ -19,10 +19,11 @@ import {
   DefaultFormStepper,
   SkeletonStepsForm,
   BackupJobs,
-  TranslateProvider,
 } from '@ResourcesModule'
-import { BackupJobAPI, useGeneralApi } from '@FeaturesModule'
+
 import { jsonToXml } from '@UtilsModule'
+import { BackupJobAPI, useGeneralApi } from '@FeaturesModule'
+
 import { T, PATH } from '@ConstantsModule'
 
 /**
@@ -49,13 +50,13 @@ export function CreateBackupJob() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <BackupJobs.Forms.CreateForm
         onSubmit={onSubmit}
         fallback={<SkeletonStepsForm />}
       >
         {(config) => <DefaultFormStepper {...config} />}
       </BackupJobs.Forms.CreateForm>
-    </TranslateProvider>
+    </>
   )
 }

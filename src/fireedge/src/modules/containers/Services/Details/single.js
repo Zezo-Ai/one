@@ -16,6 +16,7 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   MenuButton,
   ResourceActionConfirmation,
@@ -28,7 +29,12 @@ import { Component, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { useDispatch } from 'react-redux'
 import { Cancel, RefreshCircular, RefreshDouble, Trash } from 'iconoir-react'
-import { SERVICE_ACTION_ENUM, SERVICE_ACTIONS, T } from '@ConstantsModule'
+import {
+  RESOURCE_NAMES,
+  SERVICE_ACTION_ENUM,
+  SERVICE_ACTIONS,
+  T,
+} from '@ConstantsModule'
 import {
   ONE_RESOURCES_POOL,
   ServiceAPI,
@@ -36,6 +42,7 @@ import {
   useModalsApi,
 } from '@FeaturesModule'
 import {
+  getLabelTags,
   getServiceState,
   getServiceTotalNetworks,
   getServiceTotalRoles,
@@ -176,7 +183,11 @@ export const SingleView = ({
             title,
             description: (
               <ResourceActionConfirmation
-                description={T.DoYouWantProceed}
+                description={
+                  isRecoverDelete
+                    ? T['resource.recoverDelete.confirmation']
+                    : T['resource.recover.confirmation']
+                }
                 resources={service}
                 resourceType={T.Services}
               />
@@ -250,6 +261,7 @@ export const SingleView = ({
           ),
           value: 'delete',
           tooltip: T.Delete,
+          isDestructive: true,
           isDisabled: isActionsDisabled,
         }
       : undefined
@@ -266,6 +278,7 @@ export const SingleView = ({
             isTitleEditDisabled: isActionsDisabled,
             title: service?.NAME,
             id: service?.ID,
+            tags: getLabelTags(service?.LABELS),
             labels: [
               [T.Owner, service?.UNAME],
               [T.Group, service?.GNAME],
@@ -290,6 +303,13 @@ export const SingleView = ({
                   size="medium"
                   options={[
                     [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [service],
+                          resourceType: RESOURCE_NAMES.SERVICE,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
                       {
                         startIcon: <RefreshDouble width="16px" height="16px" />,
                         onClick: handleRefresh,

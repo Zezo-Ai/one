@@ -14,12 +14,13 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Card, CardContent, Typography } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { generateDocLink } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { T, ACL_TYPE_ID, ACL_RESOURCES } from '@ConstantsModule'
 import { useWatch } from 'react-hook-form'
 import { useEffect, useState, Component } from 'react'
 import { createStringACL, translateACL } from '@ModelsModule'
-import { generateDocLink } from '@UtilsModule'
+
 import PropTypes from 'prop-types'
 
 /**
@@ -44,6 +45,7 @@ const HelperACL = ({
   zones,
   version,
 }) => {
+  const { translate } = useTranslation()
   // Create rule
   const [rule, setRule] = useState('')
 
@@ -93,11 +95,11 @@ const HelperACL = ({
         }}
       >
         <Typography variant="h6" component="div" gutterBottom>
-          {Tr(title)}
+          {translate(title)}
         </Typography>
 
         <Typography variant="body2" gutterBottom>
-          {Tr(text)}
+          {translate(text)}
         </Typography>
 
         <Typography variant="body2" gutterBottom>
@@ -105,7 +107,7 @@ const HelperACL = ({
         </Typography>
 
         <Typography variant="body2" gutterBottom>
-          {Tr(T['acls.form.create.stringEditor.info.more'])}
+          {translate(T['acls.form.create.stringEditor.info.more'])}
           <a
             target="_blank"
             href={generateDocLink(
@@ -114,7 +116,7 @@ const HelperACL = ({
             )}
             rel="noreferrer"
           >
-            {Tr(T['acls.form.create.stringEditor.info.more.link'])}
+            {translate(T['acls.form.create.stringEditor.info.more.link'])}
           </a>
         </Typography>
       </CardContent>

@@ -151,7 +151,7 @@ export const OwnershipTab = forwardRef(
     )
 
     const columns = [
-      { accessorKey: 'label', header: '', width: '30%' },
+      { accessorKey: 'label', header: '' },
       {
         accessorKey: 'value',
         header: '',
@@ -164,7 +164,7 @@ export const OwnershipTab = forwardRef(
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 gap: 1,
                 width: '100%',
               }}
@@ -175,6 +175,7 @@ export const OwnershipTab = forwardRef(
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
+                  minWidth: 0,
                 }}
               >
                 {value ?? '-'}

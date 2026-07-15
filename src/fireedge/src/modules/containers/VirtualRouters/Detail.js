@@ -15,7 +15,7 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement } from 'react'
 import { Redirect, useParams } from 'react-router-dom'
-import { VrsTable, TranslateProvider, VrTabs } from '@ResourcesModule'
+import { VrsTable, VrTabs } from '@ResourcesModule'
 
 /**
  * Displays the detail information about a Service Template.
@@ -30,8 +30,8 @@ export function VirtualRouterDetail() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <VrTabs id={id} singleActions={VrsTable.Actions} />
-    </TranslateProvider>
+    </>
   )
 }

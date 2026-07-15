@@ -19,7 +19,7 @@ import PropTypes from 'prop-types'
 import { Stack, Typography, styled } from '@mui/material'
 import { WarningCircle as WarningIcon } from 'iconoir-react'
 
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const ErrorTypo = styled(Typography)(({ theme }) => ({
   ...theme.typography.body1,

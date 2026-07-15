@@ -20,11 +20,12 @@ import { ReactElement, memo, useCallback, useMemo, useState } from 'react'
 import { Row } from 'opennebula-react-table'
 import { Action } from '@modules/resources/Cards/SelectCard'
 import { SubmitButton } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
-// eslint-disable-next-line no-unused-vars
-import { DialogProps } from '@modules/resources/Dialogs'
 // eslint-disable-next-line no-unused-vars
 import { CreateFormCallback, CreateStepsCallback } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+// eslint-disable-next-line no-unused-vars
+import { DialogProps } from '@modules/resources/Dialogs'
+
 import { Menu, MenuItem } from '@mui/material'
 import { useModalsApi } from '@FeaturesModule'
 import { v4 as uuidv4 } from 'uuid'
@@ -56,6 +57,7 @@ import { v4 as uuidv4 } from 'uuid'
  */
 
 const ActionItem = memo(({ item, selectedRows, onSelectedRowsChange }) => {
+  const { translate } = useTranslation()
   /** @type {GlobalAction} */
   const {
     accessor,
@@ -130,8 +132,8 @@ const ActionItem = memo(({ item, selectedRows, onSelectedRowsChange }) => {
     startIcon: startIcon,
     endIcon: endIcon,
     iconOnly: iconOnly,
-    label: label && Tr(label),
-    title: tooltip && Tr(tooltip),
+    label: label && translate(label),
+    title: tooltip && translate(tooltip),
     sx,
     size,
     type,

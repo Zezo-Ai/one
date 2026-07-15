@@ -16,11 +16,14 @@
 
 import { T } from '@ConstantsModule'
 import { BackupJobAPI } from '@FeaturesModule'
-import { createTable } from '@UtilsModule'
+import { createTable, getLockIcon } from '@UtilsModule'
 import {
   getBackupJobLastBackupTime,
+  getBackupJobStatus,
   getBackupJobState,
 } from '@modules/models/BackupJob/general'
+import { StatusTag } from '@ComponentsV2Module'
+import { Box } from '@mui/material'
 import { createLabelColumn } from '@modules/models/labels'
 
 /* eslint-disable jsdoc/require-jsdoc */
@@ -34,21 +37,27 @@ export const BACKUPJOB_COLUMNS = [
     header: T.Name,
     id: 'name',
     accessorKey: 'NAME',
+    cell: ({ row }) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>{row.original?.NAME}</span>
+        {getLockIcon(row.original)}
+      </Box>
+    ),
   },
   {
     header: T.State,
     id: 'state',
     accessorFn: (row) => getBackupJobState(row),
+    cell: ({ row }) => {
+      const { color, name } = getBackupJobStatus(row.original) ?? {}
+
+      return <StatusTag statusColor={color} statusName={name} />
+    },
   },
   {
     header: T.Priority,
     id: 'priority',
     accessorKey: 'PRIORITY',
-  },
-  {
-    header: T.LastBackupTimeInfo,
-    id: 'lastBackupTime',
-    accessorFn: (row) => getBackupJobLastBackupTime(row?.LAST_BACKUP_TIME),
   },
   {
     header: T.Owner,
@@ -60,10 +69,16 @@ export const BACKUPJOB_COLUMNS = [
     id: 'group',
     accessorKey: 'GNAME',
   },
+  {
+    header: T.LastBackupTimeInfo,
+    id: 'lastBackupTime',
+    accessorFn: (row) => getBackupJobLastBackupTime(row?.LAST_BACKUP_TIME),
+  },
   createLabelColumn(),
 ]
 
 export const backupJobTable = createTable(
   BACKUPJOB_COLUMNS,
-  BackupJobAPI.useGetBackupJobsQuery
+  BackupJobAPI.useGetBackupJobsQuery,
+  { dataCy: 'backup-jobs' }
 )

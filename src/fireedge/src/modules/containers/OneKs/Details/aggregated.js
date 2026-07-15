@@ -16,9 +16,9 @@
 
 import {
   Button,
-  ButtonGroup,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   TabSlot,
 } from '@ComponentsV2Module'
 
@@ -27,7 +27,12 @@ import { Component } from 'react'
 
 import { createActions, permissionsToOctal, toSnakeCase } from '@UtilsModule'
 
-import { ONEKS_ACTIONS, STYLE_BUTTONS, T } from '@ConstantsModule'
+import {
+  ONEKS_ACTIONS,
+  RESOURCE_NAMES,
+  STYLE_BUTTONS,
+  T,
+} from '@ConstantsModule'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import { Cancel as CloseIcon, RefreshCircular, Trash } from 'iconoir-react'
@@ -191,10 +196,25 @@ export const AggregatedView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
-                {recoverButtons.length > 0 && (
-                  <ButtonGroup buttons={recoverButtons} />
+                {recoverButtons.map(
+                  ({ value, startIcon, onClick, tooltip, isDisabled }) => (
+                    <Button
+                      key={value}
+                      type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                      size="medium"
+                      iconOnly={startIcon}
+                      tooltip={tooltip}
+                      onClick={onClick}
+                      isDisabled={isDisabled}
+                    />
+                  )
                 )}
 
+                <LabelButton
+                  selectedRows={selectedData}
+                  resourceType={RESOURCE_NAMES.ONEKS}
+                  isDisabled={isMutating}
+                />
                 {deleteButtons.length > 0 && (
                   <Button
                     type={STYLE_BUTTONS.TYPE.PRIMARY}
@@ -210,7 +230,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

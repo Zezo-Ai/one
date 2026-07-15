@@ -99,6 +99,7 @@ const DeleteHost = memo(({ formType, submit, filter }) => {
       data-cy="delete-host"
       type="secondary"
       onClick={handleOpenForm}
+      isDestructive
       label={T.DeleteHostProvision}
     />
   )

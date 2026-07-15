@@ -27,7 +27,7 @@ import {
 } from 'opennebula-react-table'
 
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { GlobalFilter } from '@modules/resources/Tables/Enhanced/Utils'
 
 const useToolbarStyles = (theme) => ({
@@ -45,6 +45,7 @@ const useToolbarStyles = (theme) => ({
 })
 
 const Toolbar = ({ useTableProps }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => useToolbarStyles(theme), [theme])
 
@@ -57,7 +58,7 @@ const Toolbar = ({ useTableProps }) => {
   return (
     <div className={classes.filterWrapper}>
       <Button startIcon={<FilterIcon />} className={classes.filterButton}>
-        {Tr(T.Filters)}
+        {translate(T.Filters)}
       </Button>
       <GlobalFilter
         preGlobalFilteredRows={preGlobalFilteredRows}

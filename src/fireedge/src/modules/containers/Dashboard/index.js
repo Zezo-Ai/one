@@ -13,4 +13,11 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-export * from '@modules/containers/Dashboard/Sunstone'
+import { ReactElement } from 'react'
+
+import GeneralDashboard from '@modules/containers/Dashboard/General'
+
+/** @returns {ReactElement} Dashboard container */
+export function Dashboard() {
+  return <GeneralDashboard />
+}

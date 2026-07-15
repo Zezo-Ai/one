@@ -15,12 +15,16 @@
  * ------------------------------------------------------------------------- */
 import { Actions, Commands } from 'server/routes/api/oneform/provider/routes'
 import { oneApi } from '@modules/features/OneApi/oneApi'
+import {
+  withProfileLabelsTags,
+  withResourceLabels,
+} from '@modules/features/OneApi/labels'
 import { FORM, FORM_POOL } from '@modules/features/OneApi/resources'
 import {
   updateNameOnResource,
   updateOwnershipOnResource,
 } from '@modules/features/OneApi/common'
-import { Provider } from '@ConstantsModule'
+import { Provider, RESOURCE_NAMES } from '@ConstantsModule'
 
 const { PROVIDER } = FORM
 const { PROVIDER_POOL } = FORM_POOL
@@ -37,20 +41,26 @@ const basicEndpoints = (builder) => ({
       const name = Actions.LIST
       const command = { name, ...Commands[name] }
 
-      return { command }
+      return { command, needStateInMeta: true }
     },
-    transformResponse: (data) =>
-      data.map((provider) => provider.DOCUMENT ?? {}),
+    transformResponse: (data, meta) =>
+      withResourceLabels(
+        data.map((provider) => provider.DOCUMENT ?? {}),
+        RESOURCE_NAMES.PROVIDER,
+        meta
+      ),
     providesTags: (providers) =>
-      providers
-        ? [
-            ...providers.map(({ ID }) => ({
-              type: PROVIDER_POOL,
-              id: `${ID}`,
-            })),
-            PROVIDER_POOL,
-          ]
-        : [PROVIDER_POOL],
+      withProfileLabelsTags(
+        providers
+          ? [
+              ...providers.map(({ ID }) => ({
+                type: PROVIDER_POOL,
+                id: `${ID}`,
+              })),
+              PROVIDER_POOL,
+            ]
+          : [PROVIDER_POOL]
+      ),
   }),
 
   getProvider: builder.query({
@@ -66,10 +76,12 @@ const basicEndpoints = (builder) => ({
       const name = Actions.SHOW
       const command = { name, ...Commands[name] }
 
-      return { params, command }
+      return { params, command, needStateInMeta: true }
     },
-    transformResponse: (data) => data?.DOCUMENT ?? {},
-    providesTags: (_, __, { id }) => [{ type: PROVIDER, id }],
+    transformResponse: (data, meta) =>
+      withResourceLabels(data?.DOCUMENT ?? {}, RESOURCE_NAMES.PROVIDER, meta),
+    providesTags: (_, __, { id }) =>
+      withProfileLabelsTags([{ type: PROVIDER, id }]),
   }),
 
   createProvider: builder.mutation({

@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { FormWithSchema, Tr, Translate } from '@ResourcesModule'
+import { FormWithSchema } from '@ResourcesModule'
+import { Translate, useTranslation } from '@ProvidersModule'
+import { timeToString } from '@UtilsModule'
 import { SubmitButton } from '@ComponentsV2Module'
 import { STYLE_BUTTONS, T } from '@ConstantsModule'
 import { css } from '@emotion/css'
@@ -26,7 +28,7 @@ import {
   useViews,
 } from '@FeaturesModule'
 import { useClipboard } from '@HooksModule'
-import { timeToString } from '@UtilsModule'
+
 import { FIELDS, SCHEMA } from '@modules/containers/Settings/LoginToken/schema'
 import { useSettingWrapper } from '@modules/containers/Settings/Wrapper'
 import { Box, Grid, Typography, useTheme } from '@mui/material'
@@ -72,12 +74,14 @@ const styles = ({ borderRadius, borderWidth, palette, spacing }) => ({
 })
 
 const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
+  const { translate } = useTranslation()
   const { copy, isCopied } = useClipboard()
   const theme = useTheme()
   const classes = useMemo(() => styles(theme), [theme])
   const { TOKEN = '', EXPIRATION_TIME = 0, EGID = '' } = data
   const groupToken =
-    groups.find((group) => `${group?.ID}` === `${EGID}`)?.NAME || Tr(T.None)
+    groups.find((group) => `${group?.ID}` === `${EGID}`)?.NAME ||
+    translate(T.None)
 
   const handleCopy = useCallback(
     (evt) => {
@@ -99,7 +103,7 @@ const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
                   gutterBottom
                   className={classes.tokenText}
                 >
-                  <b>{`${Tr(T.ValidUntil)}: `}</b>
+                  <b>{`${translate(T.ValidUntil)}: `}</b>
                   {timeToString(EXPIRATION_TIME)}
                 </Typography>
               </Grid>
@@ -109,7 +113,7 @@ const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
                   gutterBottom
                   className={classes.tokenText}
                 >
-                  <b>{`${Tr(T.Group)}: `}</b>
+                  <b>{`${translate(T.Group)}: `}</b>
                   {groupToken}
                 </Typography>
               </Grid>
@@ -119,7 +123,7 @@ const Row = ({ data = {}, groups = [], edit = () => undefined } = {}) => {
                   gutterBottom
                   className={[classes.tokenText, classes.token].join(' ')}
                 >
-                  <b>{`${Tr(T.Token)}: `}</b>
+                  <b>{`${translate(T.Token)}: `}</b>
                   {TOKEN}
                 </Typography>
               </Grid>

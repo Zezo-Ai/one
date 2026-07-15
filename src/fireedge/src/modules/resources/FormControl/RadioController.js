@@ -15,7 +15,8 @@
  * ------------------------------------------------------------------------- */
 import { css } from '@emotion/css'
 import { Tooltip } from '@modules/resources/FormControl'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
+import { isTranslationInput, findClosestValue, generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   Box,
   FormControl,
@@ -24,7 +25,7 @@ import {
   RadioGroup,
   useTheme,
 } from '@mui/material'
-import { findClosestValue, generateKey } from '@UtilsModule'
+
 import clsx from 'clsx'
 import PropTypes from 'prop-types'
 import { memo, useCallback, useEffect, useMemo } from 'react'
@@ -103,6 +104,7 @@ const RadioController = memo(
     readOnly = false,
     onConditionChange,
   }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => styles(theme), [theme])
 
@@ -162,7 +164,9 @@ const RadioController = memo(
         sx={{ width: '100%' }}
       >
         {label && (
-          <legend>{labelCanBeTranslated(label) ? Tr(label) : label}</legend>
+          <legend>
+            {isTranslationInput(label) ? translate(label) : label}
+          </legend>
         )}
         <RadioGroup
           {...inputProps}
@@ -194,7 +198,7 @@ const RadioController = memo(
                     />
                   </Box>
                   <Box className={clsx(classes.cell, classes.cellFull)}>
-                    <Box sx={{ fontWeight: 500 }}>{Tr(text)}</Box>
+                    <Box sx={{ fontWeight: 500 }}>{translate(text)}</Box>
                     {description && (
                       <Box
                         component="p"
@@ -206,8 +210,8 @@ const RadioController = memo(
                           lineHeight: 1.4,
                         }}
                       >
-                        {labelCanBeTranslated(description)
-                          ? Tr(description)
+                        {isTranslationInput(description)
+                          ? translate(description)
                           : description}
                       </Box>
                     )}

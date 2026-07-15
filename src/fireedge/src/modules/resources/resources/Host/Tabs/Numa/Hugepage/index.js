@@ -16,9 +16,10 @@
 import { ReactElement, useMemo } from 'react'
 import { Box, List, ListItem } from '@mui/material'
 import PropTypes from 'prop-types'
-import { Tr } from '@modules/resources/HOC'
-import { getStyles } from '@modules/resources/resources/Host/Tabs/Numa/Hugepage/styles'
 import { prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { getStyles } from '@modules/resources/resources/Host/Tabs/Numa/Hugepage/styles'
+
 import { T, TEXT_VARIANTS, TEXT_WEIGHTS } from '@ConstantsModule'
 import { Text } from '@ComponentsV2Module'
 
@@ -28,6 +29,7 @@ import { Text } from '@ComponentsV2Module'
  * @returns {ReactElement} Information view
  */
 const NumaHugepage = ({ hugepage = [] }) => {
+  const { translate } = useTranslation()
   const rows = useMemo(() => [hugepage].flat().filter(Boolean), [hugepage])
   const formatValue = (value) => `${value ?? '-'}`
   const formatSize = (value) =>
@@ -40,7 +42,7 @@ const NumaHugepage = ({ hugepage = [] }) => {
         component="h6"
         variant={TEXT_VARIANTS.H6}
         weight={TEXT_WEIGHTS.SEMIBOLD}
-        value={Tr(T.HugepageNode)}
+        value={translate(T.HugepageNode)}
       />
       <List className="numa-hugepage__list">
         <ListItem className="numa-hugepage__row numa-hugepage__row--title">
@@ -48,28 +50,28 @@ const NumaHugepage = ({ hugepage = [] }) => {
             component="span"
             variant={TEXT_VARIANTS.CAPTION}
             weight={TEXT_WEIGHTS.SEMIBOLD}
-            value={Tr(T.HugepageNodeSize)}
+            value={translate(T.HugepageNodeSize)}
             noWrap
           />
           <Text
             component="span"
             variant={TEXT_VARIANTS.CAPTION}
             weight={TEXT_WEIGHTS.SEMIBOLD}
-            value={Tr(T.HugepageNodeFree)}
+            value={translate(T.HugepageNodeFree)}
             noWrap
           />
           <Text
             component="span"
             variant={TEXT_VARIANTS.CAPTION}
             weight={TEXT_WEIGHTS.SEMIBOLD}
-            value={Tr(T.HugepageNodePages)}
+            value={translate(T.HugepageNodePages)}
             noWrap
           />
           <Text
             component="span"
             variant={TEXT_VARIANTS.CAPTION}
             weight={TEXT_WEIGHTS.SEMIBOLD}
-            value={Tr(T.HugepageNodeUsage)}
+            value={translate(T.HugepageNodeUsage)}
             noWrap
           />
         </ListItem>

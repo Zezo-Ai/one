@@ -27,7 +27,7 @@ import {
   Typography,
 } from '@mui/material'
 import { WarningCircle } from 'iconoir-react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import TabStyles from '@modules/resources/Tabs/TabStyles'
 
 const Content = ({
@@ -74,6 +74,7 @@ const Tabs = ({
   renderHiddenTabs = false,
   addBorder = false,
 }) => {
+  const { translate } = useTranslation()
   const [tabSelected, setTab] = useState(() => 0)
 
   const theme = useTheme()
@@ -120,7 +121,7 @@ const Tabs = ({
                 )
               }
               value={value ?? idx}
-              label={Tr(label) ?? id}
+              label={translate(label) ?? id}
               data-cy={`tab-${id}`}
               disabled={disabled}
             />
@@ -129,7 +130,11 @@ const Tabs = ({
           return tooltip ? (
             <Tooltip
               key={`tooltip-${id}`}
-              title={<Typography variant="subtitle2">{Tr(tooltip)}</Typography>}
+              title={
+                <Typography variant="subtitle2">
+                  {translate(tooltip)}
+                </Typography>
+              }
               arrow
               placement="bottom"
             >

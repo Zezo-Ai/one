@@ -19,10 +19,11 @@ import {
   DefaultFormStepper,
   SkeletonStepsForm,
   VmGroup,
-  TranslateProvider,
 } from '@ResourcesModule'
-import { VmGroupAPI, useGeneralApi } from '@FeaturesModule'
+
 import { jsonToXml, isDevelopment } from '@UtilsModule'
+import { VmGroupAPI, useGeneralApi } from '@FeaturesModule'
+
 import { isEqual } from 'lodash'
 import { T, PATH } from '@ConstantsModule'
 
@@ -198,7 +199,7 @@ export function CreateVmGroup() {
   )
 
   return (
-    <TranslateProvider>
+    <>
       {templateId && !data ? (
         <SkeletonStepsForm />
       ) : (
@@ -211,6 +212,6 @@ export function CreateVmGroup() {
           {(config) => <DefaultFormStepper {...config} />}
         </VmGroup.Forms.CreateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

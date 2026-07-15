@@ -21,10 +21,9 @@ import { Group, Lock, User } from 'iconoir-react'
 import { useMemo } from 'react'
 
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
-import { rowStyles } from '@modules/resources/Tables/styles'
-
 import { timeFromMilliseconds } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { rowStyles } from '@modules/resources/Tables/styles'
 
 const Row = ({
   original,
@@ -35,6 +34,7 @@ const Row = ({
   toggleRowSelected,
   ...props
 }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => rowStyles(theme), [theme])
   const { ID, NAME, UNAME, GNAME, LOCK, REGTIME } = value
@@ -53,11 +53,11 @@ const Row = ({
         </div>
         <div className={classes.caption}>
           <span title={time.toFormat('ff')}>{`#${ID} ${timeAgo}`}</span>
-          <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+          <span title={`${translate(T.Owner)}: ${UNAME}`}>
             <User />
             <span>{` ${UNAME}`}</span>
           </span>
-          <span title={`${Tr(T.Group)}: ${GNAME}`}>
+          <span title={`${translate(T.Group)}: ${GNAME}`}>
             <Group />
             <span>{` ${GNAME}`}</span>
           </span>

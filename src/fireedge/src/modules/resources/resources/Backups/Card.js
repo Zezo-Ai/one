@@ -30,7 +30,7 @@ import {
   getImageType,
   getLabelSlotLabels,
 } from '@ModelsModule'
-import { prettyBytes, timeFromMilliseconds } from '@UtilsModule'
+import { getLockIcon, prettyBytes, timeFromMilliseconds } from '@UtilsModule'
 
 /**
  * @param {object} root0 - Params
@@ -64,7 +64,11 @@ export const BackupCard = forwardRef(
           [
             TitleSlot,
             {
-              title: NAME,
+              title: (
+                <>
+                  {NAME} {getLockIcon(data)}
+                </>
+              ),
               status: stateColor,
               statusName: stateName,
             },

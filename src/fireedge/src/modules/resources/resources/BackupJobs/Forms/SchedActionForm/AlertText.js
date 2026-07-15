@@ -23,7 +23,8 @@ import {
 } from '@ConstantsModule'
 import { getRepeatInformation } from '@ModelsModule'
 import { timeFromMilliseconds } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
+
 import { AlertNotification } from '@ComponentsV2Module'
 import { DateTime } from 'luxon'
 import PropTypes from 'prop-types'
@@ -57,6 +58,7 @@ VisualAlert.displayName = 'VisualAlert'
  * @returns {ReactElement|string} App rendered.
  */
 const AlertText = (data) => {
+  const { translate } = useTranslation()
   if (!data || !data?.PERIODIC) {
     return ''
   }
@@ -72,7 +74,7 @@ const AlertText = (data) => {
     END_TYPE,
     END_VALUE,
   } = data
-  const typeScheduleText = Tr(VM_SCHEDULE_TYPE_STRING?.[PERIODIC]) || ''
+  const typeScheduleText = translate(VM_SCHEDULE_TYPE_STRING?.[PERIODIC]) || ''
 
   if (!TIME || PERIODIC === SCHEDULE_TYPE.RELATIVE) {
     return ''
@@ -124,8 +126,8 @@ const AlertText = (data) => {
 
       const { repeat, end } = getRepeatInformation(schedule)
       const description = [
-        repeat && Tr(repeat),
-        end && Tr(end),
+        repeat && translate(repeat),
+        end && translate(end),
         scheduleTimeText,
       ]
         .filter(Boolean)

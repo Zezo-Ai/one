@@ -42,7 +42,9 @@ export const getStyles = ({ theme }) => ({
   '& .MuiDialogContent-root': {
     display: 'flex',
     flexDirection: 'column',
-    gap: `${theme.scale[500]}px`,
+    gap: 0,
+    padding: `${theme.scale[100]}px`,
+    boxSizing: 'border-box',
     minHeight: 0,
     maxHeight: 'none',
     overflowY: 'auto',

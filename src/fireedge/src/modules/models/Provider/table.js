@@ -19,23 +19,11 @@ import { Image } from '@ComponentsV2Module'
 import { ProviderAPI } from '@FeaturesModule'
 import { createTable, timeFromMilliseconds } from '@UtilsModule'
 import { getLogoSource } from '@modules/models/Provider/general'
+import { Box } from '@mui/material'
+import { createLabelColumn } from '@modules/models/labels'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const PROVIDER_COLUMNS = [
-  {
-    id: 'logo',
-    width: '10%',
-    header: '',
-    cell: ({ row }) => {
-      const src = getLogoSource(
-        row?.original?.TEMPLATE?.PROVIDER_BODY?.fireedge
-      )
-
-      return (
-        <Image src={src} width={40} height={40} alt={'list-image-identifier'} />
-      )
-    },
-  },
   {
     header: T.ID,
     accessorKey: 'ID',
@@ -47,6 +35,29 @@ export const PROVIDER_COLUMNS = [
     accessorKey: 'NAME',
     id: 'name',
     width: '30%',
+    cell: ({ row }) => {
+      const src = getLogoSource(
+        row?.original?.TEMPLATE?.PROVIDER_BODY?.fireedge
+      )
+
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Image
+            src={src}
+            width={32}
+            height={32}
+            alt={'list-image-identifier'}
+          />
+          <span>{row.original?.NAME}</span>
+        </Box>
+      )
+    },
+  },
+  {
+    header: T.Provisions,
+    id: 'number_provisions',
+    accessorFn: (row) =>
+      String(row?.TEMPLATE?.PROVIDER_BODY?.provision_ids?.length ?? 0),
   },
   {
     header: T.Owner,
@@ -57,12 +68,6 @@ export const PROVIDER_COLUMNS = [
     header: T.Group,
     accessorKey: 'GNAME',
     id: 'group',
-  },
-  {
-    header: T.NumberProvisions,
-    id: 'number_provisions',
-    accessorFn: (row) =>
-      String(row?.TEMPLATE?.PROVIDER_BODY?.provision_ids?.length ?? 0),
   },
   {
     header: T.RegistrationTime,
@@ -76,9 +81,11 @@ export const PROVIDER_COLUMNS = [
         : '-'
     },
   },
+  createLabelColumn(),
 ]
 
 export const providerTable = createTable(
   PROVIDER_COLUMNS,
-  ProviderAPI.useGetProvidersQuery
+  ProviderAPI.useGetProvidersQuery,
+  { dataCy: 'providers' }
 )

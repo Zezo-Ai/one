@@ -26,8 +26,9 @@ import {
   cloneObject,
   set,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { AttributePanel } from '@modules/resources/Tabs/Common'
-import { Tr } from '@modules/resources/HOC'
+
 import { T } from '@ConstantsModule'
 
 /**
@@ -39,6 +40,7 @@ import { T } from '@ConstantsModule'
  * @returns {ReactElement} Information tab
  */
 const VDCInfoTab = ({ tabProps = {}, id }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     attributes_panel: attributesPanel,
@@ -77,7 +79,7 @@ const VDCInfoTab = ({ tabProps = {}, id }) => {
         <AttributePanel
           attributes={attributes}
           actions={getActions(attributesPanel?.actions)}
-          title={Tr(T.Attributes)}
+          title={translate(T.Attributes)}
           handleAdd={handleAttributeInXml}
           handleEdit={handleAttributeInXml}
           handleDelete={handleAttributeInXml}

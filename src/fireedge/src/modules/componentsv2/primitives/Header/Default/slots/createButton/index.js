@@ -50,7 +50,7 @@ export const CreateButtonSlot = forwardRef((_, ref) => {
         type="primary"
         size="small"
         className="create-button"
-        data-cy="header-create-resource"
+        data-cy="action-create_dialog"
         onClick={() => history.push(path)}
         title={label}
       />

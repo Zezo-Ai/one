@@ -166,6 +166,7 @@ export function Users() {
 
   return (
     <ResourceContainer
+      dataCy={userTable.dataCy}
       resourceName={T.Users}
       onRefresh={refresh}
       isRefreshing={isRefreshing}
@@ -182,6 +183,7 @@ export function Users() {
           case TABLE_VIEW_MODE.LIST:
             return (
               <Table
+                dataCy={userTable.dataCy}
                 columns={userTable.columns(USER_LIST_COLUMNS)}
                 data={items}
                 isLoading={isRefreshing}
@@ -229,6 +231,7 @@ export function Users() {
                   return (
                     <Card
                       key={id}
+                      dataCy={`${userTable.dataCy}-${id}`}
                       isSelected={selectedItems?.includes(id)}
                       onCheck={() =>
                         setSelectedItems(
@@ -268,7 +271,6 @@ export function Users() {
                                 label: `${T.DatastoreSize} ${
                                   datastoreQuotaUsage?.size?.percentLabel ?? '-'
                                 }`,
-                                size: 'extraSmall',
                                 value:
                                   datastoreQuotaUsage?.size?.percentOfUsed ?? 0,
                                 isLabelVisible: true,
@@ -277,7 +279,6 @@ export function Users() {
                                 label: `${T.VMCount} ${
                                   vmQuotaUsage?.vms?.percentLabel ?? '-'
                                 }`,
-                                size: 'extraSmall',
                                 value: vmQuotaUsage?.vms?.percentOfUsed ?? 0,
                                 isLabelVisible: true,
                               },
@@ -285,7 +286,6 @@ export function Users() {
                                 label: `${T.NetworkLeases} ${
                                   networkQuotaUsage?.leases?.percentLabel ?? '-'
                                 }`,
-                                size: 'extraSmall',
                                 value:
                                   networkQuotaUsage?.leases?.percentOfUsed ?? 0,
                                 isLabelVisible: true,
@@ -294,7 +294,6 @@ export function Users() {
                                 label: `${T.ImageRVMS} ${
                                   imageQuotaUsage?.rvms?.percentLabel ?? '-'
                                 }`,
-                                size: 'extraSmall',
                                 value:
                                   imageQuotaUsage?.rvms?.percentOfUsed ?? 0,
                                 isLabelVisible: true,

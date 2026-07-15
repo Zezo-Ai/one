@@ -40,6 +40,7 @@ const getUserTableRow = (user = {}) => {
 }
 
 const getUserModel = (filterData) => ({
+  dataCy: 'user',
   columns: () => userColumns,
   useData: () => {
     const result = UserAPI.useGetUsersQuery()

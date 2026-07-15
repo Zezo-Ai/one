@@ -36,7 +36,7 @@ import {
   DeleteAction,
 } from '@modules/resources/Tabs/Vm/Snapshot/Actions'
 import SnapshotCard from '@modules/resources/Cards/SnapshotCard'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 import {
   getSnapshotList,
@@ -58,6 +58,7 @@ const { SNAPSHOT_CREATE, SNAPSHOT_REVERT, SNAPSHOT_DELETE } = VM_ACTIONS
  * @returns {ReactElement} Snapshots tab
  */
 const VmSnapshotTab = ({ tabProps: { actions } = {}, id }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   // Style for info message
   const useStyles = ({ palette }) => ({
@@ -95,7 +96,7 @@ const VmSnapshotTab = ({ tabProps: { actions } = {}, id }) => {
       {isSnapshotSupported ? (
         <Stack direction="row" gap="1em" alignItems="center">
           {snapshots.length > 0 && (
-            <Tooltip arrow title={Tr(T.VmSnapshotHint)}>
+            <Tooltip arrow title={translate(T.VmSnapshotHint)}>
               <HintIcon />
             </Tooltip>
           )}
@@ -107,7 +108,7 @@ const VmSnapshotTab = ({ tabProps: { actions } = {}, id }) => {
           variant="outlined"
           className={classes.warningInfo}
         >
-          {Tr(T.VmSnapshotInProgress)}
+          {translate(T.VmSnapshotInProgress)}
         </Alert>
       ) : (
         <Box
@@ -125,7 +126,7 @@ const VmSnapshotTab = ({ tabProps: { actions } = {}, id }) => {
                   opacity: 0.8,
                 }}
               >
-                {Tr(T.VmSnapshotNotAvailable)}
+                {translate(T.VmSnapshotNotAvailable)}
               </Typography>
               <List>
                 <ListItem>
@@ -149,7 +150,7 @@ const VmSnapshotTab = ({ tabProps: { actions } = {}, id }) => {
                   marginTop: '1em',
                 }}
               >
-                {Tr(T.VmSnapshotReferLogs)}
+                {translate(T.VmSnapshotReferLogs)}
               </Typography>
             </Box>
           </Stack>
@@ -161,7 +162,7 @@ const VmSnapshotTab = ({ tabProps: { actions } = {}, id }) => {
           variant="outlined"
           className={classes.warningInfo}
         >
-          {Tr(T.VmSnapshotHint)}
+          {translate(T.VmSnapshotHint)}
         </Alert>
       ) : (
         <Box ml={4}>

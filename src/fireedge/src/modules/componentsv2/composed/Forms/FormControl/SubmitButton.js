@@ -23,7 +23,7 @@ import {
 import { forwardRef, memo, cloneElement } from 'react'
 import PropTypes from 'prop-types'
 import { T } from '@ConstantsModule'
-import { Tr } from '@ProvidersModule'
+import { useTranslation } from '@ProvidersModule'
 
 const ButtonComponent = forwardRef(
   (
@@ -50,37 +50,42 @@ const ButtonComponent = forwardRef(
 const ConditionalWrap = ({ condition, children, wrap }) =>
   condition ? cloneElement(wrap(children)) : children
 
-const TooltipComponent = ({ tooltip, tooltipLink, tooltipprops, children }) => (
-  <ConditionalWrap
-    condition={tooltip && tooltip !== ''}
-    wrap={(wrapperChildren) => (
-      <Tooltip
-        arrow
-        placement="bottom"
-        title={
-          tooltipLink ? (
-            <Typography variant="subtitle2">
-              {Tr(tooltip)}{' '}
-              <a target="_blank" href={tooltipLink.link} rel="noreferrer">
-                {Tr(tooltipLink.text)}
-              </a>
-            </Typography>
-          ) : (
-            <Typography variant="subtitle2">{Tr(tooltip)}</Typography>
-          )
-        }
-        {...tooltipprops}
-      >
-        <span>{wrapperChildren}</span>
-      </Tooltip>
-    )}
-  >
-    {children}
-  </ConditionalWrap>
-)
+const TooltipComponent = ({ tooltip, tooltipLink, tooltipprops, children }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <ConditionalWrap
+      condition={tooltip && tooltip !== ''}
+      wrap={(wrapperChildren) => (
+        <Tooltip
+          arrow
+          placement="bottom"
+          title={
+            tooltipLink ? (
+              <Typography variant="subtitle2">
+                {translate(tooltip)}{' '}
+                <a target="_blank" href={tooltipLink.link} rel="noreferrer">
+                  {translate(tooltipLink.text)}
+                </a>
+              </Typography>
+            ) : (
+              <Typography variant="subtitle2">{translate(tooltip)}</Typography>
+            )
+          }
+          {...tooltipprops}
+        >
+          <span>{wrapperChildren}</span>
+        </Tooltip>
+      )}
+    >
+      {children}
+    </ConditionalWrap>
+  )
+}
 
 export const SubmitButton = memo(
   ({ isSubmitting, disabled, label, icon, loadOnIcon = false, ...props }) => {
+    const { translate } = useTranslation()
     const progressSize = icon?.props?.size ?? 20
 
     const labelAndIcon = label && icon
@@ -104,7 +109,11 @@ export const SubmitButton = memo(
             <CircularProgress size={progressSize} />
           )}
           {(!isSubmitting || loadOnIcon) &&
-            (icon ? (labelAndIcon ? Tr(label) : icon) : Tr(label))}
+            (icon
+              ? labelAndIcon
+                ? translate(label)
+                : icon
+              : translate(label))}
         </ButtonComponent>
       </TooltipComponent>
     )

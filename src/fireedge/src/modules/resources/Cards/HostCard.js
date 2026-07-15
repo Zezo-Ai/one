@@ -19,7 +19,8 @@ import clsx from 'clsx'
 import PropTypes from 'prop-types'
 import { memo, ReactElement, useMemo } from 'react'
 import { ModernTv, Server } from 'iconoir-react'
-import { Tr } from '@modules/resources/HOC'
+import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   LinearProgressWithLabel,
   StatusChip,
@@ -33,7 +34,6 @@ import {
 } from '@ModelsModule'
 import { Host, HOST_THRESHOLD, T, RESOURCE_NAMES } from '@ConstantsModule'
 import { useAuth } from '@FeaturesModule'
-import { getResourceLabels } from '@UtilsModule'
 
 const HostCard = memo(
   /**
@@ -46,6 +46,7 @@ const HostCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ host, rootProps, actions, onClickLabel, onDeleteLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels } = useAuth()
@@ -111,11 +112,16 @@ const HostCard = memo(
           </div>
           <div className={classes.caption}>
             <span>{`#${ID}`}</span>
-            <span data-cy="cluster" title={`${Tr(T.Cluster)}: ${CLUSTER}`}>
+            <span
+              data-cy="cluster"
+              title={`${translate(T.Cluster)}: ${CLUSTER}`}
+            >
               <Server />
               <span>{` ${CLUSTER}`}</span>
             </span>
-            <span title={`${Tr(T.RunningVMs)}: ${runningVms} / ${totalVms}`}>
+            <span
+              title={`${translate(T.RunningVMs)}: ${runningVms} / ${totalVms}`}
+            >
               <ModernTv />
               <span>{` ${runningVms} / ${totalVms}`}</span>
             </span>
@@ -127,7 +133,7 @@ const HostCard = memo(
             high={HOST_THRESHOLD.CPU.high}
             low={HOST_THRESHOLD.CPU.low}
             label={percentCpuLabel}
-            title={`${Tr(T.AllocatedCpu)}`}
+            title={`${translate(T.AllocatedCpu)}`}
             color={colorCpu}
           />
           <LinearProgressWithLabel
@@ -135,7 +141,7 @@ const HostCard = memo(
             high={HOST_THRESHOLD.MEMORY.high}
             low={HOST_THRESHOLD.MEMORY.low}
             label={percentMemLabel}
-            title={`${Tr(T.AllocatedMemory)}`}
+            title={`${translate(T.AllocatedMemory)}`}
             color={colorMem}
           />
         </div>

@@ -16,16 +16,19 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   SummarySlot,
   TabSlot,
   ToggleGroup,
   ButtonGroup,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
 
 import { Component } from 'react'
 import { prettyBytes, timeFromMilliseconds } from '@UtilsModule'
-import { Form, VrTemplate } from '@ResourcesModule'
+import { VmTemplate, VrTemplate } from '@ResourcesModule'
+import { getLabelTags } from '@ModelsModule'
 import {
   T,
   RESOURCE_NAMES,
@@ -40,7 +43,6 @@ import {
   RefreshDouble,
   Edit,
   KeyframesCouple as CloneIcon,
-  GridAdd,
   Cancel,
   Trash,
   Lock,
@@ -97,7 +99,7 @@ export const SingleView = ({
 
       onSubmit: async (cloneData) =>
         await clone({ id: selectedTemplate?.ID, ...cloneData }),
-      form: Form.VmTemplate.CloneForm({
+      form: VmTemplate.Forms.CloneForm({
         stepProps: { isMultiple: false },
         initialValues: { name: `Copy of ${selectedTemplate?.NAME}` },
       }),
@@ -108,7 +110,17 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.VRTemplate}`,
-        description: T['template.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['template.delete.confirmation']}
+            resources={selectedTemplate}
+            resourceType={T.VRTemplates}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: selectedTemplate?.ID })
@@ -135,13 +147,6 @@ export const SingleView = ({
 
   const handleEdit = () => {
     history.push(PATH.TEMPLATE.VROUTERS.UPDATE, selectedTemplate)
-  }
-
-  const handleExport = () => {
-    history.push(PATH.STORAGE.MARKETPLACE_APPS.CREATE, [
-      RESOURCE_NAMES.VM_TEMPLATE,
-      selectedTemplate,
-    ])
   }
 
   const handleChangePermission = async (newPermission) => {
@@ -182,6 +187,7 @@ export const SingleView = ({
             }`,
             title: selectedTemplate?.NAME,
             id: selectedTemplate?.ID,
+            tags: getLabelTags(selectedTemplate?.LABELS),
             labels: [
               [T.Owner, selectedTemplate?.UNAME],
               [T.Group, selectedTemplate?.GNAME],
@@ -221,38 +227,42 @@ export const SingleView = ({
                   options={[
                     [
                       {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: () =>
-                          refreshTemplate({ id: selectedTemplate?.ID }),
-                        value: 'refresh',
-                        isDisabled: isActionsDisabled,
-                      },
-                      {
                         startIcon: <Play width="16px" height="16px" />,
                         onClick: handleInstantiate,
                         value: 'instantiate',
                         isDisabled: isActionsDisabled,
-                      },
-                      {
-                        startIcon: <GridAdd width="16px" height="16px" />,
-                        onClick: handleExport,
-                        value: 'export',
-                        isDisabled: templateIsLocked || isActionsDisabled,
-                      },
-                    ],
-
-                    [
-                      {
-                        startIcon: <Edit width="16px" height="16px" />,
-                        onClick: handleEdit,
-                        value: 'edit',
-                        isDisabled: templateIsLocked || isActionsDisabled,
+                        tooltip: T.Instantiate,
                       },
                       {
                         startIcon: <CloneIcon width="16px" height="16px" />,
                         onClick: handleOpenCloneForm,
                         value: 'clone',
                         isDisabled: templateIsLocked || isActionsDisabled,
+                        tooltip: T.Clone,
+                      },
+                    ],
+                    [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [selectedTemplate],
+                          resourceType: RESOURCE_NAMES.VROUTER_TEMPLATE,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
+                      {
+                        startIcon: <Edit width="16px" height="16px" />,
+                        onClick: handleEdit,
+                        value: 'edit',
+                        isDisabled: templateIsLocked || isActionsDisabled,
+                        tooltip: T.Edit,
+                      },
+                      {
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: () =>
+                          refreshTemplate({ id: selectedTemplate?.ID }),
+                        value: 'refresh',
+                        isDisabled: isActionsDisabled,
+                        tooltip: T.Refresh,
                       },
                     ],
 
@@ -273,11 +283,13 @@ export const SingleView = ({
                         onClick: handleOpenDeleteForm,
                         value: 'delete',
                         isDisabled: templateIsLocked || isActionsDisabled,
+                        tooltip: T.Delete,
                       },
                       {
                         startIcon: <Cancel width="16px" height="16px" />,
                         onClick: handleClose,
                         value: 'close',
+                        tooltip: T.Close,
                       },
                     ],
                   ]}

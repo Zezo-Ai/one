@@ -18,7 +18,7 @@ import { useEffect } from 'react'
 import { useSnackbar } from 'notistack'
 import NotifierUpload from '@modules/resources/Notifier/upload'
 import { useGeneral, useGeneralApi } from '@FeaturesModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 let displayed = []
 

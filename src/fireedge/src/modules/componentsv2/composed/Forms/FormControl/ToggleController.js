@@ -30,8 +30,8 @@ import { useController } from 'react-hook-form'
 import { Text } from '@modules/componentsv2/primitives/Text'
 import { ErrorHelper } from '@modules/componentsv2/composed/Forms/FormControl/ErrorHelper'
 import { AdornmentWithTooltip as Tooltip } from '@modules/componentsv2/composed/Forms/FormControl/Tooltip'
-import { Tr } from '@ProvidersModule'
-import { labelCanBeTranslated, generateKey } from '@UtilsModule'
+import { isTranslationInput, generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const Label = styled('label')(({ theme, error }) => ({
   display: 'flex',
@@ -57,6 +57,7 @@ export const ToggleController = memo(
     onConditionChange,
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const {
       field: { ref, value: optionSelected, onChange, onBlur },
       fieldState: { error: { message } = {} },
@@ -95,7 +96,7 @@ export const ToggleController = memo(
       <FormControl fullWidth margin="dense">
         {label && (
           <Label htmlFor={cy} error={message}>
-            {labelCanBeTranslated(label) ? Tr(label) : label}
+            {isTranslationInput(label) ? translate(label) : label}
             {tooltip && <Tooltip title={tooltip} />}
           </Label>
         )}
@@ -128,7 +129,7 @@ export const ToggleController = memo(
             >
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <Text
-                  value={Tr(text)}
+                  value={translate(text)}
                   variant={TEXT_VARIANTS.BODY_SMALL}
                   weight={TEXT_WEIGHTS.REGULAR}
                 />
@@ -139,8 +140,8 @@ export const ToggleController = memo(
                     display="block"
                     color="text.secondary"
                   >
-                    {labelCanBeTranslated(description)
-                      ? Tr(description)
+                    {isTranslationInput(description)
+                      ? translate(description)
                       : description}
                   </Typography>
                 )}

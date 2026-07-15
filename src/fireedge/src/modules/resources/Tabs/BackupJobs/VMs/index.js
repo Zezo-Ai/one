@@ -32,7 +32,7 @@ import { RefreshDouble } from 'iconoir-react'
 import { generatePath, useHistory } from 'react-router-dom'
 
 import { SubmitButton } from '@ComponentsV2Module'
-import { Translate, Tr } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { VmsTable } from '@modules/resources/Tables'
 import AttachVms from '@modules/resources/Tabs/BackupJobs/VMs/Actions'
 import { T, PATH } from '@ConstantsModule'
@@ -143,6 +143,7 @@ const AlertVmsErrors = ({ id, vmsOutdated, state }) => {
  * @returns {ReactElement} Information tab
  */
 const VmsInfoTab = ({ id }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const [state, setState] = useState(stateAll)
 
@@ -187,7 +188,7 @@ const VmsInfoTab = ({ id }) => {
                     key={type}
                     value={type}
                     control={<Radio />}
-                    label={Tr(states[type].select)}
+                    label={translate(states[type].select)}
                   />
                 ))}
               </RadioGroup>

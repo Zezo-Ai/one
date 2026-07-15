@@ -20,7 +20,7 @@ import { Chip, Popper, styled, TextField } from '@mui/material'
 import Autocomplete, { autocompleteClasses } from '@mui/material/Autocomplete'
 import { UseFiltersInstanceProps } from 'opennebula-react-table'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const StyledAutocompletePopper = styled(Popper)(
   ({ theme: { palette, zIndex } }) => ({
@@ -76,6 +76,7 @@ const CategoryFilter = ({
     translation,
   },
 }) => {
+  const { translate } = useTranslation()
   // Calculate the options for filtering using the preFilteredRows
   const options = useMemo(() => {
     const uniqueOptions = []
@@ -125,7 +126,7 @@ const CategoryFilter = ({
       PopperComponent={CustomPopper}
       renderInput={({ inputProps, ...inputParams }) => (
         <TextField
-          label={Tr(Header)}
+          label={translate(Header)}
           ref={inputParams.InputProps.ref}
           inputProps={{ ...inputProps, 'data-cy': id }}
           {...inputParams}

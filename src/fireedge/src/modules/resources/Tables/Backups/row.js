@@ -26,6 +26,7 @@ import {
   timeFromMilliseconds,
 } from '@ModelsModule'
 import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   Db as DatastoreIcon,
   Archive as DiskTypeIcon,
@@ -36,7 +37,6 @@ import {
   User,
 } from 'iconoir-react'
 
-import { Tr } from '@modules/resources/HOC'
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { StatusChip, StatusCircle } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
@@ -52,6 +52,7 @@ const Row = ({
   toggleRowSelected,
   ...props
 }) => {
+  const { translate } = useTranslation()
   const { labels: resourceLabels } = useAuth()
   const LABELS = getResourceLabels(
     resourceLabels,
@@ -134,38 +135,38 @@ const Row = ({
           <span title={time.toFormat('ff')}>
             <Timer translateWord={T.RegisteredAt} initial={time} />
           </span>
-          <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+          <span title={`${translate(T.Owner)}: ${UNAME}`}>
             <User />
             <span>{` ${UNAME}`}</span>
           </span>
-          <span title={`${Tr(T.Group)}: ${GNAME}`}>
+          <span title={`${translate(T.Group)}: ${GNAME}`}>
             <Group />
             <span>{` ${GNAME}`}</span>
           </span>
-          <span title={`${Tr(T.Datastore)}: ${DATASTORE}`}>
+          <span title={`${translate(T.Datastore)}: ${DATASTORE}`}>
             <DatastoreIcon />
             <span>{` ${DATASTORE}`}</span>
           </span>
           <span
             title={
               PERSISTENT
-                ? Tr(T.Persistent).toLowerCase()
-                : Tr(T.NonPersistent).toLowerCase()
+                ? translate(T.Persistent).toLowerCase()
+                : translate(T.NonPersistent).toLowerCase()
             }
           >
             <PersistentIcon />
             <span>
               {PERSISTENT
-                ? Tr(T.Persistent).toLowerCase()
-                : Tr(T.NonPersistent).toLowerCase()}
+                ? translate(T.Persistent).toLowerCase()
+                : translate(T.NonPersistent).toLowerCase()}
             </span>
           </span>
-          <span title={`${Tr(T.DiskType)}: ${DISK_TYPE.toLowerCase()}`}>
+          <span title={`${translate(T.DiskType)}: ${DISK_TYPE.toLowerCase()}`}>
             <DiskTypeIcon />
             <span>{` ${DISK_TYPE.toLowerCase()}`}</span>
           </span>
           <span
-            title={`${Tr(T.Running)} / ${Tr(T.Used)} ${Tr(
+            title={`${translate(T.Running)} / ${translate(T.Used)} ${translate(
               T.VMs
             )}: ${RUNNING_VMS} / ${TOTAL_VMS}`}
           >

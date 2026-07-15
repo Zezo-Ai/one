@@ -16,7 +16,7 @@
 
 import { TablePanel } from '@ComponentsV2Module'
 import { secGroupVmTable, SECGROUP_VM_COLUMNS } from '@ModelsModule'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 import { Component } from 'react'
@@ -51,6 +51,8 @@ export const Vms = ({ data, config }) => {
         columns={secGroupVmTable.columns([...SECGROUP_VM_COLUMNS])}
         data={vms}
         isLoading={isLoadingVms}
+        openRowDetailsOnClick
+        rowDetailsResourceId={RESOURCE_NAMES.VM}
       />
     </Box>
   )

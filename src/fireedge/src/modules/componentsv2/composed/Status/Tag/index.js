@@ -18,6 +18,7 @@ import { Component, forwardRef } from 'react'
 import PropTypes from 'prop-types'
 import { Tag } from '@modules/componentsv2/primitives/Tags'
 import { Badge } from '@modules/componentsv2/primitives/Badge'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} root0 - Params
@@ -30,15 +31,19 @@ export const StatusTag = forwardRef(
   (
     { title, statusColor = 'default', statusName, isBadged = true, ...opts },
     ref
-  ) => (
-    <Tag
-      ref={ref}
-      title={statusName || title}
-      status={statusColor}
-      startIcon={isBadged && <Badge status={statusColor} type="dot" />}
-      {...opts}
-    />
-  )
+  ) => {
+    const { translate } = useTranslation()
+
+    return (
+      <Tag
+        ref={ref}
+        title={translate(statusName || title)}
+        status={statusColor}
+        startIcon={isBadged && <Badge status={statusColor} type="dot" />}
+        {...opts}
+      />
+    )
+  }
 )
 
 StatusTag.propTypes = {

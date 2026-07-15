@@ -92,6 +92,7 @@ export const PermissionsTab = forwardRef(
               placement="top"
             >
               <Checkbox
+                size="medium"
                 checked={checked}
                 onChange={() => canEdit && handleChange(key, options?.[key])}
                 isDisabled={!canEdit || isDisabled}

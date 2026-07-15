@@ -20,7 +20,7 @@ const initial = {
   // Expressions
   searchExpression: '',
   sortExpression: '',
-  filterExpression: '',
+  filterExpression: {},
 
   containerView: '',
   containerViews: {},

@@ -29,12 +29,13 @@ import {
   ACTION_STYLES,
   ADD_BUTTON_STYLES,
   CONFIRM_ACTION_STYLES,
+  DESTRUCTIVE_ACTION_STYLES,
   EDIT_CONTAINER_STYLES,
   EDIT_INPUT_STYLES,
   getFooterStyles,
   getKeyStyles,
+  getTableStyles,
   HIDDEN_ACTION_GROUP_STYLES,
-  TABLE_STYLES,
   VALUE_CONTAINER_STYLES,
   VALUE_TEXT_STYLES,
 } from '@modules/componentsv2/composed/Panels/Attributes/styles'
@@ -42,6 +43,11 @@ import { useClipboard } from '@HooksModule'
 import { useModalsApi } from '@FeaturesModule'
 
 const EMPTY_VALUE = '-'
+const DEFAULT_EMPTY_CONTENT_PROPS = {
+  size: 'small',
+  title: T.NoAttributes,
+  subtitle: T.NoAttributesDescription,
+}
 
 const isNestedValue = (value) =>
   value !== null && typeof value === 'object' && !isValidElement(value)
@@ -194,6 +200,9 @@ export const AttributesPanel = forwardRef(
       size = 'medium',
       isLoading = false,
       isFullHeight = true,
+      enableEdit = () => true,
+      emptyContentProps,
+      dataCy,
     },
     ref
   ) => {
@@ -206,6 +215,11 @@ export const AttributesPanel = forwardRef(
     const attributeRows = useMemo(
       () => getAttributeRows(attributes),
       [attributes]
+    )
+    const isEmpty = !isLoading && attributeRows.length === 0
+    const mergedEmptyContentProps = useMemo(
+      () => ({ ...DEFAULT_EMPTY_CONTENT_PROPS, ...emptyContentProps }),
+      [emptyContentProps]
     )
 
     const handleReset = () => {
@@ -228,7 +242,14 @@ export const AttributesPanel = forwardRef(
     const canUseAction = (attribute, action) => {
       if (actions?.[action] !== true) return false
 
-      if (action === 'edit') return !!handleEdit && !attribute?.isParent
+      if (action === 'edit') {
+        return (
+          !!handleEdit &&
+          !attribute?.isParent &&
+          enableEdit(attribute?.key, attribute)
+        )
+      }
+
       if (action === 'delete') {
         return !!handleDelete && (!attribute?.depth || handleDelete.length > 1)
       }
@@ -273,7 +294,7 @@ export const AttributesPanel = forwardRef(
           onClick: () => handleOpenDeleteForm(attribute),
           tooltip: T.Delete,
           value: 'delete',
-          sx: ACTION_STYLES,
+          sx: DESTRUCTIVE_ACTION_STYLES,
         },
       ].filter(({ value }) => canUseAction(attribute, value))
     }
@@ -330,7 +351,7 @@ export const AttributesPanel = forwardRef(
           },
         },
       ],
-      [editingPath, handleEdit, handleDelete, actions]
+      [editingPath, handleEdit, handleDelete, actions, enableEdit]
     )
 
     return (
@@ -340,10 +361,12 @@ export const AttributesPanel = forwardRef(
         data={attributeRows}
         columns={columns}
         size={size}
-        sx={TABLE_STYLES}
+        dataCy={dataCy}
+        sx={getTableStyles({ isEmpty })}
         isDisabled={isDisabled}
         isDisablePagination={false}
-        footer={
+        emptyContentProps={mergedEmptyContentProps}
+        topRow={
           actions?.add === true &&
           handleAdd && (
             <Box sx={(theme) => getFooterStyles({ theme })}>
@@ -351,11 +374,13 @@ export const AttributesPanel = forwardRef(
                 placeholder={T.Key}
                 value={newKey}
                 onChange={(key) => setNewKey(key)}
+                inputProps={{ 'data-cy': dataCy && `${dataCy}-key` }}
               />
               <InputField
                 placeholder={T.Value}
                 value={newValue}
                 onChange={(value) => setNewValue(value)}
+                inputProps={{ 'data-cy': dataCy && `${dataCy}-value` }}
               />
               <Button
                 size="medium"
@@ -367,12 +392,13 @@ export const AttributesPanel = forwardRef(
                 }}
                 iconOnly={<Plus width={'24px'} height={'24px'} />}
                 isDisabled={!newKey}
+                data-cy={dataCy && `${dataCy}-add`}
                 sx={ADD_BUTTON_STYLES}
               />
             </Box>
           )
         }
-        isFullHeight={isFullHeight}
+        isFullHeight={isFullHeight && !isEmpty}
         isLoading={isLoading}
       />
     )
@@ -390,6 +416,9 @@ AttributesPanel.propTypes = {
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   isLoading: PropTypes.bool,
   isFullHeight: PropTypes.bool,
+  enableEdit: PropTypes.func,
+  emptyContentProps: PropTypes.object,
+  dataCy: PropTypes.string,
 }
 
 AttributesPanel.displayName = 'AttributesPanel'

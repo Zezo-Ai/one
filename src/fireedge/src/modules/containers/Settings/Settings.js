@@ -16,7 +16,7 @@
 import { T } from '@ConstantsModule'
 import { Box, Paper, useTheme } from '@mui/material'
 import { ReactElement, useMemo, useState } from 'react'
-import { TranslateProvider } from '@ResourcesModule'
+
 import { css } from '@emotion/css'
 import { AuthenticationSettings } from '@modules/containers/Settings/Authentication'
 import { ConfigurationChangePassword } from '@modules/containers/Settings/ChangePassword'
@@ -104,7 +104,7 @@ export const Settings = () => {
   const setting = optionsSettings[selectedOption]
 
   return (
-    <TranslateProvider>
+    <>
       <Box display="flex" className={classes.wrapper}>
         <SettingsMenu
           options={optionsSettings}
@@ -114,6 +114,6 @@ export const Settings = () => {
         />
         <Paper className={classes.content}>{setting.component}</Paper>
       </Box>
-    </TranslateProvider>
+    </>
   )
 }

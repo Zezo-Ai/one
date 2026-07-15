@@ -31,12 +31,13 @@ import {
 
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { getResourceLabels, prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   getColorFromString,
   getImageState,
   timeFromMilliseconds,
 } from '@ModelsModule'
-import { Tr } from '@modules/resources/HOC'
+
 import { StatusCircle, StatusChip } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
 import Timer from '@modules/resources/Timer'
@@ -51,6 +52,7 @@ const Row = ({
   toggleRowSelected,
   ...props
 }) => {
+  const { translate } = useTranslation()
   const { labels } = useAuth()
 
   const LABELS = getResourceLabels(labels, original?.ID, RESOURCE_NAMES.IMAGE)
@@ -119,27 +121,35 @@ const Row = ({
           <span title={time.toFormat('ff')}>
             <Timer translateWord={T.RegisteredAt} initial={time} />
           </span>
-          <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+          <span title={`${translate(T.Owner)}: ${UNAME}`}>
             <User />
             <span>{` ${UNAME}`}</span>
           </span>
-          <span title={`${Tr(T.Group)}: ${GNAME}`}>
+          <span title={`${translate(T.Group)}: ${GNAME}`}>
             <Group />
             <span>{` ${GNAME}`}</span>
           </span>
-          <span title={`${Tr(T.Datastore)}: ${DATASTORE}`}>
+          <span title={`${translate(T.Datastore)}: ${DATASTORE}`}>
             <DatastoreIcon />
             <span>{` ${DATASTORE}`}</span>
           </span>
-          <span title={+PERSISTENT ? Tr(T.Persistent) : Tr(T.NonPersistent)}>
+          <span
+            title={
+              +PERSISTENT ? translate(T.Persistent) : translate(T.NonPersistent)
+            }
+          >
             <PersistentIcon />
-            <span>{+PERSISTENT ? Tr(T.Persistent) : Tr(T.NonPersistent)}</span>
+            <span>
+              {+PERSISTENT
+                ? translate(T.Persistent)
+                : translate(T.NonPersistent)}
+            </span>
           </span>
-          <span title={`${Tr(T.VMs)}: ${RUNNING_VMS}`}>
+          <span title={`${translate(T.VMs)}: ${RUNNING_VMS}`}>
             <ModernTv />
             <span>{`${RUNNING_VMS}`}</span>
           </span>
-          <span title={`${Tr(T.Size)}: ${SIZE}`}>
+          <span title={`${translate(T.Size)}: ${SIZE}`}>
             <span>{`${prettyBytes(+SIZE ?? 0, 'MB')}`}</span>
           </span>
         </div>

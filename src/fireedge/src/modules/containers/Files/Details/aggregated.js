@@ -17,6 +17,7 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  ResourceActionConfirmation,
   TabSlot,
   ButtonGroup,
   Button,
@@ -75,15 +76,24 @@ export const AggregatedView = ({
   const handleRefresh = async () =>
     await Promise.all(selectedData.map(({ ID }) => refresh({ id: ID })))
 
-  const getConfirmationDescription = () =>
-    `${selectedData.length} ${T.Files}. ${T.DoYouWantProceed}`
-
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({ title, description, onSubmit }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
-        description: getConfirmationDescription(),
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={selectedData}
+            resourceType={T.Files}
+          />
+        ),
+        confirmLabel: `${title}`.startsWith(T.Delete) ? T.Delete : title,
+        ...(`${title}`.startsWith(T.Delete) && {
+          confirmButtonProps: {
+            isDestructive: true,
+          },
+        }),
       },
       onSubmit,
     })
@@ -96,18 +106,21 @@ export const AggregatedView = ({
   const handleEnable = () =>
     handleConfirmAction({
       title: T.Enable,
+      description: T['resource.enable.confirmation'],
       onSubmit: () => handleActionForSelected((id) => enable(id)),
     })
 
   const handleDisable = () =>
     handleConfirmAction({
       title: T.Disable,
+      description: T['resource.disable.confirmation'],
       onSubmit: () => handleActionForSelected((id) => disable(id)),
     })
 
   const handleOpenDeleteForm = () =>
     handleConfirmAction({
       title: `${T.Delete} ${T.Files}`,
+      description: T['resource.delete.confirmation'],
       onSubmit: async () => {
         await Promise.all(selectedData.map(({ ID }) => remove({ id: ID })))
         handleClose()
@@ -210,7 +223,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

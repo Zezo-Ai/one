@@ -155,6 +155,7 @@ const RemoveUsersAction = memo(({ filterData, submit }) => {
       data-cy={'remove-group-users'}
       label={T['groups.actions.remove.user']}
       type="secondary"
+      isDestructive
       onClick={handleOpenForm}
     />
   )

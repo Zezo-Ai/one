@@ -24,9 +24,9 @@ import WrapperRow from '@modules/resources/Tables/Enhanced/WrapperRow'
 import OneKsColumns from '@modules/resources/Tables/Oneks/columns'
 import OneKsRow from '@modules/resources/Tables/Oneks/row'
 import { timeFromMilliseconds, generateDocLink } from '@UtilsModule'
+import { Translate, useTranslation } from '@ProvidersModule'
 import Timer from '@modules/resources/Timer'
 import { Alert, Typography } from '@mui/material'
-import { Translate, Tr } from '@modules/resources/HOC'
 
 const DEFAULT_DATA_CY = 'oneks'
 
@@ -35,6 +35,7 @@ const DEFAULT_DATA_CY = 'oneks'
  * @returns {ReactElement} OneKS table
  */
 const OneKSTable = (props) => {
+  const { translate } = useTranslation()
   const {
     rootProps = {},
     searchProps = {},
@@ -121,13 +122,13 @@ const OneKSTable = (props) => {
           <Alert severity="error" variant="outlined">
             <Translate word={T.CannotConnectOneKS} />
             <Typography variant="body2" gutterBottom>
-              {Tr(T['oneks.info.more'])}
+              {translate(T['oneks.info.more'])}
               <a
                 target="_blank"
                 href={generateDocLink(version, 'platform_services/oneks')}
                 rel="noreferrer"
               >
-                {Tr(T['oneks.info.more.link'])}
+                {translate(T['oneks.info.more.link'])}
               </a>
             </Typography>
           </Alert>

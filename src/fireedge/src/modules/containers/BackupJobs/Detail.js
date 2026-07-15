@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { BackupJobsTabs, TranslateProvider } from '@ResourcesModule'
+import { BackupJobsTabs } from '@ResourcesModule'
+
 import { ReactElement } from 'react'
 import { Redirect, useParams } from 'react-router-dom'
 
@@ -30,8 +31,8 @@ export function BackupJobDetail() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <BackupJobsTabs id={id} />
-    </TranslateProvider>
+    </>
   )
 }

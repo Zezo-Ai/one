@@ -16,16 +16,19 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   SummarySlot,
   TabSlot,
   ToggleGroup,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
 
 import { Component, useMemo } from 'react'
 import { timeFromMilliseconds } from '@UtilsModule'
 import { ServiceTemplate } from '@ResourcesModule'
-import { T, PATH } from '@ConstantsModule'
+import { getLabelTags } from '@ModelsModule'
+import { T, PATH, RESOURCE_NAMES } from '@ConstantsModule'
 import { Box, useTheme } from '@mui/material'
 import PropTypes from 'prop-types'
 import {
@@ -99,7 +102,17 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.ServiceTemplate}`,
-        description: T['template.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedTemplate}
+            resourceType={T.ServiceTemplates}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: selectedTemplate?.ID })
@@ -154,6 +167,7 @@ export const SingleView = ({
             isTitleEditDisabled: isRenaming,
             title: selectedTemplate?.NAME,
             id: selectedTemplate?.ID,
+            tags: getLabelTags(selectedTemplate?.LABELS),
             labels: [
               [T.Owner, selectedTemplate?.UNAME],
               [T.Group, selectedTemplate?.GNAME],
@@ -176,21 +190,26 @@ export const SingleView = ({
                   options={[
                     [
                       {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: () =>
-                          refreshTemplate({ id: selectedTemplate?.ID }),
-                        value: 'refresh',
-                        isDisabled: isActionsDisabled,
-                      },
-                      {
                         startIcon: <Play width="16px" height="16px" />,
                         onClick: handleInstantiate,
                         value: 'instantiate',
                         isDisabled: isActionsDisabled,
                       },
+                      {
+                        startIcon: <CloneIcon width="16px" height="16px" />,
+                        onClick: handleOpenCloneForm,
+                        value: 'clone',
+                        isDisabled: isActionsDisabled,
+                      },
                     ],
-
                     [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [selectedTemplate],
+                          resourceType: RESOURCE_NAMES.SERVICE_TEMPLATE,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
                       {
                         startIcon: <Edit width="16px" height="16px" />,
                         onClick: handleEdit,
@@ -198,9 +217,10 @@ export const SingleView = ({
                         isDisabled: isActionsDisabled,
                       },
                       {
-                        startIcon: <CloneIcon width="16px" height="16px" />,
-                        onClick: handleOpenCloneForm,
-                        value: 'clone',
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: () =>
+                          refreshTemplate({ id: selectedTemplate?.ID }),
+                        value: 'refresh',
                         isDisabled: isActionsDisabled,
                       },
                     ],

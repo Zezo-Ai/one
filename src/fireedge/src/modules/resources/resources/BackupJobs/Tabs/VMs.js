@@ -27,7 +27,7 @@ import {
 } from '@mui/material'
 import { RefreshDouble } from 'iconoir-react'
 import { Button, Table, Tooltip } from '@ComponentsV2Module'
-import { BACKUPJOB_ACTIONS, T } from '@ConstantsModule'
+import { BACKUPJOB_ACTIONS, RESOURCE_NAMES, T } from '@ConstantsModule'
 import { BackupJobAPI } from '@FeaturesModule'
 import { getBackupJobVmIds, vmsTable } from '@ModelsModule'
 import AttachVms from '@modules/resources/resources/BackupJobs/Tabs/VMs/Actions'
@@ -214,6 +214,8 @@ export const VMs = ({ data }) => {
           isEnableSearchBar={true}
           isEnableSort={true}
           isEnableFilters={true}
+          openRowDetailsOnClick
+          rowDetailsResourceId={RESOURCE_NAMES.VM}
         />
       </Box>
     </Box>

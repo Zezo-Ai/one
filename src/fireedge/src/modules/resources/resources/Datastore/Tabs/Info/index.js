@@ -113,7 +113,6 @@ export const Info = ({ data, config }) => {
       name: T.Capacity,
       value: (
         <ProgressBar
-          size="small"
           value={percentOfUsed}
           label={percentLabel}
           thresholds={[DS_THRESHOLD.CAPACITY.low, DS_THRESHOLD.CAPACITY.high]}

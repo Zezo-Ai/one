@@ -19,9 +19,10 @@ import { ReactElement, memo, useMemo } from 'react'
 import { rowStyles } from '@modules/resources/Tables/styles'
 import Image from '@modules/resources/Image'
 import Timer from '@modules/resources/Timer'
-import { Tr } from '@modules/resources/HOC'
-import { LOGO_DRIVERS_IMAGES_URL, T } from '@ConstantsModule'
 import { timeFromMilliseconds } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { LOGO_DRIVERS_IMAGES_URL, T } from '@ConstantsModule'
+
 import { Package } from 'iconoir-react'
 
 const ProviderCard = memo(
@@ -33,6 +34,7 @@ const ProviderCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ provider, rootProps, actions }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -95,7 +97,9 @@ const ProviderCard = memo(
             <span title={time.toFormat('ff')}>
               <Timer translateWord={T.RegisteredAt} initial={time} />
             </span>
-            <span title={`${Tr(T.NumberProvisions)}: ${numberOfProvisions}`}>
+            <span
+              title={`${translate(T.NumberProvisions)}: ${numberOfProvisions}`}
+            >
               <Package width={20} height={20} />
               <span data-cy="total-provisions">{numberOfProvisions}</span>
             </span>

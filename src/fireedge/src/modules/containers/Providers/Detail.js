@@ -16,11 +16,7 @@
 import { ReactElement } from 'react'
 import { Redirect, useParams } from 'react-router-dom'
 
-import {
-  ProviderTabs,
-  TranslateProvider,
-  ProvidersTable,
-} from '@ResourcesModule'
+import { ProviderTabs, ProvidersTable } from '@ResourcesModule'
 
 /**
  * Displays the detail information about a Provider.
@@ -35,8 +31,8 @@ export function ProviderDetail() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <ProviderTabs id={id} singleActions={ProvidersTable.Actions} />
-    </TranslateProvider>
+    </>
   )
 }

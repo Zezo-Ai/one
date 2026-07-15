@@ -18,8 +18,8 @@ import PropTypes from 'prop-types'
 
 import { Dropdown } from '@ComponentsV2Module'
 import { useController, useWatch, useFormContext } from 'react-hook-form'
-import { sentenceCase, generateKey } from '@UtilsModule'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
+import { sentenceCase, generateKey, isTranslationInput } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const AutocompleteController = memo(
   ({
@@ -37,8 +37,9 @@ const AutocompleteController = memo(
     dependencies,
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const { hint, placeholder, menuTitle, rowsDisplayed = 4 } = fieldProps
-    const trLabel = labelCanBeTranslated(label) ? Tr(label) : label
+    const trLabel = isTranslationInput(label) ? translate(label) : label
 
     const {
       field: { value: renderValue, onBlur, onChange },

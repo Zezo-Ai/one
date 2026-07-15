@@ -82,7 +82,7 @@ const SmartActionButton = ({
     showModal({
       id: 'create-label',
       dialogProps: {
-        title: 'Create Label',
+        title: T.CreateLabel,
         dataCy: 'modal-create-label',
         fixedWidth: '500px',
         fixedHeight: '500px',

@@ -16,9 +16,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
 import { mapValues } from 'lodash'
 import { MultiChart, Table } from '@ComponentsV2Module'
+import { useTranslation } from '@ProvidersModule'
 
 const commonStyles = {
   width: '100%',
@@ -42,22 +42,22 @@ const formatDate = (value, fallbackToCurrentDate = false) => {
   return new Date(Number(value) * 1000).toISOString().split('T')[0]
 }
 
-const getTableColumns = () => [
+const getTableColumns = (translate) => [
   { accessorKey: 'OID', header: 'OID' },
-  { accessorKey: 'NAME', header: Tr('Name') },
+  { accessorKey: 'NAME', header: translate('Name') },
   {
     accessorKey: 'STIME',
-    header: Tr('Start Time'),
+    header: translate('Start Time'),
     cell: ({ getValue }) => formatDate(getValue()),
   },
   {
     accessorKey: 'ETIME',
-    header: Tr('End Time'),
+    header: translate('End Time'),
     cell: ({ getValue }) => formatDate(getValue(), true),
   },
-  { accessorKey: 'cpuHours', header: Tr('CPU Hours') },
-  { accessorKey: 'memoryGBHours', header: Tr('Memory GB Hours') },
-  { accessorKey: 'diskMBHours', header: Tr('Disk MB Hours') },
+  { accessorKey: 'cpuHours', header: translate('CPU Hours') },
+  { accessorKey: 'memoryGBHours', header: translate('Memory GB Hours') },
+  { accessorKey: 'diskMBHours', header: translate('Disk MB Hours') },
 ]
 
 const getTableData = (datasetList, visibleDatasetIds) =>
@@ -87,13 +87,16 @@ export const CustomizedChart = ({
   isLoading,
   groupBy,
 }) => {
-  const metricNamesTranslated = mapValues(metricNames, (value) => Tr(value))
+  const { translate } = useTranslation()
+  const metricNamesTranslated = mapValues(metricNames, (value) =>
+    translate(value)
+  )
 
   if (chartType === 'table') {
     return (
       <Box sx={commonStyles}>
         <Table
-          columns={getTableColumns()}
+          columns={getTableColumns(translate)}
           data={getTableData(datasets, visibleDatasets)}
           defaultPageSize={10}
         />

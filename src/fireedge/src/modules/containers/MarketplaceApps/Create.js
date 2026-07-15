@@ -17,8 +17,8 @@ import { ReactElement } from 'react'
 import { useHistory, useLocation } from 'react-router'
 
 import { useGeneralApi, MarketplaceAppAPI } from '@FeaturesModule'
+
 import {
-  TranslateProvider,
   DefaultFormStepper,
   SkeletonStepsForm,
   MarketplaceApp,
@@ -55,7 +55,7 @@ export function CreateMarketplaceApp() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <MarketplaceApp.Forms.CreateForm
         initialValues={{ type: resourceName, id: ID }}
         onSubmit={handleTriggerSubmit}
@@ -63,6 +63,6 @@ export function CreateMarketplaceApp() {
       >
         {(config) => <DefaultFormStepper {...config} />}
       </MarketplaceApp.Forms.CreateForm>
-    </TranslateProvider>
+    </>
   )
 }

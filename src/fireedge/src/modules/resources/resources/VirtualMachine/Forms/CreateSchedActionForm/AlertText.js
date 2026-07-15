@@ -22,7 +22,7 @@ import {
   VM_SCHEDULE_TYPE_STRING,
 } from '@ConstantsModule'
 import { getRepeatInformation } from '@ModelsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { AlertNotification } from '@ComponentsV2Module'
 import { Box } from '@mui/material'
 import { DateTime } from 'luxon'
@@ -98,6 +98,7 @@ VisualAlert.displayName = 'VisualAlert'
  * @returns {ReactElement|string} App rendered.
  */
 const AlertText = (data) => {
+  const { translate } = useTranslation()
   if (!data || !data?.PERIODIC) {
     return ''
   }
@@ -119,7 +120,7 @@ const AlertText = (data) => {
     PERIODIC === SCHEDULE_TYPE.RELATIVE
       ? TEMPLATE_SCHEDULE_TYPE_STRING
       : VM_SCHEDULE_TYPE_STRING
-  const typeScheduleText = Tr(scheduleTypeLabels?.[PERIODIC]) || ''
+  const typeScheduleText = translate(scheduleTypeLabels?.[PERIODIC]) || ''
 
   if (PERIODIC === SCHEDULE_TYPE.RELATIVE) {
     if (!RELATIVE_TIME || !PERIOD) {
@@ -129,7 +130,7 @@ const AlertText = (data) => {
     return (
       <VisualAlert
         title={typeScheduleText}
-        description={`${RELATIVE_TIME} ${Tr(PERIOD)}`}
+        description={`${RELATIVE_TIME} ${translate(PERIOD)}`}
       />
     )
   } else {
@@ -175,8 +176,8 @@ const AlertText = (data) => {
 
         const { repeat, end } = getRepeatInformation(schedule)
         const description = [
-          repeat && Tr(repeat),
-          end && Tr(end),
+          repeat && translate(repeat),
+          end && translate(end),
           scheduleTimeText,
         ]
           .filter(Boolean)

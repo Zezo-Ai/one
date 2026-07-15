@@ -19,8 +19,9 @@ import {
   SCHEMA,
   FIELDS,
 } from '@modules/resources/resources/VirtualMachine/Forms/RecoverForm/schema'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { createForm } from '@UtilsModule'
+
 import { T } from '@ConstantsModule'
 
 const RecoverForm = createForm(SCHEMA, FIELDS, {

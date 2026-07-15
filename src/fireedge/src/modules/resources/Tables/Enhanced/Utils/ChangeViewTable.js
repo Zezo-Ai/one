@@ -20,7 +20,7 @@ import { EyeAlt } from 'iconoir-react'
 import { MenuItem, MenuList, Stack } from '@mui/material'
 
 import HeaderPopover from '@modules/resources/Header/Popover'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -29,6 +29,7 @@ import { T } from '@ConstantsModule'
  * @returns {object} Component JSX
  */
 const ChangeViewTable = memo(({ tableViews = {} }) => {
+  const { translate } = useTranslation()
   // Set click action
   const handleClick = (name) => {
     tableViews.onClick(name)
@@ -42,8 +43,8 @@ const ChangeViewTable = memo(({ tableViews = {} }) => {
       <HeaderPopover
         id="changeviewtable-by-button"
         icon={<EyeAlt />}
-        headerTitle={Tr(T['acls.table.types.title'])}
-        buttonLabel={Tr(T['acls.table.types.button'])}
+        headerTitle={translate(T['acls.table.types.title'])}
+        buttonLabel={translate(T['acls.table.types.button'])}
         buttonProps={{
           'data-cy': 'changeviewtable-by-button',
           disableElevation: true,
@@ -59,7 +60,7 @@ const ChangeViewTable = memo(({ tableViews = {} }) => {
                 onClick={() => handleClick(value.type)}
                 data-cy={key}
               >
-                {Tr(value.name)}
+                {translate(value.name)}
               </MenuItem>
             ))}
           </MenuList>

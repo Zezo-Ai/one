@@ -13,7 +13,13 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ButtonGroup, SubmitButton, Table, Tag } from '@ComponentsV2Module'
+import {
+  ButtonGroup,
+  ResourceActionConfirmation,
+  SubmitButton,
+  Table,
+  Tag,
+} from '@ComponentsV2Module'
 import { useLabelTree } from '@modules/resources/resources/Settings/NestedLabelTree/reducer'
 import { useModalsApi, useAuth } from '@FeaturesModule'
 import { labelsToArray } from '@modules/resources/resources/Settings/NestedLabelTree/utils'
@@ -31,11 +37,13 @@ import { useLabelMutations } from '@modules/resources/resources/Settings/NestedL
 import { buildLabelTreeState } from '@UtilsModule'
 import { CreateForm as CreateLabelForm } from '@modules/resources/resources/Settings/Forms'
 import { getSeededLabelColor } from '@ModelsModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  *@returns {Component} - Label table
  */
 const LabelTable = () => {
+  const { translate } = useTranslation()
   const auth = useAuth()
   const {
     state: { __info, ...treeState },
@@ -111,7 +119,7 @@ const LabelTable = () => {
     showModal({
       id: 'create-label',
       dialogProps: {
-        title: 'Create Label',
+        title: T.CreateLabel,
         dataCy: 'modal-create-label',
         fixedWidth: '500px',
         fixedHeight: '500px',
@@ -126,24 +134,28 @@ const LabelTable = () => {
       isConfirmDialog: true,
       dialogProps: {
         description: (
-          <Box sx={{ display: 'grid', gap: 1 }}>
-            <Box>{T.DeleteLabelConcept}</Box>
-            <Box>{T.DeleteTheFollowingLabel}:</Box>
-            <Box sx={{ display: 'grid', gap: 0.75, pl: 1 }}>
-              <Box>
-                <Box component="span" sx={{ fontWeight: 700 }}>
-                  {T.Name}:{' '}
+          <ResourceActionConfirmation
+            description={
+              <Box sx={{ display: 'grid', gap: 1 }}>
+                <Box>{translate(T.DeleteLabelConcept)}</Box>
+                <Box sx={{ display: 'grid', gap: 0.75, pl: 1 }}>
+                  <Box>
+                    <Box component="span" sx={{ fontWeight: 700 }}>
+                      {translate(T.Name)}:{' '}
+                    </Box>
+                    {row.name}
+                  </Box>
+                  <Box>
+                    <Box component="span" sx={{ fontWeight: 700 }}>
+                      {translate(T.Path)}:{' '}
+                    </Box>
+                    {row.displayPath}
+                  </Box>
                 </Box>
-                {row.name}
               </Box>
-              <Box>
-                <Box component="span" sx={{ fontWeight: 700 }}>
-                  {T.Path}:{' '}
-                </Box>
-                {row.displayPath}
-              </Box>
-            </Box>
-          </Box>
+            }
+            resourceType={T.Labels}
+          />
         ),
         title: T.DeleteLabel,
         confirmLabel: T.Delete,

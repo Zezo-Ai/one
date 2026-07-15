@@ -20,7 +20,7 @@ import { css } from '@emotion/css'
 import PropTypes from 'prop-types'
 
 import { FormWithSchema } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const useStyles = () => ({
@@ -36,6 +36,7 @@ const useStyles = () => ({
 })
 
 const PolicyCard = memo(({ id, cy, fields, handleRemove, cardProps }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => useStyles(theme), [theme])
 
@@ -52,7 +53,7 @@ const PolicyCard = memo(({ id, cy, fields, handleRemove, cardProps }) => {
             onClick={handleRemove}
             disableElevation
           >
-            {Tr(T.Remove)}
+            {translate(T.Remove)}
           </Button>
         )}
       </CardActions>

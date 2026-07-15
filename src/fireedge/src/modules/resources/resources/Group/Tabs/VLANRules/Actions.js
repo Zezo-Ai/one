@@ -22,10 +22,15 @@ import {
 } from 'iconoir-react'
 import PropTypes from 'prop-types'
 import { memo } from 'react'
-import { Button, MenuButton } from '@ComponentsV2Module'
+import {
+  Button,
+  MenuButton,
+  ResourceActionConfirmation,
+} from '@ComponentsV2Module'
 import { AddVLANRuleForm } from '@modules/resources/resources/Group/Forms'
 import { GroupAPI, useModalsApi } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
+import { hasRestrictedAttributes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   RESTRICTED_ATTRIBUTES_TYPE,
   T,
@@ -33,7 +38,6 @@ import {
   STYLE_BUTTONS,
 } from '@ConstantsModule'
 import { jsonToXml } from '@ModelsModule'
-import { hasRestrictedAttributes } from '@UtilsModule'
 
 const AddVLANRuleAction = memo(
   ({ groupId, onSubmit, oneConfig, adminGroup }) => {
@@ -93,11 +97,11 @@ const VLANRuleActionsMenu = memo(
     canUpdate = false,
     canDelete = false,
   }) => {
+    const { translate } = useTranslation()
     const { showModal } = useModalsApi()
     const [vlanRuleGroup] = GroupAPI.useVlanRuleGroupMutation()
-    const updateVLANRuleLabel = Tr(T['groups.actions.update-vlan-rule'])
-    const deleteVLANRuleLabel = Tr(T.DeleteVLANRule)
-    const proceedLabel = Tr(T.DoYouWantProceed)
+    const updateVLANRuleLabel = translate(T['groups.actions.update-vlan-rule'])
+    const deleteVLANRuleLabel = translate(T.DeleteVLANRule)
 
     const isDeleteDisabled =
       !adminGroup &&
@@ -156,7 +160,17 @@ const VLANRuleActionsMenu = memo(
             vlanRuleId !== undefined
               ? `${deleteVLANRuleLabel}: #${vlanRuleId}`
               : deleteVLANRuleLabel,
-          description: <p>{proceedLabel}</p>,
+          description: (
+            <ResourceActionConfirmation
+              description={T['resource.delete.confirmation']}
+              resources={{ ID: vlanRuleId }}
+              resourceType={T.VLANRules}
+            />
+          ),
+          confirmLabel: T.Delete,
+          confirmButtonProps: {
+            isDestructive: true,
+          },
         },
         onSubmit: handleRemove,
       })

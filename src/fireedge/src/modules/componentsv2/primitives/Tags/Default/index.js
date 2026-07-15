@@ -34,6 +34,7 @@ import { useControllableState } from '@HooksModule'
  * @param {boolean} root0.isSelected - Parent controlled selection state
  * @param {string} root0.titleClassName - Optional wrapped title class name
  * @param {object} root0.customColor - Optional custom tag colors
+ * @param {string} root0.dataCy - Cypress selector
  * @returns {Component} - Custom MUI Tag component
  */
 export const Tag = forwardRef(
@@ -48,6 +49,7 @@ export const Tag = forwardRef(
       title = '',
       titleClassName,
       customColor,
+      dataCy,
       onChange,
       ...opts
     },
@@ -70,10 +72,11 @@ export const Tag = forwardRef(
       }
     }
 
+    const label = children ?? title
     const content = titleClassName ? (
-      <span className={titleClassName}>{title}</span>
+      <span className={titleClassName}>{label}</span>
     ) : (
-      title
+      label
     )
 
     return (
@@ -83,6 +86,7 @@ export const Tag = forwardRef(
         onClick={handleClick}
         startIcon={renderIcon(startIcon)}
         endIcon={renderIcon(endIcon)}
+        data-cy={dataCy}
         sx={(theme) =>
           getStyles({
             theme,
@@ -115,6 +119,7 @@ Tag.propTypes = {
   endIcon: PropTypes.node,
   startIcon: PropTypes.node,
   isSelected: PropTypes.bool,
+  dataCy: PropTypes.string,
   onChange: PropTypes.func,
 }
 

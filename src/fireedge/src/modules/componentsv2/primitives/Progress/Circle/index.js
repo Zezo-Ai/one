@@ -19,6 +19,7 @@ import PropTypes from 'prop-types'
 import { Box, Typography, useTheme } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/primitives/Progress/Circle/styles'
 import { ProgressCircleSvg } from '@modules/componentsv2/primitives/Progress/Circle/svg'
+import { useTranslation } from '@ProvidersModule'
 
 const getDimensions = (theme, size) => {
   const dimensionMap = {
@@ -67,6 +68,7 @@ export const ProgressCircle = forwardRef(
     { size = 'medium', value = 0, isLabelVisible = false, label, ...opts },
     ref
   ) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const dimensions = useMemo(() => getDimensions(theme, size), [theme, size])
     const clampedValue = Math.min(100, Math.max(0, value))
@@ -87,7 +89,9 @@ export const ProgressCircle = forwardRef(
       >
         <ProgressCircleSvg value={clampedValue} {...dimensions} />
         {label && (
-          <Typography className="progress-circle-label">{label}</Typography>
+          <Typography className="progress-circle-label">
+            {translate(label)}
+          </Typography>
         )}
       </Box>
     )

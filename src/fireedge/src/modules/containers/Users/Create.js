@@ -18,12 +18,8 @@ import { useHistory } from 'react-router'
 
 import { UserAPI, useGeneralApi } from '@FeaturesModule'
 
-import {
-  DefaultFormStepper,
-  SkeletonStepsForm,
-  User,
-  TranslateProvider,
-} from '@ResourcesModule'
+import { DefaultFormStepper, SkeletonStepsForm, User } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 const { useAllocateUserMutation } = UserAPI
 
@@ -46,13 +42,13 @@ export function CreateUser() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <User.Forms.CreateForm
         onSubmit={onSubmit}
         fallback={<SkeletonStepsForm />}
       >
         {(config) => <DefaultFormStepper {...config} />}
       </User.Forms.CreateForm>
-    </TranslateProvider>
+    </>
   )
 }

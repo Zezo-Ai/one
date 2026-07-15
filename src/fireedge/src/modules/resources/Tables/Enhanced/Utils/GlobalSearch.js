@@ -22,7 +22,7 @@ import { UseGlobalFiltersInstanceProps } from 'opennebula-react-table'
 import PropTypes from 'prop-types'
 
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const useStyles = ({ palette, breakpoints }) => ({
   search: css({
@@ -85,6 +85,7 @@ const useStyles = ({ palette, breakpoints }) => ({
  * @returns {ReactElement} Component JSX
  */
 const GlobalSearch = ({ useTableProps, searchProps, value, setValue }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => useStyles(theme), [theme])
   const { setGlobalFilter } = useTableProps
@@ -111,7 +112,7 @@ const GlobalSearch = ({ useTableProps, searchProps, value, setValue }) => {
             setValue(event.target.value)
             handleChange(event.target.value)
           }}
-          placeholder={`${Tr(T.Search)}...`}
+          placeholder={`${translate(T.Search)}...`}
           classes={{ root: classes.inputRoot, input: classes.inputInput }}
           inputProps={{ 'aria-label': 'search', ...(searchProps ?? {}) }}
         />

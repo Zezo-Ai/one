@@ -23,6 +23,7 @@ import {
   getVirtualRouterTotalNics,
   getVirtualRouterTotalVms,
 } from '@ModelsModule'
+import { getLockIcon } from '@UtilsModule'
 
 /**
  * VirtualRouterCard component displays a Virtual Router as a card.
@@ -37,7 +38,7 @@ import {
  */
 export const VirtualRouterCard = forwardRef(
   ({ vrouter = {}, isSelected, onCheck, onClick }, ref) => {
-    const { ID, NAME, UNAME, GNAME, TEMPLATE_ID, LOCK } = vrouter
+    const { ID, NAME, UNAME, GNAME, TEMPLATE_ID } = vrouter
     const labelSlotLabels = getLabelSlotLabels(vrouter?.LABELS)
 
     return (
@@ -47,7 +48,16 @@ export const VirtualRouterCard = forwardRef(
         onClick={onClick}
         isSelected={isSelected}
         slots={[
-          [TitleSlot, { title: NAME }],
+          [
+            TitleSlot,
+            {
+              title: (
+                <>
+                  {NAME} {getLockIcon(vrouter)}
+                </>
+              ),
+            },
+          ],
           [
             MetadataSlot,
             {
@@ -61,13 +71,10 @@ export const VirtualRouterCard = forwardRef(
               ].filter(([, value]) => value !== undefined && value !== null),
             },
           ],
-          (LOCK || labelSlotLabels.length > 0) && [
+          labelSlotLabels.length > 0 && [
             LabelSlot,
             {
-              labels: [
-                LOCK && [T.Locked, 'information'],
-                ...labelSlotLabels,
-              ].filter(Boolean),
+              labels: labelSlotLabels,
             },
           ],
         ].filter(Boolean)}

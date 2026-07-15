@@ -20,7 +20,7 @@ import { Alert, Button, Chip, alertClasses, styled } from '@mui/material'
 import { Row, TableProps } from 'opennebula-react-table'
 
 import { T } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const MessageStyled = styled(Alert)({
   width: '100%',

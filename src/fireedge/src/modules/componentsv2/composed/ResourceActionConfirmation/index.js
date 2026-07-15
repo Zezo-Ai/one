@@ -19,7 +19,7 @@ import PropTypes from 'prop-types'
 import { Box, Typography } from '@mui/material'
 
 import { T } from '@ConstantsModule'
-import { Tr } from '@ProvidersModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @typedef {object} AffectedResource
@@ -57,6 +57,7 @@ const formatResource = ({ id, name }) => {
  */
 export const ResourceActionConfirmation = memo(
   ({ description, resources = [], resourceType = 'resources' }) => {
+    const { translate, translateText } = useTranslation()
     const normalizedResources = []
       .concat(resources)
       .filter(Boolean)
@@ -67,14 +68,16 @@ export const ResourceActionConfirmation = memo(
       <Box sx={{ display: 'grid', gap: 2 }}>
         {description && (
           <Typography component="p" variant="body1">
-            {typeof description === 'string' ? Tr(description) : description}
+            {typeof description === 'string'
+              ? translateText(description)
+              : description}
           </Typography>
         )}
 
         {!!normalizedResources.length && (
           <Box>
             <Typography component="p" variant="body1" fontWeight={600}>
-              {resourceType ?? Tr(T.Resources)}
+              {translate(resourceType ?? T.Resources)}
             </Typography>
 
             <Box component="ul" sx={{ m: 0, mt: 1, pl: 3 }}>

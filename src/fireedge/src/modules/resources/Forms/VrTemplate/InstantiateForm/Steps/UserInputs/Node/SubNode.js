@@ -19,7 +19,7 @@ import { Component, useState } from 'react'
 import UserInputDialog from '@modules/resources/Forms/VrTemplate/InstantiateForm/Steps/UserInputs/Node/UserInputDialog'
 import { Typography, Box, useTheme, Grid } from '@mui/material'
 import { WarningCircle as MandatoryIcon } from 'iconoir-react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -28,6 +28,7 @@ import { T } from '@ConstantsModule'
  *@returns {Component} - Subnode
  */
 const SubNode = ({ userInput }) => {
+  const { translate } = useTranslation()
   const { description, mandatory, name } = userInput
   const theme = useTheme()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -35,8 +36,8 @@ const SubNode = ({ userInput }) => {
   const userInputValue =
     userInput.type === 'boolean'
       ? getValues(`user_inputs.${userInput.name}`) === 'YES'
-        ? Tr(T.Yes)
-        : Tr(T.No)
+        ? translate(T.Yes)
+        : translate(T.No)
       : getValues(`user_inputs.${userInput.name}`) || undefined
 
   const toggleDialog = () => setDialogOpen(!dialogOpen)
@@ -72,7 +73,7 @@ const SubNode = ({ userInput }) => {
         {userInputValue && (
           <Grid item xs={12}>
             <Typography noWrap variant="body1">
-              {`${Tr(T.Value)}: ${userInputValue}`}
+              {`${translate(T.Value)}: ${userInputValue}`}
             </Typography>
           </Grid>
         )}

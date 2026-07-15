@@ -18,7 +18,7 @@ import PropTypes from 'prop-types'
 import { Component, useMemo } from 'react'
 
 import { Table } from '@ComponentsV2Module'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { DatastoreAPI } from '@FeaturesModule'
 import { datastoreTable } from '@ModelsModule'
 
@@ -60,10 +60,13 @@ export const Datastores = ({ data }) => {
 
   return (
     <Table
+      dataCy={datastoreTable.dataCy}
       columns={columns}
       data={datastoreData}
       isRowsSelectable={false}
       isLoading={isFetching}
+      openRowDetailsOnClick
+      rowDetailsResourceId={RESOURCE_NAMES.DATASTORE}
     />
   )
 }

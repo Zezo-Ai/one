@@ -15,6 +15,7 @@
  * ------------------------------------------------------------------------- */
 
 export * as Tabs from '@modules/resources/resources/VrTemplate/Tabs'
+export * as Forms from '@modules/resources/resources/VrTemplate/Forms'
 
 export const RID = 'vrouter-template'
 export { VrTemplateCard as Card } from '@modules/resources/resources/VrTemplate/Card'

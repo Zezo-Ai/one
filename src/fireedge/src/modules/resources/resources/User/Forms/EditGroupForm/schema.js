@@ -58,6 +58,7 @@ const groupColumns = [
 ]
 
 const getGroupModel = (filterData) => ({
+  dataCy: 'group',
   columns: () => groupColumns,
   useData: () => {
     const result = GroupAPI.useGetGroupsQuery()

@@ -91,7 +91,6 @@ export const DatastoreCard = forwardRef(
               bars: [
                 {
                   label: `${percentLabel}`,
-                  size: 'small',
                   value: percentOfUsed,
                   isLabelVisible: true,
                   thresholds: [

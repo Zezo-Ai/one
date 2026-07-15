@@ -25,7 +25,7 @@ import {
 import { InputBase } from '@mui/material'
 import { getEditableTitleStyles } from '@modules/componentsv2/composed/DetailsDrawer/Default/slots/info/styles'
 import { Tooltip } from '@modules/componentsv2/primitives/Tooltip'
-import { Tr } from '@ProvidersModule'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -36,7 +36,8 @@ import { T } from '@ConstantsModule'
  * @returns {object} Editable title input.
  */
 const EditableTitle = forwardRef(
-  ({ value = '', onSave, isDisabled = false }, ref) => {
+  ({ value = '', onSave, isDisabled = false, dataCy }, ref) => {
+    const { translate } = useTranslation()
     const [isEditing, setIsEditing] = useState(false)
     const [draft, setDraft] = useState(value)
     const [isSaving, setIsSaving] = useState(false)
@@ -59,6 +60,8 @@ const EditableTitle = forwardRef(
     useEffect(() => {
       if (isEditing) inputRef.current?.focus()
     }, [isEditing])
+
+    const clickToRename = translate(T.ClickToRename)
 
     const handleKeyDown = (event) => {
       if (event.key === 'Enter') save()
@@ -108,6 +111,7 @@ const EditableTitle = forwardRef(
         inputProps={{
           readOnly: !isEditing,
           size: 1,
+          'data-cy': dataCy,
         }}
         sx={(theme) =>
           getEditableTitleStyles({
@@ -118,7 +122,7 @@ const EditableTitle = forwardRef(
     )
 
     return canShowRenameTooltip ? (
-      <Tooltip title={Tr(T.ClickToRename)} placement="bottom" followCursor>
+      <Tooltip title={clickToRename} placement="bottom" followCursor>
         {titleInput}
       </Tooltip>
     ) : (
@@ -131,6 +135,7 @@ EditableTitle.propTypes = {
   value: PropTypes.string,
   onSave: PropTypes.func,
   isDisabled: PropTypes.bool,
+  dataCy: PropTypes.string,
 }
 
 EditableTitle.displayName = 'EditableTitle'

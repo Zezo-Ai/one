@@ -15,13 +15,20 @@
  * ------------------------------------------------------------------------- */
 
 import {
+  Button,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
-  ToggleGroup,
 } from '@ComponentsV2Module'
-import { CLUSTER_ACTIONS, T } from '@ConstantsModule'
+import {
+  CLUSTER_ACTIONS,
+  RESOURCE_NAMES,
+  STYLE_BUTTONS,
+  T,
+} from '@ConstantsModule'
 import { Cluster } from '@ResourcesModule'
 import { getTotalOfResources } from '@UtilsModule'
 import { Box, useTheme } from '@mui/material'
@@ -70,7 +77,17 @@ export const AggregatedView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.Clusters}`,
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedClusters}
+            resourceType={T.Clusters}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(
@@ -88,34 +105,6 @@ export const AggregatedView = ({
         handleClose()
       },
     })
-
-  const toggleOptions = [
-    [
-      canDelete && {
-        startIcon: (
-          <Trash
-            width="16px"
-            height="16px"
-            style={{
-              color: isActionsDisabled
-                ? palette.text.disabled
-                : palette.icon.error,
-            }}
-          />
-        ),
-        onClick: handleDelete,
-        value: CLUSTER_ACTIONS.DELETE,
-        tooltip: T.Delete,
-        isDisabled: isActionsDisabled,
-      },
-      {
-        startIcon: <CloseIcon width="16px" height="16px" />,
-        onClick: handleClose,
-        value: 'close',
-        tooltip: T.Close,
-      },
-    ].filter(Boolean),
-  ]
 
   const summary = useMemo(
     () =>
@@ -147,7 +136,41 @@ export const AggregatedView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
-                <ToggleGroup size="medium" options={toggleOptions} />
+                <LabelButton
+                  selectedRows={selectedClusters}
+                  resourceType={RESOURCE_NAMES.CLUSTER}
+                  isDisabled={isActionsDisabled}
+                />
+                {canDelete && (
+                  <Button
+                    type={STYLE_BUTTONS.TYPE.PRIMARY}
+                    size="small"
+                    startIcon={
+                      <Trash
+                        width="16px"
+                        height="16px"
+                        style={{
+                          color: isActionsDisabled
+                            ? palette.text.disabled
+                            : palette.icon.error,
+                        }}
+                      />
+                    }
+                    tooltip={T.Delete}
+                    onClick={handleDelete}
+                    isDestructive
+                    isDisabled={isActionsDisabled}
+                  >
+                    {T.DeleteSelected}
+                  </Button>
+                )}
+                <Button
+                  type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                  size="small"
+                  iconOnly={<CloseIcon width="16px" height="16px" />}
+                  tooltip={T.Close}
+                  onClick={handleClose}
+                />
               </Box>
             ),
           },

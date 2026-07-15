@@ -20,9 +20,10 @@ import { Avatar, Link, MenuItem, MenuList } from '@mui/material'
 import { APPS, APP_URL, T } from '@ConstantsModule'
 import { useAuth, AuthAPI } from '@FeaturesModule'
 import HeaderPopover from '@modules/resources/Header/Popover'
-import { Translate } from '@modules/resources/HOC'
-import { DevTypography } from '@modules/resources/Typography'
+import { Translate } from '@ProvidersModule'
 import { isDevelopment } from '@UtilsModule'
+import { DevTypography } from '@modules/resources/Typography'
+
 import { useHistory } from 'react-router-dom'
 
 /**

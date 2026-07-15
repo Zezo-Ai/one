@@ -16,15 +16,17 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   SummarySlot,
   TabSlot,
   ToggleGroup,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
 
 import { Component, useMemo } from 'react'
 
-import { T, PATH } from '@ConstantsModule'
+import { T, PATH, RESOURCE_NAMES } from '@ConstantsModule'
 
 import { Box, useTheme } from '@mui/material'
 import PropTypes from 'prop-types'
@@ -39,6 +41,7 @@ import {
 import { useHistory } from 'react-router'
 import { SecurityGroupAPI, useModalsApi } from '@FeaturesModule'
 import { SecurityGroup } from '@ResourcesModule'
+import { getLabelTags } from '@ModelsModule'
 import { cloneObject, filterAttributes, jsonToXml } from '@UtilsModule'
 
 const HIDDEN_ATTRIBUTES = /^(RULE)$/
@@ -183,7 +186,17 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.SecurityGroups}`,
-        description: T['securitygroup.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedSecurityGroup}
+            resourceType={T.SecurityGroups}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: selectedSecurityGroup?.ID })
@@ -231,6 +244,7 @@ export const SingleView = ({
             isTitleEditDisabled: isRenaming,
             title: selectedSecurityGroup?.NAME,
             id: selectedSecurityGroup?.ID,
+            tags: getLabelTags(selectedSecurityGroup?.LABELS),
             labels: [
               [T.Owner, selectedSecurityGroup?.UNAME],
               [T.Group, selectedSecurityGroup?.GNAME],
@@ -248,24 +262,6 @@ export const SingleView = ({
                   options={[
                     [
                       {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: () =>
-                          refreshSecGroup({ id: selectedSecurityGroup?.ID }),
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isActionsDisabled,
-                      },
-                    ],
-
-                    [
-                      {
-                        startIcon: <Edit width="16px" height="16px" />,
-                        onClick: handleEdit,
-                        value: 'edit',
-                        tooltip: T.Edit,
-                        isDisabled: isActionsDisabled,
-                      },
-                      {
                         startIcon: <CloneIcon width="16px" height="16px" />,
                         onClick: handleOpenCloneForm,
                         value: 'clone',
@@ -277,6 +273,30 @@ export const SingleView = ({
                         onClick: handleOpenCommitForm,
                         value: 'commit',
                         tooltip: T.Commit,
+                        isDisabled: isActionsDisabled,
+                      },
+                    ],
+                    [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [selectedSecurityGroup],
+                          resourceType: RESOURCE_NAMES.SEC_GROUP,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
+                      {
+                        startIcon: <Edit width="16px" height="16px" />,
+                        onClick: handleEdit,
+                        value: 'edit',
+                        tooltip: T.Edit,
+                        isDisabled: isActionsDisabled,
+                      },
+                      {
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: () =>
+                          refreshSecGroup({ id: selectedSecurityGroup?.ID }),
+                        value: 'refresh',
+                        tooltip: T.Refresh,
                         isDisabled: isActionsDisabled,
                       },
                     ],
@@ -297,6 +317,7 @@ export const SingleView = ({
                         onClick: handleOpenDeleteForm,
                         value: 'delete',
                         tooltip: T.Delete,
+                        isDestructive: true,
                         isDisabled: isActionsDisabled,
                       },
                       {

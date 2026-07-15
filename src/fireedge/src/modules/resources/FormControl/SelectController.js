@@ -20,8 +20,8 @@ import { TextField } from '@mui/material'
 import { useController, useWatch } from 'react-hook-form'
 
 import { ErrorHelper, Tooltip } from '@modules/resources/FormControl'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
-import { generateKey, findClosestValue } from '@UtilsModule'
+import { isTranslationInput, generateKey, findClosestValue } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const SelectController = memo(
   ({
@@ -40,6 +40,7 @@ const SelectController = memo(
     readOnly = false,
     onConditionChange,
   }) => {
+    const { translate } = useTranslation()
     const watch = useWatch({
       name: dependencies,
       disabled: dependencies == null,
@@ -135,7 +136,7 @@ const SelectController = memo(
         fullWidth
         disabled={readOnly}
         SelectProps={{ native: true, multiple }}
-        label={labelCanBeTranslated(label) ? Tr(label) : label}
+        label={isTranslationInput(label) ? translate(label) : label}
         InputLabelProps={{ shrink: needShrink }}
         InputProps={{
           ...(multiple && { sx: { paddingTop: '0.5em' } }),
@@ -151,7 +152,7 @@ const SelectController = memo(
       >
         {values?.map(({ text, value = '' }) => (
           <option key={`${name}-${value}`} value={value}>
-            {Tr(text)}
+            {translate(text)}
           </option>
         ))}
       </TextField>

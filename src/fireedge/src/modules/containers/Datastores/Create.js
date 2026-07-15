@@ -18,13 +18,12 @@ import { useHistory, useLocation } from 'react-router'
 
 import { DatastoreAPI, useGeneralApi } from '@FeaturesModule'
 import { jsonToXml } from '@UtilsModule'
-
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
   Datastore,
-  TranslateProvider,
 } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 
 /**
@@ -68,7 +67,7 @@ export function CreateDatastore() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {datastoreId && !data ? (
         <SkeletonStepsForm />
       ) : (
@@ -81,6 +80,6 @@ export function CreateDatastore() {
           {(config) => <DefaultFormStepper {...config} />}
         </Datastore.Forms.CreateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

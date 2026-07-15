@@ -18,7 +18,7 @@ import { useHistory } from 'react-router-dom'
 import { Network, Page } from 'iconoir-react'
 
 import { CreateTypeDialog } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, PATH } from '@ConstantsModule'
 import { SelectTemplateForm } from '@modules/resources/resources/VnTemplate/Forms'
 import { useModalsApi } from '@FeaturesModule'
@@ -57,6 +57,7 @@ const TEMPLATE_SELECTION_DIALOG_PROPS = {
  * @returns {ReactElement} - Create Virtual Network Action component
  */
 export const CreateAction = () => {
+  const { translate } = useTranslation()
   const history = useHistory()
   const { showModal } = useModalsApi()
   const selectedTemplateRef = useRef()
@@ -112,21 +113,21 @@ export const CreateAction = () => {
 
   return (
     <CreateTypeDialog
-      title={Tr(T['vnet.create.selection.title'])}
-      subtitle={Tr(T['vnet.create.selection.subtitle'])}
+      title={translate(T['vnet.create.selection.title'])}
+      subtitle={translate(T['vnet.create.selection.subtitle'])}
       options={VIRTUAL_NETWORK_CREATE_OPTIONS.map(
         ({ title, subtitle, ...option }) => ({
           ...option,
-          title: Tr(title),
-          subtitle: Tr(subtitle),
+          title: translate(title),
+          subtitle: translate(subtitle),
         })
       )}
       selectedValue={selectedType}
       onChange={setSelectedType}
       onCancel={handleCancel}
       onConfirm={handleContinue}
-      cancelLabel={Tr(T.Cancel)}
-      confirmLabel={Tr(T.Continue)}
+      cancelLabel={translate(T.Cancel)}
+      confirmLabel={translate(T.Continue)}
     />
   )
 }

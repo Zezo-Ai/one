@@ -16,6 +16,7 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   SummarySlot,
   TabSlot,
@@ -24,15 +25,15 @@ import {
 import { Box, useTheme } from '@mui/material'
 import { Component, useEffect, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
-import { RefreshCircular, RefreshDouble, Trash } from 'iconoir-react'
-import { ONEKS_ACTIONS, T } from '@ConstantsModule'
+import { RefreshCircular, RefreshDouble, Cancel, Trash } from 'iconoir-react'
+import { ONEKS_ACTIONS, RESOURCE_NAMES, T } from '@ConstantsModule'
 import {
   createActions,
   permissionsToOctal,
   timeFromMilliseconds,
   toSnakeCase,
 } from '@UtilsModule'
-import { getVirtualOneKsStateControlPlane } from '@ModelsModule'
+import { getLabelTags, getVirtualOneKsStateControlPlane } from '@ModelsModule'
 import { OneKsAPI, useModalsApi } from '@FeaturesModule'
 import { OneKs as OneKsResource } from '@ResourcesModule'
 
@@ -192,13 +193,6 @@ export const SingleView = ({
 
   const toggleOptions = [
     [
-      {
-        startIcon: <RefreshDouble width="16px" height="16px" />,
-        onClick: handleRefresh,
-        value: 'refresh',
-        tooltip: T.Refresh,
-        isDisabled: isActionsDisabled,
-      },
       ...createActions({
         filters: availableActions,
         actions: [
@@ -212,6 +206,22 @@ export const SingleView = ({
           },
         ],
       }),
+    ],
+    [
+      {
+        ...getLabelMenuButtonProps({
+          selectedRows: [data],
+          resourceType: RESOURCE_NAMES.ONEKS,
+          isDisabled: isActionsDisabled,
+        }),
+      },
+      {
+        startIcon: <RefreshDouble width="16px" height="16px" />,
+        onClick: handleRefresh,
+        value: 'refresh',
+        tooltip: T.Refresh,
+        isDisabled: isActionsDisabled,
+      },
     ],
     [
       ...createActions({
@@ -233,10 +243,17 @@ export const SingleView = ({
             onClick: handleDelete,
             value: ONEKS_ACTIONS.DELETE,
             title: T.Delete,
+            isDestructive: true,
             isDisabled: isActionsDisabled,
           },
         ],
       }),
+      {
+        startIcon: <Cancel width="16px" height="16px" />,
+        onClick: handleClose,
+        value: 'close',
+        tooltip: T.Close,
+      },
     ],
   ].filter(({ length }) => length > 0)
 
@@ -252,6 +269,7 @@ export const SingleView = ({
             isTitleEditDisabled: isActionsDisabled,
             title: data?.NAME,
             id: ID,
+            tags: getLabelTags(data?.LABELS),
             Toolbar: () => (
               <Box
                 sx={(theme) => ({

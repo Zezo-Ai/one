@@ -16,11 +16,10 @@
 
 import PropTypes from 'prop-types'
 import { Component, useMemo } from 'react'
-import { generatePath, useHistory } from 'react-router-dom'
 
 import { Box } from '@mui/material'
 import { Table } from '@ComponentsV2Module'
-import { PATH, T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { ProvisionAPI, VnAPI, useGeneralApi } from '@FeaturesModule'
 import { vnTable } from '@ModelsModule'
 import { getActionsAvailable } from '@UtilsModule'
@@ -71,7 +70,6 @@ const isPresent = (value) =>
 export const Vnets = ({ data, config }) => {
   const { selected: cluster = {}, handleRefresh, isActionsDisabled } = data
   const { enqueueSuccess } = useGeneralApi()
-  const history = useHistory()
 
   const { data: vnets = [], isFetching } = VnAPI.useGetVNetworksQuery()
   const [addIpsProvision, { isLoading: isAddingIps }] =
@@ -151,12 +149,6 @@ export const Vnets = ({ data, config }) => {
     await Promise.all(refreshes.filter(Boolean))
   }
 
-  const handleRowClick = (row) => {
-    history.push(
-      generatePath(PATH.NETWORK.VNETS.DETAIL, { id: String(row.ID) })
-    )
-  }
-
   const handleAddIp = async (amount) => {
     if (!amount || !hasProvision) return
 
@@ -202,11 +194,13 @@ export const Vnets = ({ data, config }) => {
         </Box>
       )}
       <Table
+        dataCy={vnTable.dataCy}
         columns={columns}
         data={vnetData}
         isRowsSelectable={false}
         isLoading={isFetching}
-        onRowClick={handleRowClick}
+        openRowDetailsOnClick
+        rowDetailsResourceId={RESOURCE_NAMES.VNET}
       />
     </Box>
   )

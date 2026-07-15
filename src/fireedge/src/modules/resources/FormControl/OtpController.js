@@ -18,8 +18,13 @@ import PropTypes from 'prop-types'
 import { OtpInput } from '@ComponentsV2Module'
 import { useController, useFormContext } from 'react-hook-form'
 import { DEFAULT_OTP_LENGTH } from '@ConstantsModule'
-import { generateKey, getDigits, sentenceCase } from '@UtilsModule'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
+import {
+  generateKey,
+  getDigits,
+  sentenceCase,
+  isTranslationInput,
+} from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const OtpController = memo(
   ({
@@ -30,6 +35,7 @@ const OtpController = memo(
     fieldProps = {},
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const { clearErrors, trigger } = useFormContext()
     const {
       hint = '',
@@ -65,8 +71,8 @@ const OtpController = memo(
         ?.map((message) => message?.trim())
         ?.join(' ')
     )
-    const trHint = labelCanBeTranslated(hint) ? Tr(hint) : hint
-    const trLabel = labelCanBeTranslated(label) ? Tr(label) : label
+    const trHint = isTranslationInput(hint) ? translate(hint) : hint
+    const trLabel = isTranslationInput(label) ? translate(label) : label
 
     return (
       <OtpInput

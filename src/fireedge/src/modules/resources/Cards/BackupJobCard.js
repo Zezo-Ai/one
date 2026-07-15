@@ -22,7 +22,8 @@ import {
   timeFromMilliseconds,
   getResourceLabels,
 } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
+
 import MultipleTags from '@modules/resources/MultipleTagsCard'
 import { StatusCircle } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
@@ -48,6 +49,7 @@ const BackupJobCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ template, rootProps, onClickLabel, onDeleteLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels } = useAuth()
@@ -161,15 +163,15 @@ const BackupJobCard = memo(
           </div>
           <div className={classes.caption}>
             <span>{`#${ID}`}</span>
-            <span title={`${Tr(T.Priority)}: ${PRIORITY}`}>
+            <span title={`${translate(T.Priority)}: ${PRIORITY}`}>
               <HighPriority />
               <span>{` ${PRIORITY}`}</span>
             </span>
-            <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+            <span title={`${translate(T.Owner)}: ${UNAME}`}>
               <User />
               <span>{` ${UNAME}`}</span>
             </span>
-            <span title={`${Tr(T.Group)}: ${GNAME}`}>
+            <span title={`${translate(T.Group)}: ${GNAME}`}>
               <Group />
               <span>{` ${GNAME}`}</span>
             </span>

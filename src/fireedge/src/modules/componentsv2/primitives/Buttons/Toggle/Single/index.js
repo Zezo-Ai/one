@@ -15,12 +15,17 @@
  * ------------------------------------------------------------------------- */
 
 import { Box } from '@mui/material'
-import { forwardRef, Component } from 'react'
+import { forwardRef, Component, useMemo } from 'react'
 import { getStyles } from '@modules/componentsv2/primitives/Buttons/Toggle/Single/styles'
 import { Tooltip } from '@modules/componentsv2/primitives/Tooltip/Default'
 import PropTypes from 'prop-types'
 import { useControllableState } from '@HooksModule'
 import { renderIcon } from '@UtilsModule'
+import {
+  useCompactToolbarAction,
+  useCompactToolbarId,
+} from '@modules/componentsv2/primitives/Buttons/CompactToolbar/context'
+import { useTranslation } from '@ProvidersModule'
 
 const TOGGLE_SIZES = Object.freeze({
   SMALL: 'small',
@@ -52,15 +57,19 @@ export const Toggle = forwardRef(
       isSelectable = true,
       isSelected,
       sx,
+      compactable = false,
       ...opts
     },
     ref
   ) => {
+    const { translate } = useTranslation()
+    const compactId = useCompactToolbarId('compact-toggle')
     const { 'aria-label': ariaLabel, ...boxProps } = opts
     const tooltipTitle = tooltip ?? title
-    const accessibleLabel =
+    const accessibleLabel = translate(
       ariaLabel ??
-      (text || (typeof tooltipTitle === 'string' ? tooltipTitle : undefined))
+        (text || (typeof tooltipTitle === 'string' ? tooltipTitle : undefined))
+    )
 
     const [effectiveSelected, setEffectiveSelected] = useControllableState({
       value: isSelected,
@@ -82,6 +91,24 @@ export const Toggle = forwardRef(
         handleOnClick(event)
       }
     }
+    const compactOption = useMemo(
+      () => ({
+        title: text || (typeof tooltipTitle === 'string' ? tooltipTitle : ''),
+        tooltip: tooltipTitle,
+        startIcon,
+        isDisabled,
+        isSelected: effectiveSelected,
+        onClick,
+      }),
+      [effectiveSelected, isDisabled, onClick, startIcon, text, tooltipTitle]
+    )
+    const isCompacted = useCompactToolbarAction(
+      compactId,
+      compactOption,
+      compactable
+    )
+
+    if (isCompacted) return null
 
     return (
       <Tooltip title={tooltipTitle}>
@@ -109,8 +136,11 @@ export const Toggle = forwardRef(
           {...boxProps}
         >
           {startIcon &&
-            renderIcon(startIcon, { className: 'toggle-button-icon' })}
-          {text && <Box className="toggle-button-text">{text}</Box>}
+            renderIcon(startIcon, {
+              className: 'toggle-button-icon',
+              key: 'toggle-start-icon',
+            })}
+          {text && <Box className="toggle-button-text">{translate(text)}</Box>}
         </Box>
       </Tooltip>
     )
@@ -128,6 +158,7 @@ Toggle.propTypes = {
   isOutlined: PropTypes.bool,
   isSelectable: PropTypes.bool,
   isSelected: PropTypes.bool,
+  compactable: PropTypes.bool,
   onClick: PropTypes.func,
   onChange: PropTypes.func,
   sx: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.func]),

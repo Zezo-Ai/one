@@ -17,7 +17,7 @@ import PropTypes from 'prop-types'
 import { Component, useMemo } from 'react'
 import { Table } from '@ComponentsV2Module'
 import { vmsTable } from '@ModelsModule'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 
 /**
  * @param {object} root0 - Params
@@ -76,6 +76,8 @@ export const HostVmsTab = ({ data }) => {
       columns={columns}
       data={[].concat(vmData)}
       isRowsSelectable={false}
+      openRowDetailsOnClick
+      rowDetailsResourceId={RESOURCE_NAMES.VM}
     />
   )
 }

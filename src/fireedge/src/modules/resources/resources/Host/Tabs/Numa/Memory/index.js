@@ -16,7 +16,7 @@
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import { ReactElement } from 'react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   HOST_THRESHOLD,
   T,
@@ -33,6 +33,7 @@ import { getStyles } from '@modules/resources/resources/Host/Tabs/Numa/Memory/st
  * @returns {ReactElement} Information tab
  */
 const NumaMemory = ({ node }) => {
+  const { translate } = useTranslation()
   const { percentMemUsed, percentMemLabel } = getNumaMemory(node)
   const sliderValue = Math.min(100, Math.max(0, percentMemUsed))
 
@@ -43,12 +44,11 @@ const NumaMemory = ({ node }) => {
         component="h6"
         variant={TEXT_VARIANTS.H6}
         weight={TEXT_WEIGHTS.SEMIBOLD}
-        value={Tr(T.NumaNodeMemory)}
+        value={translate(T.NumaNodeMemory)}
       />
       <Box className="numa-memory__content">
         <ProgressBar
           className="numa-memory__progress"
-          size="small"
           value={Number.isFinite(sliderValue) ? sliderValue : 0}
           label={percentMemLabel}
           thresholds={[HOST_THRESHOLD.MEMORY.low, HOST_THRESHOLD.MEMORY.high]}

@@ -17,3 +17,4 @@
 export * from '@modules/componentsv2/composed/DetailsDrawer/Default'
 export * from '@modules/componentsv2/composed/DetailsDrawer/Default/slots'
 export * from '@modules/componentsv2/composed/DetailsDrawer/Documentation/Default'
+export * from '@modules/componentsv2/composed/DetailsDrawer/Stack'

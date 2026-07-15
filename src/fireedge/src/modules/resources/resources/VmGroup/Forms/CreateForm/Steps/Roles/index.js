@@ -23,32 +23,38 @@ import HostAffinityPanel from './hostAffinityPanel'
 import RoleConfigurationPreview from './roleConfigurationPreview'
 import { Group as RoleIcon } from 'iconoir-react'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { SelectableCardPanel } from '@ComponentsV2Module'
 import { useSelectableCardPanel } from '@HooksModule'
 
 export const STEP_ID = 'role-definition'
 
-const RoleDefinitionDocumentation = () => (
-  <Stack gap="1em">
-    <Box>{Tr(T.RoleDefineRoles)}</Box>
-    <Box>
-      {Tr(T.VMAffinity)}: {Tr(T.Affined)} / {Tr(T.AntiAffined)}
-    </Box>
-    <Box>{Tr(T.NoAffinedHostsConcept)}</Box>
-    <Box>{Tr(T.NoAntiAffinedHostsConcept)}</Box>
-    <Box>
-      <strong>{Tr(T.VMGroupConfiguration)}:</strong>
-      <Box component="ul" sx={{ my: 0, pl: 4 }}>
-        <li>{Tr(T.RoleDefineRoles)}</li>
-        <li>{Tr(T.RoleOptimize)}</li>
-        <li>{Tr(T.RoleManageApps)}</li>
+const RoleDefinitionDocumentation = () => {
+  const { translate } = useTranslation()
+
+  return (
+    <Stack gap="1em">
+      <Box>{translate(T.RoleDefineRoles)}</Box>
+      <Box>
+        {translate(T.VMAffinity)}: {translate(T.Affined)} /{' '}
+        {translate(T.AntiAffined)}
       </Box>
-    </Box>
-  </Stack>
-)
+      <Box>{translate(T.NoAffinedHostsConcept)}</Box>
+      <Box>{translate(T.NoAntiAffinedHostsConcept)}</Box>
+      <Box>
+        <strong>{translate(T.VMGroupConfiguration)}:</strong>
+        <Box component="ul" sx={{ my: 0, pl: 4 }}>
+          <li>{translate(T.RoleDefineRoles)}</li>
+          <li>{translate(T.RoleOptimize)}</li>
+          <li>{translate(T.RoleManageApps)}</li>
+        </Box>
+      </Box>
+    </Stack>
+  )
+}
 
 const Content = () => {
+  const { translate } = useTranslation()
   const { control, setValue } = useFormContext()
   const watchedRoles = useWatch({
     control,
@@ -112,11 +118,11 @@ const Content = () => {
     [selectedRoleIndex, setValue, watchedRoles]
   )
 
-  const newRoleLabel = Tr(T.NewRole)
-  const nonePolicyLabel = Tr(T.None)
-  const affinedPolicyLabel = Tr(T.Affined)
-  const antiAffinedPolicyLabel = Tr(T.AntiAffined)
-  const addRoleLabel = Tr(T.AddRole)
+  const newRoleLabel = translate(T.NewRole)
+  const nonePolicyLabel = translate(T.None)
+  const affinedPolicyLabel = translate(T.Affined)
+  const antiAffinedPolicyLabel = translate(T.AntiAffined)
+  const addRoleLabel = translate(T.AddRole)
 
   const renderRoleTitle = useCallback(
     (role) => role?.NAME || newRoleLabel,

@@ -22,6 +22,7 @@ import {
   useState,
   useEffect,
   useMemo,
+  useCallback,
 } from 'react'
 import PropTypes from 'prop-types'
 import { Autocomplete, ListSubheader, Divider, useTheme } from '@mui/material'
@@ -34,6 +35,7 @@ import {
 } from '@modules/componentsv2/primitives/Dropdown/Default/styles'
 import { renderIcon } from '@UtilsModule'
 import { T } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const getOptionText = (option) => {
   const text = typeof option === 'object' ? option?.text : option
@@ -43,6 +45,17 @@ const getOptionText = (option) => {
 
 const getOptionValue = (option) =>
   typeof option === 'object' ? option?.value ?? option?.text : option
+
+const getOptionDataCy = (dataCy, option) => {
+  const value =
+    typeof option === 'object'
+      ? option?.dataCy ?? getOptionValue(option)
+      : option
+
+  return dataCy && value != null
+    ? `${dataCy}-${String(value).toLowerCase()}`
+    : undefined
+}
 
 const filterByTextOrValue = (options, { inputValue }) => {
   const query = inputValue?.toLowerCase?.() ?? ''
@@ -82,6 +95,7 @@ export const Dropdown = forwardRef(
       isReadOnly = false,
       isSearchable = false,
       isDisableEnter = false,
+      disableCloseOnSelect = false,
       label,
       menuTitle,
       onInputChange,
@@ -89,11 +103,14 @@ export const Dropdown = forwardRef(
       placeholder,
       endIcon,
       startIcon,
+      PopperComponent,
       filterOptions = filterByTextOrValue,
+      dataCy,
       rowsDisplayed = 4, // Controls the height of the scrollable menu container
     },
     ref
   ) => {
+    const { translate, translateText } = useTranslation()
     const theme = useTheme()
     const [open, setOpen] = useState(false)
     const inputRef = useRef(null)
@@ -106,6 +123,27 @@ export const Dropdown = forwardRef(
       defaultValue: initialValue ?? (isMultipleSelectable ? [] : null),
       onChange,
     })
+    const getTranslatedOptionText = useCallback(
+      (option) => translateText(getOptionText(option)),
+      [translateText]
+    )
+    const resolvedFilterOptions = useCallback(
+      (availableOptions, state) => {
+        if (filterOptions !== filterByTextOrValue) {
+          return filterOptions(availableOptions, state)
+        }
+
+        const query = state.inputValue?.toLowerCase?.() ?? ''
+
+        return availableOptions.filter((option) => {
+          const text = getTranslatedOptionText(option).toLowerCase()
+          const value = String(getOptionValue(option) ?? '').toLowerCase()
+
+          return text.includes(query) || value.includes(query)
+        })
+      },
+      [filterOptions, getTranslatedOptionText]
+    )
 
     useEffect(() => {
       if (menuItemRef.current && inputRef.current) {
@@ -161,6 +199,7 @@ export const Dropdown = forwardRef(
     return (
       <Autocomplete
         disabled={isDisabled}
+        disableCloseOnSelect={disableCloseOnSelect}
         open={open}
         onClose={() => setOpen(false)}
         ref={ref}
@@ -189,8 +228,8 @@ export const Dropdown = forwardRef(
         }
         multiple={isMultipleSelectable}
         options={options}
-        filterOptions={filterOptions}
-        getOptionLabel={getOptionText}
+        filterOptions={resolvedFilterOptions}
+        getOptionLabel={getTranslatedOptionText}
         isOptionEqualToValue={(opt, val) => {
           if (!val) return false
 
@@ -200,6 +239,7 @@ export const Dropdown = forwardRef(
         ListboxProps={{
           sx: listBoxStyles,
         }}
+        PopperComponent={PopperComponent}
         componentsProps={{
           paper: {
             className: 'dropdown-menu-paper',
@@ -230,6 +270,7 @@ export const Dropdown = forwardRef(
             startIcon={startIcon && renderIcon(startIcon)}
             inputProps={{
               ...inputProps,
+              'data-cy': inputProps?.['data-cy'] ?? dataCy,
               readOnly: isReadOnly || (!freeSolo && !isSearchable),
               ...(isDisableEnter
                 ? {
@@ -250,6 +291,7 @@ export const Dropdown = forwardRef(
         renderOption={({ className, ...optionProps }, option) => (
           <li
             {...optionProps}
+            data-cy={getOptionDataCy(dataCy, option)}
             className={[className, 'dropdown-menu-option']
               .filter(Boolean)
               .join(' ')}
@@ -260,7 +302,7 @@ export const Dropdown = forwardRef(
               </span>
             )}
             <span className="dropdown-option-text">
-              {getOptionText(option)}
+              {getTranslatedOptionText(option)}
             </span>
             {option?.endIcon && (
               <span className="dropdown-option-endicon">
@@ -270,7 +312,7 @@ export const Dropdown = forwardRef(
           </li>
         )}
         {...(menuTitle && {
-          groupBy: () => menuTitle,
+          groupBy: () => translate(menuTitle),
           renderGroup: (params) => (
             <li key={params.key}>
               <ListSubheader
@@ -304,15 +346,18 @@ Dropdown.propTypes = {
   isReadOnly: PropTypes.bool,
   isSearchable: PropTypes.bool,
   isDisableEnter: PropTypes.bool,
+  disableCloseOnSelect: PropTypes.bool,
   freeSolo: PropTypes.bool,
   onInputChange: PropTypes.func,
   options: PropTypes.array,
   filterOptions: PropTypes.func,
+  dataCy: PropTypes.string,
   initialValue: PropTypes.any,
   isMultipleSelectable: PropTypes.bool,
   rowsDisplayed: PropTypes.number,
   endIcon: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
   startIcon: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
+  PopperComponent: PropTypes.elementType,
 }
 
 Dropdown.displayName = 'Dropdown'

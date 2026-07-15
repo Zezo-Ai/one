@@ -18,6 +18,7 @@ import { Box, FormControlLabel, IconButton } from '@mui/material'
 import { forwardRef, useState, Component } from 'react'
 import { getStyles } from '@modules/componentsv2/primitives/Buttons/Radio/styles'
 import PropTypes from 'prop-types'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} root0 - Params
@@ -38,6 +39,7 @@ export const RadioButton = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const [selected, setSelected] = useState(null)
 
     /* eslint-disable-next-line jsdoc/require-jsdoc */
@@ -56,11 +58,11 @@ export const RadioButton = forwardRef(
           <FormControlLabel
             key={value}
             value={value}
-            label={text}
+            label={translate(text)}
             className={'radiogroup-container'}
             control={
               <IconButton
-                aria-label={`select ${text}`}
+                aria-label={`${translate('select')} ${translate(text)}`}
                 disableFocusRipple
                 disableRipple
                 onClick={(...args) => handleSelect(value, args)}

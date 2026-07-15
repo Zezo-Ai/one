@@ -46,6 +46,11 @@ const getStatusModifiers = ({ theme, status }) => {
 export const getStyles = ({ theme, direction, ...opts }) => {
   const { bgcolor, border, iconColor } = getStatusModifiers({ theme, ...opts })
   const isDefault = opts?.status === 'default'
+  const isSmall = opts?.size === 'small'
+  const checkboxSize = isSmall ? theme.scale[500] : theme.scale[600]
+  const checkboxBorderRadius = isSmall
+    ? theme.borderRadius.md
+    : theme.borderRadius.xlg
 
   const baseStyle = {
     display: 'flex',
@@ -105,8 +110,8 @@ export const getStyles = ({ theme, direction, ...opts }) => {
 
   const checkboxInput = {
     '& .checkbox-input-container': {
-      width: '24px',
-      height: '24px',
+      width: `${checkboxSize}px`,
+      height: `${checkboxSize}px`,
       display: 'flex',
       padding: 0,
       alignItems: 'center',
@@ -115,7 +120,7 @@ export const getStyles = ({ theme, direction, ...opts }) => {
       '&:hover': {
         '& .checkbox-unchecked-icon': {
           bgcolor: 'surface.actionHover2',
-          borderRadius: `${theme.borderRadius.xlg}px`,
+          borderRadius: `${checkboxBorderRadius}px`,
           border: `${theme.borderWidth.md}px solid ${theme.palette.border.actionHover}`,
         },
       },
@@ -123,30 +128,32 @@ export const getStyles = ({ theme, direction, ...opts }) => {
       '&.Mui-focusVisible': {
         outline: `${theme.borderWidth.sm}px solid ${theme.palette.border.action}`,
         outlineOffset: '2px',
-        borderRadius: `${theme.borderRadius.xlg}px`,
+        borderRadius: `${checkboxBorderRadius}px`,
       },
     },
   }
 
   const checkboxUnselected = {
     '& .checkbox-unchecked-icon': {
-      borderRadius: `${theme.borderRadius.xlg}px`,
+      borderRadius: `${checkboxBorderRadius}px`,
       border: !isDefault
         ? border
         : `${theme.borderWidth.md}px solid ${theme.palette.border.primary}`,
       bgcolor: !isDefault ? bgcolor : 'surface.primary',
       width: '100%',
       height: '100%',
+      boxSizing: 'border-box',
     },
   }
 
   const checkboxSelected = {
     '& .checkbox-checked-icon': {
-      borderRadius: `${theme.borderRadius.xlg}px`,
+      borderRadius: `${checkboxBorderRadius}px`,
       border: border,
       bgcolor: bgcolor,
       width: '100%',
       height: '100%',
+      boxSizing: 'border-box',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -165,11 +172,12 @@ export const getStyles = ({ theme, direction, ...opts }) => {
 
   const checkboxIndeterminate = {
     '& .checkbox-indeterminate-icon': {
-      borderRadius: `${theme.borderRadius.xlg}px`,
+      borderRadius: `${checkboxBorderRadius}px`,
       border: border,
       bgcolor: bgcolor,
       width: '100%',
       height: '100%',
+      boxSizing: 'border-box',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

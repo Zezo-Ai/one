@@ -26,6 +26,7 @@ import PropTypes from 'prop-types'
  *
  * @param {object} root0 - Params
  * @param {object} root0.cluster - Cluster data
+ * @param {string} root0.dataCy - Data-cy attribute
  * @param {boolean} root0.isSelected - Whether card is selected
  * @param {Function} root0.onCheck - Check handler
  * @param {Function} root0.onClick - Click handler
@@ -33,15 +34,18 @@ import PropTypes from 'prop-types'
  * @returns {Component} ClusterCard component
  */
 export const ClusterCard = forwardRef(
-  ({ cluster = {}, isSelected, onCheck, onClick }, ref) => {
+  ({ cluster = {}, dataCy, isSelected, onCheck, onClick }, ref) => {
     const { ID, NAME, HOSTS, VNETS, DATASTORES, TEMPLATE } = cluster
     const id = String(ID)
-    const driver = TEMPLATE?.ONEFORM?.DRIVER
+    const template =
+      typeof TEMPLATE === 'object' && !Array.isArray(TEMPLATE) ? TEMPLATE : {}
+    const driver = template?.ONEFORM?.DRIVER
     const labelSlotLabels = getLabelSlotLabels(cluster?.LABELS)
 
     return (
       <Card
         ref={ref}
+        dataCy={dataCy}
         onCheck={onCheck}
         onClick={onClick}
         isSelected={isSelected}
@@ -89,8 +93,9 @@ ClusterCard.propTypes = {
       PropTypes.arrayOf(PropTypes.object),
       PropTypes.object,
     ]),
-    TEMPLATE: PropTypes.object,
+    TEMPLATE: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
   }),
+  dataCy: PropTypes.string,
   isSelected: PropTypes.bool,
   onCheck: PropTypes.func,
   onClick: PropTypes.func,

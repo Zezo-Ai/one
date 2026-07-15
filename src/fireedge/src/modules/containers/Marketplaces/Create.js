@@ -23,8 +23,8 @@ import {
   DefaultFormStepper,
   SkeletonStepsForm,
   Marketplace,
-  TranslateProvider,
 } from '@ResourcesModule'
+
 import { jsonToXml } from '@UtilsModule'
 
 import { T, PATH } from '@ConstantsModule'
@@ -91,7 +91,7 @@ export function CreateMarketplace() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {version && (!marketplaceId || (marketplaceId && marketplace)) ? (
         <Marketplace.Forms.CreateForm
           onSubmit={onSubmit}
@@ -107,7 +107,7 @@ export function CreateMarketplace() {
       ) : (
         <SkeletonStepsForm />
       )}
-    </TranslateProvider>
+    </>
   )
 }
 

@@ -29,6 +29,7 @@ import {
   getBackupJobStatus,
   getLabelSlotLabels,
 } from '@ModelsModule'
+import { getLockIcon } from '@UtilsModule'
 
 /**
  * @param {object} root0 - Params
@@ -41,8 +42,7 @@ import {
  */
 export const BackupJobCard = forwardRef(
   ({ data, isSelected, onCheck, onClick }, ref) => {
-    const { ID, NAME, UNAME, GNAME, PRIORITY, LAST_BACKUP_TIME, LOCK } =
-      data || {}
+    const { ID, NAME, UNAME, GNAME, PRIORITY, LAST_BACKUP_TIME } = data || {}
     const { color: stateColor, name: stateName } = useMemo(
       () => getBackupJobStatus(data ?? {}),
       [data]
@@ -59,8 +59,12 @@ export const BackupJobCard = forwardRef(
           [
             TitleSlot,
             {
-              title: NAME,
-              status: LOCK ? 'disabled' : stateColor,
+              title: (
+                <>
+                  {NAME} {getLockIcon(data)}
+                </>
+              ),
+              status: stateColor,
               statusName: stateName,
             },
           ],

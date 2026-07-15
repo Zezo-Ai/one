@@ -14,7 +14,12 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Alert } from '@mui/material'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+import {
+  getColorFromString,
+  timeFromMilliseconds,
+  getResourceLabels,
+} from '@UtilsModule'
 import MultipleTags from '@modules/resources/MultipleTags'
 import EnhancedTable, {
   createColumns,
@@ -25,11 +30,7 @@ import ServiceTemplateRow from '@modules/resources/Tables/ServiceTemplates/row'
 import Timer from '@modules/resources/Timer'
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { useAuth, useViews, ServiceTemplateAPI } from '@FeaturesModule'
-import {
-  getColorFromString,
-  timeFromMilliseconds,
-  getResourceLabels,
-} from '@UtilsModule'
+
 import { ReactElement, useMemo } from 'react'
 
 const DEFAULT_DATA_CY = 'service-templates'

@@ -17,6 +17,7 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   ResourceActionConfirmation,
   SummarySlot,
@@ -51,7 +52,11 @@ import {
   useModalsApi,
   useViews,
 } from '@FeaturesModule'
-import { getMarketplaceAppState, getMarketplaceAppType } from '@ModelsModule'
+import {
+  getLabelTags,
+  getMarketplaceAppState,
+  getMarketplaceAppType,
+} from '@ModelsModule'
 import {
   filterAttributes,
   getActionsAvailable,
@@ -250,6 +255,10 @@ export const SingleView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: marketplaceApp?.ID })
@@ -269,6 +278,7 @@ export const SingleView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Enable,
       },
       onSubmit: handleEnable,
     })
@@ -285,6 +295,7 @@ export const SingleView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Disable,
       },
       onSubmit: handleDisable,
     })
@@ -301,6 +312,7 @@ export const SingleView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Lock,
       },
       onSubmit: handleLock,
     })
@@ -317,6 +329,7 @@ export const SingleView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Unlock,
       },
       onSubmit: handleUnlock,
     })
@@ -363,6 +376,7 @@ export const SingleView = ({
             isTitleEditDisabled: isActionsDisabled,
             title: marketplaceApp?.NAME,
             id: marketplaceApp?.ID,
+            tags: getLabelTags(marketplaceApp?.LABELS),
             labels: [
               [T.Owner, marketplaceApp?.UNAME],
               [T.Group, marketplaceApp?.GNAME],
@@ -381,27 +395,6 @@ export const SingleView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
-                {(canLock || canUnlock) && (
-                  <ButtonGroup
-                    selected={isLocked ? ['lock'] : ['unlock']}
-                    buttons={[
-                      canLock && {
-                        startIcon: <Lock width="16px" height="16px" />,
-                        onClick: handleLockForm,
-                        value: 'lock',
-                        tooltip: T.Lock,
-                        isDisabled: isActionsDisabled,
-                      },
-                      canUnlock && {
-                        startIcon: <NoLock width="16px" height="16px" />,
-                        onClick: handleUnlockForm,
-                        value: 'unlock',
-                        tooltip: T.Unlock,
-                        isDisabled: isActionsDisabled,
-                      },
-                    ].filter(Boolean)}
-                  />
-                )}
                 {(canEnable || canDisable) && (
                   <ButtonGroup
                     selected={isDisabled ? ['disable'] : ['enable']}
@@ -423,17 +416,31 @@ export const SingleView = ({
                     ].filter(Boolean)}
                   />
                 )}
+                {(canLock || canUnlock) && (
+                  <ButtonGroup
+                    selected={isLocked ? ['lock'] : ['unlock']}
+                    buttons={[
+                      canLock && {
+                        startIcon: <Lock width="16px" height="16px" />,
+                        onClick: handleLockForm,
+                        value: 'lock',
+                        tooltip: T.Lock,
+                        isDisabled: isActionsDisabled,
+                      },
+                      canUnlock && {
+                        startIcon: <NoLock width="16px" height="16px" />,
+                        onClick: handleUnlockForm,
+                        value: 'unlock',
+                        tooltip: T.Unlock,
+                        isDisabled: isActionsDisabled,
+                      },
+                    ].filter(Boolean)}
+                  />
+                )}
                 <ToggleGroup
                   size="medium"
                   options={[
                     [
-                      {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isActionsDisabled,
-                      },
                       canExport && {
                         startIcon: <CloudDownload width="16px" height="16px" />,
                         onClick: handleExportForm,
@@ -448,6 +455,22 @@ export const SingleView = ({
                         onClick: handleDownload,
                         value: 'download',
                         tooltip: T.DownloadApp,
+                        isDisabled: isActionsDisabled,
+                      },
+                    ].filter(Boolean),
+                    [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [marketplaceApp],
+                          resourceType: RESOURCE_NAMES.APP,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
+                      {
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: handleRefresh,
+                        value: 'refresh',
+                        tooltip: T.Refresh,
                         isDisabled: isActionsDisabled,
                       },
                     ].filter(Boolean),
@@ -467,6 +490,7 @@ export const SingleView = ({
                         onClick: handleDeleteForm,
                         value: 'delete',
                         tooltip: T.Delete,
+                        isDestructive: true,
                         isDisabled: isActionsDisabled,
                       },
                       {

@@ -18,7 +18,8 @@ import PropTypes from 'prop-types'
 import { Stack } from '@mui/material'
 
 import { VrAPI } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
+import { getActionsAvailable, jsonToXml, cloneObject, set } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import {
   Permissions,
@@ -26,7 +27,6 @@ import {
   AttributePanel,
 } from '@modules/resources/Tabs/Common'
 import Information from '@modules/resources/Tabs/VirtualRouter/Info/information'
-import { getActionsAvailable, jsonToXml, cloneObject, set } from '@UtilsModule'
 
 /**
  * Renders mainly information tab.
@@ -37,6 +37,7 @@ import { getActionsAvailable, jsonToXml, cloneObject, set } from '@UtilsModule'
  * @returns {ReactElement} Information tab
  */
 const VRouterInfoTab = ({ tabProps = {}, id }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     permissions_panel: permissionsPanel,
@@ -125,7 +126,7 @@ const VRouterInfoTab = ({ tabProps = {}, id }) => {
           collapse
           attributes={TEMPLATE || {}}
           actions={getActions(attributesPanel?.actions)}
-          title={`${Tr(T.Attributes)}`}
+          title={`${translate(T.Attributes)}`}
         />
       )}
     </Stack>

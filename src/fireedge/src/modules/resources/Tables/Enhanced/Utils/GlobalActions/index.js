@@ -25,7 +25,7 @@ import {
 
 import { T, STYLE_BUTTONS } from '@ConstantsModule'
 import { SubmitButton } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   Action,
   GlobalAction,
@@ -59,6 +59,7 @@ const GlobalActions = ({
   useTableProps = {},
   styles = {},
 }) => {
+  const { translate } = useTranslation()
   /** @type {UseRowSelectInstanceProps} */
   const { getToggleAllPageRowsSelectedProps, getToggleAllRowsSelectedProps } =
     useTableProps
@@ -77,7 +78,7 @@ const GlobalActions = ({
         getToggleAllRowsSelectedProps && (
           <Checkbox
             {...getToggleAllPageRowsSelectedProps()}
-            title={Tr(T.ToggleAllSelectedCardsCurrentPage)}
+            title={translate(T.ToggleAllSelectedCardsCurrentPage)}
             indeterminate={getToggleAllRowsSelectedProps().indeterminate}
           />
         )}
@@ -85,7 +86,7 @@ const GlobalActions = ({
         <SubmitButton
           data-cy="refresh"
           iconOnly={<RefreshDouble />}
-          tooltip={Tr(T.Refresh)}
+          tooltip={translate(T.Refresh)}
           isSubmitting={isLoading}
           onClick={refetch}
           type={STYLE_BUTTONS.TYPE.OUTLINE}

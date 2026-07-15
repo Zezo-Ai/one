@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { FormWithSchema, Tr } from '@ResourcesModule'
+import { FormWithSchema } from '@ResourcesModule'
+import { useTranslation } from '@ProvidersModule'
 import { SubmitButton } from '@ComponentsV2Module'
 import {
   AUTH_DRIVER,
@@ -46,7 +47,8 @@ const styles = () => ({
  * @returns {ReactElement} change password
  */
 const ChangePassword = () => {
-  const successMessageChangePassword = `${Tr(T.ChangePasswordSuccess)}`
+  const { translate } = useTranslation()
+  const successMessageChangePassword = `${translate(T.ChangePasswordSuccess)}`
   const { Legend, InternalWrapper } = useSettingWrapper()
   const classes = useMemo(() => styles())
   const { enqueueSuccess } = useGeneralApi()

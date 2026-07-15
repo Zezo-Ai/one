@@ -25,7 +25,7 @@ import {
   Typography,
   styled,
 } from '@mui/material'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { PrettySecurityGroupRule, RESOURCE_NAMES, T } from '@ConstantsModule'
 import PropTypes from 'prop-types'
 import { ReactElement, memo, useMemo } from 'react'
@@ -63,6 +63,7 @@ const useStyles = () => ({
 })
 
 const RulesSecGroupsTable = memo(({ title, rules = [] }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => useStyles(theme), [theme])
 
@@ -72,7 +73,7 @@ const RulesSecGroupsTable = memo(({ title, rules = [] }) => {
         {title && (
           <Title>
             {typeof title === 'string' ? (
-              <Typography noWrap>{Tr(title)}</Typography>
+              <Typography noWrap>{translate(title)}</Typography>
             ) : (
               title
             )}
@@ -163,6 +164,7 @@ SecurityGroupRules.propTypes = {
 SecurityGroupRules.displayName = 'SecurityGroupRule'
 
 export const SecurityGroupRule = memo(({ rule = {}, 'data-cy': parentCy }) => {
+  const { translate } = useTranslation()
   /** @type {PrettySecurityGroupRule} */
   const {
     PROTOCOL = '',
@@ -178,7 +180,9 @@ export const SecurityGroupRule = memo(({ rule = {}, 'data-cy': parentCy }) => {
   let isNetworkLink = false
 
   if (IP && SIZE) {
-    networkDisplay = `${Tr(T.Start)}: ${IP}, ${Tr(T.Size)}: ${SIZE}`
+    networkDisplay = `${translate(T.Start)}: ${IP}, ${translate(
+      T.Size
+    )}: ${SIZE}`
   } else if (NETWORK_ID && NETWORK_ID !== T.Any && !isNaN(NETWORK_ID)) {
     networkDisplay = NETWORK_ID
     isNetworkLink = true

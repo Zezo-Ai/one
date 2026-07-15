@@ -19,7 +19,7 @@ import PropTypes from 'prop-types'
 import { Trash, Edit } from 'iconoir-react'
 
 import { AttachPciForm } from '@modules/resources/resources/VirtualMachine/Forms'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import { useGeneralApi, useModalsApi } from '@FeaturesModule'
 
@@ -27,6 +27,7 @@ import { SubmitButton } from '@ComponentsV2Module'
 
 const AttachPciAction = memo(
   ({ vmId, pci, indexPci, onSubmit, sx, oneConfig, adminGroup }) => {
+    const { translate } = useTranslation()
     const { showModal } = useModalsApi()
 
     const { setFieldPath } = useGeneralApi()
@@ -48,7 +49,7 @@ const AttachPciAction = memo(
       <SubmitButton
         data-cy={`edit-${indexPci}`}
         iconOnly={<Edit />}
-        tooltip={Tr(T.Edit)}
+        tooltip={translate(T.Edit)}
         label={T.AttachPci}
         onClick={handleOpenForm}
       />
@@ -57,13 +58,17 @@ const AttachPciAction = memo(
 )
 
 const DetachPciAction = memo(
-  ({ vmId, indexPci, onSubmit, sx, oneConfig, adminGroup }) => (
-    <SubmitButton
-      data-cy={`detach-pci-${indexPci}`}
-      iconOnly={<Trash />}
-      tooltip={Tr(T.Detach)}
-    />
-  )
+  ({ vmId, indexPci, onSubmit, sx, oneConfig, adminGroup }) => {
+    const { translate } = useTranslation()
+
+    return (
+      <SubmitButton
+        data-cy={`detach-pci-${indexPci}`}
+        iconOnly={<Trash />}
+        tooltip={translate(T.Detach)}
+      />
+    )
+  }
 )
 
 const ActionPropTypes = {

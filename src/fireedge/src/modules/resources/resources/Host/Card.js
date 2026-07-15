@@ -35,6 +35,7 @@ import {
  *
  * @param {object} params - Input parameters
  * @param {boolean} params.host - Host data
+ * @param {string} params.dataCy - Data-cy attribute
  * @param {boolean} params.isSelected - Whether card is selected
  * @param {Function} params.onCheck - Check handler
  * @param {Function} params.onClick - Click handler
@@ -42,7 +43,7 @@ import {
  * @returns {Component} HostCard component
  */
 export const HostCard = forwardRef(
-  ({ host, isSelected, onCheck, onClick }, ref) => {
+  ({ host, dataCy, isSelected, onCheck, onClick }, ref) => {
     // Get the data from the host to display the card
     const { CLUSTER, ID, IM_MAD, VM_MAD } = host
     const id = String(ID)
@@ -57,6 +58,7 @@ export const HostCard = forwardRef(
     return (
       <Card
         ref={ref}
+        dataCy={dataCy}
         onCheck={onCheck}
         onClick={onClick}
         isSelected={isSelected}
@@ -87,14 +89,12 @@ export const HostCard = forwardRef(
               bars: [
                 {
                   label: `${T.AllocatedCpu} ${percentCpuLabel}`,
-                  size: 'small',
                   value: percentCpuUsed,
                   isLabelVisible: true,
                   thresholds: [HOST_THRESHOLD.CPU.low, HOST_THRESHOLD.CPU.high],
                 },
                 {
                   label: `${T.AllocatedMemory} ${percentMemLabel}`,
-                  size: 'small',
                   value: percentMemUsed,
                   isLabelVisible: true,
                   thresholds: [
@@ -119,6 +119,7 @@ export const HostCard = forwardRef(
 
 HostCard.propTypes = {
   host: PropTypes.object,
+  dataCy: PropTypes.string,
   isSelected: PropTypes.bool,
   onCheck: PropTypes.func,
   onClick: PropTypes.func,

@@ -30,7 +30,7 @@ import {
   ChangeGroupForm,
   ChangeUserForm,
 } from '@modules/resources/resources/VirtualMachine/Forms'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const ListMarketplaceNames = ({ rows = [] }) =>
   rows?.map?.(({ id, original }) => {

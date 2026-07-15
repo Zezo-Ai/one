@@ -32,11 +32,11 @@ import {
 } from 'recharts'
 import { mapValues } from 'lodash'
 
-import { Tr } from '@modules/resources/HOC'
+import { sentenceCase } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import DataGridTable from '@modules/resources/Tables/DataGrid'
 import { useTheme } from '@mui/material'
 import { CustomTooltip } from '@modules/resources/Tooltip'
-import { sentenceCase } from '@UtilsModule'
 
 import {
   generateColorByMetric,
@@ -115,6 +115,7 @@ export const ChartRenderer = ({
   disableLegend,
   onElementClick,
 }) => {
+  const { translate } = useTranslation()
   const ChartComponent = ChartComponents[coordinateType][chartType]
   const ChartElement = ChartElements[coordinateType][chartType]
   const theme = useTheme()
@@ -126,7 +127,7 @@ export const ChartRenderer = ({
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ')
 
-    return Tr(finalWord)
+    return translate(finalWord)
   })
 
   const polarDataset =
@@ -142,7 +143,7 @@ export const ChartRenderer = ({
   // Translate columns in tables
   const tableColumnsTranslated = tableColumns?.map((column) => ({
     ...column,
-    headerName: Tr(column.headerName),
+    headerName: translate(column.headerName),
   }))
 
   return (
@@ -188,7 +189,9 @@ export const ChartRenderer = ({
             content={
               coordinateType === 'CARTESIAN' ? (
                 <CustomTooltip
-                  labels={datasets.map((ds) => Tr(sentenceCase(ds.label)))}
+                  labels={datasets.map((ds) =>
+                    translate(sentenceCase(ds.label))
+                  )}
                   generateColor={generateColorByMetric}
                   formatMetric={humanReadableMetric}
                   metricHues={metricHues}

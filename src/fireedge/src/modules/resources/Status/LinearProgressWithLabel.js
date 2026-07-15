@@ -29,7 +29,7 @@ import {
 
 import { StatusCircle } from '@modules/resources/Status'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { SCHEMES, T } from '@ConstantsModule'
 
 const getRangeColor = ({ value, high, low, palette }) => {
@@ -81,51 +81,55 @@ const StyledChip = styled(Chip)(({ theme, colorSvg }) => ({
 }))
 
 const LinearProgressWithLabel = memo(
-  ({ value, high, low, label, title, color = '' }) => (
-    <div style={{ textAlign: 'end' }}>
-      <StyledTypography component="span" variant="body2" noWrap color={color}>
-        {label}
-      </StyledTypography>
-      <StyledTooltip
-        arrow
-        title={
-          <Grid container>
-            <Grid item xs={12}>
-              <Typography>{title}</Typography>
+  ({ value, high, low, label, title, color = '' }) => {
+    const { translate } = useTranslation()
+
+    return (
+      <div style={{ textAlign: 'end' }}>
+        <StyledTypography component="span" variant="body2" noWrap color={color}>
+          {label}
+        </StyledTypography>
+        <StyledTooltip
+          arrow
+          title={
+            <Grid container>
+              <Grid item xs={12}>
+                <Typography>{title}</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <StyledChip
+                  colorSvg="success"
+                  icon={<StatusCircle />}
+                  label={translate(T.Low)}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <StyledChip
+                  colorSvg="warning"
+                  icon={<StatusCircle />}
+                  label={translate(T.Medium)}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <StyledChip
+                  colorSvg="error"
+                  icon={<StatusCircle />}
+                  label={translate(T.High)}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <StyledChip
-                colorSvg="success"
-                icon={<StatusCircle />}
-                label={Tr(T.Low)}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <StyledChip
-                colorSvg="warning"
-                icon={<StatusCircle />}
-                label={Tr(T.Medium)}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <StyledChip
-                colorSvg="error"
-                icon={<StatusCircle />}
-                label={Tr(T.High)}
-              />
-            </Grid>
-          </Grid>
-        }
-      >
-        <BorderLinearProgress
-          variant="determinate"
-          value={value}
-          high={high}
-          low={low}
-        />
-      </StyledTooltip>
-    </div>
-  ),
+          }
+        >
+          <BorderLinearProgress
+            variant="determinate"
+            value={value}
+            high={high}
+            low={low}
+          />
+        </StyledTooltip>
+      </div>
+    )
+  },
   (prev, next) => prev.value === next.value && prev.label === next.label
 )
 

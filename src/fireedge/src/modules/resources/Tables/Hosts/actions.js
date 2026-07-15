@@ -34,12 +34,13 @@ import {
   useViews,
 } from '@FeaturesModule'
 import { ChangeClusterForm } from '@modules/resources/resources/Cluster/Forms'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+import { formatError } from '@UtilsModule'
 import {
   createActions,
   GlobalAction,
 } from '@modules/resources/Tables/Enhanced/Utils'
-import { formatError } from '@UtilsModule'
+
 import { useDispatch } from 'react-redux'
 
 const isDisabled = (action) => (rows) =>

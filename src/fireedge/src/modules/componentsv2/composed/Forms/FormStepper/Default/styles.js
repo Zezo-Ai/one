@@ -73,6 +73,10 @@ export const getStyles = ({ type, theme, iconOnly, size }) => {
     '& .form-stepper-content > *:has(.MuiTabs-root)': {
       marginTop: '32px',
     },
+
+    '& .form-stepper-content :has(> .MuiTabs-root)': {
+      marginBottom: `${theme.scale[800]}px`,
+    },
   }
 
   return { ...baseStyle }

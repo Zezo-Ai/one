@@ -14,10 +14,11 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { Component, ReactNode, forwardRef } from 'react'
+import { Component, ReactNode, forwardRef, isValidElement } from 'react'
 import PropTypes from 'prop-types'
 import { Tooltip as MUITooltip, useTheme } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/primitives/Tooltip/Default/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Tooltip component displays contextual information on hover.
@@ -31,11 +32,17 @@ import { getStyles } from '@modules/componentsv2/primitives/Tooltip/Default/styl
 export const Tooltip = forwardRef(
   ({ title = '', placement, children, ...opts }, ref) => {
     const theme = useTheme()
+    const { translate } = useTranslation()
+
+    // Check children is a valid element to avoid errors in MUI Tooltip component
+    if (!isValidElement(children)) {
+      return children ?? null
+    }
 
     return (
       <MUITooltip
         ref={ref}
-        title={title}
+        title={typeof title === 'string' ? translate(title) : title}
         arrow={false}
         componentsProps={{
           tooltip: {

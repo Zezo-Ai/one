@@ -19,6 +19,7 @@ import {
   ButtonGroup,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
@@ -27,7 +28,12 @@ import { Box } from '@mui/material'
 import { Component, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { Cancel as CloseIcon, Lock, NoLock, Trash } from 'iconoir-react'
-import { STYLE_BUTTONS, T, VN_TEMPLATE_ACTIONS } from '@ConstantsModule'
+import {
+  RESOURCE_NAMES,
+  STYLE_BUTTONS,
+  T,
+  VN_TEMPLATE_ACTIONS,
+} from '@ConstantsModule'
 import { VnTemplateAPI, useModalsApi } from '@FeaturesModule'
 import { VnTemplate as Resource } from '@ResourcesModule'
 import { aggregateLockState } from '@UtilsModule'
@@ -165,6 +171,7 @@ export const AggregatedView = ({
             resourceType={T.NetworkTemplates}
           />
         ),
+        confirmLabel: T.Lock,
       },
       onSubmit: handleLock,
     })
@@ -181,6 +188,7 @@ export const AggregatedView = ({
             resourceType={T.NetworkTemplates}
           />
         ),
+        confirmLabel: T.Unlock,
       },
       onSubmit: handleUnlock,
     })
@@ -197,6 +205,10 @@ export const AggregatedView = ({
             resourceType={T.NetworkTemplates}
           />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(
@@ -248,6 +260,11 @@ export const AggregatedView = ({
                   />
                 )}
 
+                <LabelButton
+                  selectedRows={selectedVnTemplates}
+                  resourceType={RESOURCE_NAMES.VN_TEMPLATE}
+                  isDisabled={isMutating}
+                />
                 {canDelete && (
                   <Button
                     type={STYLE_BUTTONS.TYPE.PRIMARY}
@@ -263,7 +280,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

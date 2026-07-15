@@ -35,6 +35,7 @@ export const ACL_TYPE_ID_TRANSLATIONS = {
 }
 
 const groupSelectorTable = {
+  dataCy: groupTable.dataCy,
   columns: () => groupTable.columns(GROUP_LIST_COLUMNS),
   useData: groupTable.useData,
 }
@@ -60,6 +61,7 @@ const clusterColumns = [
 ]
 
 const clusterSelectorTable = {
+  dataCy: clusterTable.dataCy,
   columns: () => clusterTable.columns(clusterColumns),
   useData: clusterTable.useData,
 }

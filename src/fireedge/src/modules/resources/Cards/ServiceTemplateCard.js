@@ -20,17 +20,17 @@ import { ReactElement, memo, useMemo } from 'react'
 import { Network, Package } from 'iconoir-react'
 
 import { useAuth, useViews } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
-import MultipleTags from '@modules/resources/MultipleTagsCard'
-import { rowStyles } from '@modules/resources/Tables/styles'
-import Timer from '@modules/resources/Timer'
-
-import { ACTIONS, RESOURCE_NAMES, ServiceTemplate, T } from '@ConstantsModule'
 import {
   getColorFromString,
   getUniqueLabels,
   timeFromMilliseconds,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import MultipleTags from '@modules/resources/MultipleTagsCard'
+import { rowStyles } from '@modules/resources/Tables/styles'
+import Timer from '@modules/resources/Timer'
+
+import { ACTIONS, RESOURCE_NAMES, ServiceTemplate, T } from '@ConstantsModule'
 
 const ServiceTemplateCard = memo(
   /**
@@ -42,6 +42,7 @@ const ServiceTemplateCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ template, rootProps, actions, onDeleteLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels: userLabels } = useAuth()
@@ -107,11 +108,11 @@ const ServiceTemplateCard = memo(
             <span title={time.toFormat('ff')}>
               <Timer translateWord={T.RegisteredAt} initial={time} />
             </span>
-            <span title={`${Tr(T.Networks)}: ${numberOfNetworks}`}>
+            <span title={`${translate(T.Networks)}: ${numberOfNetworks}`}>
               <Network width={20} height={20} />
               <span data-cy="total-networks">{numberOfNetworks}</span>
             </span>
-            <span title={`${Tr(T.Roles)}: ${numberOfRoles}`}>
+            <span title={`${translate(T.Roles)}: ${numberOfRoles}`}>
               <Package width={20} height={20} />
               <span data-cy="total-roles">{numberOfRoles}</span>
             </span>

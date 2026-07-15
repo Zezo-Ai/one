@@ -34,7 +34,7 @@ import {
   VM_ACTIONS,
   VM_ACTIONS_IN_CHARTER,
 } from '@ConstantsModule'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { hasRestrictedAttributes, sentenceCase } from '@UtilsModule'
 
 import { useModalsApi } from '@FeaturesModule'
@@ -148,6 +148,7 @@ const UpdateSchedButton = memo(
  */
 const DeleteSchedButton = memo(
   ({ onSubmit, schedule, oneConfig, adminGroup, vmId }) => {
+    const { translate } = useTranslation()
     const { showModal } = useModalsApi()
 
     const { ID, ACTION } = schedule
@@ -171,7 +172,7 @@ const DeleteSchedButton = memo(
           title: (
             <Translate word={T.DeleteScheduleAction} values={[titleAction]} />
           ),
-          children: <p>{Tr(T.DoYouWantProceed)}</p>,
+          children: <p>{translate(T.DoYouWantProceed)}</p>,
         },
 
         onSubmit,
@@ -181,7 +182,9 @@ const DeleteSchedButton = memo(
       <SubmitButton
         data-cy={`${VM_ACTIONS.SCHED_ACTION_DELETE}-${ID}`}
         iconOnly={<Trash />}
-        tooltip={!disabledAction ? Tr(T.Delete) : Tr(T.DetachRestricted)}
+        tooltip={
+          !disabledAction ? translate(T.Delete) : translate(T.DetachRestricted)
+        }
         disabled={disabledAction}
         onClick={handleOpenForm}
       />

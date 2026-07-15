@@ -19,7 +19,7 @@ import PropTypes from 'prop-types'
 import { Button, CardActions } from '@mui/material'
 
 import SelectCard from '@modules/resources/Cards/SelectCard'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const ApplicationNetworkCard = memo(
@@ -31,6 +31,7 @@ const ApplicationNetworkCard = memo(
     handleClone,
     handleRemove,
   }) => {
+    const { translate } = useTranslation()
     const { mandatory, name, description } = value
 
     return (
@@ -49,7 +50,7 @@ const ApplicationNetworkCard = memo(
               onClick={handleEdit}
               disableElevation
             >
-              {Tr(T.Edit)}
+              {translate(T.Edit)}
             </Button>
           )}
           {handleClone && (
@@ -59,12 +60,12 @@ const ApplicationNetworkCard = memo(
               onClick={handleClone}
               disableElevation
             >
-              {Tr(T.Clone)}
+              {translate(T.Clone)}
             </Button>
           )}
           {handleRemove && (
             <Button size="small" onClick={handleRemove} disableElevation>
-              {Tr(T.Remove)}
+              {translate(T.Remove)}
             </Button>
           )}
         </CardActions>

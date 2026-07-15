@@ -33,7 +33,7 @@ import {
 } from '@modules/resources/Status'
 import { getUserState, getUserQuotaUsage } from '@ModelsModule'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -45,6 +45,7 @@ import { T } from '@ConstantsModule'
  * @returns {Component} UserCard component
  */
 const UserCard = ({ user, rootProps }) => {
+  const { translate } = useTranslation()
   const {
     ID,
     NAME,
@@ -98,7 +99,7 @@ const UserCard = ({ user, rootProps }) => {
             {NAME}
           </Typography>
           {IS_ADMIN_GROUP && (
-            <Tooltip title={Tr(T.Admin)}>
+            <Tooltip title={translate(T.Admin)}>
               <Wrench ml={1} />
             </Tooltip>
           )}
@@ -116,7 +117,7 @@ const UserCard = ({ user, rootProps }) => {
         >
           <Typography variant="caption">{`#${ID}`}</Typography>
           <Box display="flex" alignItems="center" mt={1}>
-            <Tooltip title={`${Tr(T.Group)}: ${GNAME}`}>
+            <Tooltip title={`${translate(T.Group)}: ${GNAME}`}>
               <Box display="flex" alignItems="center" mr={2}>
                 <Group />
                 <Typography variant="caption" ml={1}>
@@ -124,7 +125,7 @@ const UserCard = ({ user, rootProps }) => {
                 </Typography>
               </Box>
             </Tooltip>
-            <Tooltip title={`${Tr(T.AuthDriver)}: ${AUTH_DRIVER}`}>
+            <Tooltip title={`${translate(T.AuthDriver)}: ${AUTH_DRIVER}`}>
               <Box display="flex" alignItems="center">
                 <LockKey />
                 <Typography

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { createTable } from '@UtilsModule'
+import { createTable, getLockIcon } from '@UtilsModule'
+import { Box } from '@mui/material'
 import { VnAPI } from '@FeaturesModule'
 import {
-  getVirtualNetLocked,
   getLeasesInfo,
   getVirtualNetworkState,
   getVNManager,
@@ -31,19 +31,16 @@ const getCluster = ({ CLUSTERS } = {}) =>
 
 export const VN_COLUMNS = [
   { header: T.ID, id: 'id', accessorKey: 'ID', width: '5%' },
-  { header: T.Name, id: 'name', accessorKey: 'NAME' },
-  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
-  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   {
-    header: T.Driver,
-    id: 'vn_mad',
-    accessorFn: getVNManager,
-    cell: ({ row }) =>
-      row.original?.VN_MAD ? (
-        <Tag title={row.original.VN_MAD} status="default" />
-      ) : (
-        '-'
-      ),
+    header: T.Name,
+    id: 'name',
+    accessorKey: 'NAME',
+    cell: ({ row }) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>{row.original?.NAME}</span>
+        {getLockIcon(row.original)}
+      </Box>
+    ),
   },
   {
     header: T.State,
@@ -56,10 +53,15 @@ export const VN_COLUMNS = [
     },
   },
   {
-    header: T.Cluster,
-    id: 'cluster',
-    accessorFn: getCluster,
-    width: '5%',
+    header: T.Driver,
+    id: 'vn_mad',
+    accessorFn: getVNManager,
+    cell: ({ row }) =>
+      row.original?.VN_MAD ? (
+        <Tag title={row.original.VN_MAD} status="default" />
+      ) : (
+        '-'
+      ),
   },
   {
     header: T.UsedLeases,
@@ -70,7 +72,6 @@ export const VN_COLUMNS = [
 
       return (
         <ProgressBar
-          size="small"
           value={percentOfUsed}
           label={percentLabel}
           isLabelVisible
@@ -80,17 +81,16 @@ export const VN_COLUMNS = [
     },
   },
   {
-    header: T.Locked,
-    id: 'locked',
-    accessorFn: getVirtualNetLocked,
-    cell: ({ row }) =>
-      row.original?.LOCK ? (
-        <StatusTag statusColor="information" statusName={T.Locked} />
-      ) : (
-        '-'
-      ),
+    header: T.Cluster,
+    id: 'cluster',
+    accessorFn: getCluster,
+    width: '5%',
   },
+  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
+  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   createLabelColumn(),
 ]
 
-export const vnTable = createTable(VN_COLUMNS, VnAPI.useGetVNetworksQuery)
+export const vnTable = createTable(VN_COLUMNS, VnAPI.useGetVNetworksQuery, {
+  dataCy: 'vnets',
+})

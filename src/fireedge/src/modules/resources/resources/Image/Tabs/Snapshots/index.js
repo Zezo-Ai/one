@@ -27,7 +27,8 @@ import {
   stringToBoolean,
   timeFromMilliseconds,
 } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
+
 import {
   SnapshotDeleteAction,
   SnapshotFlattenAction,
@@ -42,6 +43,7 @@ import { getActionsStyles, getTableStyles } from './styles'
  * @returns {ReactElement} - Image snapshots tab
  */
 export const Snapshots = ({ data, config }) => {
+  const { translate } = useTranslation()
   const selectedImage = [].concat(data?.selected).filter(Boolean)?.[0] ?? {}
   const id =
     selectedImage?.ID === undefined ? undefined : String(selectedImage.ID)
@@ -72,14 +74,14 @@ export const Snapshots = ({ data, config }) => {
 
         return {
           ...snapshot,
-          NAME: snapshot.NAME || `${Tr(T.Snapshot)} #${snapshot.ID}`,
-          ACTIVE_LABEL: stringToBoolean(ACTIVE) ? Tr(T.Active) : '-',
+          NAME: snapshot.NAME || `${translate(T.Snapshot)} #${snapshot.ID}`,
+          ACTIVE_LABEL: stringToBoolean(ACTIVE) ? translate(T.Active) : '-',
           DATE_LABEL: time?.toFormat?.('ff') ?? '-',
           SIZE_LABEL: size,
           MONITOR_SIZE_LABEL: monitorSize,
         }
       }),
-    [image]
+    [image, translate]
   )
 
   const columns = useMemo(

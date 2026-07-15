@@ -19,6 +19,7 @@ import { Box, Typography } from '@mui/material'
 
 import { T } from '@ConstantsModule'
 import { getStyles } from '@modules/componentsv2/composed/Panels/UserGroups/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Displays user groups using the Components V2 design system.
@@ -42,35 +43,43 @@ export const UserGroupsTab = forwardRef(
       secondaryTitle = T.SecondaryGroups,
     },
     ref
-  ) => (
-    <Box sx={(theme) => getStyles({ theme })} ref={ref}>
-      {actions && <Box className="user-groups-actions">{actions}</Box>}
+  ) => {
+    const { translate } = useTranslation()
 
-      <Box className="user-groups-section">
-        {primaryTitle && (
-          <Typography component="h3" className="user-groups-section-title">
-            {primaryTitle}
-          </Typography>
-        )}
-        <Box className="user-groups-card">{primaryGroup}</Box>
-      </Box>
+    return (
+      <Box sx={(theme) => getStyles({ theme })} ref={ref}>
+        {actions && <Box className="user-groups-actions">{actions}</Box>}
 
-      {secondaryGroups.length > 0 && (
         <Box className="user-groups-section">
-          <Typography component="h3" className="user-groups-section-title">
-            {secondaryTitle}
-          </Typography>
-          <Box className="user-groups-list">
-            {secondaryGroups.map(({ id, content }) => (
-              <Box key={id} className="user-groups-card">
-                {content}
-              </Box>
-            ))}
-          </Box>
+          {primaryTitle && (
+            <Typography component="h3" className="user-groups-section-title">
+              {typeof primaryTitle === 'string'
+                ? translate(primaryTitle)
+                : primaryTitle}
+            </Typography>
+          )}
+          <Box className="user-groups-card">{primaryGroup}</Box>
         </Box>
-      )}
-    </Box>
-  )
+
+        {secondaryGroups.length > 0 && (
+          <Box className="user-groups-section">
+            <Typography component="h3" className="user-groups-section-title">
+              {typeof secondaryTitle === 'string'
+                ? translate(secondaryTitle)
+                : secondaryTitle}
+            </Typography>
+            <Box className="user-groups-list">
+              {secondaryGroups.map(({ id, content }) => (
+                <Box key={id} className="user-groups-card">
+                  {content}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Box>
+    )
+  }
 )
 
 UserGroupsTab.propTypes = {

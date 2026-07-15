@@ -27,7 +27,7 @@ import {
 
 import PropTypes from 'prop-types'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Legend } from '@modules/resources/Forms'
 
 import { mapNameByIndex } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/schema'
@@ -45,6 +45,7 @@ export const SCHED_ACTION_SCHEMA = object({
 })
 
 const ScheduleActionsSection = ({ oneConfig, adminGroup }) => {
+  const { translate } = useTranslation()
   const {
     fields: scheduleActions,
     remove,
@@ -77,7 +78,7 @@ const ScheduleActionsSection = ({ oneConfig, adminGroup }) => {
 
   return (
     <Box mt={2}>
-      <Legend title={Tr(T.AddChartes)} />
+      <Legend title={translate(T.AddChartes)} />
       <Box sx={{ width: '100%', gridColumn: '1 / -1' }}>
         <Stack flexDirection="row" gap="1em">
           <CreateSchedButton

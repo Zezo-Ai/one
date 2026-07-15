@@ -96,7 +96,6 @@ export const MarketplaceCard = forwardRef(
               bars: [
                 {
                   label: `${T.Capacity} ${percentLabel}`,
-                  size: 'small',
                   value: percentOfUsed,
                   isLabelVisible: true,
                   thresholds: [

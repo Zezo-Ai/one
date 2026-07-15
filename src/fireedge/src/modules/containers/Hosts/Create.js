@@ -18,12 +18,8 @@ import { useHistory } from 'react-router'
 //
 import { HostAPI, useGeneralApi } from '@FeaturesModule'
 //
-import {
-  DefaultFormStepper,
-  SkeletonStepsForm,
-  Host,
-  TranslateProvider,
-} from '@ResourcesModule'
+import { DefaultFormStepper, SkeletonStepsForm, Host } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 
 /**
@@ -46,13 +42,13 @@ export function CreateHost() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <Host.Forms.CreateForm
         onSubmit={onSubmit}
         fallback={<SkeletonStepsForm />}
       >
         {(config) => <DefaultFormStepper {...config} />}
       </Host.Forms.CreateForm>
-    </TranslateProvider>
+    </>
   )
 }

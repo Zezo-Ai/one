@@ -30,6 +30,21 @@ const RESOURCE_NAME_BY_LABEL_KEY = Object.fromEntries(
 )
 
 /**
+ * Removes internal label prefixes while preserving the label hierarchy.
+ *
+ * @param {string} path - Label path
+ * @returns {string} - Displayable label path
+ */
+export const cleanLabelPath = (path = '') => {
+  const separator = LABEL_DELIMITER ?? '/'
+
+  return String(path)
+    .split(separator)
+    .map((segment) => segment.replace(/^\$+/, ''))
+    .join(separator)
+}
+
+/**
  * Resource leaves use Sunstone resource names, accepting differences in case,
  * leading `$`, and separators. Label path segments keep their original names.
  *
@@ -274,10 +289,12 @@ export const getResourceLabels = (
 }
 
 /**
- * @param {any} val - Translate target
+ * @param {any} input - Translation input
  * @returns {boolean} - Can be translated
  */
-export const labelCanBeTranslated = (val) =>
-  typeof val === 'string' ||
-  (Array.isArray(val) && val.length === 2) ||
-  (typeof val === 'object' && val?.word)
+export const isTranslationInput = (input) =>
+  typeof input === 'string' ||
+  (Array.isArray(input) && input.length === 2) ||
+  (input !== null &&
+    typeof input === 'object' &&
+    ('word' in input || 'message' in input))

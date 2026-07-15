@@ -27,8 +27,9 @@ const paddingScale = (theme, size) =>
  * @param {string} root0.size - Row size
  * @param {boolean} root0.isDisabled - Disable interactions
  * @param {boolean} root0.isLoading - Is loading
+ * @param {'small'|'medium'} root0.emptyContentSize - Empty content size
  * @param {number} root0.theadHeight - Table header ref height
- * @param {number} root0.tfootHeight - Table footer ref height
+ * @param {number} root0.footerHeight - Table footer ref height
  * @param {boolean} root0.isFullHeight - Is table full height
  * @returns {object} - Table SX styles
  */
@@ -37,10 +38,17 @@ export const getStyles = ({
   size,
   isDisabled,
   isLoading,
+  emptyContentSize,
   theadHeight,
-  tfootHeight,
+  footerHeight,
   isFullHeight,
 }) => {
+  const isSmallEmptyContent = emptyContentSize === 'small'
+  const emptyRowHeight = isSmallEmptyContent ? '112px' : '240px'
+  const emptyRowPadding = isSmallEmptyContent
+    ? `${theme.scale[300]}px ${theme.scale[500]}px`
+    : `${theme.scale[900]}px ${theme.scale[500]}px`
+
   const rootStyles = {
     display: 'flex',
     flexDirection: 'column',
@@ -56,7 +64,8 @@ export const getStyles = ({
     boxSizing: 'border-box',
     flexDirection: 'column',
     flexShrink: isFullHeight ? 1 : 0,
-    overflow: isFullHeight ? 'auto' : 'hidden',
+    position: 'relative',
+    overflow: 'hidden',
     borderRadius: `${theme.borderRadius['3xl']}px`,
     border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
     bgcolor: 'surface.primary',
@@ -76,7 +85,6 @@ export const getStyles = ({
       md: theme.lineHeight.body.sm.desktop,
     },
   }
-
   const table = {
     '& .table-toolbar': {
       display: 'flex',
@@ -104,12 +112,20 @@ export const getStyles = ({
       ...tableContainer,
     },
 
-    '& .table-container table': {
+    '& .table-scroll': {
+      display: 'flex',
+      width: '100%',
+      flex: isFullHeight ? '1 1 auto' : '0 0 auto',
+      minHeight: 0,
+      overflowX: 'auto',
+      overflowY: isFullHeight ? 'auto' : 'hidden',
+      overscrollBehaviorX: 'contain',
+    },
+
+    '& .table-scroll table': {
       boxSizing: 'border-box',
       width: '100%',
-      height: isFullHeight
-        ? `calc(100% - ${theadHeight + tfootHeight}px)`
-        : 'auto',
+      height: isFullHeight ? '100%' : 'auto',
       tableLayout: 'fixed',
       borderCollapse: 'separate',
       borderSpacing: 0,
@@ -139,7 +155,6 @@ export const getStyles = ({
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         maxWidth: '100%',
-        color: 'text.headings',
       },
 
       '& th.table-title': {
@@ -166,6 +181,7 @@ export const getStyles = ({
 
       '& thead tr.table-header-row': {
         '& .text-ellipsis': {
+          color: 'text.headings',
           fontWeight: 500,
         },
       },
@@ -197,13 +213,6 @@ export const getStyles = ({
         alignSelf: 'stretch',
       },
 
-      '& tfoot td': {
-        position: isFullHeight ? 'sticky' : 'static',
-        bottom: 0,
-        zIndex: 1,
-        bgcolor: 'surface.primary',
-      },
-
       '& tbody tr:not(:last-of-type):not(.filler-row) td': {
         borderBottom: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
       },
@@ -229,19 +238,17 @@ export const getStyles = ({
       },
 
       '& tbody tr.table-empty-row': {
-        height: isFullHeight ? '100%' : '240px',
+        height: isFullHeight ? '100%' : emptyRowHeight,
       },
 
       '& tbody tr.table-empty-row td': {
         border: 'none',
-        padding: `${theme.scale[900]}px ${theme.scale[500]}px`,
+        padding: 0,
         textAlign: 'center',
       },
 
       '& tbody': {
-        height: isFullHeight
-          ? `calc(100% - ${theadHeight + tfootHeight}px)`
-          : 'auto',
+        height: isFullHeight ? `calc(100% - ${theadHeight}px)` : 'auto',
       },
 
       '& tbody tr.filler-row': {
@@ -281,6 +288,43 @@ export const getStyles = ({
         pointerEvents: 'none',
         cursor: 'not-allowed',
       }),
+    },
+
+    '& .table-empty-content': {
+      position: 'absolute',
+      top: `${theadHeight}px`,
+      right: 0,
+      bottom: `${footerHeight}px`,
+      left: 0,
+      zIndex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxSizing: 'border-box',
+      padding: emptyRowPadding,
+      pointerEvents: 'none',
+    },
+
+    '& .table-empty-content-inner': {
+      width: '100%',
+      maxWidth: isSmallEmptyContent ? '640px' : '476px',
+      pointerEvents: 'auto',
+    },
+
+    '& .table-footer': {
+      display: 'flex',
+      flexDirection: 'column',
+      flex: '0 0 auto',
+      width: '100%',
+      boxSizing: 'border-box',
+      bgcolor: 'surface.primary',
+    },
+
+    '& .table-footer-item': {
+      width: '100%',
+      boxSizing: 'border-box',
+      padding: paddingScale(theme, size),
+      bgcolor: 'surface.primary',
     },
   }
 

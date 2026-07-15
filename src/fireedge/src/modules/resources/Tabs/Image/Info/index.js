@@ -34,7 +34,7 @@ import {
   cloneObject,
   set,
 } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const HIDDEN_ATTRIBUTES_REG = /^(SERIAL)$/
 
@@ -56,6 +56,7 @@ const ImageInfoTab = ({
   adminGroup,
   resource,
 }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     permissions_panel: permissionsPanel,
@@ -150,7 +151,7 @@ const ImageInfoTab = ({
           attributes={attributes}
           actions={getActions(attributesPanel?.actions)}
           filtersSpecialAttributes={false}
-          title={Tr(T.Attributes)}
+          title={translate(T.Attributes)}
         />
       )}
     </Stack>

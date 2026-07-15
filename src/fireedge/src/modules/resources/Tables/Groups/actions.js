@@ -26,7 +26,7 @@ import {
 } from '@modules/resources/Tables/Enhanced/Utils'
 
 import { GROUP_ACTIONS, RESOURCE_NAMES, T, PATH } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const ListGroupNames = ({ rows = [] }) =>
   rows?.map?.(({ id, original }) => {

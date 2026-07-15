@@ -17,7 +17,7 @@ import { DateTime } from 'luxon'
 import PropTypes from 'prop-types'
 import { ReactElement, memo, useEffect, useMemo, useState } from 'react'
 
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { timeFromMilliseconds } from '@UtilsModule'
 
 const Timer = memo(

@@ -17,6 +17,7 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   ResourceActionConfirmation,
   SummarySlot,
@@ -24,7 +25,7 @@ import {
   ToggleGroup,
 } from '@ComponentsV2Module'
 import { unset } from 'lodash'
-import { getImageState } from '@ModelsModule'
+import { getImageState, getLabelTags } from '@ModelsModule'
 
 import { Box, useTheme } from '@mui/material'
 import { Component, useMemo } from 'react'
@@ -41,7 +42,7 @@ import {
   Infinite as PersistentIcon,
   Hourglass as NonPersistentIcon,
 } from 'iconoir-react'
-import { IMAGE_ACTIONS, T } from '@ConstantsModule'
+import { IMAGE_ACTIONS, RESOURCE_NAMES, T } from '@ConstantsModule'
 import {
   cloneObject,
   createActions,
@@ -132,12 +133,20 @@ export const SingleView = ({
     />
   )
 
-  const handleConfirmAction = ({ title, description, onSubmit }) =>
+  const handleConfirmAction = ({
+    title,
+    description,
+    confirmLabel,
+    confirmButtonProps,
+    onSubmit,
+  }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
         description,
+        confirmLabel,
+        confirmButtonProps,
       },
       onSubmit,
     })
@@ -171,6 +180,7 @@ export const SingleView = ({
     handleConfirmAction({
       title: `${T.Enable} ${T.Image}`,
       description: getResourceConfirmation(T['resource.enable.confirmation']),
+      confirmLabel: T.Enable,
       onSubmit: async () => {
         await enable(ID)
         await refreshCurrentData()
@@ -181,6 +191,7 @@ export const SingleView = ({
     handleConfirmAction({
       title: `${T.Disable} ${T.Image}`,
       description: getResourceConfirmation(T['resource.disable.confirmation']),
+      confirmLabel: T.Disable,
       onSubmit: async () => {
         await disable(ID)
         await refreshCurrentData()
@@ -191,6 +202,7 @@ export const SingleView = ({
     handleConfirmAction({
       title: `${T.Lock} ${T.Image}`,
       description: getResourceConfirmation(T['resource.lock.confirmation']),
+      confirmLabel: T.Lock,
       onSubmit: async () => {
         await lock({ id: ID })
         await refreshCurrentData()
@@ -201,6 +213,7 @@ export const SingleView = ({
     handleConfirmAction({
       title: `${T.Unlock} ${T.Image}`,
       description: getResourceConfirmation(T['resource.unlock.confirmation']),
+      confirmLabel: T.Unlock,
       onSubmit: async () => {
         await unlock({ id: ID })
         await refreshCurrentData()
@@ -211,6 +224,10 @@ export const SingleView = ({
     handleConfirmAction({
       title: `${T.Delete} ${T.Image}`,
       description: getResourceConfirmation(T['resource.delete.confirmation']),
+      confirmLabel: T.Delete,
+      confirmButtonProps: {
+        isDestructive: true,
+      },
       onSubmit: async () => {
         await deleteImage({ id: ID })
         handleClose()
@@ -220,7 +237,12 @@ export const SingleView = ({
   const handlePersistent = (isPersistent = true) =>
     handleConfirmAction({
       title: isPersistent ? T.Persistent : T.NonPersistent,
-      description: getResourceConfirmation(T.DoYouWantProceed),
+      description: getResourceConfirmation(
+        isPersistent
+          ? T['resource.persistent.confirmation']
+          : T['resource.nonPersistent.confirmation']
+      ),
+      confirmLabel: isPersistent ? T.Persistent : T.NonPersistent,
       onSubmit: async () => {
         await persistent({ id: ID, persistent: isPersistent })
         await refreshCurrentData()
@@ -357,14 +379,6 @@ export const SingleView = ({
 
   const toggleOptions = [
     [
-      {
-        startIcon: <RefreshDouble width="16px" height="16px" />,
-        onClick: handleRefresh,
-        value: 'refresh',
-        title: T.Refresh,
-        isDisabled: isActionsDisabled,
-        tooltip: T.Refresh,
-      },
       ...createActions({
         filters: availableActions,
         actions: [
@@ -378,6 +392,23 @@ export const SingleView = ({
           },
         ],
       }),
+    ],
+    [
+      {
+        ...getLabelMenuButtonProps({
+          selectedRows: [data],
+          resourceType: RESOURCE_NAMES.IMAGE,
+          isDisabled: isActionsDisabled,
+        }),
+      },
+      {
+        startIcon: <RefreshDouble width="16px" height="16px" />,
+        onClick: handleRefresh,
+        value: 'refresh',
+        title: T.Refresh,
+        isDisabled: isActionsDisabled,
+        tooltip: T.Refresh,
+      },
     ],
     [
       ...createActions({
@@ -399,6 +430,7 @@ export const SingleView = ({
             onClick: handleDelete,
             value: IMAGE_ACTIONS.DELETE,
             tooltip: T.Delete,
+            isDestructive: true,
             isDisabled: isActionsDisabled,
           },
         ],
@@ -425,6 +457,7 @@ export const SingleView = ({
 
             title: data?.NAME,
             id: ID,
+            tags: getLabelTags(data?.LABELS),
             Toolbar: () => (
               <Box
                 sx={(theme) => ({

@@ -26,9 +26,10 @@ import {
   HostAPI,
   VmAPI,
 } from '@FeaturesModule'
-import { Tr, Translate } from '@modules/resources/HOC'
-import { rowStyles } from '@modules/resources/Tables/styles'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { getHistoryAction, timeFromMilliseconds, timeDiff } from '@UtilsModule'
+import { rowStyles } from '@modules/resources/Tables/styles'
+
 import { T } from '@ConstantsModule'
 
 const HistoryRecordCard = memo(
@@ -39,6 +40,7 @@ const HistoryRecordCard = memo(
    * @returns {ReactElement} History record card component
    */
   (input) => {
+    const { translate } = useTranslation()
     const { history, original } = input
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
@@ -118,31 +120,31 @@ const HistoryRecordCard = memo(
             <Typography noWrap component="span" data-cy="record-data">
               {`${SEQ || ID || ''} | ${HID || HOST_ID} | ${
                 HOSTNAME || hostName || ''
-              } | ${Tr(T.Action)}: ${ACTION ? action : OPERATION}`}
+              } | ${translate(T.Action)}: ${ACTION ? action : OPERATION}`}
             </Typography>
           </div>
           <div className={classes.caption}>
-            <span title={`${Tr(T.Datastore)}: ${DS_ID} ${dsName}`}>
+            <span title={`${translate(T.Datastore)}: ${DS_ID} ${dsName}`}>
               <Folder />
               <span data-cy="datastore">{dsName}</span>
             </span>
             {VM_ID != null && (
-              <span title={`${Tr(T.VM)}: ${VM_ID} ${vmName}`}>
+              <span title={`${translate(T.VM)}: ${VM_ID} ${vmName}`}>
                 <ModernTv />
                 <span data-cy="vm">{vmName}</span>
               </span>
             )}
             {+UID !== -1 && UID != null && (
               <>
-                <span title={`${Tr(T.Owner)}: ${UID} ${userName}`}>
+                <span title={`${translate(T.Owner)}: ${UID} ${userName}`}>
                   <User />
                   <span data-cy="owner">{userName}</span>
                 </span>
-                <span title={`${Tr(T.Group)}: ${GID} ${groupName}`}>
+                <span title={`${translate(T.Group)}: ${GID} ${groupName}`}>
                   <Group />
                   <span data-cy="group">{groupName}</span>
                 </span>
-                <span title={`${Tr(T.RequestId)}: ${REQUEST_ID}`}>
+                <span title={`${translate(T.RequestId)}: ${REQUEST_ID}`}>
                   <InfoEmpty />
                   <span data-cy="request">{REQUEST_ID}</span>
                 </span>
@@ -154,7 +156,7 @@ const HistoryRecordCard = memo(
               divider={<Divider orientation="vertical" flexItem />}
             >
               {startTime != null && (
-                <span title={Tr(T.TimeWhenTheStateChanged)}>
+                <span title={translate(T.TimeWhenTheStateChanged)}>
                   <Translate
                     word={T.StartedOnTime}
                     values={[startTime.toFormat('ff')]}
@@ -162,14 +164,14 @@ const HistoryRecordCard = memo(
                 </span>
               )}
               {monitorDiffTime != null && (
-                <span title={Tr(T.TotalTimeInThisState)}>
+                <span title={translate(T.TotalTimeInThisState)}>
                   <Translate word={T.Total} />
                   {` ${monitorDiffTime}`}
                 </span>
               )}
 
               {prologDiffTime != null && (
-                <span title={Tr(T.PrologTimeForThisState)}>
+                <span title={translate(T.PrologTimeForThisState)}>
                   <Translate word={T.Prolog} />
                   {` ${prologDiffTime}`}
                 </span>

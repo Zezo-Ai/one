@@ -20,7 +20,7 @@ import { Copy as CopyIcon, Check as CopiedIcon, Cancel } from 'iconoir-react'
 
 import { useClipboard } from '@HooksModule'
 import { SCHEMES, T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC/Translate'
+import { useTranslation } from '@ProvidersModule'
 
 const callAll =
   (...fns) =>
@@ -72,8 +72,10 @@ const StatusChip = memo(
     forceWhiteColor,
     ...props
   }) => {
+    const { translate } = useTranslation()
     const { copy, isCopied } = useClipboard()
-    const displayText = typeof text === 'string' ? Tr(T[text] ?? text) : text
+    const displayText =
+      typeof text === 'string' ? translate(T[text] ?? text) : text
 
     const ownerState = {
       forceWhiteColor,

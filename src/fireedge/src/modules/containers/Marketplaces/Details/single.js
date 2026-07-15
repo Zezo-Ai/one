@@ -17,6 +17,7 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   ResourceActionConfirmation,
   SummarySlot,
@@ -38,7 +39,11 @@ import {
 } from 'iconoir-react'
 import { MARKETPLACE_ACTIONS, PATH, RESOURCE_NAMES, T } from '@ConstantsModule'
 import { MarketplaceAPI, useModalsApi, useViews } from '@FeaturesModule'
-import { getMarketplaceCapacityInfo, getMarketplaceState } from '@ModelsModule'
+import {
+  getLabelTags,
+  getMarketplaceCapacityInfo,
+  getMarketplaceState,
+} from '@ModelsModule'
 import { filterAttributes, getActionsAvailable, jsonToXml } from '@UtilsModule'
 import { Marketplace } from '@ResourcesModule'
 import { useHistory } from 'react-router'
@@ -192,6 +197,7 @@ export const SingleView = ({
             resourceType={T.Marketplaces}
           />
         ),
+        confirmLabel: T.Enable,
       },
       onSubmit: handleEnable,
     })
@@ -208,6 +214,7 @@ export const SingleView = ({
             resourceType={T.Marketplaces}
           />
         ),
+        confirmLabel: T.Disable,
       },
       onSubmit: handleDisable,
     })
@@ -224,6 +231,10 @@ export const SingleView = ({
             resourceType={T.Marketplaces}
           />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: marketplace?.ID })
@@ -265,6 +276,7 @@ export const SingleView = ({
             isTitleEditDisabled: isActionsDisabled,
             title: marketplace?.NAME,
             id: marketplace?.ID,
+            tags: getLabelTags(marketplace?.LABELS),
             labels: [
               [T.Owner, marketplace?.UNAME],
               [T.Group, marketplace?.GNAME],
@@ -305,17 +317,24 @@ export const SingleView = ({
                   options={[
                     [
                       {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isActionsDisabled,
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [marketplace],
+                          resourceType: RESOURCE_NAMES.MARKETPLACE,
+                          isDisabled: isActionsDisabled,
+                        }),
                       },
                       canUpdate && {
                         startIcon: <Edit width="16px" height="16px" />,
                         onClick: handleUpdate,
                         value: 'update',
                         tooltip: T.Update,
+                        isDisabled: isActionsDisabled,
+                      },
+                      {
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: handleRefresh,
+                        value: 'refresh',
+                        tooltip: T.Refresh,
                         isDisabled: isActionsDisabled,
                       },
                     ].filter(Boolean),
@@ -335,6 +354,7 @@ export const SingleView = ({
                         onClick: handleDeleteForm,
                         value: 'delete',
                         tooltip: T.Delete,
+                        isDestructive: true,
                         isDisabled: isActionsDisabled,
                       },
                       {

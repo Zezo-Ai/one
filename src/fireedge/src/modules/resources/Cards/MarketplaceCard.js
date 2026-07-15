@@ -26,7 +26,7 @@ import {
   MinusPinAlt as ZoneIcon,
 } from 'iconoir-react'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   LinearProgressWithLabel,
   StatusChip,
@@ -50,6 +50,7 @@ const MarketplaceCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ market, rootProps, actions }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -91,19 +92,19 @@ const MarketplaceCard = memo(
           </div>
           <div className={classes.caption}>
             <span>{`#${ID}`}</span>
-            <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+            <span title={`${translate(T.Owner)}: ${UNAME}`}>
               <User />
               <span>{` ${UNAME}`}</span>
             </span>
-            <span title={`${Tr(T.Group)}: ${GNAME}`}>
+            <span title={`${translate(T.Group)}: ${GNAME}`}>
               <Group />
               <span>{` ${GNAME}`}</span>
             </span>
-            <span title={`${Tr(T.Apps)}: ${apps}`}>
+            <span title={`${translate(T.Apps)}: ${apps}`}>
               <Server />
               <span>{` ${apps}`}</span>
             </span>
-            <span title={`${Tr(T.Zone)}: ${ZONE_ID}`}>
+            <span title={`${translate(T.Zone)}: ${ZONE_ID}`}>
               <ZoneIcon />
               <span>{` ${ZONE_ID}`}</span>
             </span>
@@ -115,7 +116,7 @@ const MarketplaceCard = memo(
             label={percentLabel}
             high={MARKET_THRESHOLD.CAPACITY.high}
             low={MARKET_THRESHOLD.CAPACITY.low}
-            title={Tr(T.UsedOfTotal)}
+            title={translate(T.UsedOfTotal)}
           />
         </div>
         {actions && <div className={classes.actions}>{actions}</div>}

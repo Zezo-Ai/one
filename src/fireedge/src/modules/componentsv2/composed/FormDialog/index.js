@@ -29,6 +29,7 @@ import {
   getBackdropStyles,
   getStyles,
 } from '@modules/componentsv2/composed/FormDialog/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Dialog that resolves and renders a v2 steps form.
@@ -52,43 +53,47 @@ export const FormDialog = ({
   initialValues,
   update = false,
   ...dialogProps
-}) => (
-  <Dialog
-    open
-    onClose={onClose}
-    maxWidth={false}
-    {...dialogProps}
-    BackdropProps={{
-      sx: getBackdropStyles(),
-    }}
-    PaperProps={{
-      sx: (theme) => getStyles({ theme }),
-    }}
-  >
-    <Box className="form-dialog-header">
-      <Typography component="h2" className="form-dialog-title">
-        {title}
-      </Typography>
-      <Button
-        type="transparent"
-        iconOnly={<Cancel />}
-        onClick={onClose}
-        aria-label={T.Close}
-        title={T.Close}
-      />
-    </Box>
-    <Steps
-      initialValues={initialValues}
-      stepProps={stepProps}
-      onSubmit={onSubmit}
-      fallback={<SkeletonStepsForm />}
+}) => {
+  const { translateText } = useTranslation()
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      maxWidth={false}
+      {...dialogProps}
+      BackdropProps={{
+        sx: getBackdropStyles(),
+      }}
+      PaperProps={{
+        sx: (theme) => getStyles({ theme }),
+      }}
     >
-      {(config) => (
-        <DefaultFormStepper {...config} onCancel={onClose} update={update} />
-      )}
-    </Steps>
-  </Dialog>
-)
+      <Box className="form-dialog-header">
+        <Typography component="h2" className="form-dialog-title">
+          {typeof title === 'string' ? translateText(title) : title}
+        </Typography>
+        <Button
+          type="transparent"
+          iconOnly={<Cancel />}
+          onClick={onClose}
+          aria-label={T.Close}
+          title={T.Close}
+        />
+      </Box>
+      <Steps
+        initialValues={initialValues}
+        stepProps={stepProps}
+        onSubmit={onSubmit}
+        fallback={<SkeletonStepsForm />}
+      >
+        {(config) => (
+          <DefaultFormStepper {...config} onCancel={onClose} update={update} />
+        )}
+      </Steps>
+    </Dialog>
+  )
+}
 
 FormDialog.propTypes = {
   title: PropTypes.node.isRequired,

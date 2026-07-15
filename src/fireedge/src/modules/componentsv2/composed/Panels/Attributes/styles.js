@@ -50,13 +50,31 @@ export const getFooterStyles = ({ theme }) => {
   }
 }
 
-export const TABLE_STYLES = {
+/**
+ * @param {object} root0 - Params
+ * @param {boolean} root0.isEmpty - Whether the attributes table is empty
+ * @returns {object} - Attributes table styles
+ */
+export const getTableStyles = ({ isEmpty = false } = {}) => ({
+  '& .table-top-row': {
+    position: 'sticky',
+    top: 0,
+    zIndex: 1,
+  },
   '& tbody tr:not(.filler-row):hover': {
     '& .toggle-group-container': {
       display: 'flex',
     },
   },
-}
+  ...(isEmpty && {
+    '& .table-scroll': {
+      minHeight: '112px',
+    },
+    '& .table-empty-content-inner > *': {
+      margin: '0 auto',
+    },
+  }),
+})
 
 /**
  * @param {object} root0 - Params
@@ -123,6 +141,14 @@ export const ACTION_STYLES = {
   bgcolor: 'transparent',
   '&:hover': {
     color: 'icon.actionHover',
+  },
+}
+
+export const DESTRUCTIVE_ACTION_STYLES = {
+  ...ACTION_STYLES,
+  color: 'text.onDestructive',
+  '&:hover': {
+    color: 'text.onDestructive',
   },
 }
 

@@ -23,11 +23,14 @@
 export const getStyles = ({ theme, isOutlined }) => {
   const baseStyle = {
     display: 'flex',
-    padding: `0 ${theme.scale[100]}px`,
+    flexWrap: 'nowrap',
+    padding: 0,
     justifyContent: 'center',
     alignItems: 'flex-start',
     flex: '1 0 0',
     alignSelf: 'stretch',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
 
     borderRadius: `${theme.scale[150]}px`,
     bgcolor: 'surface.primary',
@@ -54,13 +57,25 @@ export const getStyles = ({ theme, isOutlined }) => {
     },
   }
   const divider = {
+    '& .toggle-group-section': {
+      display: 'flex',
+      flexWrap: 'nowrap',
+      alignSelf: 'stretch',
+    },
+
     '& .toggle-group-divider': {
       margin: `${theme.scale[100]}px`,
+    },
+  }
+  const toggle = {
+    '& .toggle-button-container': {
+      borderRadius: 0,
     },
   }
 
   return {
     ...baseStyle,
     ...divider,
+    ...toggle,
   }
 }

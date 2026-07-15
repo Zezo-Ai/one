@@ -25,7 +25,11 @@ import {
   Trash as DeleteIcon,
 } from 'iconoir-react'
 
-import { SubmitButton, Table } from '@ComponentsV2Module'
+import {
+  ResourceActionConfirmation,
+  SubmitButton,
+  Table,
+} from '@ComponentsV2Module'
 import { PLAN_STATE, T } from '@ConstantsModule'
 import { DatastoreAPI, HostAPI, useModalsApi, VmAPI } from '@FeaturesModule'
 import { timeFromSeconds } from '@ModelsModule'
@@ -157,7 +161,13 @@ const ExecutionTimeline = ({ data = {}, isLoading, ...props }) => {
       isConfirmDialog: true,
       dialogProps: {
         title: T.Apply,
-        description: T.DoYouWantApplyOp,
+        description: (
+          <ResourceActionConfirmation
+            description={T.DoYouWantApplyOp}
+            resourceType={T.Drs}
+          />
+        ),
+        confirmLabel: T.Apply,
       },
       onSubmit: handleApplyPlan,
     })
@@ -167,7 +177,16 @@ const ExecutionTimeline = ({ data = {}, isLoading, ...props }) => {
       isConfirmDialog: true,
       dialogProps: {
         title: T.Delete,
-        description: T.DoYouWantDeleteOp,
+        description: (
+          <ResourceActionConfirmation
+            description={T.DoYouWantDeleteOp}
+            resourceType={T.Drs}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: handleDeletePlan,
     })

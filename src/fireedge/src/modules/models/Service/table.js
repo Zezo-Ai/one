@@ -37,8 +37,6 @@ import { getScheduleActions } from '@modules/models/VirtualMachine/general'
 export const SERVICES_COLUMNS = [
   { header: T.ID, id: 'id', accessorKey: 'ID', width: '5%' },
   { header: T.Name, id: 'name', accessorKey: 'NAME' },
-  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
-  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   {
     header: T.State,
     id: 'state',
@@ -63,6 +61,8 @@ export const SERVICES_COLUMNS = [
     id: 'vms',
     accessorFn: getServiceTotalVms,
   },
+  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
+  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   {
     header: T.StartTime,
     id: 'time',
@@ -113,79 +113,84 @@ export const ROLE_VMS_COLUMNS = [
 
 export const serviceTable = createTable(
   SERVICES_COLUMNS,
-  ServiceAPI.useGetServicesQuery
+  ServiceAPI.useGetServicesQuery,
+  { dataCy: 'services' }
 )
 
-export const rolevmsTable = createTable(ROLE_VMS_COLUMNS, (args, options) => {
-  const { id, role = [] } = args ?? {}
-  const shouldSkipService =
-    options?.skip || id === undefined || id === null || id === ''
+export const rolevmsTable = createTable(
+  ROLE_VMS_COLUMNS,
+  (args, options) => {
+    const { id, role = [] } = args ?? {}
+    const shouldSkipService =
+      options?.skip || id === undefined || id === null || id === ''
 
-  const {
-    data: roleVms = [],
-    isFetching: isFetchingService,
-    isLoading: isLoadingService,
-    refetch: refetchService,
-  } = ServiceAPI.useGetServiceQuery(
-    { id },
-    {
-      ...options,
-      skip: shouldSkipService,
-      selectFromResult: ({ data, isFetching, isLoading }) => ({
-        data: getRoleVms(data, role),
-        isFetching,
-        isLoading,
-      }),
-    }
-  )
-
-  const vmIds = [...new Set(roleVms.map(({ ID }) => ID))].join(',')
-
-  const {
-    data: vms = [],
-    isFetching: isFetchingVms,
-    isLoading: isLoadingVms,
-    refetch: refetchVms,
-  } = VmAPI.useGetVmInfosetQuery(
-    { ids: vmIds, extended: 1 },
-    {
-      ...options,
-      skip: options?.skip || !vmIds,
-      selectFromResult: ({ data, isFetching, isLoading }) => {
-        const vmsById = new Map(
-          []
-            .concat(data)
-            .filter(Boolean)
-            .map((vm = {}) => [String(vm?.ID), vm])
-        )
-
-        return {
-          data: roleVms
-            .map(({ ID, ROLE }) => {
-              const vm = vmsById.get(ID)
-
-              return vm && { ...vm, ROLE }
-            })
-            .filter(Boolean),
+    const {
+      data: roleVms = [],
+      isFetching: isFetchingService,
+      isLoading: isLoadingService,
+      refetch: refetchService,
+    } = ServiceAPI.useGetServiceQuery(
+      { id },
+      {
+        ...options,
+        skip: shouldSkipService,
+        selectFromResult: ({ data, isFetching, isLoading }) => ({
+          data: getRoleVms(data, role),
           isFetching,
           isLoading,
-        }
-      },
-    }
-  )
+        }),
+      }
+    )
 
-  return {
-    data: vmIds ? vms : [],
-    isFetching: isFetchingService || isFetchingVms,
-    isLoading: isLoadingService || isLoadingVms,
-    refetch: () =>
-      Promise.all(
-        [!shouldSkipService && refetchService, vmIds && refetchVms]
-          .filter(Boolean)
-          .map((refetch) => refetch())
-      ),
-  }
-})
+    const vmIds = [...new Set(roleVms.map(({ ID }) => ID))].join(',')
+
+    const {
+      data: vms = [],
+      isFetching: isFetchingVms,
+      isLoading: isLoadingVms,
+      refetch: refetchVms,
+    } = VmAPI.useGetVmInfosetQuery(
+      { ids: vmIds, extended: 1 },
+      {
+        ...options,
+        skip: options?.skip || !vmIds,
+        selectFromResult: ({ data, isFetching, isLoading }) => {
+          const vmsById = new Map(
+            []
+              .concat(data)
+              .filter(Boolean)
+              .map((vm = {}) => [String(vm?.ID), vm])
+          )
+
+          return {
+            data: roleVms
+              .map(({ ID, ROLE }) => {
+                const vm = vmsById.get(ID)
+
+                return vm && { ...vm, ROLE }
+              })
+              .filter(Boolean),
+            isFetching,
+            isLoading,
+          }
+        },
+      }
+    )
+
+    return {
+      data: vmIds ? vms : [],
+      isFetching: isFetchingService || isFetchingVms,
+      isLoading: isLoadingService || isLoadingVms,
+      refetch: () =>
+        Promise.all(
+          [!shouldSkipService && refetchService, vmIds && refetchVms]
+            .filter(Boolean)
+            .map((refetch) => refetch())
+        ),
+    }
+  },
+  { dataCy: 'role-vms' }
+)
 
 export const roleschedactionsTable = createTable(
   ROLE_SCHED_ACTION_COLUMNS,
@@ -259,5 +264,6 @@ export const roleschedactionsTable = createTable(
       isLoading: results.some(({ isLoading }) => isLoading),
       refetch: refetchVms,
     }
-  }
+  },
+  { dataCy: 'role-scheduled-actions' }
 )

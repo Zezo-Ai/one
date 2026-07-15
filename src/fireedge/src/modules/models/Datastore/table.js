@@ -23,6 +23,7 @@ import {
 import { createTable } from '@UtilsModule'
 import { DatastoreAPI } from '@FeaturesModule'
 import { createLabelColumn } from '@modules/models/labels'
+import { StatusTag } from '@ComponentsV2Module'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const DATASTORE_COLUMNS = [
@@ -43,6 +44,17 @@ export const DATASTORE_COLUMNS = [
     id: 'state',
     width: '12%',
     accessorFn: (row) => getDatastoreState(row)?.name,
+    cell: ({ row }) => {
+      const { color, name } = getDatastoreState(row.original) ?? {}
+
+      return <StatusTag statusColor={color} statusName={name} />
+    },
+  },
+  {
+    header: T.Type,
+    id: 'type',
+    width: '12%',
+    accessorFn: (row) => getDatastoreType(row),
   },
   {
     header: T.Capacity,
@@ -53,12 +65,6 @@ export const DATASTORE_COLUMNS = [
 
       return capacity.percentLabel
     },
-  },
-  {
-    header: T.Type,
-    id: 'type',
-    width: '12%',
-    accessorFn: (row) => getDatastoreType(row),
   },
   {
     header: T.Clusters,
@@ -83,5 +89,6 @@ export const DATASTORE_COLUMNS = [
 
 export const datastoreTable = createTable(
   DATASTORE_COLUMNS,
-  DatastoreAPI.useGetDatastoresQuery
+  DatastoreAPI.useGetDatastoresQuery,
+  { dataCy: 'datastores' }
 )

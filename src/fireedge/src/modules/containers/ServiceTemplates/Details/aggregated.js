@@ -17,15 +17,17 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   SummarySlot,
   TabSlot,
   Button,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
 
 import { useModalsApi, ServiceTemplateAPI, oneApi } from '@FeaturesModule'
 import { Component, useMemo } from 'react'
 import { aggregateMetrics } from '@UtilsModule'
-import { T, STYLE_BUTTONS } from '@ConstantsModule'
+import { T, STYLE_BUTTONS, RESOURCE_NAMES } from '@ConstantsModule'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import { Trash, Cancel as CloseIcon } from 'iconoir-react'
@@ -130,7 +132,17 @@ export const AggregatedView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.ServiceTemplates}`,
-        description: T['template.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedTemplates}
+            resourceType={T.ServiceTemplates}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(selectedTemplates.map(({ ID }) => remove({ id: ID })))
@@ -175,6 +187,11 @@ export const AggregatedView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
+                <LabelButton
+                  selectedRows={selectedTemplates}
+                  resourceType={RESOURCE_NAMES.SERVICE_TEMPLATE}
+                  isDisabled={isMutating}
+                />
                 <Button
                   type={STYLE_BUTTONS.TYPE.PRIMARY}
                   size="small"
@@ -187,7 +204,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

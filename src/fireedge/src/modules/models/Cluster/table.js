@@ -32,6 +32,11 @@ export const CLUSTER_COLUMNS = [
     accessorKey: 'NAME',
   },
   {
+    header: T.ProvisionType,
+    id: 'provisionType',
+    accessorFn: (row) => row?.TEMPLATE?.ONEFORM?.DRIVER,
+  },
+  {
     header: T.Hosts,
     id: 'hosts',
     accessorFn: (row) => getTotalOfResources(row?.HOSTS),
@@ -46,15 +51,11 @@ export const CLUSTER_COLUMNS = [
     id: 'vnets',
     accessorFn: (row) => getTotalOfResources(row?.VNETS),
   },
-  {
-    header: T.ProvisionType,
-    id: 'provisionType',
-    accessorFn: (row) => row?.TEMPLATE?.ONEFORM?.DRIVER,
-  },
   createLabelColumn(),
 ]
 
 export const clusterTable = createTable(
   CLUSTER_COLUMNS,
-  ClusterAPI.useGetClustersQuery
+  ClusterAPI.useGetClustersQuery,
+  { dataCy: 'clusters' }
 )

@@ -23,11 +23,12 @@ import {
   EditOneKsNodeGroupForm,
 } from '@modules/resources/Forms/OneKs'
 import { generatePath, useHistory } from 'react-router-dom'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, ONEKS_OPERATIONS, PATH } from '@ConstantsModule'
 import { SubmitButton } from '@ComponentsV2Module'
 
 const RowAction = memo(({ node, id }) => {
+  const { translate } = useTranslation()
   const history = useHistory()
   const { showModal } = useModalsApi()
   const { enqueueSuccess, enqueueError } = useGeneralApi()
@@ -113,7 +114,7 @@ const RowAction = memo(({ node, id }) => {
         dataCy: 'modal-recover-node',
         children: (
           <>
-            <p>{Tr(T.DoYouWantProceed)}</p>
+            <p>{translate(T.DoYouWantProceed)}</p>
           </>
         ),
       },
@@ -128,7 +129,7 @@ const RowAction = memo(({ node, id }) => {
         dataCy: 'modal-delete-node',
         children: (
           <>
-            <p>{Tr(T.DoYouWantProceed)}</p>
+            <p>{translate(T.DoYouWantProceed)}</p>
           </>
         ),
       },
@@ -140,28 +141,28 @@ const RowAction = memo(({ node, id }) => {
       <SubmitButton
         data-cy={`edit-${nodeId}`}
         iconOnly={<Edit />}
-        tooltip={Tr(T.EditNodeGroup)}
+        tooltip={translate(T.EditNodeGroup)}
         variant={'outlined'}
         onClick={handleOpenEditForm}
       />
       <SubmitButton
         data-cy={`scaling-${nodeId}`}
         iconOnly={<Upload />}
-        tooltip={Tr(T.ResizeNodeGroup)}
+        tooltip={translate(T.ResizeNodeGroup)}
         variant={'outlined'}
         onClick={handleOpenScalingForm}
       />
       <SubmitButton
         data-cy={`recover-${nodeId}`}
         iconOnly={<RefreshCircular />}
-        tooltip={Tr(T.RecoverNodeGroup)}
+        tooltip={translate(T.RecoverNodeGroup)}
         variant={'outlined'}
         onClick={handleOpenRecoverForm}
       />
       <SubmitButton
         data-cy={`delete-${nodeId}`}
         iconOnly={<Trash />}
-        tooltip={Tr(T.DeleteNodeGroup)}
+        tooltip={translate(T.DeleteNodeGroup)}
         variant={'outlined'}
         onClick={handleOpenRemoveForm}
       />

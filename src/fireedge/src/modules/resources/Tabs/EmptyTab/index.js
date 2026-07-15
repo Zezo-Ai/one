@@ -18,7 +18,7 @@ import { useMemo, ReactElement } from 'react'
 import { useTheme } from '@mui/material'
 import { InfoEmpty } from 'iconoir-react'
 
-import { Translate } from '@modules/resources/HOC/Translate'
+import { Translate } from '@ProvidersModule'
 import { useStyles } from '@modules/resources/Tabs/EmptyTab/styles'
 
 import { T } from '@ConstantsModule'

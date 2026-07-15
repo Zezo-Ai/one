@@ -19,7 +19,7 @@ import { ReactElement } from 'react'
 import { Stack, TextField } from '@mui/material'
 import { UseFiltersInstanceProps } from 'opennebula-react-table'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Render category filter to table.
@@ -28,30 +28,34 @@ import { Tr } from '@modules/resources/HOC'
  * @param {UseFiltersInstanceProps} props.column - Props
  * @returns {ReactElement} Component JSX
  */
-const CategoryFilter = ({ column: { Header, filterValue, setFilter, id } }) => (
-  <Stack direction="row">
-    <TextField
-      fullWidth
-      label={Tr(Header)}
-      value={new Date(filterValue)}
-      onChange={(evt) => {
-        console.log(evt.target.value)
-      }}
-      type="date"
-      inputProps={{ 'data-cy': `after-${id}` }}
-    />
-    <TextField
-      fullWidth
-      label={Tr(Header)}
-      value={new Date(filterValue)}
-      onChange={(evt) => {
-        console.log(evt.target.value)
-      }}
-      type="date"
-      inputProps={{ 'data-cy': `before-${id}` }}
-    />
-  </Stack>
-)
+const CategoryFilter = ({ column: { Header, filterValue, setFilter, id } }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Stack direction="row">
+      <TextField
+        fullWidth
+        label={translate(Header)}
+        value={new Date(filterValue)}
+        onChange={(evt) => {
+          console.log(evt.target.value)
+        }}
+        type="date"
+        inputProps={{ 'data-cy': `after-${id}` }}
+      />
+      <TextField
+        fullWidth
+        label={translate(Header)}
+        value={new Date(filterValue)}
+        onChange={(evt) => {
+          console.log(evt.target.value)
+        }}
+        type="date"
+        inputProps={{ 'data-cy': `before-${id}` }}
+      />
+    </Stack>
+  )
+}
 
 CategoryFilter.propTypes = {
   column: PropTypes.object,

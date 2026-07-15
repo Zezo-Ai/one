@@ -21,9 +21,9 @@ import { TextField } from '@mui/material'
 import { useController } from 'react-hook-form'
 
 import { ErrorHelper, Tooltip } from '@modules/resources/FormControl'
-import { Translate } from '@modules/resources/HOC'
-import { T } from '@ConstantsModule'
+import { Translate } from '@ProvidersModule'
 import { generateKey } from '@UtilsModule'
+import { T } from '@ConstantsModule'
 
 import LocalizationProvider from '@mui/lab/LocalizationProvider'
 import AdapterLuxon from '@mui/lab/AdapterLuxon'

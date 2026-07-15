@@ -15,10 +15,8 @@
  * ------------------------------------------------------------------------- */
 
 import { ReactElement, useMemo } from 'react'
-import {
-  TranslateProvider,
-  Settings as SettingsResource,
-} from '@ResourcesModule'
+
+import { Settings as SettingsResource } from '@ResourcesModule'
 import { Box, useTheme } from '@mui/material'
 import { css } from '@emotion/css'
 
@@ -44,10 +42,10 @@ export const Settings = () => {
   const classes = useMemo(() => styles(theme), [theme])
 
   return (
-    <TranslateProvider>
+    <>
       <Box className={classes.labelsSection}>
         <SettingsResource.NestedLabelTable />
       </Box>
-    </TranslateProvider>
+    </>
   )
 }

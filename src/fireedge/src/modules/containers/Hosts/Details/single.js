@@ -17,13 +17,15 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
+  ResourceActionConfirmation,
   StatusTag,
   SummarySlot,
   TabSlot,
   ToggleGroup,
 } from '@ComponentsV2Module'
-import { getHostState } from '@ModelsModule'
+import { getHostState, getLabelTags } from '@ModelsModule'
 import { Box, useTheme } from '@mui/material'
 import { Component } from 'react'
 import PropTypes from 'prop-types'
@@ -163,11 +165,25 @@ export const SingleView = ({
       form: Cluster.Forms.ChangeClusterForm(),
     })
 
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({ title, description, dataCy, onSubmit }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
+        dataCy,
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={host}
+            resourceType={T.Hosts}
+          />
+        ),
+        confirmLabel: `${title}`.startsWith(T.Delete) ? T.Delete : title,
+        ...(`${title}`.startsWith(T.Delete) && {
+          confirmButtonProps: {
+            isDestructive: true,
+          },
+        }),
       },
       onSubmit,
     })
@@ -175,6 +191,8 @@ export const SingleView = ({
   const handleEnable = () =>
     handleConfirmAction({
       title: T.Enable,
+      description: T['resource.enable.confirmation'],
+      dataCy: `modal_${HOST_ACTIONS.ENABLE}`,
       onSubmit: async () => {
         await enableHost(ID)
         await refreshCurrentHost()
@@ -184,6 +202,8 @@ export const SingleView = ({
   const handleDisable = () =>
     handleConfirmAction({
       title: T.Disable,
+      description: T['resource.disable.confirmation'],
+      dataCy: `modal_${HOST_ACTIONS.DISABLE}`,
       onSubmit: async () => {
         await disableHost(ID)
         await refreshCurrentHost()
@@ -193,6 +213,8 @@ export const SingleView = ({
   const handleOffline = () =>
     handleConfirmAction({
       title: T.Offline,
+      description: T['resource.offline.confirmation'],
+      dataCy: `modal_${HOST_ACTIONS.OFFLINE}`,
       onSubmit: async () => {
         await offlineHost(ID)
         await refreshCurrentHost()
@@ -202,6 +224,8 @@ export const SingleView = ({
   const handleFlush = () =>
     handleConfirmAction({
       title: T.Flush,
+      description: T['resource.flush.confirmation'],
+      dataCy: `modal_${HOST_ACTIONS.FLUSH}`,
       onSubmit: async () => {
         const result = await flushHost(ID)
         const hasData =
@@ -222,6 +246,8 @@ export const SingleView = ({
   const handleDelete = () =>
     handleConfirmAction({
       title: T.Delete,
+      description: T['resource.delete.confirmation'],
+      dataCy: 'modal-host-delete',
       onSubmit: async () => {
         await removeHost({ id: ID })
         handleClose()
@@ -243,6 +269,7 @@ export const SingleView = ({
         startIcon: <OnTag width="16px" height="16px" />,
         onClick: handleEnable,
         value: HOST_ACTIONS.ENABLE,
+        dataCy: `action-host_${HOST_ACTIONS.ENABLE}`,
         isDisabled: isActionsDisabled,
       },
       {
@@ -250,6 +277,7 @@ export const SingleView = ({
         startIcon: <OffTag width="16px" height="16px" />,
         onClick: handleDisable,
         value: HOST_ACTIONS.DISABLE,
+        dataCy: `action-host_${HOST_ACTIONS.DISABLE}`,
         isDisabled: isActionsDisabled,
       },
     ],
@@ -258,6 +286,47 @@ export const SingleView = ({
   // Rest of actions
   const toggleOptions = [
     [
+      ...createActions({
+        filters: viewActions,
+        actions: [
+          {
+            accessor: HOST_ACTIONS.OFFLINE,
+            startIcon: <CloudError width="16px" height="16px" />,
+            onClick: handleOffline,
+            value: HOST_ACTIONS.OFFLINE,
+            'data-cy': `action-host_${HOST_ACTIONS.OFFLINE}`,
+            tooltip: T.Offline,
+            isDisabled: isActionsDisabled,
+          },
+          {
+            accessor: HOST_ACTIONS.FLUSH,
+            startIcon: <SafeArrowRight width="16px" height="16px" />,
+            onClick: handleFlush,
+            value: HOST_ACTIONS.FLUSH,
+            'data-cy': `action-host_${HOST_ACTIONS.FLUSH}`,
+            tooltip: T.Flush,
+            isDisabled: isActionsDisabled,
+          },
+          {
+            accessor: HOST_ACTIONS.CHANGE_CLUSTER,
+            startIcon: <Network width="16px" height="16px" />,
+            onClick: handleOpenChangeClusterForm,
+            value: HOST_ACTIONS.CHANGE_CLUSTER,
+            'data-cy': 'action-host-change_cluster',
+            tooltip: T.SelectCluster,
+            isDisabled: isActionsDisabled,
+          },
+        ],
+      }),
+    ],
+    [
+      {
+        ...getLabelMenuButtonProps({
+          selectedRows: [host],
+          resourceType: RESOURCE_NAMES.HOST,
+          isDisabled: isActionsDisabled,
+        }),
+      },
       {
         startIcon: <RefreshDouble width="16px" height="16px" />,
         onClick: handleRefresh,
@@ -265,41 +334,7 @@ export const SingleView = ({
         tooltip: T.Refresh,
         isDisabled: isActionsDisabled,
       },
-      ...createActions({
-        filters: viewActions,
-        actions: [
-          {
-            accessor: HOST_ACTIONS.CHANGE_CLUSTER,
-            startIcon: <Network width="16px" height="16px" />,
-            onClick: handleOpenChangeClusterForm,
-            value: HOST_ACTIONS.CHANGE_CLUSTER,
-            tooltip: T.SelectCluster,
-            isDisabled: isActionsDisabled,
-          },
-        ],
-      }),
     ],
-    createActions({
-      filters: viewActions,
-      actions: [
-        {
-          accessor: HOST_ACTIONS.OFFLINE,
-          startIcon: <CloudError width="16px" height="16px" />,
-          onClick: handleOffline,
-          value: HOST_ACTIONS.OFFLINE,
-          tooltip: T.Offline,
-          isDisabled: isActionsDisabled,
-        },
-        {
-          accessor: HOST_ACTIONS.FLUSH,
-          startIcon: <SafeArrowRight width="16px" height="16px" />,
-          onClick: handleFlush,
-          value: HOST_ACTIONS.FLUSH,
-          tooltip: T.Flush,
-          isDisabled: isActionsDisabled,
-        },
-      ],
-    }),
     [
       ...createActions({
         filters: viewActions,
@@ -319,7 +354,9 @@ export const SingleView = ({
             ),
             onClick: handleDelete,
             value: HOST_ACTIONS.DELETE,
+            'data-cy': 'action-host-delete',
             tooltip: T.Delete,
+            isDestructive: true,
             isDisabled: isActionsDisabled,
           },
         ],
@@ -345,6 +382,8 @@ export const SingleView = ({
             isTitleEditDisabled: isRenaming,
             title: host?.NAME,
             id: ID,
+            dataCy: 'host',
+            tags: getLabelTags(host?.LABELS),
             Toolbar: () => (
               <Box
                 sx={(theme) => ({
@@ -395,7 +434,7 @@ export const SingleView = ({
             tabs: Host.Tabs.Single,
             resourceId: Host.RID,
             tabProps: {
-              selected: selectedHost,
+              selected: host,
               host,
               vms,
               monitoring,

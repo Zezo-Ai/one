@@ -23,11 +23,11 @@ import { SecurityGroup, T, RESOURCE_NAMES } from '@ConstantsModule'
 import { css } from '@emotion/css'
 import { useAuth } from '@FeaturesModule'
 import { getColorFromString } from '@ModelsModule'
-import { Tr } from '@modules/resources/HOC'
+import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import MultipleTags from '@modules/resources/MultipleTagsCard'
 import { rowStyles } from '@modules/resources/Tables/styles'
 import clsx from 'clsx'
-import { getResourceLabels } from '@UtilsModule'
 
 const getTotalOfResources = (resources) =>
   [resources?.ID ?? []].flat().length || 0
@@ -51,6 +51,7 @@ const SecurityGroupCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ securityGroup, rootProps, actions, onClickLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -117,23 +118,27 @@ const SecurityGroupCard = memo(
             </div>
             <div className={classes.caption}>
               <span>{`#${ID}`}</span>
-              <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+              <span title={`${translate(T.Owner)}: ${UNAME}`}>
                 <User />
                 <span data-cy="uname">{` ${UNAME}`}</span>
               </span>
-              <span title={`${Tr(T.Group)}: ${GNAME}`}>
+              <span title={`${translate(T.Group)}: ${GNAME}`}>
                 <Group />
                 <span data-cy="gname">{` ${GNAME}`}</span>
               </span>
-              <span title={`${Tr(T.TotalUpdatedVms)}: ${totalUpdatedVms}`}>
+              <span
+                title={`${translate(T.TotalUpdatedVms)}: ${totalUpdatedVms}`}
+              >
                 <PcCheck />
                 <span>{` ${totalUpdatedVms}`}</span>
               </span>
-              <span title={`${Tr(T.TotalOutdatedVms)}: ${totalOutdatedVms}`}>
+              <span
+                title={`${translate(T.TotalOutdatedVms)}: ${totalOutdatedVms}`}
+              >
                 <PcNoEntry />
                 <span>{` ${totalOutdatedVms}`}</span>
               </span>
-              <span title={`${Tr(T.TotalErrorVms)}: ${totalErrorVms}`}>
+              <span title={`${translate(T.TotalErrorVms)}: ${totalErrorVms}`}>
                 <PcWarning />
                 <span>{` ${totalErrorVms}`}</span>
               </span>

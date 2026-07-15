@@ -30,10 +30,11 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
+import { Apps } from '@modules/resources/resources/Marketplace/Tabs/Apps'
 import { Info } from '@modules/resources/resources/Marketplace/Tabs/Info'
 import { Selection } from '@modules/resources/resources/Marketplace/Tabs/Selection'
 
-export { Info, Selection }
+export { Apps, Info, Selection }
 
-export const Single = [Info]
-export const Aggregated = [Selection, Info]
+export const Single = [Info, Apps]
+export const Aggregated = [Selection, Info, Apps]

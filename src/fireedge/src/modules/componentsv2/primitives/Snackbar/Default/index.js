@@ -20,6 +20,7 @@ import { Box, Typography, Link } from '@mui/material'
 import { InfoEmpty, Check, WarningCircle, Cancel } from 'iconoir-react'
 import { getStyles } from '@modules/componentsv2/primitives/Snackbar/Default/styles'
 import { Button } from '@modules/componentsv2/primitives/Buttons'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Get status icon based on the status type.
@@ -76,6 +77,7 @@ export const Snackbar = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const [internalProgress, setInternalProgress] = useState(0)
     const clampProgress = (p) => Math.min(100, Math.max(0, p))
 
@@ -119,11 +121,13 @@ export const Snackbar = forwardRef(
           <Box className="snackbar-text-container">
             <Box className="snackbar-text-body">
               {!!title && (
-                <Typography className="snackbar-title">{title}</Typography>
+                <Typography className="snackbar-title">
+                  {translate(title)}
+                </Typography>
               )}
               {!!description && (
                 <Typography className="snackbar-description">
-                  {description}
+                  {translate(description)}
                 </Typography>
               )}
             </Box>
@@ -135,7 +139,7 @@ export const Snackbar = forwardRef(
                 onClick={onLinkClick}
                 underline="none"
               >
-                {linkText}
+                {translate(linkText)}
               </Link>
             )}
           </Box>

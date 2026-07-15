@@ -14,26 +14,31 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
+const isSmall = (size) => size === 'small'
+
 /**
  * @param {object} root0 - Params
  * @param {object} root0.theme - Current theme in use
+ * @param {'small'|'medium'} root0.size - Empty content size
  * @returns {object} - EmptyContent styles
  */
-export const getStyles = ({ theme }) => ({
+export const getStyles = ({ theme, size = 'medium' }) => ({
   alignItems: 'center',
   display: 'flex',
-  flexDirection: 'column',
-  gap: `${theme.scale[600]}px`,
+  flexDirection: isSmall(size) ? 'row' : 'column',
+  flexWrap: 'nowrap',
+  gap: `${theme.scale[isSmall(size) ? 700 : 600]}px`,
   justifyContent: 'center',
-  margin: '0 auto',
-  maxWidth: '476px',
-  textAlign: 'center',
+  margin: isSmall(size) ? `${theme.scale[600]}px auto` : '0 auto',
+  maxWidth: isSmall(size) ? '640px' : '476px',
+  textAlign: isSmall(size) ? 'left' : 'center',
   width: '100%',
 
   '& .empty-content-illustration': {
+    flexShrink: 0,
     height: 'auto',
     maxWidth: '100%',
-    width: '476px',
+    width: isSmall(size) ? '168px' : '476px',
   },
 
   '& .empty-content-card': {
@@ -81,8 +86,18 @@ export const getStyles = ({ theme }) => ({
     stroke: theme.palette.icon.disabled,
   },
 
+  '& .empty-content-body': {
+    alignItems: isSmall(size) ? 'flex-start' : 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: `${theme.scale[isSmall(size) ? 500 : 600]}px`,
+    flex: isSmall(size) ? '1 1 auto' : 'initial',
+    maxWidth: '384px',
+    minWidth: 0,
+  },
+
   '& .empty-content-text': {
-    alignItems: 'center',
+    alignItems: isSmall(size) ? 'flex-start' : 'center',
     display: 'flex',
     flexDirection: 'column',
     gap: `${theme.scale[100]}px`,

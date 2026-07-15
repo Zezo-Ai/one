@@ -53,6 +53,7 @@ import { T } from '@ConstantsModule'
  * @param {string} root0.dialogPaperOverflow - Dialog paper overflow
  * @param {string|object} root0.dialogContentMaxHeight - Dialog content max-height
  * @param {string} root0.dialogContentOverflowY - Dialog content overflow-y
+ * @param {string} root0.dataCy - Dialog data-cy attribute
  * @param {object} root0.children - Component children
  * @returns {Component} - Custom MUI AlertDialog component
  */
@@ -77,6 +78,7 @@ export const AlertDialog = forwardRef(
       dialogPaperOverflow,
       dialogContentMaxHeight,
       dialogContentOverflowY,
+      dataCy,
       children,
       ...opts
     },
@@ -100,14 +102,16 @@ export const AlertDialog = forwardRef(
             dialogPaperOverflow,
           })
         }
+        data-cy={dataCy}
         {...opts}
       >
         <DialogTitle sx={(theme) => useHeaderStyles({ theme })}>
           {headerText}
         </DialogTitle>
         <DialogContent
-          sx={{
-            padding: 0,
+          sx={(theme) => ({
+            padding: `${theme.scale[100]}px`,
+            boxSizing: 'border-box',
             ...(dialogContentOverflowY && {
               overflowY: dialogContentOverflowY,
             }),
@@ -115,7 +119,7 @@ export const AlertDialog = forwardRef(
               maxHeight: dialogContentMaxHeight,
               overflowY: dialogContentOverflowY ?? 'auto',
             }),
-          }}
+          })}
         >
           {children ??
             (typeof descriptionText === 'string' ? (
@@ -135,6 +139,7 @@ export const AlertDialog = forwardRef(
             type="secondary"
             onClick={onCancel}
             isDisabled={isCancelDisabled}
+            data-cy="dg-cancel-button"
             {...cancelButtonProps}
           >
             {cancelLabel}
@@ -143,6 +148,7 @@ export const AlertDialog = forwardRef(
             type="primary"
             onClick={onSubmit}
             isDisabled={isConfirmDisabled}
+            data-cy="dg-accept-button"
             {...confirmButtonProps}
           >
             {confirmLabel}
@@ -175,6 +181,7 @@ AlertDialog.propTypes = {
     PropTypes.object,
   ]),
   dialogContentOverflowY: PropTypes.string,
+  dataCy: PropTypes.string,
   children: PropTypes.node,
 }
 

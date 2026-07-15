@@ -19,12 +19,13 @@ import { T } from '@ConstantsModule'
 import { SCHEMA, FIELDS } from './schema'
 import { useMemo } from 'react'
 import { Grid, Alert, useTheme } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import styles from '@modules/resources/resources/OneKs/Forms/CreateOneKsClusterForm/Steps/styles'
 
 export const STEP_ID = 'general'
 
 const Content = () => {
+  const { translate } = useTranslation()
   // Theme
   const theme = useTheme()
   // Style classes
@@ -41,7 +42,7 @@ const Content = () => {
           flexDirection: 'row !important',
         }}
       >
-        {Tr(T['oneks.form.create_nodegroup.general.help.paragraph'])}
+        {translate(T['oneks.form.create_nodegroup.general.help.paragraph'])}
       </Alert>
       <Grid mt={2} container className={classes.container}>
         <Grid item xs={12}>

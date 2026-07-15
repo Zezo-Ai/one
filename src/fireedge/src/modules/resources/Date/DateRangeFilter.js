@@ -18,7 +18,7 @@ import { Component, useState } from 'react'
 import { Box, TextField } from '@mui/material'
 import { DatePicker, LocalizationProvider } from '@mui/lab'
 import { DateTime, Settings } from 'luxon'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 import AdapterLuxon from '@mui/lab/AdapterLuxon'
@@ -54,6 +54,7 @@ export const DateRangeFilter = ({
   onDateChange,
   views,
 }) => {
+  const { translate } = useTranslation()
   // Set language for date picker
   const { settings: fireedge = {} } = useAuth()
   const lang = fireedge?.LANG?.substring(0, 2)
@@ -82,7 +83,7 @@ export const DateRangeFilter = ({
     <Box display="flex" alignItems="center" marginRight={2}>
       <LocalizationProvider dateAdapter={AdapterLuxon} locale={lang}>
         <DatePicker
-          label={Tr(T.StartDate)}
+          label={translate(T.StartDate)}
           value={dateRange.startDate}
           onChange={(date) => handleDateChange('startDate', date)}
           maxDate={dateRange.endDate || today}
@@ -101,7 +102,7 @@ export const DateRangeFilter = ({
       <Box marginLeft={2}>
         <LocalizationProvider dateAdapter={AdapterLuxon} locale={lang}>
           <DatePicker
-            label={Tr(T.EndDate)}
+            label={translate(T.EndDate)}
             value={dateRange.endDate}
             onChange={(date) => handleDateChange('endDate', date)}
             minDate={dateRange.startDate || '1900-01-01'}

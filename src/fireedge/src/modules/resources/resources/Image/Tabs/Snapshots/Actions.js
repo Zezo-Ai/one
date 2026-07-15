@@ -20,10 +20,11 @@ import { Trash, UndoAction } from 'iconoir-react'
 
 import { IMAGE_ACTIONS, T } from '@ConstantsModule'
 import { ImageAPI, useModalsApi } from '@FeaturesModule'
-import { SubmitButton } from '@ComponentsV2Module'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { ResourceActionConfirmation, SubmitButton } from '@ComponentsV2Module'
+import { Translate, useTranslation } from '@ProvidersModule'
 
 const SnapshotFlattenAction = memo(({ id, snapshot, isDisabled = false }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
   const [flattenImageSnapshot] = ImageAPI.useFlattenImageSnapshotMutation()
   const { ID, NAME = T.Snapshot } = snapshot
@@ -39,12 +40,19 @@ const SnapshotFlattenAction = memo(({ id, snapshot, isDisabled = false }) => {
         title: (
           <Translate word={T.FlattenSnapshot} values={`#${ID} - ${NAME}`} />
         ),
-        children: (
-          <>
-            <p>{Tr(T.DeleteOtherSnapshots)}</p>
-            <p>{Tr(T.DoYouWantProceed)}</p>
-          </>
+        description: (
+          <ResourceActionConfirmation
+            description={
+              <>
+                <p>{translate(T.DeleteOtherSnapshots)}</p>
+                <p>{translate(T['resource.flatten.confirmation'])}</p>
+              </>
+            }
+            resources={{ ID, NAME }}
+            resourceType={T.Snapshot}
+          />
         ),
+        confirmLabel: T.Flatten,
       },
       onSubmit: handleFlatten,
     })
@@ -52,8 +60,8 @@ const SnapshotFlattenAction = memo(({ id, snapshot, isDisabled = false }) => {
   return (
     <SubmitButton
       data-cy={IMAGE_ACTIONS.SNAPSHOT_FLATTEN}
-      tooltip={Tr(T.Flatten)}
-      label={Tr(T.Flatten)}
+      tooltip={translate(T.Flatten)}
+      label={translate(T.Flatten)}
       onClick={handleOpenForm}
       isDisabled={isDisabled || id === undefined}
     />
@@ -61,6 +69,7 @@ const SnapshotFlattenAction = memo(({ id, snapshot, isDisabled = false }) => {
 })
 
 const SnapshotRevertAction = memo(({ id, snapshot, isDisabled = false }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
   const [revertImageSnapshot] = ImageAPI.useRevertImageSnapshotMutation()
   const { ID, NAME = T.Snapshot } = snapshot
@@ -76,7 +85,14 @@ const SnapshotRevertAction = memo(({ id, snapshot, isDisabled = false }) => {
         title: (
           <Translate word={T.RevertSomething} values={`#${ID} - ${NAME}`} />
         ),
-        children: <p>{Tr(T.DoYouWantProceed)}</p>,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.revert.confirmation']}
+            resources={{ ID, NAME }}
+            resourceType={T.Snapshot}
+          />
+        ),
+        confirmLabel: T.Revert,
       },
       onSubmit: handleRevert,
     })
@@ -85,7 +101,7 @@ const SnapshotRevertAction = memo(({ id, snapshot, isDisabled = false }) => {
     <SubmitButton
       data-cy={IMAGE_ACTIONS.SNAPSHOT_REVERT}
       iconOnly={<UndoAction width="16px" height="16px" />}
-      tooltip={Tr(T.Revert)}
+      tooltip={translate(T.Revert)}
       onClick={handleOpenForm}
       isDisabled={isDisabled || id === undefined}
     />
@@ -93,6 +109,7 @@ const SnapshotRevertAction = memo(({ id, snapshot, isDisabled = false }) => {
 })
 
 const SnapshotDeleteAction = memo(({ id, snapshot, isDisabled = false }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
   const [deleteImageSnapshot] = ImageAPI.useDeleteImageSnapshotMutation()
   const { ID, NAME = T.Snapshot } = snapshot
@@ -108,7 +125,17 @@ const SnapshotDeleteAction = memo(({ id, snapshot, isDisabled = false }) => {
         title: (
           <Translate word={T.DeleteSomething} values={`#${ID} - ${NAME}`} />
         ),
-        children: <p>{Tr(T.DoYouWantProceed)}</p>,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={{ ID, NAME }}
+            resourceType={T.Snapshot}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: handleDelete,
     })
@@ -117,7 +144,7 @@ const SnapshotDeleteAction = memo(({ id, snapshot, isDisabled = false }) => {
     <SubmitButton
       data-cy={IMAGE_ACTIONS.SNAPSHOT_DELETE}
       iconOnly={<Trash width="16px" height="16px" />}
-      tooltip={Tr(T.Delete)}
+      tooltip={translate(T.Delete)}
       onClick={handleOpenForm}
       isDisabled={isDisabled || id === undefined}
     />

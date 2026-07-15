@@ -22,13 +22,19 @@ import {
   useEffect,
   ReactElement,
   isValidElement,
+  useRef,
 } from 'react'
 import PropTypes from 'prop-types'
 import { BaseSchema } from 'yup'
 import { useForm, FormProvider, useFormContext } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useMediaQuery, Box, Stack } from '@mui/material'
-import { useGeneral, updateDisabledSteps, useGeneralApi } from '@FeaturesModule'
+import {
+  useGeneral,
+  updateDisabledSteps,
+  useGeneralApi,
+  useModalsApi,
+} from '@FeaturesModule'
 import { HelpCircle } from 'iconoir-react'
 import SkeletonStepsForm from '@modules/componentsv2/composed/Forms/FormStepper/Default/skeleton'
 import {
@@ -91,6 +97,7 @@ const DefaultFormStepper = ({
   defaultValues,
   resolver,
   initialValues,
+  saveState = false,
   update = false,
 }) => {
   const methods = useForm({
@@ -114,6 +121,7 @@ const DefaultFormStepper = ({
         schema={resolver}
         onSubmit={onSubmit}
         onCancel={onCancel}
+        saveState={saveState}
         update={update}
       />
     </FormProvider>
@@ -127,10 +135,12 @@ DefaultFormStepper.propTypes = {
   defaultValues: PropTypes.object,
   initialValues: PropTypes.object,
   resolver: PropTypes.func,
+  saveState: PropTypes.bool,
   update: PropTypes.bool,
 }
 
 const DisableStepContext = createContext(() => {})
+const ModifiedFieldsContext = createContext(() => () => {})
 
 /**
  * Hook that can be used to enable/disable steps in the stepper dialog.
@@ -142,6 +152,13 @@ const DisableStepContext = createContext(() => {})
  * disableStep('step1', true); // This will disable 'step1'
  */
 export const useDisableStep = () => useContext(DisableStepContext)
+
+/**
+ * Hook to register a callback that persists modified fields before submitting.
+ *
+ * @returns {Function} Register function from the ModifiedFieldsContext.
+ */
+export const useRegisterModifiedFields = () => useContext(ModifiedFieldsContext)
 
 /**
  * Represents a form with one or more steps.
@@ -173,6 +190,7 @@ const FormStepper = ({
     setFocus,
   } = useFormContext()
   const { setModifiedFields } = useGeneralApi()
+  const { showModal } = useModalsApi()
   const history = useHistory()
   const { isLoading } = useGeneral()
   const [steps, setSteps] = useState(initialSteps)
@@ -180,6 +198,7 @@ const FormStepper = ({
   const [openDocumentation, setOpenDocumentation] = useState(false)
   const dispatch = useDispatch()
   const currentState = useSelector((state) => state)
+  const modifiedFieldsCallbacks = useRef(new Set())
 
   // State to control the status of each step. Object because idx could change when disable steps.
   const [stepStatuses, setStepStatuses] = useState(() =>
@@ -198,8 +217,7 @@ const FormStepper = ({
     }))
   }
 
-  // On cancel go back by default
-  const handleCancel = useCallback(() => {
+  const executeCancel = useCallback(() => {
     if (typeof onCancel === 'function') {
       onCancel()
 
@@ -208,6 +226,23 @@ const FormStepper = ({
 
     history.goBack()
   }, [onCancel, history])
+
+  // On cancel confirm progress loss before leaving the form
+  const handleCancel = useCallback(() => {
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Cancel,
+        description: T['form.cancel.progress.confirmation'],
+        confirmLabel: T.Continue,
+        cancelLabel: T.Cancel,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
+      },
+      onSubmit: executeCancel,
+    })
+  }, [executeCancel, showModal])
 
   // Used to control the default visibility of a step
   useEffect(() => {
@@ -254,6 +289,20 @@ const FormStepper = ({
 
       return newDisabledSteps
     })
+  }, [])
+
+  const registerModifiedFields = useCallback((callback) => {
+    if (typeof callback !== 'function') return () => {}
+
+    modifiedFieldsCallbacks.current.add(callback)
+
+    return () => {
+      modifiedFieldsCallbacks.current.delete(callback)
+    }
+  }, [])
+
+  const flushModifiedFields = useCallback(() => {
+    modifiedFieldsCallbacks.current.forEach((callback) => callback())
   }, [])
 
   useEffect(() => {
@@ -408,6 +457,9 @@ const FormStepper = ({
    */
   const handleNext = async () => {
     try {
+      // Persist the active fields before final validation and schema casting.
+      activeStep === lastStep && flushModifiedFields()
+
       // Update the form data with data from the active step
       const { id, data } = await validateSchema(activeStep)
 
@@ -489,6 +541,9 @@ const FormStepper = ({
    */
   const handleSave = async () => {
     try {
+      // Persist the active fields before validation and schema casting.
+      flushModifiedFields()
+
       // Validate if the origin step is valid, if not, stop
       const { id, data } = await validateSchema(activeStep)
 
@@ -525,81 +580,83 @@ const FormStepper = ({
 
   return (
     <DisableStepContext.Provider value={disableStep}>
-      <Stack sx={(theme) => getStyles({ theme })}>
-        {/* STEPPER */}
-        {useMemo(
-          () => (
-            <Stepper
-              steps={steps}
-              activeStep={activeStep}
-              onClick={handleStep}
-              stepStatuses={stepStatuses}
-              errors={errors}
-            />
-          ),
-          [
-            isLoading,
-            isMobile,
-            activeStep,
-            errors[stepId],
-            steps,
-            valueShowMandatoryOnly,
-          ]
-        )}
-        {/* FORM CONTENT */}
-        {Content && (
-          <Box className="form-stepper-content">
-            <Content
-              data={formData[stepId]}
-              setFormData={setFormData}
-              showMandatoryOnly={valueShowMandatoryOnly}
-            />
-          </Box>
-        )}
-        <Box className="form-footer-buttons">
-          {Documentation && (
-            <Box className="form-help-buttons">
-              <Button
-                data-cy="stepper-help-button"
-                onClick={() => setOpenDocumentation((isOpen) => !isOpen)}
-                type={'transparent'}
-                iconOnly={<HelpCircle />}
+      <ModifiedFieldsContext.Provider value={registerModifiedFields}>
+        <Stack sx={(theme) => getStyles({ theme })}>
+          {/* STEPPER */}
+          {useMemo(
+            () => (
+              <Stepper
+                steps={steps}
+                activeStep={activeStep}
+                onClick={handleStep}
+                stepStatuses={stepStatuses}
+                errors={errors}
+              />
+            ),
+            [
+              isLoading,
+              isMobile,
+              activeStep,
+              errors[stepId],
+              steps,
+              valueShowMandatoryOnly,
+            ]
+          )}
+          {/* FORM CONTENT */}
+          {Content && (
+            <Box className="form-stepper-content">
+              <Content
+                data={formData[stepId]}
+                setFormData={setFormData}
+                showMandatoryOnly={valueShowMandatoryOnly}
               />
             </Box>
           )}
-          <Box className="form-stepper-buttons">
-            <SubmitButton
-              data-cy="stepper-cancel-button"
-              label={T.Cancel}
-              type={'transparent'}
-              onClick={handleCancel}
-            />
-            <Box className="form-stepper-buttons-progress">
-              {canDisplaySave() && (
-                <SubmitButton
-                  data-cy="stepper-save-button"
-                  label={T.Save}
+          <Box className="form-footer-buttons">
+            {Documentation && (
+              <Box className="form-help-buttons">
+                <Button
+                  data-cy="stepper-help-button"
+                  onClick={() => setOpenDocumentation((isOpen) => !isOpen)}
                   type={'transparent'}
-                  onClick={handleSave}
+                  iconOnly={<HelpCircle />}
                 />
-              )}
+              </Box>
+            )}
+            <Box className="form-stepper-buttons">
               <SubmitButton
-                data-cy="stepper-back-button"
-                isDisabled={disabledBack || isLoading}
-                type={'secondary'}
-                onClick={handleBack}
-                label={T.Back}
+                data-cy="stepper-cancel-button"
+                label={T.Cancel}
+                type={'transparent'}
+                onClick={handleCancel}
               />
-              <SubmitButton
-                data-cy="stepper-next-button"
-                isSubmitting={isLoading}
-                onClick={handleNext}
-                label={activeStep === lastStep ? T.Finish : T.Next}
-              />
+              <Box className="form-stepper-buttons-progress">
+                {canDisplaySave() && (
+                  <SubmitButton
+                    data-cy="stepper-save-button"
+                    label={T.Save}
+                    type={'transparent'}
+                    onClick={handleSave}
+                  />
+                )}
+                <SubmitButton
+                  data-cy="stepper-back-button"
+                  isDisabled={disabledBack || isLoading}
+                  type={'secondary'}
+                  onClick={handleBack}
+                  label={T.Back}
+                />
+                <SubmitButton
+                  data-cy="stepper-next-button"
+                  isSubmitting={isLoading}
+                  onClick={handleNext}
+                  label={activeStep === lastStep ? T.Finish : T.Next}
+                />
+              </Box>
             </Box>
           </Box>
-        </Box>
-      </Stack>
+        </Stack>
+      </ModifiedFieldsContext.Provider>
       <DocumentationDrawer
         isOpen={openDocumentation}
         onClose={() => setOpenDocumentation(false)}

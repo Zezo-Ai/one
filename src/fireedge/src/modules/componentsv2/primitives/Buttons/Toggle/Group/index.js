@@ -15,12 +15,21 @@
  * ------------------------------------------------------------------------- */
 
 import { Box, Divider } from '@mui/material'
-import { forwardRef, Component, Fragment } from 'react'
+import {
+  forwardRef,
+  Component,
+  Fragment,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { getStyles } from '@modules/componentsv2/primitives/Buttons/Toggle/Group/styles'
 import PropTypes from 'prop-types'
 import { Toggle } from '@modules/componentsv2/primitives/Buttons/Toggle/Single'
 import { useControllableState } from '@HooksModule'
 import { MenuButton } from '@modules/componentsv2/primitives/Buttons/Menu'
+import { CompactToolbarOverflow } from '@modules/componentsv2/primitives/Buttons/CompactToolbar'
 
 /**
  * @param {object} root0 - Params
@@ -44,16 +53,54 @@ export const ToggleGroup = forwardRef(
     },
     ref
   ) => {
+    const groupRefs = useRef([])
+    const [visibleGroups, setVisibleGroups] = useState(() =>
+      options?.map((group) => !!group?.length)
+    )
     const [selectedValues, setSelectedValues] = useControllableState({
       defaultValue: [],
       onChange,
     })
+
+    const updateVisibleGroups = useCallback(() => {
+      const nextVisibleGroups = options?.map(
+        (_, index) => !!groupRefs.current[index]?.childElementCount
+      )
+
+      setVisibleGroups((current = []) =>
+        current.length === nextVisibleGroups.length &&
+        current.every((value, index) => value === nextVisibleGroups[index])
+          ? current
+          : nextVisibleGroups
+      )
+    }, [options])
+
+    useLayoutEffect(() => {
+      groupRefs.current = groupRefs.current.slice(0, options.length)
+      updateVisibleGroups()
+
+      const observers = groupRefs.current
+        .map((node) => {
+          if (!node) return undefined
+
+          const observer = new MutationObserver(updateVisibleGroups)
+          observer.observe(node, { childList: true })
+
+          return observer
+        })
+        .filter(Boolean)
+
+      return () => observers.forEach((observer) => observer.disconnect())
+    }, [options, updateVisibleGroups])
 
     const handleToggleChange = (toggleValue, isSelected) =>
       setSelectedValues((prev) => [
         ...(isMultipleSelectable ? prev?.filter((v) => v !== toggleValue) : []),
         ...(isSelected ? [toggleValue] : []),
       ])
+
+    const hasVisibleGroupAfter = (groupIdx) =>
+      visibleGroups?.slice(groupIdx + 1)?.some(Boolean)
 
     return (
       <Box
@@ -67,30 +114,48 @@ export const ToggleGroup = forwardRef(
       >
         {options?.map((group, groupIdx) => (
           <Fragment key={groupIdx}>
-            {group?.map((toggle, toggleIdx) => {
-              const { options: menuOptions, ...toggleProps } = toggle ?? {}
+            <Box
+              className="toggle-group-section"
+              ref={(node) => {
+                groupRefs.current[groupIdx] = node
+              }}
+            >
+              {group?.map((toggle, toggleIdx) => {
+                if (toggle?.compactToolbarOverflow) {
+                  return (
+                    <CompactToolbarOverflow
+                      key={toggle.value ?? toggleIdx}
+                      size={size}
+                      isDisabled={toggle.isDisabled}
+                      useToggleTrigger
+                    />
+                  )
+                }
 
-              return menuOptions ? (
-                <MenuButton
-                  key={toggleProps.value ?? toggleIdx}
-                  {...toggleProps}
-                  size={size}
-                  options={menuOptions}
-                  isDisabled={toggleProps.isDisabled}
-                  __useToggleTrigger
-                />
-              ) : (
-                <Toggle
-                  key={toggleIdx}
-                  isSelectable={isSelectable}
-                  {...toggleProps}
-                  size={size}
-                  isSelected={selectedValues?.includes(toggleProps?.value)}
-                  onChange={handleToggleChange}
-                />
-              )
-            })}
-            {options?.length > 1 && groupIdx < options?.length - 1 && (
+                const { options: menuOptions, ...toggleProps } = toggle ?? {}
+
+                return menuOptions ? (
+                  <MenuButton
+                    key={toggleProps.value ?? toggleIdx}
+                    {...toggleProps}
+                    size={size}
+                    options={menuOptions}
+                    isDisabled={toggleProps.isDisabled}
+                    __useToggleTrigger
+                  />
+                ) : (
+                  <Toggle
+                    key={toggleIdx}
+                    isSelectable={isSelectable}
+                    {...toggleProps}
+                    size={size}
+                    isSelected={selectedValues?.includes(toggleProps?.value)}
+                    onChange={handleToggleChange}
+                  />
+                )
+              })}
+            </Box>
+            {visibleGroups?.[groupIdx] && hasVisibleGroupAfter(groupIdx) && (
               <Divider
                 orientation="vertical"
                 flexItem

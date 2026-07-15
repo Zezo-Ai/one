@@ -29,7 +29,8 @@ import clsx from 'clsx'
 
 import { T } from '@ConstantsModule'
 import { SubmitButtonStyles } from '@modules/resources/FormControl/styles/SubmitButtonStyles'
-import { ConditionalWrap, Tr } from '@modules/resources/HOC'
+import { ConditionalWrap } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const ButtonComponent = forwardRef(
   (
@@ -72,6 +73,7 @@ const ButtonComponent = forwardRef(
 )
 
 const TooltipComponent = ({ tooltip, tooltipLink, tooltipprops, children }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => SubmitButtonStyles(theme), [theme])
 
@@ -85,18 +87,18 @@ const TooltipComponent = ({ tooltip, tooltipLink, tooltipprops, children }) => {
           title={
             tooltipLink ? (
               <Typography variant="subtitle2">
-                {Tr(tooltip)}{' '}
+                {translate(tooltip)}{' '}
                 <a
                   className={classes.tooltipLink}
                   target="_blank"
                   href={tooltipLink.link}
                   rel="noreferrer"
                 >
-                  {Tr(tooltipLink.text)}
+                  {translate(tooltipLink.text)}
                 </a>
               </Typography>
             ) : (
-              <Typography variant="subtitle2">{Tr(tooltip)}</Typography>
+              <Typography variant="subtitle2">{translate(tooltip)}</Typography>
             )
           }
           {...tooltipprops}
@@ -112,6 +114,7 @@ const TooltipComponent = ({ tooltip, tooltipLink, tooltipprops, children }) => {
 
 const SubmitButton = memo(
   ({ isSubmitting, disabled, label, icon, loadOnIcon = false, ...props }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
 
     const classes = useMemo(
@@ -155,7 +158,11 @@ const SubmitButton = memo(
             <CircularProgress size={progressSize} />
           )}
           {(!isSubmitting || loadOnIcon) &&
-            (icon ? (labelAndIcon ? Tr(label) : icon) : Tr(label))}
+            (icon
+              ? labelAndIcon
+                ? translate(label)
+                : icon
+              : translate(label))}
         </ButtonComponent>
       </TooltipComponent>
     )

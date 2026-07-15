@@ -21,14 +21,14 @@ import { Component } from 'react'
  * @param {object} root0.dimensions - Checkbox dimensions
  * @returns {Component} - MinusSvg component.
  */
-export const MinusSvg = ({ dimensions, ...opts }) => {
-  const { width, height } = dimensions
+export const MinusSvg = ({ dimensions = {}, ...opts }) => {
+  const { width = 24, height = 24 } = dimensions
 
   return (
     <svg
       width={width}
       height={height}
-      viewBox={`0 0 ${width} ${height}`}
+      viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...opts}
@@ -44,7 +44,10 @@ export const MinusSvg = ({ dimensions, ...opts }) => {
 }
 
 MinusSvg.propTypes = {
-  dimensions: PropTypes.object,
+  dimensions: PropTypes.shape({
+    width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }),
 }
 
 MinusSvg.displayName = 'MinusSvg'

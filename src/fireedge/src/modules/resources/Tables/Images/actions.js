@@ -38,7 +38,7 @@ import {
   PATH,
 } from '@ConstantsModule'
 import { isVmAvailableAction } from '@ModelsModule'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 
 const isDisabled = (action) => (rows) =>
   !isVmAvailableAction(
@@ -79,6 +79,7 @@ const MessageToConfirmAction = (rows) => (
  * @returns {GlobalAction} - Actions
  */
 const Actions = (props = {}) => {
+  const { translate } = useTranslation()
   const { setSelectedRows } = props
   const history = useHistory()
   const { view, getResourceView } = useViews()
@@ -134,7 +135,7 @@ const Actions = (props = {}) => {
                     const { ID, NAME } = rows?.[0]?.original ?? {}
 
                     return [
-                      Tr(
+                      translate(
                         isMultiple ? T.CloneSeveralTemplates : T.CloneTemplate
                       ),
                       !isMultiple && `#${ID} ${NAME}`,
@@ -341,7 +342,7 @@ const Actions = (props = {}) => {
           },
         ],
       }),
-    [view]
+    [view, translate]
   )
 
   return imageActions

@@ -16,12 +16,13 @@
 import { RESOURCE_NAMES, T, VNET_THRESHOLD } from '@ConstantsModule'
 import { VnAPI, useAuth, useViews } from '@FeaturesModule'
 import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   getColorFromString,
   getLeasesInfo,
   getVirtualNetworkState,
 } from '@ModelsModule'
-import { Tr } from '@modules/resources/HOC'
+
 import MultipleTags from '@modules/resources/MultipleTags'
 import {
   LinearProgressWithLabel,
@@ -47,6 +48,7 @@ const DEFAULT_DATA_CY = 'vnets'
  * @returns {ReactElement} Virtual networks table
  */
 const VnsTable = (props) => {
+  const { translate } = useTranslation()
   const { labels = {} } = useAuth()
   const {
     rootProps = {},
@@ -201,7 +203,7 @@ const VnsTable = (props) => {
             high={VNET_THRESHOLD.LEASES.high}
             low={VNET_THRESHOLD.LEASES.low}
             label={percentLabel}
-            title={`${Tr(T.Used)} / ${Tr(T.TotalLeases)}`}
+            title={`${translate(T.Used)} / ${translate(T.TotalLeases)}`}
           />
         )
       },

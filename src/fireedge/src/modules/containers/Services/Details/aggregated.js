@@ -18,22 +18,22 @@ import {
   Button,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   MenuButton,
   ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
-  ToggleGroup,
 } from '@ComponentsV2Module'
 import { Box } from '@mui/material'
 import { Component, useMemo } from 'react'
 import PropTypes from 'prop-types'
+import { Cancel as CloseIcon, RefreshCircular, Trash } from 'iconoir-react'
 import {
-  Cancel as CloseIcon,
-  RefreshCircular,
-  RefreshDouble,
-  Trash,
-} from 'iconoir-react'
-import { SERVICE_TEMPLATE_ACTIONS, STYLE_BUTTONS, T } from '@ConstantsModule'
+  RESOURCE_NAMES,
+  SERVICE_TEMPLATE_ACTIONS,
+  STYLE_BUTTONS,
+  T,
+} from '@ConstantsModule'
 import { ServiceAPI, useModalsApi } from '@FeaturesModule'
 import {
   getServiceState,
@@ -180,7 +180,11 @@ export const AggregatedView = ({
         title: deleteAfterRecover ? T.RecoverDelete : T.RecoverSeveralServices,
         description: (
           <ResourceActionConfirmation
-            description={T.DoYouWantProceed}
+            description={
+              deleteAfterRecover
+                ? T['resource.recoverDelete.confirmation']
+                : T['resource.recover.confirmation']
+            }
             resources={selectedServices}
             resourceType={T.Services}
           />
@@ -217,6 +221,7 @@ export const AggregatedView = ({
     },
     canRecoverDelete && {
       title: T.RecoverDelete,
+      isDestructive: true,
       startIcon: <Trash width="16px" height="16px" />,
       onClick: () => handleRecoverForm(true),
       isDisabled: isMutating,
@@ -246,7 +251,11 @@ export const AggregatedView = ({
                     isDisabled={isMutating}
                   />
                 )}
-
+                <LabelButton
+                  selectedRows={selectedServices}
+                  resourceType={RESOURCE_NAMES.SERVICE}
+                  isDisabled={isMutating}
+                />
                 {canDelete && (
                   <Button
                     type={STYLE_BUTTONS.TYPE.PRIMARY}
@@ -259,28 +268,12 @@ export const AggregatedView = ({
                     {T.DeleteSelected}
                   </Button>
                 )}
-
-                <ToggleGroup
-                  size="medium"
-                  options={[
-                    [
-                      {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isMutating,
-                      },
-                    ],
-                    [
-                      {
-                        startIcon: <CloseIcon width={'16px'} height={'16px'} />,
-                        onClick: handleClose,
-                        value: 'close',
-                        tooltip: T.Close,
-                      },
-                    ],
-                  ]}
+                <Button
+                  type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                  size="small"
+                  iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
+                  tooltip={T.Close}
+                  onClick={handleClose}
                 />
               </Box>
             ),

@@ -267,6 +267,9 @@ const LogsViewer = ({
       sx={{
         display: 'flex',
         flexDirection: 'column',
+        flex: '1 1 0',
+        minHeight: 0,
+        minWidth: 0,
         gap: `${theme.scale[500]}px`,
       }}
     >

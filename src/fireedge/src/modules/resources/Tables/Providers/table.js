@@ -15,7 +15,8 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useEffect, useMemo } from 'react'
 import { Alert, Typography } from '@mui/material'
-import { Translate, Tr } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
+import { timeFromMilliseconds, generateDocLink } from '@UtilsModule'
 import EnhancedTable, {
   createColumns,
 } from '@modules/resources/Tables/Enhanced'
@@ -23,7 +24,7 @@ import WrapperRow from '@modules/resources/Tables/Enhanced/WrapperRow'
 import ProviderColumns from '@modules/resources/Tables/Providers/columns'
 import ProviderRow from '@modules/resources/Tables/Providers/row'
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
-import { timeFromMilliseconds, generateDocLink } from '@UtilsModule'
+
 import { useViews, ProviderAPI, SystemAPI } from '@FeaturesModule'
 import Timer from '@modules/resources/Timer'
 
@@ -34,6 +35,7 @@ const DEFAULT_DATA_CY = 'providers'
  * @returns {ReactElement} Providers table
  */
 const ProvidersTable = (props) => {
+  const { translate } = useTranslation()
   const {
     rootProps = {},
     searchProps = {},
@@ -109,7 +111,7 @@ const ProvidersTable = (props) => {
           <Alert severity="error" variant="outlined">
             <Translate word={T.CannotConnectOneForm} />
             <Typography variant="body2" gutterBottom>
-              {Tr(T['oneform.info.more'])}
+              {translate(T['oneform.info.more'])}
               <a
                 target="_blank"
                 href={generateDocLink(
@@ -118,7 +120,7 @@ const ProvidersTable = (props) => {
                 )}
                 rel="noreferrer"
               >
-                {Tr(T['oneform.info.more.link'])}
+                {translate(T['oneform.info.more.link'])}
               </a>
             </Typography>
           </Alert>

@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { HostsTable, HostTabs, TranslateProvider } from '@ResourcesModule'
+import { PATH } from '@ConstantsModule'
 import { ReactElement } from 'react'
-import { Redirect, useParams } from 'react-router-dom'
+import { Redirect, useHistory, useParams } from 'react-router-dom'
+
+import { SingleView } from '@modules/containers/Hosts/Details/single'
 
 /**
  * Displays the detail information about a Host.
@@ -24,16 +26,17 @@ import { Redirect, useParams } from 'react-router-dom'
  */
 export function HostDetail() {
   const { id } = useParams()
+  const history = useHistory()
 
   if (Number.isNaN(+id)) {
     return <Redirect to="/" />
   }
 
   return (
-    <>
-      <TranslateProvider>
-        <HostTabs id={id} singleActions={HostsTable.Actions} />
-      </TranslateProvider>
-    </>
+    <SingleView
+      isOpen
+      selectedHost={{ ID: id }}
+      handleClose={() => history.push(PATH.INFRASTRUCTURE.HOSTS.LIST)}
+    />
   )
 }

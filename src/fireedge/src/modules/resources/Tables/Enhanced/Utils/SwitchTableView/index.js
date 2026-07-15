@@ -19,7 +19,7 @@ import { useGeneral, useGeneralApi } from '@FeaturesModule'
 import { Stack, useTheme, Button } from '@mui/material'
 import SwitchTableViewStyles from '@modules/resources/Tables/Enhanced/Utils/SwitchTableView/styles'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import clsx from 'clsx'
 import { Check } from 'iconoir-react'
@@ -30,6 +30,7 @@ import { Check } from 'iconoir-react'
  * @returns {ReactElement} The switch table view button
  */
 const SwitchTableView = () => {
+  const { translate } = useTranslation()
   // Get theme and classes
   const theme = useTheme()
   const classes = useMemo(() => SwitchTableViewStyles(theme), [theme])
@@ -50,7 +51,7 @@ const SwitchTableView = () => {
           {tableViewMode === TABLE_VIEW_MODE.CARD && (
             <Check className={classes.logo} />
           )}
-          <span className={classes.buttonText}>{Tr(T.CardView)}</span>
+          <span className={classes.buttonText}>{translate(T.CardView)}</span>
         </Stack>
       </Button>
       <Button
@@ -63,7 +64,7 @@ const SwitchTableView = () => {
           {tableViewMode === TABLE_VIEW_MODE.LIST && (
             <Check className={classes.logo} />
           )}
-          <span className={classes.buttonText}>{Tr(T.ListView)}</span>
+          <span className={classes.buttonText}>{translate(T.ListView)}</span>
         </Stack>
       </Button>
     </Stack>

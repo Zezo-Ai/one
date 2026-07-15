@@ -60,7 +60,7 @@ const ROLE_ACTION_SCHEMA = object(getValidationFromFields(ROLE_ACTION_FIELDS))
  */
 const getRoleActionDescription = (resources) => (
   <ResourceActionConfirmation
-    description={T.DoYouWantProceed}
+    description={T['resource.action.confirmation']}
     resources={resources}
     resourceType={T.Roles}
   />

@@ -29,7 +29,7 @@ import {
 } from '@FeaturesModule'
 
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   validateResourceId,
   validateValue,
@@ -48,10 +48,17 @@ import { Dropdown, SubmitButton, Tooltip } from '@ComponentsV2Module'
 
 import { mapValues, map } from 'lodash'
 
+const getOptionDataCy = ({ displayName, id, type }) =>
+  String(type ?? displayName ?? id ?? '')
+    .toLowerCase()
+    .split(' ')
+    .join('')
+
 const toDropdownOptions = (items = []) =>
   items.map(({ displayName, id, title, type }) => ({
     text: displayName ?? title,
     value: id ?? type,
+    dataCy: getOptionDataCy({ displayName, id, type }),
   }))
 
 const getSelectedOption = (options, value) =>
@@ -80,6 +87,7 @@ export const QuotaControls = memo(
     nameMaps,
     groups,
   }) => {
+    const { translate } = useTranslation()
     const [getClusters] = ClusterAPI.useLazyGetClustersQuery()
     const [getDatastores] = DatastoreAPI.useLazyGetDatastoresQuery()
     const [getImages] = ImageAPI.useLazyGetImagesQuery()
@@ -116,7 +124,7 @@ export const QuotaControls = memo(
     const extendedQuotaIdentifiers = mapValues(quotaIdentifiers, (quotaArray) =>
       map(quotaArray, (quota) => ({
         ...quota,
-        displayName: Tr(quota.displayName),
+        displayName: translate(quota.displayName),
       }))
     )
 
@@ -289,9 +297,10 @@ export const QuotaControls = memo(
             overflow: 'visible',
           }}
         >
-          <Box data-cy="qc-type-selector">
+          <Box>
             <Dropdown
-              label={Tr(T.Type)}
+              dataCy="qc-type-selector"
+              label={translate(T.Type)}
               initialValue={selectedQuotaType}
               options={quotaTypeOptions}
               onChange={(option) => setSelectedType(option?.value ?? '')}
@@ -308,9 +317,10 @@ export const QuotaControls = memo(
             nameMaps={nameMaps}
           />
 
-          <Box data-cy="qc-identifier-selector">
+          <Box>
             <Dropdown
-              label={Tr(T.Identifier)}
+              dataCy="qc-identifier-selector"
+              label={translate(T.Identifier)}
               initialValue={selectedIdentifier}
               options={identifierOptions}
               onChange={(option) => {
@@ -370,26 +380,26 @@ export const QuotaControls = memo(
             }}
           >
             <Typography component="strong" sx={{ fontWeight: 600 }}>
-              {Tr(T.QuotaHelpTitle)}:
+              {translate(T.QuotaHelpTitle)}:
             </Typography>
             <ul>
-              <li>{Tr(T.QuotaHelpStep1)}</li>
+              <li>{translate(T.QuotaHelpStep1)}</li>
               <li>
-                <Tooltip title={Tr(T.QuotaHelpStep2Tooltip)}>
+                <Tooltip title={translate(T.QuotaHelpStep2Tooltip)}>
                   <Box component="span" sx={{ textDecoration: 'underline' }}>
-                    {Tr(T.QuotaHelpStep2)}
+                    {translate(T.QuotaHelpStep2)}
                   </Box>
                 </Tooltip>
               </li>
               <li>
-                <Tooltip title={Tr(T.QuotaHelpStep3Tooltip)}>
+                <Tooltip title={translate(T.QuotaHelpStep3Tooltip)}>
                   <Box component="span" sx={{ textDecoration: 'underline' }}>
-                    {Tr(T.QuotaHelpStep3)}
+                    {translate(T.QuotaHelpStep3)}
                   </Box>
                 </Tooltip>
               </li>
-              <li>{Tr(T.QuotaHelpStep4)}</li>
-              <li>{Tr(T.QuotaHelpStep5)}</li>
+              <li>{translate(T.QuotaHelpStep4)}</li>
+              <li>{translate(T.QuotaHelpStep5)}</li>
             </ul>
           </Box>
         </Box>

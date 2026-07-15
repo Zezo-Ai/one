@@ -106,6 +106,35 @@ const orderFieldsByType = (fields = [], type = AR_TYPES.IP4) => {
   ]
 }
 
+const getReadOnlyField = (field = {}) => ({
+  ...field,
+  readOnly: true,
+  fieldProps: {
+    ...field.fieldProps,
+    disabled: true,
+    isDisabled: true,
+  },
+})
+
+const isDisabledField = (field = {}) =>
+  field.readOnly || field.fieldProps?.disabled || field.fieldProps?.isDisabled
+
+const getUpdateFields = (fields = [], mutableFields = []) => {
+  const mutableFieldByName = new Map(
+    mutableFields.map((field) => [field.name, field])
+  )
+
+  return fields.map((field) => {
+    const mutableField = mutableFieldByName.get(field.name)
+
+    if (!mutableField) return getReadOnlyField(field)
+
+    return isDisabledField(mutableField)
+      ? getReadOnlyField(mutableField)
+      : mutableField
+  })
+}
+
 /**
  * @param {object} props - Props
  * @param {boolean} [props.isUpdate] - Is `true` the form will be filter immutable attributes
@@ -120,13 +149,15 @@ const Content = ({ isUpdate, hasLease, oneConfig, adminGroup }) => {
   const addressRangeType = useWatch({ name: 'TYPE' })
 
   const fields = useMemo(() => {
+    const allFields = FIELDS(oneConfig, adminGroup)
     const formFields = isUpdate
-      ? MUTABLE_FIELDS(oneConfig, adminGroup, isUpdate, hasLease)
-      : FIELDS(oneConfig, adminGroup)
+      ? getUpdateFields(
+          allFields,
+          MUTABLE_FIELDS(oneConfig, adminGroup, isUpdate, hasLease)
+        )
+      : allFields
 
-    return isUpdate
-      ? formFields
-      : orderFieldsByType(formFields, addressRangeType ?? AR_TYPES.IP4)
+    return orderFieldsByType(formFields, addressRangeType ?? AR_TYPES.IP4)
   }, [addressRangeType, adminGroup, hasLease, isUpdate, oneConfig])
 
   const handleChangeAttribute = useCallback(

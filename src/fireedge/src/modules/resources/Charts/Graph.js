@@ -21,7 +21,7 @@ import { wheelZoomPlugin } from '@modules/resources/Charts/Plugins'
 import { CircularProgress, Stack, useTheme, Typography } from '@mui/material'
 import { Component, useEffect, useMemo, useRef, useState } from 'react'
 import UplotReact from 'uplot-react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const calculateDerivative = (data, filter) =>
@@ -163,6 +163,7 @@ const Graph = ({
   showLegends = true,
   isFetching = false,
 }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
 
   const chartRef = useRef(null)
@@ -401,7 +402,7 @@ const Graph = ({
       ) : !data?.length ? (
         <Stack direction="row" justifyContent="center" alignItems="center">
           <Typography sx={{ color: 'text.headings' }}>
-            {Tr(T.NoDataAvailable)}
+            {translate(T.NoDataAvailable)}
           </Typography>
         </Stack>
       ) : (

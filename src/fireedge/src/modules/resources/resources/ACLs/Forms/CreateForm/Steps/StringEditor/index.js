@@ -20,7 +20,7 @@ import { css } from '@emotion/css'
 import { FormWithSchema } from '@ComponentsV2Module'
 import { T } from '@ConstantsModule'
 import { SCHEMA, FIELDS } from './schema'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   ACLRulePreview,
   ACLStringRuleDocumentation,
@@ -33,6 +33,7 @@ import { validACL } from '@ModelsModule'
 export const STEP_ID = 'stringEditor'
 
 const Content = (users, groups, clusters, zones) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const [ruleString, setRuleString] = useState('')
 
@@ -88,7 +89,7 @@ const Content = (users, groups, clusters, zones) => {
             variant="outlined"
             className={classes.groupInfo}
           >
-            {Tr(T['acls.translate.error'])}
+            {translate(T['acls.translate.error'])}
           </Alert>
         )}
         <FormWithSchema id={STEP_ID} cy={`${STEP_ID}`} fields={FIELDS} />

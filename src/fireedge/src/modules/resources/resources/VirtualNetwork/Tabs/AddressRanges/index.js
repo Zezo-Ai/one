@@ -175,7 +175,6 @@ export const AddressRanges = ({ data, config }) => {
 
         return (
           <ProgressBar
-            size="small"
             value={percentOfUsed}
             label={percentLabel}
             isLabelVisible
@@ -206,6 +205,7 @@ export const AddressRanges = ({ data, config }) => {
                   },
                   {
                     title: T.Delete,
+                    isDestructive: true,
                     isDisabled: !canDeleteAddressRange || areRowActionsDisabled,
                     onClick: () =>
                       handleDeleteAddressRangeForm(addressRange, index),
@@ -279,8 +279,11 @@ export const AddressRanges = ({ data, config }) => {
             resourceType={T.AddressRanges}
           />
         ),
-        confirmLabel: T.Accept,
+        confirmLabel: T.Delete,
         cancelLabel: T.Cancel,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: () => handleDeleteAddressRange(addressRange),
     })

@@ -21,7 +21,8 @@ import { Group, Lock, User } from 'iconoir-react'
 
 import { useAuth } from '@FeaturesModule'
 import { getResourceLabels, isExternalURL } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
+
 import Image from '@modules/resources/Image'
 import MultipleTags from '@modules/resources/MultipleTagsCard'
 import { StatusChip } from '@modules/resources/Status'
@@ -51,6 +52,7 @@ const VmTemplateCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ template, rootProps, onClickLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels } = useAuth()
@@ -149,11 +151,11 @@ const VmTemplateCard = memo(
             <span title={time.toFormat('ff')}>
               <Timer translateWord={T.RegisteredAt} initial={time} />
             </span>
-            <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+            <span title={`${translate(T.Owner)}: ${UNAME}`}>
               <User />
               <span>{` ${UNAME}`}</span>
             </span>
-            <span title={`${Tr(T.Group)}: ${GNAME}`}>
+            <span title={`${translate(T.Group)}: ${GNAME}`}>
               <Group />
               <span>{` ${GNAME}`}</span>
             </span>

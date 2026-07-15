@@ -24,6 +24,7 @@ import {
 } from '@mui/material'
 import { NavArrowDown as ExpandIcon } from 'iconoir-react'
 import { getStyles } from '@modules/componentsv2/primitives/Accordion/Default/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} params - Params
@@ -33,6 +34,7 @@ import { getStyles } from '@modules/componentsv2/primitives/Accordion/Default/st
  */
 export const Accordion = forwardRef(
   ({ options = [], isMultipleExpandable = false, ...opts }, ref) => {
+    const { translate } = useTranslation()
     const [expanded, setExpanded] = useState([])
 
     return (
@@ -65,12 +67,14 @@ export const Accordion = forwardRef(
                 expandIcon={<ExpandIcon />}
               >
                 <Typography className="accordion-title" component="div">
-                  {title}
+                  {typeof title === 'string' ? translate(title) : title}
                 </Typography>
               </AccordionSummary>
               <AccordionDetails className="accordion-details">
                 <Typography className="accordion-description" component="div">
-                  {description}
+                  {typeof description === 'string'
+                    ? translate(description)
+                    : description}
                 </Typography>
               </AccordionDetails>
             </MUIAccordion>

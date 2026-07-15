@@ -56,6 +56,7 @@ const Content = () => {
   return (
     <Box display="grid" gap="1em" sx={{ pt: 3 }}>
       <AttributesPanel
+        dataCy="custom-variables"
         title={T.Attributes}
         actions={{ add: true, edit: true, delete: true, copy: true }}
         attributes={customVars}

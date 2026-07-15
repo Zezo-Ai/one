@@ -53,10 +53,14 @@ const parsePercentValue = (value) => {
 const formatPercentValue = (value) => `${value}${PERCENT_UNIT}`
 
 const OvercommitmentValue = ({
+  acceptDataCy,
+  cancelDataCy,
   canEdit,
   currentValue,
   dataCy,
+  editDataCy,
   handleEdit,
+  inputDataCy,
   name,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
@@ -123,6 +127,7 @@ const OvercommitmentValue = ({
               max: OVERCOMMITMENT_MAX,
               step: 1,
               'aria-label': name,
+              'data-cy': inputDataCy,
             }}
           />
         </Box>
@@ -138,6 +143,7 @@ const OvercommitmentValue = ({
                 onClick: handleAccept,
                 tooltip: T.Accept,
                 value: 'accept',
+                'data-cy': acceptDataCy,
                 sx: OVERCOMMITMENT_ACTION_SX,
               },
               {
@@ -145,6 +151,7 @@ const OvercommitmentValue = ({
                 onClick: () => setIsEditing(false),
                 tooltip: T.Cancel,
                 value: 'cancel',
+                'data-cy': cancelDataCy,
                 sx: OVERCOMMITMENT_ACTION_SX,
               },
             ],
@@ -172,6 +179,7 @@ const OvercommitmentValue = ({
                 onClick: handleActiveEditForm,
                 tooltip: T.Edit,
                 value: 'edit',
+                'data-cy': editDataCy,
                 sx: OVERCOMMITMENT_ACTION_SX,
               },
             ],
@@ -183,10 +191,14 @@ const OvercommitmentValue = ({
 }
 
 OvercommitmentValue.propTypes = {
+  acceptDataCy: PropTypes.string,
+  cancelDataCy: PropTypes.string,
   canEdit: PropTypes.bool,
   currentValue: PropTypes.string,
   dataCy: PropTypes.string,
+  editDataCy: PropTypes.string,
   handleEdit: PropTypes.func,
+  inputDataCy: PropTypes.string,
   name: PropTypes.string,
 }
 
@@ -319,6 +331,10 @@ export const Info = ({ data, config }) => {
       canEdit: overcommitmentPanel?.actions?.update_cpu === true && !isDisabled,
       currentValue: RESERVED_CPU,
       dataCy: 'allocated-cpu',
+      editDataCy: 'edit-allocatedCpu',
+      inputDataCy: 'text-allocatedCpu',
+      acceptDataCy: 'accept-allocatedCpu',
+      cancelDataCy: 'cancel-allocatedCpu',
       handleEdit: handleOvercommitmentCPU,
       name: T.ReservedCpu,
     },
@@ -327,6 +343,10 @@ export const Info = ({ data, config }) => {
         overcommitmentPanel?.actions?.update_memory === true && !isDisabled,
       currentValue: RESERVED_MEM,
       dataCy: 'allocated-memory',
+      editDataCy: 'edit-allocatedMemory',
+      inputDataCy: 'text-allocatedMemory',
+      acceptDataCy: 'accept-allocatedMemory',
+      cancelDataCy: 'cancel-allocatedMemory',
       handleEdit: handleOvercommitmentMemory,
       name: T.ReservedMemory,
     },

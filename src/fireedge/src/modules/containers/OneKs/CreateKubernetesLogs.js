@@ -15,7 +15,7 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useEffect, useState, useMemo } from 'react'
 import { Redirect, useParams, useLocation } from 'react-router-dom'
-import { TranslateProvider } from '@ResourcesModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   SkeletonStepsForm,
   SubmitButton,
@@ -36,7 +36,6 @@ import {
 import { last, filter, find } from 'lodash'
 import { getOneKsProgress, getVirtualOneKsState } from '@ModelsModule'
 import { useHistory } from 'react-router'
-import { Tr } from '@ProvidersModule'
 
 /**
  * Displays the creation form for a cluster.
@@ -44,6 +43,7 @@ import { Tr } from '@ProvidersModule'
  * @returns {ReactElement} - The Kubernetes logs component
  */
 export function CreateKubernetesLogs() {
+  const { translate } = useTranslation()
   // Get history to redirect to back to clusters
   const history = useHistory()
 
@@ -118,12 +118,12 @@ export function CreateKubernetesLogs() {
 
   // Translations
   const translations = {
-    description: Tr(T['oneks.logs.create.logs']),
-    operation: Tr(T[operationText], [document?.NAME]),
+    description: translate(T['oneks.logs.create.logs']),
+    operation: translate(T[operationText], [document?.NAME]),
   }
 
   return logsData ? (
-    <TranslateProvider>
+    <>
       <Stack
         direction="column"
         sx={{ flex: '1 1 auto', minHeight: 0, minWidth: 0 }}
@@ -170,7 +170,7 @@ export function CreateKubernetesLogs() {
               sx={{ color: 'text.action' }}
             />
           )}
-          <ProgressBar size="medium" value={progress} />
+          <ProgressBar value={progress} />
         </Stack>
         <Box
           sx={{
@@ -195,7 +195,7 @@ export function CreateKubernetesLogs() {
           />
         </Box>
       </Stack>
-    </TranslateProvider>
+    </>
   ) : (
     <SkeletonStepsForm />
   )

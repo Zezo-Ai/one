@@ -23,7 +23,7 @@ import {
   exportDataToPDF,
 } from '@modules/resources/Charts/MultiChart/helpers/scripts'
 import { useGeneralApi } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -36,6 +36,7 @@ import { T } from '@ConstantsModule'
  * @returns {object} The rendered export button component.
  */
 export const ExportButton = ({ data, exportOptions, exportHandlers }) => {
+  const { translate } = useTranslation()
   const [anchorEl, setAnchorEl] = useState(null)
   const { enqueueError } = useGeneralApi()
 
@@ -67,7 +68,7 @@ export const ExportButton = ({ data, exportOptions, exportHandlers }) => {
         onClick={handleMenuOpen}
         isDisabled={noData}
       >
-        {Tr(T.Export)}
+        {translate(T.Export)}
       </Button>
       <Menu
         anchorEl={anchorEl}
@@ -77,7 +78,7 @@ export const ExportButton = ({ data, exportOptions, exportHandlers }) => {
       >
         {exportOptions.map((option) => (
           <MenuItem key={option.type} onClick={() => handleExport(option.type)}>
-            {Tr(option.label)}
+            {translate(option.label)}
           </MenuItem>
         ))}
       </Menu>

@@ -14,11 +14,12 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Alert, Box, Link, Stack } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { generateDocLink } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { T, ACL_TYPE_ID, ACL_RESOURCES } from '@ConstantsModule'
 import { useWatch } from 'react-hook-form'
 import { createStringACL, translateACL } from '@ModelsModule'
-import { generateDocLink } from '@UtilsModule'
+
 import PropTypes from 'prop-types'
 
 const ACL_DOC_LINK =
@@ -52,6 +53,7 @@ const getACLRuleString = (values = {}) =>
  * @returns {*} ACL rule preview
  */
 const ACLRulePreview = ({ users, groups, clusters, zones, rule }) => {
+  const { translate } = useTranslation()
   const values = useWatch()
   const ruleString = rule ?? getACLRuleString(values)
 
@@ -59,7 +61,7 @@ const ACLRulePreview = ({ users, groups, clusters, zones, rule }) => {
     <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
       <Stack gap="1em">
         <Box>
-          {Tr(T['acls.form.create.summary.info.rule'])}
+          {translate(T['acls.form.create.summary.info.rule'])}
           <Box
             component="strong"
             data-cy="ruleString"
@@ -69,7 +71,7 @@ const ACLRulePreview = ({ users, groups, clusters, zones, rule }) => {
           </Box>
         </Box>
         <Box>
-          {Tr(T['acls.form.create.summary.info.translation'])}
+          {translate(T['acls.form.create.summary.info.translation'])}
           <Box component="strong" sx={{ display: 'inline' }}>
             {translateACL(ruleString, users, groups, clusters, zones)}
           </Box>
@@ -87,16 +89,20 @@ ACLRulePreview.propTypes = {
   rule: PropTypes.string,
 }
 
-const DocumentationLink = ({ version }) => (
-  <Link
-    target="_blank"
-    href={generateDocLink(version, ACL_DOC_LINK)}
-    rel="noreferrer"
-    underline="hover"
-  >
-    {Tr(T['acls.form.create.stringEditor.info.more.link'])}
-  </Link>
-)
+const DocumentationLink = ({ version }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Link
+      target="_blank"
+      href={generateDocLink(version, ACL_DOC_LINK)}
+      rel="noreferrer"
+      underline="hover"
+    >
+      {translate(T['acls.form.create.stringEditor.info.more.link'])}
+    </Link>
+  )
+}
 
 DocumentationLink.propTypes = {
   version: PropTypes.string,
@@ -110,15 +116,19 @@ DocumentationLink.propTypes = {
  * @param {string} props.version - ONE version
  * @returns {*} ACL documentation content
  */
-const ACLDocumentation = ({ text, version }) => (
-  <Stack gap="1em">
-    <Box>{Tr(text)}</Box>
-    <Box>
-      {Tr(T['acls.form.create.stringEditor.info.more'])}
-      <DocumentationLink version={version} />
-    </Box>
-  </Stack>
-)
+const ACLDocumentation = ({ text, version }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Stack gap="1em">
+      <Box>{translate(text)}</Box>
+      <Box>
+        {translate(T['acls.form.create.stringEditor.info.more'])}
+        <DocumentationLink version={version} />
+      </Box>
+    </Stack>
+  )
+}
 
 ACLDocumentation.propTypes = {
   text: PropTypes.string,
@@ -132,14 +142,18 @@ ACLDocumentation.propTypes = {
  * @param {string} props.version - ONE version
  * @returns {*} ACL summary documentation content
  */
-const ACLSummaryDocumentation = ({ version }) => (
-  <Stack gap="1em">
-    <Box>
-      {Tr(T['acls.form.create.stringEditor.info.more'])}
-      <DocumentationLink version={version} />
-    </Box>
-  </Stack>
-)
+const ACLSummaryDocumentation = ({ version }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Stack gap="1em">
+      <Box>
+        {translate(T['acls.form.create.stringEditor.info.more'])}
+        <DocumentationLink version={version} />
+      </Box>
+    </Stack>
+  )
+}
 
 ACLSummaryDocumentation.propTypes = {
   version: PropTypes.string,
@@ -152,41 +166,45 @@ ACLSummaryDocumentation.propTypes = {
  * @param {string} props.version - ONE version
  * @returns {*} ACL string editor documentation content
  */
-const ACLStringRuleDocumentation = ({ version }) => (
-  <Stack gap="1em">
-    <Box>{Tr(T['acls.form.create.stringEditor.info'])}</Box>
-    <Box component="ul" sx={{ my: 0, pl: 4 }}>
-      <li>
-        <Box component="strong">
-          {Tr(T['acls.form.create.stringEditor.info.user.title'])}
-        </Box>
-        {Tr(T['acls.form.create.stringEditor.info.user.info'])}
-      </li>
-      <li>
-        <Box component="strong">
-          {Tr(T['acls.form.create.stringEditor.info.resource.title'])}
-        </Box>
-        {Tr(T['acls.form.create.stringEditor.info.resource.info'])}
-      </li>
-      <li>
-        <Box component="strong">
-          {Tr(T['acls.form.create.stringEditor.info.rights.title'])}
-        </Box>
-        {Tr(T['acls.form.create.stringEditor.info.rights.info'])}
-      </li>
-      <li>
-        <Box component="strong">
-          {Tr(T['acls.form.create.stringEditor.info.zone.title'])}
-        </Box>
-        {Tr(T['acls.form.create.stringEditor.info.zone.info'])}
-      </li>
-    </Box>
-    <Box>
-      {Tr(T['acls.form.create.stringEditor.info.more'])}
-      <DocumentationLink version={version} />
-    </Box>
-  </Stack>
-)
+const ACLStringRuleDocumentation = ({ version }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Stack gap="1em">
+      <Box>{translate(T['acls.form.create.stringEditor.info'])}</Box>
+      <Box component="ul" sx={{ my: 0, pl: 4 }}>
+        <li>
+          <Box component="strong">
+            {translate(T['acls.form.create.stringEditor.info.user.title'])}
+          </Box>
+          {translate(T['acls.form.create.stringEditor.info.user.info'])}
+        </li>
+        <li>
+          <Box component="strong">
+            {translate(T['acls.form.create.stringEditor.info.resource.title'])}
+          </Box>
+          {translate(T['acls.form.create.stringEditor.info.resource.info'])}
+        </li>
+        <li>
+          <Box component="strong">
+            {translate(T['acls.form.create.stringEditor.info.rights.title'])}
+          </Box>
+          {translate(T['acls.form.create.stringEditor.info.rights.info'])}
+        </li>
+        <li>
+          <Box component="strong">
+            {translate(T['acls.form.create.stringEditor.info.zone.title'])}
+          </Box>
+          {translate(T['acls.form.create.stringEditor.info.zone.info'])}
+        </li>
+      </Box>
+      <Box>
+        {translate(T['acls.form.create.stringEditor.info.more'])}
+        <DocumentationLink version={version} />
+      </Box>
+    </Stack>
+  )
+}
 
 ACLStringRuleDocumentation.propTypes = {
   version: PropTypes.string,

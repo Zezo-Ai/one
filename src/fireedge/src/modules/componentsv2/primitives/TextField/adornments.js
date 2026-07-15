@@ -29,7 +29,7 @@ export const adornments = ({ startIcon, endIcon, preTab, postTab }) => ({
   ...((startIcon || preTab) && {
     startAdornment: (
       <InputAdornment className="textfield-adornment-start" position="start">
-        {renderIcon(startIcon)}
+        {renderIcon(startIcon, { key: 'start-icon' })}
         {preTab && (
           <Typography className="textfield-prettab">{preTab}</Typography>
         )}
@@ -43,7 +43,7 @@ export const adornments = ({ startIcon, endIcon, preTab, postTab }) => ({
         {postTab && (
           <Typography className="textfield-posttab">{postTab}</Typography>
         )}
-        {renderIcon(endIcon)}
+        {renderIcon(endIcon, { key: 'end-icon' })}
       </InputAdornment>
     ),
   }),

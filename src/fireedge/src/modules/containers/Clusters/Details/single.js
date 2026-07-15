@@ -16,7 +16,9 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
   ToggleGroup,
@@ -50,6 +52,7 @@ import { getActionsAvailable, getTotalOfResources } from '@UtilsModule'
 import PropTypes from 'prop-types'
 import { generatePath, useHistory } from 'react-router'
 import { Cluster } from '@ResourcesModule'
+import { getLabelTags } from '@ModelsModule'
 
 /**
  * @param {object} root0 - Params
@@ -108,7 +111,14 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: T.Deprovision,
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.deprovision.confirmation']}
+            resources={cluster}
+            resourceType={T.Clusters}
+          />
+        ),
+        confirmLabel: T.Deprovision,
       },
       onSubmit: async () => {
         await deprovision({ id: TEMPLATE?.ONEFORM?.PROVISION_ID })
@@ -122,7 +132,14 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: T.Retry,
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.retry.confirmation']}
+            resources={cluster}
+            resourceType={T.Clusters}
+          />
+        ),
+        confirmLabel: T.Retry,
       },
       onSubmit: async () => {
         await retryProvision({ id: TEMPLATE?.ONEFORM?.PROVISION_ID }).unwrap()
@@ -143,7 +160,18 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.Cluster}`,
-        description: T.DoYouWantProceed,
+        dataCy: 'modal-delete',
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={cluster}
+            resourceType={T.Clusters}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         const deleteProvisionId = TEMPLATE?.ONEFORM?.PROVISION_ID
@@ -200,6 +228,7 @@ export const SingleView = ({
             isTitleEditDisabled: !canRename || isActionsDisabled,
             title: NAME,
             id: ID,
+            tags: getLabelTags(cluster?.LABELS),
             Toolbar: () => (
               <Box
                 sx={(theme) => ({
@@ -211,22 +240,6 @@ export const SingleView = ({
                 <ToggleGroup
                   size="medium"
                   options={[
-                    [
-                      {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isActionsDisabled,
-                      },
-                      {
-                        startIcon: <Edit width="16px" height="16px" />,
-                        onClick: handleEdit,
-                        value: 'edit',
-                        tooltip: T.Update,
-                        isDisabled: !canUpdate || isActionsDisabled,
-                      },
-                    ],
                     [
                       canDeprovision && {
                         startIcon: <CloudDesync width="16px" height="16px" />,
@@ -245,6 +258,30 @@ export const SingleView = ({
                     ].filter(Boolean),
                     [
                       {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [cluster],
+                          resourceType: RESOURCE_NAMES.CLUSTER,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
+                      {
+                        startIcon: <Edit width="16px" height="16px" />,
+                        onClick: handleEdit,
+                        value: 'edit',
+                        'data-cy': 'action-update_dialog',
+                        tooltip: T.Update,
+                        isDisabled: !canUpdate || isActionsDisabled,
+                      },
+                      {
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: handleRefresh,
+                        value: 'refresh',
+                        tooltip: T.Refresh,
+                        isDisabled: isActionsDisabled,
+                      },
+                    ],
+                    [
+                      {
                         startIcon: (
                           <Trash
                             width="16px"
@@ -259,7 +296,9 @@ export const SingleView = ({
                         ),
                         onClick: handleOpenDeleteForm,
                         value: 'delete',
+                        'data-cy': 'action-cluster_delete',
                         tooltip: T.Delete,
+                        isDestructive: true,
                         isDisabled: !canDelete || isActionsDisabled,
                       },
                       {

@@ -18,14 +18,16 @@ import PropTypes from 'prop-types'
 import { SCHEMA } from './schema'
 import { useTheme, Alert, Grid, Stack, Typography } from '@mui/material'
 import { useMemo } from 'react'
-import { Tr } from '@modules/resources/HOC'
 import { sanitizeAllowingTarget } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+
 import { useFormContext, useController } from 'react-hook-form'
 import { getStyles } from '@modules/resources/resources/Cluster/Forms/CreateCloudForm/Steps/Deployments/styles'
 
 export const STEP_ID = 'deployments'
 
 const Content = ({ providers, groupedDrivers }) => {
+  const { translate } = useTranslation()
   // Access to the form
   const { control, watch } = useFormContext()
 
@@ -63,12 +65,12 @@ const Content = ({ providers, groupedDrivers }) => {
           spacing={1}
           justifyContent="space-between"
         >
-          <div>{Tr(T['oneform.deploymentConf.info'])}</div>
+          <div>{translate(T['oneform.deploymentConf.info'])}</div>
         </Stack>
       </Alert>
       {error && (
         <Alert severity="error" variant="outlined" sx={styles.groupInfo}>
-          {Tr(T['oneform.deploymentConf.error'])}
+          {translate(T['oneform.deploymentConf.error'])}
         </Alert>
       )}
       <Grid container spacing={2} sx={styles.container}>

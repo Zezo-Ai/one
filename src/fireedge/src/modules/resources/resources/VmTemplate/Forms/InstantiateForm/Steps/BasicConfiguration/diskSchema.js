@@ -17,11 +17,11 @@
 import { object, array, number } from 'yup'
 
 import { StatusCircle, StatusChip } from '@modules/resources/Status'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+import { Field, stringToBoolean } from '@UtilsModule'
 
 import { getState } from '@ModelsModule'
 import { T, INPUT_TYPES } from '@ConstantsModule'
-import { Field, stringToBoolean } from '@UtilsModule'
 
 export const PARENT = 'DISK'
 

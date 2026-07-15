@@ -16,7 +16,7 @@
 
 import PropTypes from 'prop-types'
 import { T } from '@ConstantsModule'
-import { Tr } from '@ProvidersModule'
+import { useTranslation } from '@ProvidersModule'
 import { SCHEMA, FIELDS } from './schema'
 import { FormWithSchema } from '@ComponentsV2Module'
 import { useFormContext } from 'react-hook-form'
@@ -27,6 +27,7 @@ import { useMemo } from 'react'
 export const STEP_ID = 'vntemplates'
 
 const Content = () => {
+  const { translate } = useTranslation()
   const theme = useTheme()
 
   // Style for info message
@@ -48,7 +49,7 @@ const Content = () => {
     return (
       <>
         <Alert severity="info" variant="outlined" className={classes.groupInfo}>
-          {Tr(T['groups.actions.vlan-rule.hint'])}
+          {translate(T['groups.actions.vlan-rule.hint'])}
         </Alert>
       </>
     )

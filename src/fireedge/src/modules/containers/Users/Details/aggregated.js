@@ -19,16 +19,16 @@ import {
   InfoSlot,
   SummarySlot,
   TabSlot,
-  ToggleGroup,
   ButtonGroup,
   Button,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
-import { T, STYLE_BUTTONS } from '@ConstantsModule'
+import { T, STYLE_BUTTONS, USER_ACTIONS } from '@ConstantsModule'
 import { UserAPI, useModalsApi } from '@FeaturesModule'
 import { getUserState } from '@ModelsModule'
 import { User } from '@ResourcesModule'
 import { Box } from '@mui/material'
-import { Cancel, RefreshDouble, OffTag, OnTag, Trash } from 'iconoir-react'
+import { Cancel, OffTag, OnTag, Trash } from 'iconoir-react'
 import PropTypes from 'prop-types'
 import { Component, useMemo } from 'react'
 
@@ -57,23 +57,62 @@ export const AggregatedView = ({
   const handleRefresh = async () =>
     await Promise.all(selectedUsers.map(({ ID }) => refreshUser({ id: ID })))
 
-  const handleEnable = async () => {
-    await Promise.all(selectedUsers.map(({ ID }) => enable(ID)))
-    await handleRefresh()
-  }
+  const handleConfirmAction = ({ title, description, onSubmit, dataCy }) =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title,
+        dataCy,
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={selectedUsers}
+            resourceType={T.Users}
+          />
+        ),
+        confirmLabel: title,
+      },
+      onSubmit,
+    })
 
-  const handleDisable = async () => {
-    await Promise.all(selectedUsers.map(({ ID }) => disable(ID)))
-    await handleRefresh()
-  }
+  const handleEnable = () =>
+    handleConfirmAction({
+      title: T.Enable,
+      description: T['resource.enable.confirmation'],
+      dataCy: `modal-user_${USER_ACTIONS.ENABLE}`,
+      onSubmit: async () => {
+        await Promise.all(selectedUsers.map(({ ID }) => enable(ID)))
+        await handleRefresh()
+      },
+    })
+
+  const handleDisable = () =>
+    handleConfirmAction({
+      title: T.Disable,
+      description: T['resource.disable.confirmation'],
+      dataCy: `modal-user_${USER_ACTIONS.DISABLE}`,
+      onSubmit: async () => {
+        await Promise.all(selectedUsers.map(({ ID }) => disable(ID)))
+        await handleRefresh()
+      },
+    })
 
   const handleOpenDeleteForm = () =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title: T?.['user.delete'],
-        description: T?.['user.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedUsers}
+            resourceType={T.Users}
+          />
+        ),
         confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(selectedUsers.map(({ ID }) => remove({ id: ID })))
@@ -143,12 +182,14 @@ export const AggregatedView = ({
                       startIcon: <OnTag width="16px" height="16px" />,
                       onClick: handleEnable,
                       value: 'enable',
+                      dataCy: `action-user_${USER_ACTIONS.ENABLE}`,
                       isDisabled: isMutating,
                     },
                     {
                       startIcon: <OffTag width="16px" height="16px" />,
                       onClick: handleDisable,
                       value: 'disable',
+                      dataCy: `action-user_${USER_ACTIONS.DISABLE}`,
                       isDisabled: isMutating,
                     },
                   ]}
@@ -161,27 +202,15 @@ export const AggregatedView = ({
                   onClick={handleOpenDeleteForm}
                   isDestructive
                   isDisabled={isMutating}
+                  data-cy={`action-user_${USER_ACTIONS.DELETE}`}
                 >
                   {T.DeleteSelected}
                 </Button>
-
-                <ToggleGroup
-                  size="medium"
-                  options={[
-                    [
-                      {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        isDisabled: isMutating,
-                      },
-                      {
-                        startIcon: <Cancel width="16px" height="16px" />,
-                        onClick: handleClose,
-                        value: 'close',
-                      },
-                    ],
-                  ]}
+                <Button
+                  type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                  size="small"
+                  iconOnly={<Cancel width="16px" height="16px" />}
+                  onClick={handleClose}
                 />
               </Box>
             ),

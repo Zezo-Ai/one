@@ -23,9 +23,11 @@ import { T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import { useFunctionality, useFunctionalityApi } from '@FeaturesModule'
 import { SearchBar } from '@modules/componentsv2/composed/SearchBar/Default'
 import { FilterPanel } from '@modules/componentsv2/composed/FilterPanel'
+import { EmptyContent } from '@modules/componentsv2/composed/EmptyContent'
 import { Button } from '@modules/componentsv2/primitives/Buttons/Default'
 import { Checkbox } from '@modules/componentsv2/primitives/Buttons/Checkbox'
-import { getActiveFilters } from '@UtilsModule'
+import { cleanFilterValues, getActiveFilters } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 export const ResourceContainer = forwardRef(
   (
@@ -41,10 +43,13 @@ export const ResourceContainer = forwardRef(
       slots,
       extraSlots,
       viewMode,
+      dataCy,
+      emptyContentProps,
       children,
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const {
       searchExpression,
       sortExpression,
@@ -61,6 +66,7 @@ export const ResourceContainer = forwardRef(
       setSelectedItems,
     } = useFunctionalityApi()
     const [isFilterPanelOpen, setFilterPanelOpen] = useState(false)
+    const translatedResourceName = translate(resourceName)
 
     useLayoutEffect(() => {
       setSelectedItems([])
@@ -68,10 +74,15 @@ export const ResourceContainer = forwardRef(
 
     const viewKey = containerViewKey || resourceName
     const currentView = viewMode ?? containerView
+    const isEmpty = count === 0 && !isRefreshing
     const hasFilters = filterOptions?.length > 0
+    const filterValues = useMemo(
+      () => cleanFilterValues(filterExpression),
+      [filterExpression]
+    )
     const activeFilters = useMemo(
-      () => getActiveFilters(filterOptions, filterExpression),
-      [filterOptions, filterExpression]
+      () => getActiveFilters(filterOptions, filterValues),
+      [filterOptions, filterValues]
     )
 
     /**
@@ -80,10 +91,6 @@ export const ResourceContainer = forwardRef(
      * @param {string} filterId - Filter identifier
      */
     const handleRemoveFilter = (filterId) => {
-      const filterValues =
-        typeof filterExpression === 'object' && !Array.isArray(filterExpression)
-          ? filterExpression
-          : {}
       const nextValues = { ...filterValues }
       delete nextValues[filterId]
 
@@ -91,11 +98,15 @@ export const ResourceContainer = forwardRef(
     }
 
     return (
-      <Box ref={ref} sx={(theme) => getStyles({ theme })}>
+      <Box ref={ref} data-cy={dataCy} sx={(theme) => getStyles({ theme })}>
         <SearchBar
           onRefresh={onRefresh}
           isRefreshing={isRefreshing}
-          searchPlaceholder={`${T.Search} ${resourceName}...`}
+          refreshDataCy={dataCy ? 'refresh' : undefined}
+          searchPlaceholder={`${translate(
+            T.Search
+          )} ${translatedResourceName}...`}
+          searchDataCy={dataCy ? `search-${dataCy}` : undefined}
           searchValue={searchExpression}
           sortOptions={sortOptions}
           sortValue={sortExpression}
@@ -124,7 +135,7 @@ export const ResourceContainer = forwardRef(
           <FilterPanel
             open={isFilterPanelOpen}
             filters={filterOptions}
-            values={filterExpression}
+            values={filterValues}
             onClose={() => setFilterPanelOpen(false)}
             onApply={setFilterExpression}
           />
@@ -135,7 +146,7 @@ export const ResourceContainer = forwardRef(
               <Chip
                 key={id}
                 className="active-filter-chip"
-                label={label}
+                label={translate(label)}
                 size="small"
                 deleteIcon={<Cancel width="16px" height="16px" />}
                 onDelete={() => handleRemoveFilter(id)}
@@ -147,21 +158,29 @@ export const ResourceContainer = forwardRef(
               startIcon={<Cancel width="16px" height="16px" />}
               onClick={() => setFilterExpression({})}
             >
-              {`${T.Clear} ${T.All}`.trim()}
+              {`${translate(T.Clear)} ${translate(T.All)}`.trim()}
             </Button>
           </Box>
         )}
-        {currentView !== TABLE_VIEW_MODE.LIST && (
+        {!isEmpty && currentView !== TABLE_VIEW_MODE.LIST && (
           <Box className="select-all-container">
             <Checkbox
-              text={`${T.SelectAll} \u2022 ${count ?? 0} ${resourceName}`}
+              text={`${translate(T.SelectAll)} \u2022 ${
+                count ?? 0
+              } ${translatedResourceName}`}
               onChange={onSelectAll}
               checked={count > 0 && !isRefreshing && selectedCount === count}
               isDisabled={count <= 0 || isRefreshing}
             />
           </Box>
         )}
-        {children}
+        {isEmpty ? (
+          <Box className="empty-content-container">
+            <EmptyContent {...emptyContentProps} />
+          </Box>
+        ) : (
+          children
+        )}
       </Box>
     )
   }
@@ -170,6 +189,7 @@ export const ResourceContainer = forwardRef(
 ResourceContainer.propTypes = {
   slots: PropTypes.array,
   extraSlots: PropTypes.array,
+  emptyContentProps: PropTypes.object,
   children: PropTypes.node,
   onRefresh: PropTypes.func,
   onSelectAll: PropTypes.func,
@@ -179,6 +199,7 @@ ResourceContainer.propTypes = {
   isRefreshing: PropTypes.bool,
   searchPlaceholder: PropTypes.string,
   resourceName: PropTypes.string,
+  dataCy: PropTypes.string,
   count: PropTypes.number,
   selectedCount: PropTypes.number,
 }

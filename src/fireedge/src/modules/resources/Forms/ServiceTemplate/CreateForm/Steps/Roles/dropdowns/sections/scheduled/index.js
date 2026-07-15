@@ -29,7 +29,7 @@ import {
 } from '@mui/material'
 import { STEP_ID as ROLES_ID } from '@modules/resources/Forms/ServiceTemplate/CreateForm/Steps/Roles'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 import { Cancel } from 'iconoir-react'
 
@@ -47,6 +47,7 @@ import {
 } from '@modules/resources/Forms/ServiceTemplate/CreateForm/Steps/Roles/dropdowns/sections/scheduled/schema'
 
 const ScheduledPolicies = ({ roles, selectedRole }) => {
+  const { translate } = useTranslation()
   const { watch } = useFormContext()
 
   const wPolicies = watch(`${ROLES_ID}.${selectedRole}.${SECTION_ID}`)
@@ -157,15 +158,19 @@ const ScheduledPolicies = ({ roles, selectedRole }) => {
                       const { type, adjust, min, format, expression } =
                         wPolicies?.[idx] ?? policy
 
-                      const timeFormatTrans = Tr(format)
+                      const timeFormatTrans = translate(format)
 
                       const secondaryFields = [
-                        type && `${Tr(T.Type)}: ${Tr(SCHED_TYPES?.[type])}`,
-                        adjust && `${Tr(T.Adjust)}: ${adjust}`,
-                        min && `${Tr(T.Min)}: ${min}`,
+                        type &&
+                          `${translate(T.Type)}: ${translate(
+                            SCHED_TYPES?.[type]
+                          )}`,
+                        adjust && `${translate(T.Adjust)}: ${adjust}`,
+                        min && `${translate(T.Min)}: ${min}`,
                         timeFormatTrans &&
-                          `${Tr(T.TimeFormat)}: ${timeFormatTrans}`,
-                        expression && `${Tr(T.TimeExpression)}: ${expression}`,
+                          `${translate(T.TimeFormat)}: ${timeFormatTrans}`,
+                        expression &&
+                          `${translate(T.TimeExpression)}: ${expression}`,
                       ].filter(Boolean)
 
                       return (

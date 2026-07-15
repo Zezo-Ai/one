@@ -17,7 +17,7 @@ import { Typography } from '@mui/material'
 import { Plus, Trash } from 'iconoir-react'
 import { useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { useViews, OneKsAPI } from '@FeaturesModule'
 import { DeleteOneKsClusterForm } from '@modules/resources/Forms/OneKs'
 import {
@@ -67,6 +67,7 @@ MessageToConfirmAction.displayName = 'MessageToConfirmAction'
  * @returns {GlobalAction} - Actions
  */
 const Actions = (props = {}) => {
+  const { translate } = useTranslation()
   const { setSelectedRows } = props
   const history = useHistory()
   const { view, getResourceView } = useViews()
@@ -110,7 +111,7 @@ const Actions = (props = {}) => {
                     const { ID, NAME } = rows?.[0]?.original ?? {}
 
                     return [
-                      Tr(
+                      translate(
                         isMultiple
                           ? T.RecoverSeveralOneKsClusters
                           : T.RecoverOneKsCluster
@@ -147,7 +148,7 @@ const Actions = (props = {}) => {
                     const { ID, NAME } = rows?.[0]?.original ?? {}
 
                     return [
-                      Tr(
+                      translate(
                         isMultiple
                           ? T.DeleteSeveralVirtualRouters
                           : T.DeleteVirtualRouter
@@ -176,7 +177,7 @@ const Actions = (props = {}) => {
           },
         ],
       }),
-    [view]
+    [view, translate]
   )
 }
 

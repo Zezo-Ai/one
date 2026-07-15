@@ -22,10 +22,12 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import { Translate, OpenNebulaLogo, Tr } from '@ResourcesModule'
+import { Translate, useTranslation } from '@ProvidersModule'
+import { OpenNebulaLogo } from '@ResourcesModule'
+import { storage } from '@UtilsModule'
 import { JWT_NAME, T, STYLE_BUTTONS } from '@ConstantsModule'
 import { AuthSlice } from '@FeaturesModule'
-import { storage } from '@UtilsModule'
+
 import { ReactElement, useEffect, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import PropTypes from 'prop-types'
@@ -41,6 +43,7 @@ const { actions: authActions } = AuthSlice
  * @returns {ReactElement} The login form.
  */
 export function Remote({ data = {} }) {
+  const { translate } = useTranslation()
   const dispatch = useDispatch()
   const { jwt, remoteRedirect = '.', ...user } = data
 
@@ -77,7 +80,7 @@ export function Remote({ data = {} }) {
         </InteractiveGrid>
 
         <Typography variant="h6" align="center">
-          {Tr(T.LogIn)}
+          {translate(T.LogIn)}
         </Typography>
 
         <SubmitButton

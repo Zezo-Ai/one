@@ -15,21 +15,21 @@
  * ------------------------------------------------------------------------- */
 
 import {
+  Button,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   SummarySlot,
   TabSlot,
-  ToggleGroup,
 } from '@ComponentsV2Module'
 
 import { getZoneState } from '@ModelsModule'
 import { Zone } from '@ResourcesModule'
-import { ZoneAPI } from '@FeaturesModule'
 import { Box } from '@mui/material'
 import { Component, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { Cancel, RefreshDouble } from 'iconoir-react'
-import { T } from '@ConstantsModule'
+import { Cancel } from 'iconoir-react'
+import { RESOURCE_NAMES, STYLE_BUTTONS, T } from '@ConstantsModule'
 import { getCommonValue } from '@UtilsModule'
 
 /**
@@ -48,12 +48,7 @@ export const AggregatedView = ({
   handleSelect,
   handleDeselect,
 }) => {
-  const [refreshZone, { isFetching }] = ZoneAPI.useLazyGetZoneQuery()
-
-  const isActionsDisabled = selectedZones?.length === 0 || isFetching
-
-  const handleRefresh = async () =>
-    await Promise.all(selectedZones.map(({ ID }) => refreshZone({ id: ID })))
+  const isActionsDisabled = selectedZones?.length === 0
 
   const summary = useMemo(
     () => ({
@@ -73,24 +68,6 @@ export const AggregatedView = ({
     [selectedZones]
   )
 
-  const toggleOptions = [
-    [
-      {
-        startIcon: <RefreshDouble width="16px" height="16px" />,
-        onClick: handleRefresh,
-        value: 'refresh',
-        title: T.Refresh,
-        isDisabled: isActionsDisabled,
-      },
-      {
-        startIcon: <Cancel width="16px" height="16px" />,
-        onClick: handleClose,
-        value: 'close',
-        title: T.Close,
-      },
-    ].filter(Boolean),
-  ].filter(({ length }) => length > 0)
-
   return (
     <DetailsDrawer
       isOpen={isOpen}
@@ -107,7 +84,18 @@ export const AggregatedView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
-                <ToggleGroup size="medium" options={toggleOptions} />
+                <LabelButton
+                  selectedRows={selectedZones}
+                  resourceType={RESOURCE_NAMES.ZONE}
+                  isDisabled={isActionsDisabled}
+                />
+                <Button
+                  type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                  size="small"
+                  iconOnly={<Cancel width="16px" height="16px" />}
+                  tooltip={T.Close}
+                  onClick={handleClose}
+                />
               </Box>
             ),
           },

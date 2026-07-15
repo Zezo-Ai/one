@@ -15,6 +15,11 @@
  * ------------------------------------------------------------------------- */
 
 /**
+ * Minimum width reserved for the compactable header toolbar before truncating.
+ */
+const MIN_TOOLBAR_WIDTH = 550
+
+/**
  * @param {object} root0 - Params
  * @param {object} root0.theme - Current theme in use
  * @returns {object} - Slot styles
@@ -23,7 +28,10 @@ export const getStyles = ({ theme }) => {
   const baseStyles = {
     display: 'flex',
     flexDirection: 'row',
-    flex: '1 0 0',
+    flex: '1 1 auto',
+    minWidth: 0,
+    width: '100%',
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'flex-start',
   }
@@ -36,7 +44,8 @@ export const getStyles = ({ theme }) => {
       alignItems: 'flex-start',
       alignSelf: 'stretch',
       gap: `${theme.scale[600]}px`,
-      flex: '1 0 0',
+      flex: '1 1 auto',
+      minWidth: 0,
 
       fontSize: {
         xs: theme.fontSize.body.sm.mobile,
@@ -61,6 +70,10 @@ export const getStyles = ({ theme }) => {
       display: 'flex',
       alignItems: 'center',
       gap: `${theme.scale[100]}px`,
+      alignSelf: 'stretch',
+      minWidth: 0,
+      maxWidth: '100%',
+      overflow: 'hidden',
 
       '&:hover': {
         '& .info-edit-icon-container': {
@@ -69,6 +82,7 @@ export const getStyles = ({ theme }) => {
       },
 
       '& .icon-container': {
+        flex: '0 0 auto',
         width: '40px',
         height: '40px',
         padding: '4px',
@@ -103,7 +117,7 @@ export const getStyles = ({ theme }) => {
           outlineOffset: '2px',
         },
       },
-      '& .info-title, .info-id': {
+      '& .info-title, & .info-id': {
         color: 'text.headings',
         fontFamily: 'Inter',
         fontSize: {
@@ -122,8 +136,32 @@ export const getStyles = ({ theme }) => {
         },
       },
 
+      '& .info-title-wrapper': {
+        display: 'flex',
+        alignItems: 'center',
+        gap: `${theme.scale[100]}px`,
+        flex: '1 1 auto',
+        minWidth: 0,
+        maxWidth: '100%',
+        overflow: 'hidden',
+      },
+
+      '& .info-title, & .editable-title': {
+        flex: '0 1 auto',
+        minWidth: 0,
+        maxWidth: '100%',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      },
+
       '& .info-id': {
+        flex: '0 0 auto',
         color: 'text.onDisabled',
+      },
+
+      '& .info-title-wrapper > .MuiButton-root': {
+        flex: '0 0 auto',
       },
     },
   }
@@ -145,6 +183,13 @@ export const getStyles = ({ theme }) => {
     },
   }
   const ownership = {
+    '& .info-metadata': {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: `${theme.scale[200]}px`,
+      alignSelf: 'stretch',
+      minWidth: 0,
+    },
     '& .info-ownership': {
       display: 'flex',
       gap: `${theme.scale[100]}px`,
@@ -173,12 +218,20 @@ export const getStyles = ({ theme }) => {
         },
       },
     },
+    '& .info-tags': {
+      display: 'flex',
+      alignItems: 'center',
+      minWidth: 0,
+    },
   }
   const toolbar = {
     '& .info-action-toggles': {
-      width: 'fit-content',
-      flexShrink: 0,
-      flexWrap: 'nowrap',
+      display: 'flex',
+      justifyContent: 'flex-end',
+      minWidth: `${MIN_TOOLBAR_WIDTH}px`,
+      maxWidth: '100%',
+      flex: '0 1 auto',
+      overflow: 'hidden',
     },
   }
 
@@ -204,6 +257,11 @@ export const getEditableTitleStyles = ({ theme }) => {
     fontStyle: 'normal',
     display: 'inline-grid',
     width: 'fit-content',
+    minWidth: 0,
+    maxWidth: '100%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
     borderRadius: `${theme.borderRadius['2xl']}px`,
     fontWeight: 700,
     fontSize: {
@@ -225,7 +283,9 @@ export const getEditableTitleStyles = ({ theme }) => {
       content: 'attr(data-value)',
       gridArea: '1 / 1',
       visibility: 'hidden',
-      whiteSpace: 'pre',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
       padding: '0 4px',
       font: 'inherit',
     },
@@ -251,6 +311,9 @@ export const getEditableTitleStyles = ({ theme }) => {
       boxSizing: 'border-box',
       padding: '0 4px',
       font: 'inherit',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
     },
   }
 

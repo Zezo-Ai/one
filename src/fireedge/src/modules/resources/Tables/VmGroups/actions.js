@@ -26,7 +26,7 @@ import {
 } from '@modules/resources/Tables/Enhanced/Utils'
 
 import { RESOURCE_NAMES, T, VMGROUP_ACTIONS, PATH } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const ListVmGroupNames = ({ rows = [] }) =>
   rows?.map?.(({ id, original }) => {

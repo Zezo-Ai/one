@@ -30,7 +30,7 @@ import {
 } from '@modules/resources/Tables/Enhanced/Utils'
 
 import { RESOURCE_NAMES, T, VROUTER_ACTIONS, PATH } from '@ConstantsModule'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 
 const ListVmTemplateNames = ({ rows = [] }) =>
   rows?.map?.(({ id, original }) => {
@@ -68,6 +68,7 @@ MessageToConfirmAction.displayName = 'MessageToConfirmAction'
  * @returns {GlobalAction} - Actions
  */
 const Actions = (props = {}) => {
+  const { translate } = useTranslation()
   const { setSelectedRows } = props
   const history = useHistory()
   const { view, getResourceView } = useViews()
@@ -218,7 +219,7 @@ const Actions = (props = {}) => {
                     const { ID, NAME } = rows?.[0]?.original ?? {}
 
                     return [
-                      Tr(
+                      translate(
                         isMultiple
                           ? T.DeleteSeveralVirtualRouters
                           : T.DeleteVirtualRouter
@@ -240,7 +241,7 @@ const Actions = (props = {}) => {
           },
         ],
       }),
-    [view]
+    [view, translate]
   )
 }
 

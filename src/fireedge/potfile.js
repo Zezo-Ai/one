@@ -13,45 +13,45 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
+const { writeFileSync } = require('fs')
 
-const { createReadStream, generateFile } = require('opennebula-generatepotfile')
-const clientConstants = require('./src/modules/constants/translates')
+const messages = require('./src/modules/constants/translates')
 
-const modulesCode = './src/modules'
-const clientCode = './src/client'
-const exportFile = `${clientCode}/assets/languages/messages.pot`
+const outputFile = './src/client/assets/languages/messages.pot'
+const sourceFile = './src/modules/constants/translates.js'
 
-/**
- * if the constants have an object indicator. where are the definitions you must place it
- *
- * example:
- * - indicator: T.Cluster
- * - definition: {T: {Cluster: "Cluster"}} (e)
- */
+const messagesByText = Object.entries(messages).reduce(
+  (catalog, [key, message]) => {
+    if (typeof message !== 'string') {
+      throw new TypeError(`Translation T.${key} must be a string`)
+    }
 
-const definitions = { T: { ...clientConstants } }
+    const keys = catalog.get(message) ?? []
+    keys.push(key)
+    catalog.set(message, keys)
 
-// function Tr()
-const optsFunc = {
-  regex: /Tr(\("|\('|\()[a-zA-Z0-9_. ]*("\)|'\)|\))/g,
-  removeStart: /Tr(\()/g,
-  removeEnd: /(\))/g,
-  regexTextCaptureIndex: 0,
-  definitions,
-  split: '.',
-}
+    return catalog
+  },
+  new Map()
+)
 
-// React component <Translate word="word"/>
-const optsComponent = {
-  regex: /<Translate word=('|"|{|{'|{")[a-zA-Z0-9_. ]*('|"|}|'}|"}) \/>/g,
-  removeStart: /<Translate word=('|"|{|{'|{")/g,
-  removeEnd: /('|"|}|'}|"}) \/>/g,
-  regexTextCaptureIndex: 0,
-  definitions,
-  split: '.',
-}
+const header = [
+  'msgid ""',
+  'msgstr ""',
+  '"Content-Type: text/plain; charset=UTF-8\\n"',
+  '"Content-Transfer-Encoding: 8bit\\n"',
+  '',
+].join('\n')
 
-createReadStream(modulesCode, optsFunc)
-createReadStream(modulesCode, optsComponent)
+const entries = [...messagesByText]
+  .map(
+    ([message, keys]) =>
+      `#. ${keys.map((key) => `T.${key}`).join(', ')}\n` +
+      `#: ${sourceFile}\n` +
+      `msgid ${JSON.stringify(message)}\n` +
+      'msgstr ""\n'
+  )
+  .join('\n')
 
-generateFile(exportFile)
+writeFileSync(outputFile, `${header}${entries}`)
+console.log(`created ${outputFile} (${messagesByText.size} messages)`)

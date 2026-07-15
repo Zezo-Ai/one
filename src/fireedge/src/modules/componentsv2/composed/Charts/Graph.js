@@ -15,6 +15,8 @@
  * ------------------------------------------------------------------------- */
 
 import PropTypes from 'prop-types'
+import { Translate } from '@ProvidersModule'
+import { DateTime } from 'luxon'
 
 import { timeFromSeconds } from '@ModelsModule'
 import { wheelZoomPlugin } from '@modules/componentsv2/composed/Charts/Plugins'
@@ -22,6 +24,8 @@ import { CircularProgress, Stack, useTheme, Typography } from '@mui/material'
 import { Component, useEffect, useMemo, useRef, useState } from 'react'
 import UplotReact from 'uplot-react'
 import { T } from '@ConstantsModule'
+
+const GRID_ORIENTATIONS = ['horizontal', 'vertical', 'both']
 
 const calculateDerivative = (data, filter) =>
   data
@@ -98,6 +102,11 @@ const minMaxTick = (ticks, formatter) => {
   return res
 }
 
+const formatTimestamp = (timestamp, format, useMilliseconds) =>
+  useMilliseconds
+    ? DateTime.fromMillis(+timestamp).toFormat(format)
+    : timeFromSeconds(timestamp).toFormat(format)
+
 const createFill = (u, color) => {
   const ctx = u.ctx
   const plotHeight = u.bbox?.height || u.over.clientHeight
@@ -135,8 +144,20 @@ const createFill = (u, color) => {
  * @param {number} props.zoomFactor - Grapg zooming factor
  * @param {string} props.dateFormat - Labels timestamp format
  * @param {string} props.dateFormatHover - Legend timestamp format
+ * @param {boolean} props.showGrid - Whether to display the axis grid lines
+ * @param {'horizontal'|'vertical'|'both'} props.gridOrientation - Grid line orientation
+ * @param {string} props.gridColor - Optional grid line color
+ * @param {number} props.gridWidth - Optional grid line width
+ * @param {string} props.tickColor - Optional axis tick color
+ * @param {string} props.axisColor - Optional axis label color
+ * @param {boolean} props.showXAxisTicks - Whether to display the X-axis tick marks
+ * @param {boolean} props.fitWidth - Whether the graph uses the full container width
+ * @param {boolean} props.useMilliseconds - Whether timestamps use milliseconds
  * @param {boolean} props.showLegends - show labels
  * @param {boolean} props.isFetching - The request is fetching
+ * @param {number|string|object} props.height - Responsive graph height
+ * @param {number|string} props.aspectRatio - Graph aspect ratio
+ * @param {string} props.className - Additional graph class name
  * @returns {Component} Chartist component
  */
 const Graph = ({
@@ -159,8 +180,20 @@ const Graph = ({
   lineColors = [],
   dateFormat = 'MM-dd HH:mm',
   dateFormatHover = 'MMM dd HH:mm:ss',
+  showGrid = true,
+  gridOrientation = 'both',
+  gridColor,
+  gridWidth,
+  tickColor,
+  axisColor,
+  showXAxisTicks = true,
+  fitWidth = false,
+  useMilliseconds = false,
   showLegends = true,
   isFetching = false,
+  height,
+  aspectRatio = '16 / 9',
+  className = '',
 }) => {
   const theme = useTheme()
 
@@ -176,10 +209,11 @@ const Graph = ({
   useEffect(() => {
     const observer = new ResizeObserver(() => {
       if (chartRef.current) {
-        const { width, height } = chartRef.current.getBoundingClientRect()
+        const { width, height: measuredHeight } =
+          chartRef.current.getBoundingClientRect()
         setChartDimensions({
-          width: width - 50,
-          height: height - (showLegends ? 150 : 0),
+          width: Math.max(width - (fitWidth ? 0 : 50), 0),
+          height: Math.max(measuredHeight - (showLegends ? 150 : 0), 0),
         })
       }
     })
@@ -191,7 +225,7 @@ const Graph = ({
     return () => {
       observer.disconnect()
     }
-  }, [])
+  }, [fitWidth, showLegends])
 
   const dataChart = useMemo(() => {
     if (!filter.length) return []
@@ -280,6 +314,7 @@ const Graph = ({
   const chartOptions = useMemo(() => {
     const options = {
       ...chartDimensions,
+      ...(useMilliseconds && { ms: 1 }),
       drag: false,
       legend: {
         show: false,
@@ -304,18 +339,29 @@ const Graph = ({
       },
       axes: [
         {
-          grid: { show: true },
-          ticks: { show: true },
-          stroke: theme?.palette?.graphs?.axis?.color,
+          grid: {
+            show: showGrid && gridOrientation !== 'horizontal',
+            ...(gridColor && { stroke: gridColor }),
+            ...(gridWidth !== undefined && { width: gridWidth }),
+          },
+          ticks: {
+            show: showXAxisTicks,
+            ...(tickColor && { stroke: tickColor }),
+          },
+          stroke: axisColor ?? theme?.palette?.graphs?.axis?.color,
           values: (_, ticks) =>
             minMaxTick(ticks, (label) =>
-              timeFromSeconds(label).toFormat(dateFormat)
+              formatTimestamp(label, dateFormat, useMilliseconds)
             ),
         },
         {
-          grid: { show: true },
-          ticks: { show: true },
-          stroke: theme?.palette?.graphs?.axis?.color,
+          grid: {
+            show: showGrid && gridOrientation !== 'vertical',
+            ...(gridColor && { stroke: gridColor }),
+            ...(gridWidth !== undefined && { width: gridWidth }),
+          },
+          ticks: { show: true, ...(tickColor && { stroke: tickColor }) },
+          stroke: axisColor ?? theme?.palette?.graphs?.axis?.color,
           values: (_, ticks) => minMaxTick(ticks, (yV) => interpolationY(yV)),
         },
       ],
@@ -324,7 +370,7 @@ const Graph = ({
           label: 'Time',
           value: (_, timestamp) =>
             timestamp
-              ? timeFromSeconds(timestamp).toFormat(dateFormatHover)
+              ? formatTimestamp(timestamp, dateFormatHover, useMilliseconds)
               : '--',
         },
         ...(Array.isArray(y)
@@ -380,13 +426,23 @@ const Graph = ({
     legendNames,
     lineColors,
     interpolationY,
+    showGrid,
+    gridOrientation,
+    gridColor,
+    gridWidth,
+    tickColor,
+    axisColor,
+    showXAxisTicks,
+    useMilliseconds,
+    theme,
   ])
 
   return (
     <Stack
+      className={className}
       sx={{
         width: '100%',
-        aspectRatio: '16/9',
+        ...(height === undefined ? { aspectRatio } : { height }),
         overflow: 'hidden',
       }}
       ref={chartRef}
@@ -399,8 +455,17 @@ const Graph = ({
         </Stack>
       ) : !data?.length ? (
         <Stack direction="row" justifyContent="center" alignItems="center">
-          <Typography sx={{ color: 'text.headings' }}>
-            {T.NoDataAvailable}
+          <Typography
+            sx={{
+              color: 'text.onDisabled',
+              fontSize: {
+                xs: theme.fontSize.body.sm.mobile,
+                sm: theme.fontSize.body.sm.tablet,
+                md: theme.fontSize.body.sm.desktop,
+              },
+            }}
+          >
+            <Translate word={T.NoDataAvailable} />
           </Typography>
         </Stack>
       ) : (
@@ -414,17 +479,21 @@ Graph.propTypes = {
   name: PropTypes.string,
   filter: PropTypes.arrayOf(PropTypes.string),
   data: PropTypes.array,
-  x: PropTypes.arrayOf(PropTypes.func),
+  x: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func,
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.func])),
+  ]),
   y: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.string),
     PropTypes.string,
   ]),
   interpolationY: PropTypes.func,
   derivative: PropTypes.bool,
-  shouldFill: PropTypes.bool,
+  shouldFill: PropTypes.arrayOf(PropTypes.string),
   clampForecast: PropTypes.bool,
   sortX: PropTypes.bool,
-  shouldPadY: PropTypes.bool,
+  shouldPadY: PropTypes.arrayOf(PropTypes.string),
   enableLegend: PropTypes.bool,
   zoomFactor: PropTypes.number,
   clusterFactor: PropTypes.number,
@@ -434,8 +503,24 @@ Graph.propTypes = {
   lineColors: PropTypes.arrayOf(PropTypes.string),
   dateFormat: PropTypes.string,
   dateFormatHover: PropTypes.string,
+  showGrid: PropTypes.bool,
+  gridOrientation: PropTypes.oneOf(GRID_ORIENTATIONS),
+  gridColor: PropTypes.string,
+  gridWidth: PropTypes.number,
+  tickColor: PropTypes.string,
+  axisColor: PropTypes.string,
+  showXAxisTicks: PropTypes.bool,
+  fitWidth: PropTypes.bool,
+  useMilliseconds: PropTypes.bool,
   showLegends: PropTypes.bool,
   isFetching: PropTypes.bool,
+  height: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string,
+    PropTypes.object,
+  ]),
+  aspectRatio: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  className: PropTypes.string,
 }
 
 Graph.displayName = 'Graph'

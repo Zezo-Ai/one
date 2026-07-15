@@ -105,7 +105,7 @@ export const AggregatedView = ({
               <Box sx={TOOLBAR_STYLES}>
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

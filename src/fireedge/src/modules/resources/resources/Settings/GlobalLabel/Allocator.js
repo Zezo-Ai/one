@@ -25,7 +25,7 @@ import {
 } from '@modules/resources/resources/Settings/GlobalLabel/styles'
 import { StatusCircle } from '@modules/resources/Status'
 import { getColorFromString } from '@ModelsModule'
-import { Translate, Tr } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const EmptyIcon = styled((props) => <Box component="span" {...props} />)({
@@ -67,6 +67,7 @@ const LabelAllocator = ({
   handleChange,
   handleClose,
 }) => {
+  const { translate } = useTranslation()
   const getLabelProps = useCallback(
     (label) => {
       const labelProps = { label }
@@ -137,7 +138,7 @@ const LabelAllocator = ({
           ref={params.InputProps.ref}
           inputProps={params.inputProps}
           autoFocus
-          placeholder={Tr(T.Search)}
+          placeholder={translate(T.Search)}
         />
       )}
     />

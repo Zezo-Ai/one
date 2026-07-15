@@ -25,7 +25,7 @@ import {
   TitleSlot,
 } from '@ComponentsV2Module'
 import { getLabelSlotLabels, getMarketplaceAppState } from '@ModelsModule'
-import { prettyBytes } from '@UtilsModule'
+import { getLockIcon, prettyBytes } from '@UtilsModule'
 
 /**
  * MarketplaceAppsCard component displays a Marketplace App as a card.
@@ -49,7 +49,6 @@ export const MarketplaceAppsCard = forwardRef(
       SIZE,
       REGTIME,
       VERSION,
-      LOCK,
       TEMPLATE = {},
     } = marketplaceApp
 
@@ -67,7 +66,11 @@ export const MarketplaceAppsCard = forwardRef(
           [
             TitleSlot,
             {
-              title: NAME,
+              title: (
+                <>
+                  {NAME} {getLockIcon(marketplaceApp)}
+                </>
+              ),
               status: stateColor,
               statusName: stateName,
             },
@@ -84,15 +87,13 @@ export const MarketplaceAppsCard = forwardRef(
               ].filter(([, value]) => value),
             },
           ],
-          (LOCK ||
-            TEMPLATE?.HYPERVISOR ||
+          (TEMPLATE?.HYPERVISOR ||
             TEMPLATE?.ARCHITECTURE ||
             VERSION ||
             labelSlotLabels.length > 0) && [
             LabelSlot,
             {
               labels: [
-                LOCK && [T.Locked, 'information'],
                 TEMPLATE?.HYPERVISOR && [TEMPLATE.HYPERVISOR, 'miscellaneous'],
                 TEMPLATE?.ARCHITECTURE && [
                   TEMPLATE.ARCHITECTURE,

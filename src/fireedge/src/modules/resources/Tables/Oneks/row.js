@@ -22,10 +22,11 @@ import { XrayView as KubernetesIcon } from 'iconoir-react'
 import { useMemo } from 'react'
 import { rowStyles } from '@modules/resources/Tables/styles'
 
-import { Tr } from '@modules/resources/HOC'
+import { timeFromMilliseconds, getVirtualOneKsState } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import { StatusCircle } from '@modules/resources/Status'
-import { timeFromMilliseconds, getVirtualOneKsState } from '@UtilsModule'
+
 import Timer from '@modules/resources/Timer'
 
 const Row = ({
@@ -37,6 +38,7 @@ const Row = ({
   toggleRowSelected,
   ...props
 }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => rowStyles(theme), [theme])
   const { ID, NAME, CREATED, VERSION } = value
@@ -63,7 +65,7 @@ const Row = ({
             <Timer initial={time} />
           </span>
           {!!VERSION && (
-            <span title={`${Tr(T.Version)}: ${VERSION}`}>
+            <span title={`${translate(T.Version)}: ${VERSION}`}>
               <KubernetesIcon />
               <span>{` ${VERSION}`}</span>
             </span>

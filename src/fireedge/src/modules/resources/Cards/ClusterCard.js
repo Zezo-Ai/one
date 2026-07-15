@@ -26,7 +26,7 @@ import {
 } from 'iconoir-react'
 
 import { SelectCard } from '@modules/resources/Cards'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const useStyles = (theme) => ({
@@ -38,6 +38,7 @@ const useStyles = (theme) => ({
 
 const ClusterCard = memo(
   ({ value, isSelected, handleClick }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => useStyles(theme), [theme])
     const { ID, NAME, HOSTS, VNETS, DATASTORES } = value
@@ -59,7 +60,7 @@ const ClusterCard = memo(
           <Box className={classes.badgesWrapper}>
             <Badge
               showZero
-              title={Tr(T.Hosts)}
+              title={translate(T.Hosts)}
               classes={{ badge: 'badge' }}
               color="primary"
               badgeContent={hosts.length}
@@ -69,7 +70,7 @@ const ClusterCard = memo(
             </Badge>
             <Badge
               showZero
-              title={Tr(T.VirtualNetworks)}
+              title={translate(T.VirtualNetworks)}
               classes={{ badge: 'badge' }}
               color="primary"
               badgeContent={vnets.length}
@@ -79,7 +80,7 @@ const ClusterCard = memo(
             </Badge>
             <Badge
               showZero
-              title={Tr(T.Datastores)}
+              title={translate(T.Datastores)}
               classes={{ badge: 'badge' }}
               color="primary"
               badgeContent={datastores.length}

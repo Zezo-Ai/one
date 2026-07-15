@@ -32,7 +32,8 @@ import {
   NavArrowRight as NextIcon,
 } from 'iconoir-react'
 
-import { Translate, labelCanBeTranslated } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+import { isTranslationInput } from '@UtilsModule'
 import { T } from '@ConstantsModule'
 
 const useStyles = (theme) => ({
@@ -70,7 +71,7 @@ const CustomMobileStepper = ({
     <Box className={classes.root}>
       <Box minHeight={60}>
         <Typography className={classes.title}>
-          {labelCanBeTranslated(label) ? <Translate word={label} /> : label}
+          {isTranslationInput(label) ? <Translate word={label} /> : label}
         </Typography>
         {Boolean(errors[id]) && (
           <Typography className={classes.error} variant="caption" color="error">

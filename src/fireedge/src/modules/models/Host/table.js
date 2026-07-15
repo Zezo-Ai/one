@@ -38,16 +38,12 @@ export const HOST_COLUMNS = [
   {
     header: T.State,
     id: 'state',
+    accessorFn: (row) => getHostState(row)?.name,
     cell: ({ row }) => {
       const { color, name } = getHostState(row.original) ?? {}
 
       return <StatusTag statusColor={color} statusName={name} />
     },
-  },
-  {
-    header: T.Cluster,
-    id: 'cluster',
-    accessorKey: 'CLUSTER',
   },
   {
     header: 'IM MAD',
@@ -79,7 +75,14 @@ export const HOST_COLUMNS = [
     id: 'memory',
     accessorFn: (row) => getAllocatedInfo(row)?.percentMemLabel,
   },
+  {
+    header: T.Cluster,
+    id: 'cluster',
+    accessorKey: 'CLUSTER',
+  },
   createLabelColumn(),
 ]
 
-export const hostTable = createTable(HOST_COLUMNS, HostAPI.useGetHostsQuery)
+export const hostTable = createTable(HOST_COLUMNS, HostAPI.useGetHostsQuery, {
+  dataCy: 'hosts',
+})

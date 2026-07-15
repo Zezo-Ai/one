@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { SystemShut as OsIcon, WarningCircle } from 'iconoir-react'
+import { SystemShut as OsIcon } from 'iconoir-react'
 import PropTypes from 'prop-types'
 import { useMemo, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import { useViews } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
+import { getActionsAvailable as getSectionsAvailable } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 import { TabType } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration'
 import BootOrder from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/booting/bootOrder'
@@ -32,7 +33,7 @@ import { Box } from '@mui/material'
 import { Tabs } from '@ComponentsV2Module'
 
 import { RESOURCE_NAMES, T, VmTemplate } from '@ConstantsModule'
-import { getActionsAvailable as getSectionsAvailable } from '@UtilsModule'
+
 import { SCHEMA } from '@modules/resources/resources/VmTemplate/Forms/InstantiateForm/Steps/ExtraConfiguration/schema'
 
 export const STEP_ID = 'extra'
@@ -70,7 +71,6 @@ const TAB_CONTENT_SX = {
   height: 'auto',
   display: 'flex',
   flexDirection: 'column',
-  p: 2,
 }
 
 const Content = ({
@@ -81,6 +81,7 @@ const Content = ({
   adminGroup,
   vmTemplate,
 }) => {
+  const { translate } = useTranslation()
   const {
     formState: { errors },
     control,
@@ -95,7 +96,7 @@ const Content = ({
     return getSectionsAvailable(dialog, hypervisor)
   }, [view])
 
-  const totalErrors = Object.keys(errors[STEP_ID] ?? {}).length
+  const stepErrors = errors[STEP_ID]
 
   const tabs = useMemo(
     () =>
@@ -103,8 +104,9 @@ const Content = ({
         ({ Content: TabContent, name, getError, icon, ...section }) => ({
           ...section,
           name,
-          title: Tr(name),
-          startIcon: getError?.(errors[STEP_ID]) ? WarningCircle : icon,
+          title: translate(name),
+          startIcon: icon,
+          getError,
           Content: () => (
             <TabContent
               {...{
@@ -120,7 +122,7 @@ const Content = ({
           ),
         })
       ),
-    [totalErrors, view, control]
+    [view, control, translate]
   )
 
   const ActiveTab = tabs[selected] ?? tabs[0]
@@ -132,9 +134,10 @@ const Content = ({
           <Tabs
             type="line"
             defaultSelect={0}
-            options={tabs.map(({ title, startIcon }, idx) => ({
+            options={tabs.map(({ title, startIcon, getError }, idx) => ({
               title,
               startIcon,
+              error: !!getError?.(stepErrors),
               value: idx,
             }))}
             onChange={(idx) => setSelected(idx)}

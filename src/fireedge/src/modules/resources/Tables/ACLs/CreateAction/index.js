@@ -18,7 +18,7 @@ import { useHistory } from 'react-router-dom'
 import { Page, Code } from 'iconoir-react'
 import { CreateTypeDialog } from '@ComponentsV2Module'
 import { T, PATH } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const ACL_CREATE_TYPES = {
   NORMAL: 'NORMAL',
@@ -48,6 +48,7 @@ const ACL_CREATE_OPTIONS = [
  * @returns {ReactElement} ACL create action selector
  */
 const CreateAction = () => {
+  const { translate } = useTranslation()
   const history = useHistory()
   const [selectedType, setSelectedType] = useState(ACL_CREATE_TYPES.NORMAL)
 
@@ -62,19 +63,20 @@ const CreateAction = () => {
 
   return (
     <CreateTypeDialog
-      title={Tr(T['acls.create.selection.title'])}
-      subtitle={Tr(T['acls.create.selection.subtitle'])}
+      title={translate(T['acls.create.selection.title'])}
+      subtitle={translate(T['acls.create.selection.subtitle'])}
       options={ACL_CREATE_OPTIONS.map(({ title, subtitle, ...option }) => ({
         ...option,
-        title: Tr(title),
-        subtitle: Tr(subtitle),
+        title: translate(title),
+        subtitle: translate(subtitle),
       }))}
       selectedValue={selectedType}
       onChange={setSelectedType}
       onCancel={handleCancel}
       onConfirm={handleContinue}
-      cancelLabel={Tr(T.Cancel)}
-      confirmLabel={Tr(T.Continue)}
+      cancelLabel={translate(T.Cancel)}
+      confirmLabel={translate(T.Continue)}
+      confirmDataCy="acl-create-continue"
     />
   )
 }

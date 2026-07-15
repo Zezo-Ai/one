@@ -25,6 +25,7 @@ import {
 } from '@modules/componentsv2/composed/Charts/MultiChart/helpers/scripts'
 import { useGeneralApi } from '@FeaturesModule'
 import { T } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Renders a button that provides export options for data.
@@ -36,6 +37,7 @@ import { T } from '@ConstantsModule'
  * @returns {object} The rendered export button component.
  */
 export const ExportButton = ({ data, exportOptions, exportHandlers }) => {
+  const { translate } = useTranslation()
   const [anchorEl, setAnchorEl] = useState(null)
   const { enqueueError } = useGeneralApi()
 
@@ -67,7 +69,7 @@ export const ExportButton = ({ data, exportOptions, exportHandlers }) => {
         onClick={handleMenuOpen}
         isDisabled={noData}
       >
-        {T.Export}
+        {translate(T.Export)}
       </Button>
       <Menu
         anchorEl={anchorEl}
@@ -77,7 +79,7 @@ export const ExportButton = ({ data, exportOptions, exportHandlers }) => {
       >
         {exportOptions.map((option) => (
           <MenuItem key={option.type} onClick={() => handleExport(option.type)}>
-            {option.label}
+            {translate(option.label)}
           </MenuItem>
         ))}
       </Menu>

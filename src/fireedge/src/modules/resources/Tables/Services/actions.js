@@ -36,7 +36,7 @@ import {
   T,
   PATH,
 } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import ServiceTemplatesTable from '@modules/resources/Tables/ServiceTemplates'
 
 const useTableStyles = () => ({

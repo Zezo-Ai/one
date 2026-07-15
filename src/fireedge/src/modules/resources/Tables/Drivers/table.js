@@ -15,7 +15,8 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useEffect, useMemo } from 'react'
 import { Alert, Typography } from '@mui/material'
-import { Translate, Tr } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
+import { generateDocLink } from '@UtilsModule'
 import EnhancedTable, {
   createColumns,
 } from '@modules/resources/Tables/Enhanced'
@@ -24,7 +25,6 @@ import DriverColumns from '@modules/resources/Tables/Drivers/columns'
 import DriverRow from '@modules/resources/Tables/Drivers/row'
 import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { useViews, DriverAPI, SystemAPI } from '@FeaturesModule'
-import { generateDocLink } from '@UtilsModule'
 
 const DEFAULT_DATA_CY = 'drivers'
 
@@ -33,6 +33,7 @@ const DEFAULT_DATA_CY = 'drivers'
  * @returns {ReactElement} Drivers table
  */
 const DriversTable = (props) => {
+  const { translate } = useTranslation()
   const {
     rootProps = {},
     searchProps = {},
@@ -96,7 +97,7 @@ const DriversTable = (props) => {
           <Alert severity="error" variant="outlined">
             <Translate word={T.CannotConnectOneForm} />
             <Typography variant="body2" gutterBottom>
-              {Tr(T['oneform.info.more'])}
+              {translate(T['oneform.info.more'])}
               <a
                 target="_blank"
                 href={generateDocLink(
@@ -105,7 +106,7 @@ const DriversTable = (props) => {
                 )}
                 rel="noreferrer"
               >
-                {Tr(T['oneform.info.more.link'])}
+                {translate(T['oneform.info.more.link'])}
               </a>
             </Typography>
           </Alert>

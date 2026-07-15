@@ -12,6 +12,8 @@ actions:
   import_dialog: true
   disable: true
   enable: true
+  lock: true
+  unlock: true
   chown: true
   chgrp: true
   delete: true

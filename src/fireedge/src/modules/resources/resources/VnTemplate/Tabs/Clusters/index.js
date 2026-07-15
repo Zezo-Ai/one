@@ -118,6 +118,7 @@ export const Clusters = ({ data, config }) => {
                 [
                   {
                     title: T.Remove,
+                    isDestructive: true,
                     isDisabled: !canChangeCluster || areActionsDisabled,
                     onClick: () => handleRemoveClusterForm(cluster),
                   },
@@ -184,8 +185,11 @@ export const Clusters = ({ data, config }) => {
             resourceType={T.Clusters}
           />
         ),
-        confirmLabel: T.Accept,
+        confirmLabel: T.Remove,
         cancelLabel: T.Cancel,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: () => handleRemoveCluster(cluster?.ID),
     })

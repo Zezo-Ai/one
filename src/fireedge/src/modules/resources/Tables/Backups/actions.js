@@ -37,7 +37,7 @@ import {
   getBackupVmIds,
   isVmAvailableAction,
 } from '@ModelsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const isDisabled = (action) => (rows) =>
   !isVmAvailableAction(

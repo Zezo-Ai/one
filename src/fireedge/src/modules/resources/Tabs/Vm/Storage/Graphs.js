@@ -20,8 +20,8 @@ import { ReactElement } from 'react'
 import { T } from '@ConstantsModule'
 import { VmAPI } from '@FeaturesModule'
 import Chartist from '@modules/resources/Charts/Chartist'
-import { Tr } from '@modules/resources/HOC'
 import { prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const interpolationBytes = (value) =>
   value ? prettyBytes(value, 'KB', 2) : value
@@ -34,6 +34,7 @@ const interpolationBytes = (value) =>
  * @returns {ReactElement} Capacity Graphs.
  */
 const Graphs = ({ id }) => {
+  const { translate } = useTranslation()
   const { data: monitoring = [], isFetching } = VmAPI.useGetMonitoringQuery(id)
   const { data: vm = {} } = VmAPI.useGetVmQuery({ id })
 
@@ -103,7 +104,7 @@ const Graphs = ({ id }) => {
     <Grid container spacing={1} sx={{ overflow: 'hidden' }}>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.DiskReadBytes)}
+          name={translate(T.DiskReadBytes)}
           data={monitoring}
           isFetching={isFetching}
           y={diskRdBytesY}
@@ -153,7 +154,7 @@ const Graphs = ({ id }) => {
       </Grid>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.DiskWriteBytes)}
+          name={translate(T.DiskWriteBytes)}
           data={monitoring}
           isFetching={isFetching}
           y={diskWrBytesY}
@@ -203,7 +204,7 @@ const Graphs = ({ id }) => {
       </Grid>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.DiskReadIOPS)}
+          name={translate(T.DiskReadIOPS)}
           data={monitoring}
           isFetching={isFetching}
           y={diskRdIopsY}
@@ -253,7 +254,7 @@ const Graphs = ({ id }) => {
       </Grid>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.DiskWriteIOPS)}
+          name={translate(T.DiskWriteIOPS)}
           data={monitoring}
           isFetching={isFetching}
           y={diskWrIopsY}

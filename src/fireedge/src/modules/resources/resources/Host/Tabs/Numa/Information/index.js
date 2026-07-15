@@ -21,7 +21,7 @@ import NumaMemory from '@modules/resources/resources/Host/Tabs/Numa/Memory'
 import NumaHugepage from '@modules/resources/resources/Host/Tabs/Numa/Hugepage'
 import { getStyles } from '@modules/resources/resources/Host/Tabs/Numa/Information/styles'
 import { T, TEXT_VARIANTS, TEXT_WEIGHTS } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Text } from '@ComponentsV2Module'
 
 /**
@@ -30,6 +30,7 @@ import { Text } from '@ComponentsV2Module'
  * @returns {ReactElement} Information tab
  */
 export const InformationPanel = ({ node = {} }) => {
+  const { translate } = useTranslation()
   const { CORE, HUGEPAGE } = node
   const cores = [].concat(CORE ?? []).filter(Boolean)
   const hugepages = [HUGEPAGE].flat().filter(Boolean)
@@ -41,7 +42,7 @@ export const InformationPanel = ({ node = {} }) => {
           component="h5"
           variant={TEXT_VARIANTS.H5}
           weight={TEXT_WEIGHTS.SEMIBOLD}
-          value={Tr(T.NumaNodeItem, node.NODE_ID)}
+          value={translate(T.NumaNodeItem, node.NODE_ID)}
         />
       </Box>
       <Box className="numa-node__metrics">
@@ -54,7 +55,7 @@ export const InformationPanel = ({ node = {} }) => {
           component="h6"
           variant={TEXT_VARIANTS.H6}
           weight={TEXT_WEIGHTS.SEMIBOLD}
-          value={Tr(T.NumaNodeTitle)}
+          value={translate(T.NumaNodeTitle)}
         />
         <Box className="numa-node__cores">
           {cores.map((core) => (

@@ -28,7 +28,10 @@ import { useModalsApi } from '@FeaturesModule'
 import ContentForm, {
   CUSTOM_ATTRS_ID,
 } from '@modules/resources/resources/VirtualNetwork/Forms/AddRangeForm/content'
-import { SCHEMA } from '@modules/resources/resources/VirtualNetwork/Forms/AddRangeForm/schema'
+import {
+  FIELDS,
+  SCHEMA,
+} from '@modules/resources/resources/VirtualNetwork/Forms/AddRangeForm/schema'
 import {
   dialogContentMaxHeight,
   dialogMaxWidth,
@@ -57,7 +60,18 @@ const IMMUTABLE_ATTRS = [
   'IPAM_MAD',
 ]
 
+// List of attributes that should be hide from attributes panel
+const IGNORED_ATTRS = [
+  'ID',
+  'INDEX',
+  'NEXT_INDEX',
+  'POSITION',
+  '__ORIGINAL_ADDRESS_RANGE__',
+]
+
 const sharedRemoveData = ['MAC']
+
+const getFormFieldNames = () => FIELDS().map(({ name }) => name)
 
 const removeSharedData = (data) => {
   Object.keys(data).forEach((attr) => {
@@ -85,22 +99,41 @@ const AddRangeForm = createForm(SCHEMA, undefined, {
   transformInitialValue: (addressRange) => {
     if (!addressRange) return {}
 
-    const mutableAttrs = {}
-    for (const attr of Object.keys(addressRange)) {
-      !IMMUTABLE_ATTRS.includes(attr) &&
-        (mutableAttrs[attr] = addressRange[attr])
+    const formAttrs = {}
+    const customAttrs = {}
+    const fieldNames = getFormFieldNames()
+
+    for (const [attr, value] of Object.entries(addressRange)) {
+      if (IGNORED_ATTRS.includes(attr)) continue
+
+      if (fieldNames.includes(attr)) {
+        formAttrs[attr] = value
+      } else if (!IMMUTABLE_ATTRS.includes(attr)) {
+        customAttrs[attr] = value
+      }
     }
 
-    if (mutableAttrs?.SHARED === 'NO') mutableAttrs.SHARED = false
+    if (formAttrs?.SHARED === 'NO') formAttrs.SHARED = false
+    if (formAttrs?.SHARED === 'YES') formAttrs.SHARED = true
 
-    return { ...mutableAttrs }
+    return {
+      ...formAttrs,
+      ...(Object.keys(customAttrs).length && {
+        [CUSTOM_ATTRS_ID]: customAttrs,
+      }),
+    }
   },
-  transformBeforeSubmit: (formData) => {
+  transformBeforeSubmit: (formData, _, stepProps) => {
     const filteredData = cleanSharedData(formData)
 
     const { [CUSTOM_ATTRS_ID]: customAttrs = {}, ...rest } = filteredData ?? {}
+    const submitData = { ...customAttrs, ...rest }
 
-    return { ...customAttrs, ...rest }
+    if (stepProps?.isUpdate) {
+      IMMUTABLE_ATTRS.forEach((attr) => delete submitData[attr])
+    }
+
+    return submitData
   },
 })
 

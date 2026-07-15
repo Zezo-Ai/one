@@ -25,6 +25,7 @@ import {
   MenuButton,
   Tooltip,
   AlertNotification,
+  getLabelMenuButtonProps,
 } from '@ComponentsV2Module'
 import {
   useModalsApi,
@@ -59,6 +60,7 @@ import {
   getVirtualMachineState,
   getVmHostname,
   getVmClusterId,
+  getLabelTags,
 } from '@ModelsModule'
 
 import { prettyBytes, jsonToXml } from '@UtilsModule'
@@ -115,6 +117,7 @@ export const SingleView = ({
     }
   )
   const vmData = extendedVmData ?? selectedVm
+  const vmLabelTags = useMemo(() => getLabelTags(vmData?.LABELS), [vmData])
   const clusterId = getVmClusterId(vmData)
   const clusterIdNumber = Number(clusterId)
   const hasClusterId = Number.isInteger(clusterIdNumber) && clusterIdNumber >= 0
@@ -328,6 +331,7 @@ export const SingleView = ({
               [T.Host, hostName],
               [T.Cluster, clusterName],
             ],
+            tags: vmLabelTags,
             Toolbar: () => (
               <Box
                 sx={(theme) => ({
@@ -345,6 +349,7 @@ export const SingleView = ({
                       isDisabled={
                         vmState?.name === 'RUNNING' || isActionsDisabled
                       }
+                      compactable
                     />
                   </span>
                 </Tooltip>
@@ -352,11 +357,13 @@ export const SingleView = ({
                 <MenuButton
                   placeholder={T.Console}
                   options={[consoleOptions]}
+                  compactable
                 />
 
                 <MenuButton
                   placeholder={T.VMActions}
                   options={[generalOptions]}
+                  compactable
                 />
 
                 <MenuButton placeholder={T.VMState} options={[stateOptions]} />
@@ -393,6 +400,7 @@ export const SingleView = ({
                         tooltip: T.SaveAsTemplate,
                         isDisabled:
                           isActionsDisabled || saveAsTemplateAction?.isDisabled,
+                        compactable: true,
                       },
                       {
                         startIcon: <Cart width="16px" height="16px" />,
@@ -401,6 +409,17 @@ export const SingleView = ({
                         tooltip: T.CreateApp,
                         isDisabled:
                           isActionsDisabled || createAppAction?.isDisabled,
+                        compactable: true,
+                      },
+                    ],
+                    [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [selectedVm],
+                          resourceType: RESOURCE_NAMES.VM,
+                          isDisabled: !vmId || isActionsDisabled,
+                        }),
+                        compactable: true,
                       },
                       {
                         startIcon: <RefreshDouble width="16px" height="16px" />,
@@ -408,6 +427,7 @@ export const SingleView = ({
                         value: 'refresh',
                         tooltip: T.Refresh,
                         isDisabled: isActionsDisabled,
+                        compactable: true,
                       },
                     ],
                     [
@@ -428,6 +448,11 @@ export const SingleView = ({
                         options: [terminateActions],
                         placeholder: T.Delete,
                         isDisabled: vmIsLocked || isActionsDisabled,
+                      },
+                      {
+                        value: 'compact-overflow',
+                        compactToolbarOverflow: true,
+                        isDisabled: isActionsDisabled,
                       },
                       {
                         startIcon: <Cancel width="16px" height="16px" />,

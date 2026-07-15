@@ -26,7 +26,7 @@ import {
 } from '@ComponentsV2Module'
 
 import { getImageState, getLabelSlotLabels } from '@ModelsModule'
-import { prettyBytes, timeFromMilliseconds } from '@UtilsModule'
+import { getLockIcon, prettyBytes, timeFromMilliseconds } from '@UtilsModule'
 
 /**
  * VmTemplateCard component displays a VM Template as a card.
@@ -73,7 +73,11 @@ export const ImageCard = forwardRef(
           [
             TitleSlot,
             {
-              title: NAME,
+              title: (
+                <>
+                  {NAME} {getLockIcon(data)}
+                </>
+              ),
               status: stateColor,
               statusName: stateName,
             },

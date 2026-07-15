@@ -26,6 +26,7 @@ export const TablePanel = forwardRef(
       size = 'medium',
       isLoading = false,
       isFullHeight = false,
+      ...props
     },
     ref
   ) => (
@@ -37,6 +38,7 @@ export const TablePanel = forwardRef(
       size={size}
       isLoading={isLoading}
       isFullHeight={isFullHeight}
+      {...props}
     />
   )
 )
@@ -50,4 +52,6 @@ TablePanel.propTypes = {
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   isLoading: PropTypes.bool,
   isFullHeight: PropTypes.bool,
+  openRowDetailsOnClick: PropTypes.bool,
+  rowDetailsResourceId: PropTypes.string,
 }

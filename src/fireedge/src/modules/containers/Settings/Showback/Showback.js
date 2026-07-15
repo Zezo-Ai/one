@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Tr } from '@ResourcesModule'
+import { useTranslation } from '@ProvidersModule'
 import { DateRangeFilter, SubmitButton } from '@ComponentsV2Module'
 import { STYLE_BUTTONS, T } from '@ConstantsModule'
 import { css } from '@emotion/css'
@@ -44,6 +44,7 @@ const styles = ({ palette, spacing }) => ({
  * @returns {ReactElement} Settings showback
  */
 export const Settings = () => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => styles(theme), [theme])
 
@@ -95,7 +96,7 @@ export const Settings = () => {
           gutterBottom
           className={classes.description}
         >
-          {Tr(T['showback.button.help.paragraph.1'])}
+          {translate(T['showback.button.help.paragraph.1'])}
         </Typography>
         <Stack className={classes.formContainer}>
           <DateRangeFilter

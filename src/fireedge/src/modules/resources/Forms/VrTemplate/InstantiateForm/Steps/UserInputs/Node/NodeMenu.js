@@ -27,7 +27,7 @@ import {
 import { Trash as ClearIcon } from 'iconoir-react'
 import SubNode from '@modules/resources/Forms/VrTemplate/InstantiateForm/Steps/UserInputs/Node/SubNode'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -36,6 +36,7 @@ import { T } from '@ConstantsModule'
  * @returns {Component} - Node menu
  */
 const NodeMenu = ({ userInputs }) => {
+  const { translate } = useTranslation()
   const [searchTerm, setSearchTerm] = useState('')
   const [showMandatoryOnly, setShowMandatoryOnly] = useState(false)
 
@@ -65,7 +66,7 @@ const NodeMenu = ({ userInputs }) => {
       <TextField
         fullWidth
         variant="outlined"
-        placeholder={`${Tr(T.Search)}...`}
+        placeholder={`${translate(T.Search)}...`}
         value={searchTerm}
         onChange={handleSearchChange}
         sx={{ paddingBottom: '6px' }}
@@ -90,7 +91,7 @@ const NodeMenu = ({ userInputs }) => {
               }}
             />
           }
-          label={Tr(T.VirtualRouterUserInputsShowMandatory)}
+          label={translate(T.VirtualRouterUserInputsShowMandatory)}
         />
       </FormGroup>
       {filteredUserInputs.map((userInput, index) => (

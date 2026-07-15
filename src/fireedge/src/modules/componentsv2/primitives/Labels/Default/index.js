@@ -20,6 +20,7 @@ import { Typography as MUITypography, Box, Stack, Tooltip } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/primitives/Labels/Default/styles'
 import { HelpCircle as TooltipIcon } from 'iconoir-react'
 import { T } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} root0 - Params
@@ -33,7 +34,10 @@ export const Label = forwardRef(
     { children, isRequired = false, isOptional = false, tooltip = '', ...opts },
     ref
   ) => {
+    const { translate, translateText } = useTranslation()
     const content = opts?.title || children || 'Label'
+    const translatedContent =
+      typeof content === 'string' ? translateText(content) : content
 
     return (
       <Stack
@@ -44,18 +48,18 @@ export const Label = forwardRef(
       >
         {isRequired && <Box className="isRequired-icon">*</Box>}
         <MUITypography className="label" ref={ref} {...opts}>
-          {content}
+          {translatedContent}
         </MUITypography>
 
         {tooltip && (
-          <Tooltip arrow title={tooltip}>
+          <Tooltip arrow title={translate(tooltip)}>
             <TooltipIcon className="tooltip-icon" />
           </Tooltip>
         )}
 
         {isOptional && (
           <MUITypography className="isOptional-banner">
-            {`(${T.Optional})`}
+            {`(${translate(T.Optional)})`}
           </MUITypography>
         )}
       </Stack>

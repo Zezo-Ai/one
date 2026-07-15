@@ -14,11 +14,12 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { createTable } from '@UtilsModule'
+import { createTable, getLockIcon } from '@UtilsModule'
 import { VmGroupAPI, VmAPI } from '@FeaturesModule'
 import { T } from '@ConstantsModule'
 import { VM_COLUMNS } from '@modules/models/VirtualMachine/table'
 import { createLabelColumn } from '@modules/models/labels'
+import { Box } from '@mui/material'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const VMGROUP_COLUMNS = [
@@ -31,6 +32,12 @@ export const VMGROUP_COLUMNS = [
     accessorKey: 'NAME',
     header: T.Name,
     width: '30%',
+    cell: ({ row }) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>{row.original?.NAME}</span>
+        {getLockIcon(row.original)}
+      </Box>
+    ),
   },
   {
     accessorKey: 'UNAME',
@@ -51,10 +58,12 @@ export const VMGROUP_VM_COLUMNS = VM_COLUMNS.filter(({ id }) =>
 
 export const vmgroupVmTable = createTable(
   VMGROUP_VM_COLUMNS,
-  VmAPI.useGetVmInfosetQuery
+  VmAPI.useGetVmInfosetQuery,
+  { dataCy: 'vm-group-vms' }
 )
 
 export const vmgroupTable = createTable(
   VMGROUP_COLUMNS,
-  VmGroupAPI.useGetVMGroupsQuery
+  VmGroupAPI.useGetVMGroupsQuery,
+  { dataCy: 'vm-groups' }
 )

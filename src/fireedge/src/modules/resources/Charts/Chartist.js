@@ -38,7 +38,7 @@ import {
 import { Component, useMemo, useRef, useState } from 'react'
 import UplotReact from 'uplot-react'
 import { useResizeObserver } from '@HooksModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const useStyles = ({ palette, typography }) => ({
@@ -177,6 +177,7 @@ const Chartist = ({
   dateFormat = 'MM/dd/yyyy\nhh:mm a',
   dateFormatHover = 'MMM dd HH:mm:ss',
 }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => useStyles(theme), [theme])
   const [timePeriod, setTimePeriod] = useState(sortingOptions[T.Last30Minutes])
@@ -583,7 +584,7 @@ const Chartist = ({
               ?.some((v) => typeof v !== 'number' || Number.isNaN(v)) ? (
             <Stack direction="row" justifyContent="center" alignItems="center">
               <Typography sx={{ color: 'text.headings' }}>
-                {Tr(T.NoDataAvailable)}
+                {translate(T.NoDataAvailable)}
               </Typography>
             </Stack>
           ) : (
@@ -608,21 +609,27 @@ const Chartist = ({
   )
 }
 
+const chartSeriesType = PropTypes.arrayOf(
+  PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)])
+)
+
+const legendNamesType = PropTypes.oneOfType([
+  PropTypes.arrayOf(PropTypes.string),
+  PropTypes.objectOf(PropTypes.string),
+])
+
 Chartist.propTypes = {
   name: PropTypes.string,
   data: PropTypes.array,
   x: PropTypes.arrayOf(PropTypes.func),
-  y: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.string),
-    PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
-  ]),
+  y: chartSeriesType,
   yRangeOffset: PropTypes.number,
   xRangeOffset: PropTypes.number,
   interpolationY: PropTypes.func,
   shouldFill: PropTypes.array,
   enableLegend: PropTypes.bool,
   zoomFactor: PropTypes.number,
-  legendNames: PropTypes.arrayOf(PropTypes.string),
+  legendNames: legendNamesType,
   setTransform: PropTypes.func,
   serieScale: PropTypes.number,
   trendLineOnly: PropTypes.arrayOf(PropTypes.string),

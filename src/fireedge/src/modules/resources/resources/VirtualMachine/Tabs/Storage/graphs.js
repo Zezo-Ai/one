@@ -20,8 +20,9 @@ import { ReactElement } from 'react'
 import { T } from '@ConstantsModule'
 import { VmAPI } from '@FeaturesModule'
 import { Chartist } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
 import { prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+
 import { getHypervisor } from '@ModelsModule'
 
 const interpolationBytes = (value) =>
@@ -35,10 +36,14 @@ const interpolationBytes = (value) =>
  * @returns {ReactElement} Capacity Graphs.
  */
 const Graphs = ({ id }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
 
-  const { data: monitoring = [], isFetching } = VmAPI.useGetMonitoringQuery(id)
-  const { data: vm = {} } = VmAPI.useGetVmQuery({ id })
+  const { data: monitoring = [], isFetching } = VmAPI.useGetMonitoringQuery(
+    id,
+    { skip: !id }
+  )
+  const { data: vm = {} } = VmAPI.useGetVmQuery({ id }, { skip: !id })
   const VM_MAD = getHypervisor(vm)
 
   const forecastConfig = window?.__FORECAST_CONFIG__?.[VM_MAD] ?? {}
@@ -101,7 +106,7 @@ const Graphs = ({ id }) => {
     <Grid container spacing={1} sx={{ overflow: 'hidden' }}>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.DiskReadBytes)}
+          name={translate(T.DiskReadBytes)}
           data={monitoring}
           isFetching={isFetching}
           y={diskRdBytesY}
@@ -151,7 +156,7 @@ const Graphs = ({ id }) => {
       </Grid>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.DiskWriteBytes)}
+          name={translate(T.DiskWriteBytes)}
           data={monitoring}
           isFetching={isFetching}
           y={diskWrBytesY}
@@ -201,7 +206,7 @@ const Graphs = ({ id }) => {
       </Grid>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.DiskReadIOPS)}
+          name={translate(T.DiskReadIOPS)}
           data={monitoring}
           isFetching={isFetching}
           y={diskRdIopsY}
@@ -251,7 +256,7 @@ const Graphs = ({ id }) => {
       </Grid>
       <Grid item md={6}>
         <Chartist
-          name={Tr(T.DiskWriteIOPS)}
+          name={translate(T.DiskWriteIOPS)}
           data={monitoring}
           isFetching={isFetching}
           y={diskWrIopsY}

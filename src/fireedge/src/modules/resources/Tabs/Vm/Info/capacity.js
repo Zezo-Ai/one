@@ -23,14 +23,14 @@ import { VmAPI, useModalsApi } from '@FeaturesModule'
 import { ResizeCapacityForm } from '@modules/resources/resources/VirtualMachine/Forms'
 import { List } from '@modules/resources/Tabs/Common'
 import { MemoryIcon } from '@modules/resources/Icons'
-import { Tr, Translate } from '@modules/resources/HOC'
-
+import { Translate, useTranslation } from '@ProvidersModule'
 import {
   isVmAvailableAction,
   formatNumberByCurrency,
   jsonToXml,
   prettyBytes,
 } from '@UtilsModule'
+
 import { T, VM, VM_ACTIONS } from '@ConstantsModule'
 
 /**
@@ -44,6 +44,7 @@ import { T, VM, VM_ACTIONS } from '@ConstantsModule'
  * @returns {ReactElement} Capacity tab
  */
 const CapacityPanel = ({ vm = {}, actions, oneConfig, adminGroup }) => {
+  const { translate } = useTranslation()
   const {
     CPU,
     VCPU = '-',
@@ -89,8 +90,8 @@ const CapacityPanel = ({ vm = {}, actions, oneConfig, adminGroup }) => {
     ![CORES, SOCKETS].includes(undefined) && {
       name: T.VirtualCores,
       value: [
-        `${Tr(T.Cores)} x ${CORES}`,
-        `${Tr(T.Sockets)} x ${SOCKETS}`,
+        `${translate(T.Cores)} x ${CORES}`,
+        `${translate(T.Sockets)} x ${SOCKETS}`,
       ].join(' | '),
       dataCy: 'virtualcores',
     },

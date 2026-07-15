@@ -2362,7 +2362,8 @@ FIREEDGE_SUNSTONE_ETC_PROFILES="src/fireedge/etc/sunstone/profiles/windows_optim
 
 FIREEDGE_SUNSTONE_ETC_VIEW="src/fireedge/etc/sunstone/views/sunstone-views.yaml"
 
-FIREEDGE_SUNSTONE_ETC_VIEW_ADMIN="src/fireedge/etc/sunstone/views/admin/vm-tab.yaml \
+FIREEDGE_SUNSTONE_ETC_VIEW_ADMIN="src/fireedge/etc/sunstone/views/admin/dashboard-tab.yaml \
+                                src/fireedge/etc/sunstone/views/admin/vm-tab.yaml \
                                 src/fireedge/etc/sunstone/views/admin/vm-template-tab.yaml \
                                 src/fireedge/etc/sunstone/views/admin/vm-group-tab.yaml \
                                 src/fireedge/etc/sunstone/views/admin/marketplace-app-tab.yaml \
@@ -2390,7 +2391,8 @@ FIREEDGE_SUNSTONE_ETC_VIEW_ADMIN="src/fireedge/etc/sunstone/views/admin/vm-tab.y
                                 src/fireedge/etc/sunstone/views/admin/driver-tab.yaml \
                                 src/fireedge/etc/sunstone/views/admin/provider-tab.yaml"
 
-FIREEDGE_SUNSTONE_ETC_VIEW_USER="src/fireedge/etc/sunstone/views/user/vm-tab.yaml \
+FIREEDGE_SUNSTONE_ETC_VIEW_USER="src/fireedge/etc/sunstone/views/user/dashboard-tab.yaml \
+                                src/fireedge/etc/sunstone/views/user/vm-tab.yaml \
                                 src/fireedge/etc/sunstone/views/user/vm-template-tab.yaml \
                                 src/fireedge/etc/sunstone/views/user/marketplace-app-tab.yaml \
                                 src/fireedge/etc/sunstone/views/user/image-tab.yaml \
@@ -2402,7 +2404,8 @@ FIREEDGE_SUNSTONE_ETC_VIEW_USER="src/fireedge/etc/sunstone/views/user/vm-tab.yam
                                 src/fireedge/etc/sunstone/views/user/vnet-template-tab.yaml \
                                 src/fireedge/etc/sunstone/views/user/group-tab.yaml"
 
-FIREEDGE_SUNSTONE_ETC_VIEW_GROUPADMIN="src/fireedge/etc/sunstone/views/groupadmin/vm-tab.yaml \
+FIREEDGE_SUNSTONE_ETC_VIEW_GROUPADMIN="src/fireedge/etc/sunstone/views/groupadmin/dashboard-tab.yaml \
+                                src/fireedge/etc/sunstone/views/groupadmin/vm-tab.yaml \
                                 src/fireedge/etc/sunstone/views/groupadmin/vm-template-tab.yaml \
                                 src/fireedge/etc/sunstone/views/groupadmin/marketplace-app-tab.yaml \
                                 src/fireedge/etc/sunstone/views/groupadmin/sec-group-tab.yaml \
@@ -2419,11 +2422,11 @@ FIREEDGE_SUNSTONE_ETC_VIEW_GROUPADMIN="src/fireedge/etc/sunstone/views/groupadmi
                                 src/fireedge/etc/sunstone/views/groupadmin/vrouter-template-tab.yaml \
                                 src/fireedge/etc/sunstone/views/groupadmin/group-tab.yaml"
 
-FIREEDGE_SUNSTONE_ETC_VIEW_CLOUD="src/fireedge/etc/sunstone/views/cloud/vm-tab.yaml \
+FIREEDGE_SUNSTONE_ETC_VIEW_CLOUD="src/fireedge/etc/sunstone/views/cloud/dashboard-tab.yaml \
+                                src/fireedge/etc/sunstone/views/cloud/vm-tab.yaml \
                                 src/fireedge/etc/sunstone/views/cloud/vm-template-tab.yaml \
                                 src/fireedge/etc/sunstone/views/cloud/service-tab.yaml \
                                 src/fireedge/etc/sunstone/views/cloud/marketplace-app-tab.yaml \
-                                src/fireedge/etc/sunstone/views/cloud/dashboard-tab.yaml \
                                 src/fireedge/etc/sunstone/views/cloud/user-tab.yaml"
 
 #-----------------------------------------------------------------------------

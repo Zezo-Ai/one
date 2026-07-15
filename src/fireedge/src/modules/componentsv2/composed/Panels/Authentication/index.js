@@ -25,6 +25,7 @@ import { InputField } from '@modules/componentsv2/primitives/Fields'
 import { SubmitButton } from '@modules/componentsv2/primitives/Buttons/Submit'
 import { TextArea } from '@modules/componentsv2/primitives/TextArea'
 import { getStyles } from '@modules/componentsv2/composed/Panels/Authentication/styles'
+import { useTranslation } from '@ProvidersModule'
 
 const AUTH_DRIVER_OPTIONS = [
   'core',
@@ -90,6 +91,7 @@ export const AuthenticationTab = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const [dialog, setDialog] = useState(null)
     const [dialogValue, setDialogValue] = useState('')
     const activeDialog = dialog ? SECRET_DIALOGS[dialog] : null
@@ -123,7 +125,7 @@ export const AuthenticationTab = forwardRef(
 
     return (
       <Box sx={(theme) => getStyles({ theme })} ref={ref}>
-        <Typography className="title">{T.Authentication}</Typography>
+        <Typography className="title">{translate(T.Authentication)}</Typography>
 
         <Box className="container">
           <Box className="section">
@@ -137,7 +139,7 @@ export const AuthenticationTab = forwardRef(
               onChange={(option) =>
                 onAuthDriverChange?.(option?.value ?? option)
               }
-              data-cy="auth-driver-selector"
+              dataCy="auth-driver-selector"
             />
 
             <InputField

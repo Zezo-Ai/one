@@ -19,6 +19,7 @@ import {
   ButtonGroup,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
@@ -27,7 +28,13 @@ import { Box } from '@mui/material'
 import { Component, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { Cancel as CloseIcon, OffTag, OnTag, Trash } from 'iconoir-react'
-import { MARKETPLACE_ACTIONS, STYLE_BUTTONS, T, UNITS } from '@ConstantsModule'
+import {
+  MARKETPLACE_ACTIONS,
+  RESOURCE_NAMES,
+  STYLE_BUTTONS,
+  T,
+  UNITS,
+} from '@ConstantsModule'
 import { MarketplaceAPI, useModalsApi } from '@FeaturesModule'
 import { Marketplace } from '@ResourcesModule'
 import {
@@ -150,6 +157,7 @@ export const AggregatedView = ({
             resourceType={T.Marketplaces}
           />
         ),
+        confirmLabel: T.Enable,
       },
       onSubmit: handleEnable,
     })
@@ -166,6 +174,7 @@ export const AggregatedView = ({
             resourceType={T.Marketplaces}
           />
         ),
+        confirmLabel: T.Disable,
       },
       onSubmit: handleDisable,
     })
@@ -182,6 +191,10 @@ export const AggregatedView = ({
             resourceType={T.Marketplaces}
           />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(
@@ -231,6 +244,11 @@ export const AggregatedView = ({
                   />
                 )}
 
+                <LabelButton
+                  selectedRows={selectedMarketplaces}
+                  resourceType={RESOURCE_NAMES.MARKETPLACE}
+                  isDisabled={isMutating}
+                />
                 {canDelete && (
                   <Button
                     type={STYLE_BUTTONS.TYPE.PRIMARY}
@@ -246,7 +264,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   tooltip={T.Close}
                   onClick={handleClose}

@@ -20,12 +20,13 @@ import { Trash, UndoAction } from 'iconoir-react'
 
 import { ImageAPI, useModalsApi } from '@FeaturesModule'
 
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { T, IMAGE_ACTIONS } from '@ConstantsModule'
 
 import { SubmitButton } from '@ComponentsV2Module'
 
 const SnapshotFlattenAction = memo(({ id, snapshot }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
 
   const [flattenImageSnapshot] = ImageAPI.useFlattenImageSnapshotMutation()
@@ -45,8 +46,8 @@ const SnapshotFlattenAction = memo(({ id, snapshot }) => {
         ),
         children: (
           <>
-            <p>{Tr(T.DeleteOtherSnapshots)}</p>
-            <p>{Tr(T.DoYouWantProceed)}</p>
+            <p>{translate(T.DeleteOtherSnapshots)}</p>
+            <p>{translate(T.DoYouWantProceed)}</p>
           </>
         ),
       },
@@ -57,14 +58,15 @@ const SnapshotFlattenAction = memo(({ id, snapshot }) => {
   return (
     <SubmitButton
       data-cy={IMAGE_ACTIONS.SNAPSHOT_FLATTEN}
-      tooltip={Tr(T.Flatten)}
-      label={Tr(T.Flatten)}
+      tooltip={translate(T.Flatten)}
+      label={translate(T.Flatten)}
       onClick={handleOpenForm}
     />
   )
 })
 
 const SnapshotRevertAction = memo(({ id, snapshot }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
 
   const [revertImageSnapshot] = ImageAPI.useRevertImageSnapshotMutation()
@@ -81,7 +83,7 @@ const SnapshotRevertAction = memo(({ id, snapshot }) => {
         title: (
           <Translate word={T.RevertSomething} values={`#${ID} - ${NAME}`} />
         ),
-        children: <p>{Tr(T.DoYouWantProceed)}</p>,
+        children: <p>{translate(T.DoYouWantProceed)}</p>,
       },
 
       onSubmit: handleRevert,
@@ -91,13 +93,14 @@ const SnapshotRevertAction = memo(({ id, snapshot }) => {
     <SubmitButton
       data-cy={IMAGE_ACTIONS.SNAPSHOT_REVERT}
       iconOnly={<UndoAction />}
-      tooltip={Tr(T.Revert)}
+      tooltip={translate(T.Revert)}
       onClick={handleOpenForm}
     />
   )
 })
 
 const SnapshotDeleteAction = memo(({ id, snapshot }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
 
   const [deleteImageSnapshot] = ImageAPI.useDeleteImageSnapshotMutation()
@@ -115,7 +118,7 @@ const SnapshotDeleteAction = memo(({ id, snapshot }) => {
         title: (
           <Translate word={T.DeleteSomething} values={`#${ID} - ${NAME}`} />
         ),
-        children: <p>{Tr(T.DoYouWantProceed)}</p>,
+        children: <p>{translate(T.DoYouWantProceed)}</p>,
       },
 
       onSubmit: handleDelete,
@@ -125,7 +128,7 @@ const SnapshotDeleteAction = memo(({ id, snapshot }) => {
     <SubmitButton
       data-cy={IMAGE_ACTIONS.SNAPSHOT_DELETE}
       iconOnly={<Trash />}
-      tooltip={Tr(T.Delete)}
+      tooltip={translate(T.Delete)}
       onClick={handleOpenForm}
     />
   )

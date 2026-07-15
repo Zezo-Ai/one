@@ -23,11 +23,13 @@ import {
   GlobalAction,
 } from '@modules/resources/Tables/Enhanced/Utils'
 import { ACL_ACTIONS, RESOURCE_NAMES, T, PATH } from '@ConstantsModule'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { translateACL } from '@ModelsModule'
 
-const ListACLNames = ({ rows = [] }) =>
-  rows?.map?.(({ id, original }) => {
+const ListACLNames = ({ rows = [] }) => {
+  const { translate } = useTranslation()
+
+  return rows?.map?.(({ id, original }) => {
     const { ID, STRING } = original
     const translatedString = translateACL(STRING)
 
@@ -38,11 +40,12 @@ const ListACLNames = ({ rows = [] }) =>
         component="span"
         display="block"
       >
-        {Tr(T['acls.form.delete.rule'])} <b>#{ID}</b>{' '}
-        {Tr(T['acls.form.delete.means'])} <b>{translatedString}</b>
+        {translate(T['acls.form.delete.rule'])} <b>#{ID}</b>{' '}
+        {translate(T['acls.form.delete.means'])} <b>{translatedString}</b>
       </Typography>
     )
   })
+}
 
 const MessageToConfirmAction = (rows, description) => (
   <>

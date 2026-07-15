@@ -18,12 +18,13 @@ import { T } from '@ConstantsModule'
 import { SCHEMA, FIELDS } from './schema'
 import { useMemo } from 'react'
 import { Grid, Alert, useTheme, Stack } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import styles from '@modules/resources/resources/OneKs/Forms/CreateOneKsClusterForm/Steps/styles'
 
 export const STEP_ID = 'general'
 
 const Content = () => {
+  const { translate } = useTranslation()
   // Theme
   const theme = useTheme()
   // Style classes
@@ -38,7 +39,7 @@ const Content = () => {
           spacing={1}
           justifyContent="space-between"
         >
-          <div>{Tr(T['oneks.form.create.general.help.paragraph'])}</div>
+          <div>{translate(T['oneks.form.create.general.help.paragraph'])}</div>
         </Stack>
       </Alert>
       <Grid mt={2} container className={classes.container}>

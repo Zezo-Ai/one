@@ -15,7 +15,7 @@
  * ------------------------------------------------------------------------- */
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Checkbox } from '@ComponentsV2Module'
 
 /**
@@ -28,27 +28,31 @@ import { Checkbox } from '@ComponentsV2Module'
  * @param {Array<object>} props.items - An array of items where each item has a key and a label.
  * @returns {object} The MetricSelector component.
  */
-export const MetricSelector = ({ selectedItems, onChange, items }) => (
-  <Box
-    sx={(theme) => ({
-      display: 'flex',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-      gap: theme.scale?.[300] ? theme.scale[300] + 'px' : '12px',
-    })}
-  >
-    {items.map((item) => (
-      <Checkbox
-        key={item.key}
-        text={Tr(item.label)}
-        checked={!!selectedItems[item.key]}
-        onChange={(checked) =>
-          onChange({ target: { name: item.key, checked } })
-        }
-      />
-    ))}
-  </Box>
-)
+export const MetricSelector = ({ selectedItems, onChange, items }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Box
+      sx={(theme) => ({
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: theme.scale?.[300] ? theme.scale[300] + 'px' : '12px',
+      })}
+    >
+      {items.map((item) => (
+        <Checkbox
+          key={item.key}
+          text={translate(item.label)}
+          checked={!!selectedItems[item.key]}
+          onChange={(checked) =>
+            onChange({ target: { name: item.key, checked } })
+          }
+        />
+      ))}
+    </Box>
+  )
+}
 
 MetricSelector.propTypes = {
   selectedItems: PropTypes.objectOf(PropTypes.bool),

@@ -123,9 +123,10 @@ const PREFIX_LENGTH_FIELD = {
 
 /**
  * @param {boolean} [isUpdate=false] - If true the form is for update
+ * @param {boolean} [hasLease=false] - If true the address range has leases
  * @returns {Field} Shared field
  */
-const SHARED_FIELD = (isUpdate = false) => ({
+const SHARED_FIELD = (isUpdate = false, hasLease = false) => ({
   name: 'SHARED',
   label: T.Shared,
   type: INPUT_TYPES.SWITCH,
@@ -141,8 +142,11 @@ const SHARED_FIELD = (isUpdate = false) => ({
       pt: { md: '1.5em' },
     },
   },
+  ...(isUpdate &&
+    hasLease && {
+      fieldProps: { disabled: true, isDisabled: true },
+    }),
   ...(isUpdate && {
-    fieldProps: { disabled: true },
     tooltip: T.CannotModifySharedWithLeases,
   }),
 })

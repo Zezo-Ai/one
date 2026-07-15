@@ -20,7 +20,7 @@ import { Trash, UndoAction } from 'iconoir-react'
 import { VmAPI, useModalsApi } from '@FeaturesModule'
 import { CreateSnapshotForm } from '@modules/resources/resources/VirtualMachine/Forms'
 
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { T, VM_ACTIONS } from '@ConstantsModule'
 
 import { SubmitButton } from '@ComponentsV2Module'
@@ -55,6 +55,7 @@ const CreateAction = memo(({ vmId }) => {
 })
 
 const RevertAction = memo(({ vmId, snapshot }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
 
   const [revertSnapshot] = VmAPI.useRevertVmSnapshotMutation()
@@ -76,7 +77,7 @@ const RevertAction = memo(({ vmId, snapshot }) => {
           />
         ),
         dataCy: 'modal-revert-snapshot',
-        children: <p>{Tr(T.DoYouWantProceed)}</p>,
+        children: <p>{translate(T.DoYouWantProceed)}</p>,
       },
 
       onSubmit: handleRevert,
@@ -86,13 +87,14 @@ const RevertAction = memo(({ vmId, snapshot }) => {
     <SubmitButton
       data-cy={`${VM_ACTIONS.SNAPSHOT_REVERT}-${SNAPSHOT_ID}`}
       iconOnly={<UndoAction />}
-      tooltip={Tr(T.Revert)}
+      tooltip={translate(T.Revert)}
       onClick={handleOpenForm}
     />
   )
 })
 
 const DeleteAction = memo(({ vmId, snapshot }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
 
   const [deleteSnapshot] = VmAPI.useDeleteVmSnapshotMutation()
@@ -114,7 +116,7 @@ const DeleteAction = memo(({ vmId, snapshot }) => {
           />
         ),
         dataCy: 'modal-delete-snapshot',
-        children: <p>{Tr(T.DoYouWantProceed)}</p>,
+        children: <p>{translate(T.DoYouWantProceed)}</p>,
       },
 
       onSubmit: handleDelete,
@@ -124,7 +126,7 @@ const DeleteAction = memo(({ vmId, snapshot }) => {
     <SubmitButton
       data-cy={`${VM_ACTIONS.SNAPSHOT_DELETE}-${SNAPSHOT_ID}`}
       iconOnly={<Trash />}
-      tooltip={Tr(T.Delete)}
+      tooltip={translate(T.Delete)}
       onClick={handleOpenForm}
     />
   )

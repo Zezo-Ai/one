@@ -23,14 +23,36 @@ import { TemplateTab } from '@ComponentsV2Module'
 
 const getStyles = ({ theme }) => ({
   display: 'flex',
+  flex: '1 1 0',
   flexDirection: 'column',
   gap: `${theme.scale[600]}px`,
+  width: '100%',
   minWidth: 0,
+  minHeight: 0,
+  overflowY: 'auto',
 
-  '& > *': {
+  '& .marketplaceapp-template-section': {
     display: 'flex',
+    flex: '1 1 0',
     flexDirection: 'column',
     gap: `${theme.scale[300]}px`,
+    width: '100%',
+    minWidth: 0,
+    minHeight: '240px',
+  },
+
+  '& .marketplaceapp-template-body': {
+    display: 'flex',
+    flex: '1 1 0',
+    width: '100%',
+    minWidth: 0,
+    minHeight: 0,
+  },
+
+  '& .marketplaceapp-template-body > *': {
+    flex: '1 1 0',
+    minWidth: 0,
+    minHeight: 0,
   },
 })
 
@@ -72,13 +94,17 @@ export const Template = ({ data }) => {
 
   return (
     <Box sx={(theme) => getStyles({ theme })}>
-      <Box>
+      <Box className="marketplaceapp-template-section">
         <Box sx={(theme) => titleStyles({ theme })}>{T.AppTemplate}</Box>
-        <TemplateTab code={appTemplate} />
+        <Box className="marketplaceapp-template-body">
+          <TemplateTab code={appTemplate} />
+        </Box>
       </Box>
-      <Box>
+      <Box className="marketplaceapp-template-section">
         <Box sx={(theme) => titleStyles({ theme })}>{T.VMTemplate}</Box>
-        <TemplateTab code={vmTemplate} />
+        <Box className="marketplaceapp-template-body">
+          <TemplateTab code={vmTemplate} />
+        </Box>
       </Box>
     </Box>
   )

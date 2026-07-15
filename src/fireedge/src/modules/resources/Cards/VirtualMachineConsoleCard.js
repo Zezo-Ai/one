@@ -22,7 +22,8 @@ import { WarningCircle as WarningIcon } from 'iconoir-react'
 import { T, VM } from '@ConstantsModule'
 import { getVirtualMachineState } from '@ModelsModule'
 import { getErrorMessage, timeFromMilliseconds } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
+
 import { StatusCircle } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
 import Timer from '@modules/resources/Timer'
@@ -39,6 +40,7 @@ const VirtualMachineConsoleCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ vm, rootProps, actions, onClickLabel, globalErrors = [] }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -110,7 +112,7 @@ const VirtualMachineConsoleCard = memo(
             <div className={classes.caption}>
               <span data-cy="id">{`#${ID}`}</span>
               <span title={timeFormat}>
-                {`${+ETIME ? Tr(T.Done) : Tr(T.Started)} `}
+                {`${+ETIME ? translate(T.Done) : translate(T.Started)} `}
                 <Timer initial={time} />
               </span>
             </div>

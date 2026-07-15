@@ -30,11 +30,13 @@ const ACL_TYPE_ID_USER_TRANSLATIONS = {
 }
 
 const userSelectorTable = {
+  dataCy: userTable.dataCy,
   columns: () => userTable.columns(USER_LIST_COLUMNS),
   useData: userTable.useData,
 }
 
 const groupSelectorTable = {
+  dataCy: groupTable.dataCy,
   columns: () => groupTable.columns(GROUP_LIST_COLUMNS),
   useData: groupTable.useData,
 }

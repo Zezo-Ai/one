@@ -21,6 +21,9 @@ import { getStyles } from '@modules/componentsv2/composed/DetailsDrawer/Default/
 import { Tabs } from '@modules/componentsv2/primitives/Tabs/Default'
 import { useViews } from '@FeaturesModule'
 
+const getTabs = (tabs) =>
+  Array.isArray(tabs) ? tabs : Object.values(tabs ?? {})
+
 /**
  * TabSlot component.
  *
@@ -31,8 +34,8 @@ export const TabSlot = forwardRef(
   ({ tabs = [], tabProps = {}, resourceId }, ref) => {
     const { getResourceView } = useViews()
     const viewConfig = getResourceView(resourceId)?.['info-tabs']
-    const enabledTabs = Object.values(tabs)?.filter(
-      ({ id }) => viewConfig?.[id]?.enabled === true
+    const enabledTabs = getTabs(tabs).filter(
+      (Tab) => Tab?.id && viewConfig?.[Tab.id]?.enabled === true
     )
 
     const [selected, setSelected] = useState(0)
@@ -44,11 +47,13 @@ export const TabSlot = forwardRef(
         <Tabs
           type="line"
           defaultSelect={0}
-          options={enabledTabs.map(({ title }) => ({ title }))}
+          options={enabledTabs.map(({ id, title }) => ({ id, title }))}
           onChange={(idx) => setSelected(idx)}
         />
         {ActiveTab && (
-          <ActiveTab data={tabProps} config={viewConfig?.[ActiveTab?.id]} />
+          <Box className="tab-content" data-cy={`tab-content-${ActiveTab.id}`}>
+            <ActiveTab data={tabProps} config={viewConfig?.[ActiveTab?.id]} />
+          </Box>
         )}
       </Box>
     )
@@ -56,7 +61,7 @@ export const TabSlot = forwardRef(
 )
 
 TabSlot.propTypes = {
-  tabs: PropTypes.array,
+  tabs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   tabProps: PropTypes.object,
   resourceId: PropTypes.string,
 }

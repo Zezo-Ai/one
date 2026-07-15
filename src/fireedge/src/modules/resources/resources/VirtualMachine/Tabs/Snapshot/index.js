@@ -50,9 +50,7 @@ export const Snapshot = ({ data, config }) => {
     })
 
   const { data: snapshots = [], isFetching: isFetchingSnapshots } =
-    vmsnapshotsTable.useData({
-      id: selectedVm?.ID,
-    })
+    vmsnapshotsTable.useData({ id: selectedVm?.ID }, { skip: !selectedVm?.ID })
 
   const columns = [
     ...vmsnapshotsTable.columns(),

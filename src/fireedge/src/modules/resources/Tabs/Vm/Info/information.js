@@ -37,11 +37,11 @@ import {
   levelLockToString,
   timeToString,
 } from '@ModelsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+import { isRestrictedAttributes } from '@UtilsModule'
 import MultipleTags from '@modules/resources/MultipleTags'
 import { StatusChip, StatusCircle } from '@modules/resources/Status'
 import { List } from '@modules/resources/Tabs/Common'
-import { isRestrictedAttributes } from '@UtilsModule'
 
 const { CLUSTER, HOST } = RESOURCE_NAMES
 

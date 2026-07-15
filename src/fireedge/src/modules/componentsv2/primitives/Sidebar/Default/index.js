@@ -27,7 +27,9 @@ import {
   NavArrowLeft as CollapseMenuIcon,
 } from 'iconoir-react'
 import { Button } from '@modules/componentsv2/primitives/Buttons'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
+import { Link as RouterLink } from 'react-router-dom'
 
 const SIDEBAR_FIXED_STORAGE_KEY = 'fireedge.sidebar.fixed'
 
@@ -36,6 +38,7 @@ const SIDEBAR_FIXED_STORAGE_KEY = 'fireedge.sidebar.fixed'
  */
 export const Sidebar = forwardRef(
   ({ isOpen = false, endpoints = [], ...opts }, ref) => {
+    const { translate } = useTranslation()
     const [hovered, setHovered] = useState(false)
     const [fixedMenu, setFixedMenu] = useState(() => {
       try {
@@ -82,10 +85,11 @@ export const Sidebar = forwardRef(
     }, [])
 
     useEffect(() => {
-      if (!headerRef.current) return
+      const header = headerRef.current
+      if (!header) return
 
       const observer = new ResizeObserver(() => {
-        const height = headerRef.current.getBoundingClientRect().height
+        const height = header.getBoundingClientRect().height
 
         document.documentElement.style.setProperty(
           '--sidebar-header-height',
@@ -93,7 +97,7 @@ export const Sidebar = forwardRef(
         )
       })
 
-      observer.observe(headerRef.current)
+      observer.observe(header)
 
       return () => observer.disconnect()
     }, [])
@@ -122,6 +126,7 @@ export const Sidebar = forwardRef(
         }
         ref={ref}
         onMouseLeave={() => setHovered(false)}
+        data-cy="sidebar"
         {...opts}
       >
         <Drawer
@@ -131,6 +136,7 @@ export const Sidebar = forwardRef(
           open={open}
           PaperProps={{
             ref: internalRef,
+            'data-cy': 'sidebar-paper',
           }}
           {...opts}
         >
@@ -139,7 +145,12 @@ export const Sidebar = forwardRef(
             ref={headerRef}
             onMouseEnter={() => setHovered(true)}
           >
-            <Box className="sidebar-header-logo">
+            <Box
+              className="sidebar-header-logo"
+              component={RouterLink}
+              to={`/${RESOURCE_NAMES.DASHBOARD}`}
+              aria-label={T.Dashboard}
+            >
               <OpenNebulaIcon withText={open} />
             </Box>
             {open && (
@@ -147,7 +158,7 @@ export const Sidebar = forwardRef(
                 <Button
                   className="sidebar-toggle-button"
                   onClick={handleFixedMenuToggle}
-                  aria-label={T.ToggleFixedMenu}
+                  aria-label={translate(T.ToggleFixedMenu)}
                   iconOnly={
                     isFixedMenu ? <CollapseMenuIcon /> : <OpenMenuIcon />
                   }

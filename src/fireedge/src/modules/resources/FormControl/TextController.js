@@ -17,8 +17,8 @@ import { memo, useCallback, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { TextArea, InputField } from '@ComponentsV2Module'
 import { useController, useWatch, useFormContext } from 'react-hook-form'
-import { sentenceCase, generateKey } from '@UtilsModule'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
+import { sentenceCase, generateKey, isTranslationInput } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const TextController = memo(
   ({
@@ -35,6 +35,7 @@ const TextController = memo(
     onConditionChange,
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const {
       hint,
       placeholder,
@@ -76,7 +77,7 @@ const TextController = memo(
       [onChange, onConditionChange]
     )
 
-    const trLabel = labelCanBeTranslated(label) ? Tr(label) : label
+    const trLabel = isTranslationInput(label) ? translate(label) : label
 
     return multiline ? (
       <TextArea

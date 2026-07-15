@@ -17,6 +17,8 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
   ButtonGroup,
@@ -26,7 +28,12 @@ import {
 import { useModalsApi, DatastoreAPI } from '@FeaturesModule'
 import { Component, useMemo } from 'react'
 import { createActions } from '@UtilsModule'
-import { T, STYLE_BUTTONS, DATASTORE_ACTIONS } from '@ConstantsModule'
+import {
+  T,
+  STYLE_BUTTONS,
+  DATASTORE_ACTIONS,
+  RESOURCE_NAMES,
+} from '@ConstantsModule'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import { Trash, OnTag, OffTag, Cancel as CloseIcon } from 'iconoir-react'
@@ -86,7 +93,17 @@ export const AggregatedView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.Datastores}`,
-        description: T['datastore.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedData}
+            resourceType={T.Datastores}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(selectedData.map(({ ID }) => remove({ id: ID })))
@@ -199,6 +216,11 @@ export const AggregatedView = ({
                   />
                 )}
 
+                <LabelButton
+                  selectedRows={selectedData}
+                  resourceType={RESOURCE_NAMES.DATASTORE}
+                  isDisabled={isMutating}
+                />
                 {deleteButtons.length > 0 && (
                   <Button
                     type={STYLE_BUTTONS.TYPE.PRIMARY}
@@ -214,7 +236,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

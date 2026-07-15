@@ -23,6 +23,7 @@ import { getStyles } from '@modules/componentsv2/primitives/Pagination/Default/s
 import { useControllableState } from '@HooksModule'
 import { Dropdown } from '@modules/componentsv2/primitives/Dropdown'
 import { PAGINATION_SIZES, T } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Pagination controller. All state is managed by the parent.
@@ -51,6 +52,7 @@ export const Pagination = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const [currentIndex, setCurrentIndex] = useControllableState({
       value: pageIndex,
       defaultValue: 0,
@@ -223,7 +225,7 @@ export const Pagination = forwardRef(
         {isPageSizeController && (
           <Box className="pagination-size-container">
             <Typography className={'page-size-title'}>
-              {T.ResultsPerPage}
+              {translate(T.ResultsPerPage)}
             </Typography>
             <Dropdown
               isMultipleSelectable={false}

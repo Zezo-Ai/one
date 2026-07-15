@@ -19,13 +19,13 @@ import PropTypes from 'prop-types'
 import { ReactElement, memo, useMemo } from 'react'
 
 import DiskSnapshotCard from '@modules/resources/Cards/DiskSnapshotCard'
-import { Tr } from '@modules/resources/HOC'
+import { prettyBytes, sentenceCase, stringToBoolean } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { StatusChip } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
 
 import { Disk, DiskSnapshot, T } from '@ConstantsModule'
 import { getDiskName, getDiskType } from '@ModelsModule'
-import { prettyBytes, sentenceCase, stringToBoolean } from '@UtilsModule'
 
 const DiskCard = memo(
   /**
@@ -37,6 +37,7 @@ const DiskCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ disk = {}, rootProps = {}, actions, snapshotActions }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -104,7 +105,7 @@ const DiskCard = memo(
               {labels.map(({ label, dataCy }) => (
                 <StatusChip
                   key={label}
-                  text={sentenceCase(Tr(label))}
+                  text={sentenceCase(translate(label))}
                   {...(dataCy && { dataCy: dataCy })}
                 />
               ))}
@@ -113,26 +114,26 @@ const DiskCard = memo(
           <div className={classes.caption}>
             <span>{`#${DISK_ID}`}</span>
             {TARGET && (
-              <span title={`${Tr(T.TargetDevice)}: ${TARGET}`}>
+              <span title={`${translate(T.TargetDevice)}: ${TARGET}`}>
                 <PlugTypeC />
                 <span data-cy="target">{` ${TARGET}`}</span>
               </span>
             )}
             {DATASTORE && (
-              <span title={`${Tr(T.Datastore)}: ${DATASTORE}`}>
+              <span title={`${translate(T.Datastore)}: ${DATASTORE}`}>
                 <DatabaseSettings />
                 <span data-cy="datastore">{` ${DATASTORE}`}</span>
               </span>
             )}
             {SERIAL && (
-              <span title={`${Tr(T.Serial)}: ${SERIAL}`}>
+              <span title={`${translate(T.Serial)}: ${SERIAL}`}>
                 <Book />
                 <span data-cy="serial">{` ${SERIAL}`}</span>
               </span>
             )}
             {+MONITOR_SIZE ? (
               <span
-                title={`${Tr(T.Monitoring)} / ${Tr(
+                title={`${translate(T.Monitoring)} / ${translate(
                   T.DiskSize
                 )}: ${monitorSize}/${size}`}
               >
@@ -140,7 +141,7 @@ const DiskCard = memo(
                 <span data-cy="monitorsize">{` ${monitorSize}/${size}`}</span>
               </span>
             ) : (
-              <span title={`${Tr(T.DiskSize)}: ${size}`}>
+              <span title={`${translate(T.DiskSize)}: ${size}`}>
                 <Folder />
                 <span data-cy="disksize">{` ${size}`}</span>
               </span>

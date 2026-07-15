@@ -31,7 +31,7 @@ import {
   timeFromMilliseconds,
 } from '@ModelsModule'
 import { sentenceCase } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const StyledTypography = styled(Typography)(({ theme }) => ({
   marginLeft: `${theme.spacing(1)} !important`,
@@ -42,6 +42,7 @@ const StyledTypographyTypeSchedule = styled(Typography)(() => ({
 }))
 
 const ScheduleActionCard = memo(({ schedule, actions }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => rowStyles(theme), [theme])
   const { palette } = useTheme()
@@ -49,11 +50,12 @@ const ScheduleActionCard = memo(({ schedule, actions }) => {
   const { ID, ACTION, TIME, MESSAGE, DONE, WARNING, NAME } = schedule
 
   const typeScheduleText =
-    Tr(TEMPLATE_SCHEDULE_TYPE_STRING?.[getTypeScheduleAction(schedule)]) +
-      ':' || ''
+    translate(
+      TEMPLATE_SCHEDULE_TYPE_STRING?.[getTypeScheduleAction(schedule)]
+    ) + ':' || ''
 
   const titleName = NAME ? `(${NAME})` : ''
-  const titleAction = `#${ID} ${Tr(sentenceCase(ACTION))} ${titleName}`
+  const titleAction = `#${ID} ${translate(sentenceCase(ACTION))} ${titleName}`
   const timeIsRelative = isRelative(TIME)
 
   const time = timeIsRelative ? getPeriodicityByTimeInSeconds(TIME) : TIME
@@ -90,10 +92,14 @@ const ScheduleActionCard = memo(({ schedule, actions }) => {
             {typeScheduleText}
           </StyledTypographyTypeSchedule>
           {repeat && (
-            <StyledTypography variant="caption">{Tr(repeat)}</StyledTypography>
+            <StyledTypography variant="caption">
+              {translate(repeat)}
+            </StyledTypography>
           )}
           {end && (
-            <StyledTypography variant="caption">{Tr(end)}</StyledTypography>
+            <StyledTypography variant="caption">
+              {translate(end)}
+            </StyledTypography>
           )}
           {DONE && (
             <StyledTypography variant="caption" title={formatDoneTime}>
@@ -108,7 +114,7 @@ const ScheduleActionCard = memo(({ schedule, actions }) => {
               <StyledTypography variant="caption">
                 {timeIsRelative ? (
                   <span>
-                    {time?.time} {Tr(time?.period)}
+                    {time?.time} {translate(time?.period)}
                   </span>
                 ) : (
                   <span title={formatTime}>

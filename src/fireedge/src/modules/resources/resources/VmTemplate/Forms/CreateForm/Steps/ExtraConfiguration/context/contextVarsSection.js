@@ -23,8 +23,7 @@ import { SystemAPI, useGeneralApi } from '@FeaturesModule'
 import { SCHEMA as CONTEXT_SCHEMA } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/context/schema'
 
 import { T } from '@ConstantsModule'
-import { Accordion, Legend } from '@ComponentsV2Module'
-import { AttributePanel } from '@modules/resources/Tabs/Common'
+import { Accordion, AttributesPanel, Legend } from '@ComponentsV2Module'
 import { getUnknownAttributes } from '@UtilsModule'
 
 export const SECTION_ID = 'CONTEXT'
@@ -58,8 +57,11 @@ const ContextVarsSection = ({ stepId, hypervisor }) => {
   }, [customVars])
 
   const handleChangeAttribute = useCallback(
-    (path, newValue) => {
-      const contextPath = `${SECTION_ID}.${path}`
+    ({ key, path, value } = {}) => {
+      const attributePath = path ?? key?.toUpperCase?.() ?? key
+      if (!attributePath) return
+
+      const contextPath = `${SECTION_ID}.${attributePath}`
       const formPath = [stepId, contextPath].filter(Boolean).join('.')
 
       try {
@@ -69,7 +71,7 @@ const ContextVarsSection = ({ stepId, hypervisor }) => {
       } catch (e) {
         // When the path is not found, it means that
         // the attribute is correct and we can set it
-        setValue(formPath, newValue)
+        setValue(formPath, value)
 
         // Set as update if the newValue is not undefined and delete if the newValue is undefined
         // Set as delete
@@ -77,13 +79,42 @@ const ContextVarsSection = ({ stepId, hypervisor }) => {
         setModifiedFields({
           extra: {
             CONTEXT: {
-              [path]: newValue ? true : { __delete__: true },
+              [attributePath]: value ? true : { __delete__: true },
             },
           },
         })
       }
     },
-    [hypervisor]
+    [
+      enqueueError,
+      hypervisor,
+      setFieldPath,
+      setModifiedFields,
+      setValue,
+      stepId,
+    ]
+  )
+
+  const handleDeleteAttribute = useCallback(
+    (index, attribute) => {
+      const attributePath =
+        attribute?.path ?? attribute?.key ?? Object.keys(unknownVars)?.[index]
+      if (!attributePath) return
+
+      const contextPath = `${SECTION_ID}.${attributePath}`
+      const formPath = [stepId, contextPath].filter(Boolean).join('.')
+
+      setValue(formPath, undefined)
+      setFieldPath('extra.Context')
+      setModifiedFields({
+        extra: {
+          CONTEXT: {
+            [attributePath]: { __delete__: true },
+          },
+        },
+      })
+    },
+    [setFieldPath, setModifiedFields, setValue, stepId, unknownVars]
   )
 
   return (
@@ -101,11 +132,11 @@ const ContextVarsSection = ({ stepId, hypervisor }) => {
                 />
               ),
               description: (
-                <AttributePanel
-                  allActionsEnabled
+                <AttributesPanel
+                  actions={{ add: true, edit: true, delete: true, copy: true }}
                   handleAdd={handleChangeAttribute}
                   handleEdit={handleChangeAttribute}
-                  handleDelete={handleChangeAttribute}
+                  handleDelete={handleDeleteAttribute}
                   attributes={unknownVars}
                   filtersSpecialAttributes={false}
                   enableEdit={(name = '') => {

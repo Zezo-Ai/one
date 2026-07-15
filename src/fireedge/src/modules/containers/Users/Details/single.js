@@ -17,12 +17,13 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  ResourceActionConfirmation,
   ToggleGroup,
   TabSlot,
   ButtonGroup,
 } from '@ComponentsV2Module'
 
-import { T } from '@ConstantsModule'
+import { T, USER_ACTIONS } from '@ConstantsModule'
 import { UserAPI, useModalsApi } from '@FeaturesModule'
 import { getUserState } from '@ModelsModule'
 import { User } from '@ResourcesModule'
@@ -60,23 +61,64 @@ export const SingleView = ({
   const userIsEnabled = getUserState(user)?.shortName === 'on'
 
   const handleRefresh = () => ID !== undefined && refreshUser({ id: ID })
-  const handleEnable = async () => {
-    await enable(ID)
-    await handleRefresh()
-  }
 
-  const handleDisable = async () => {
-    await disable(ID)
-    await handleRefresh()
-  }
+  const handleConfirmAction = ({ title, description, onSubmit, dataCy }) =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title,
+        dataCy,
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={user}
+            resourceType={T.Users}
+          />
+        ),
+        confirmLabel: title,
+      },
+      onSubmit,
+    })
+
+  const handleEnable = () =>
+    handleConfirmAction({
+      title: T.Enable,
+      description: T['resource.enable.confirmation'],
+      dataCy: `modal-user_${USER_ACTIONS.ENABLE}`,
+      onSubmit: async () => {
+        await enable(ID)
+        await handleRefresh()
+      },
+    })
+
+  const handleDisable = () =>
+    handleConfirmAction({
+      title: T.Disable,
+      description: T['resource.disable.confirmation'],
+      dataCy: `modal-user_${USER_ACTIONS.DISABLE}`,
+      onSubmit: async () => {
+        await disable(ID)
+        await handleRefresh()
+      },
+    })
 
   const handleOpenDeleteForm = () =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title: T?.['user.delete'],
-        description: T?.['user.delete.confirmation'],
+        dataCy: 'modal-delete',
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={user}
+            resourceType={T.Users}
+          />
+        ),
         confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: ID })
@@ -115,12 +157,14 @@ export const SingleView = ({
                       startIcon: <OnTag width="16px" height="16px" />,
                       onClick: handleEnable,
                       value: 'enable',
+                      dataCy: `action-user_${USER_ACTIONS.ENABLE}`,
                       isDisabled: isActionsDisabled,
                     },
                     {
                       startIcon: <OffTag width="16px" height="16px" />,
                       onClick: handleDisable,
                       value: 'disable',
+                      dataCy: `action-user_${USER_ACTIONS.DISABLE}`,
                       isDisabled: isActionsDisabled,
                     },
                   ]}
@@ -151,6 +195,7 @@ export const SingleView = ({
                         ),
                         onClick: handleOpenDeleteForm,
                         value: 'delete',
+                        'data-cy': `action-user_${USER_ACTIONS.DELETE}`,
                         isDisabled: isActionsDisabled,
                       },
                       {

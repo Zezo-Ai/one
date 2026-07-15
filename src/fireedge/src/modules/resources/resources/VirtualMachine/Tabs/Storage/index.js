@@ -284,7 +284,7 @@ export const Storage = ({ data, config }) => {
     })
 
   const { data: disks = [], isFetching: isFetchingDisks } =
-    vmdisksTable.useData({ id: selectedVm?.ID })
+    vmdisksTable.useData({ id: selectedVm?.ID }, { skip: !selectedVm?.ID })
 
   const openSnapshotDialog = useCallback((disk) => {
     setSnapshotDialog({

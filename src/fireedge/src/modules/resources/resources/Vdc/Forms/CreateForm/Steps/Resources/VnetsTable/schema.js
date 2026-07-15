@@ -23,6 +23,7 @@ import { ObjectSchema, array, object, string } from 'yup'
 // const ZONE_FIELD_NAME = 'VNET_ZONE_ID'
 
 const getVnetModel = (zoneId) => ({
+  dataCy: 'vnets',
   columns: vnTable.columns,
   useData: (_args, options) => vnTable.useData({ zone: zoneId }, options),
 })

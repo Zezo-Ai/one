@@ -25,7 +25,7 @@ import {
   ChangeGroupForm,
   ChangeUserForm,
 } from '@modules/resources/resources/VirtualMachine/Forms'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import {
   createActions,
   GlobalAction,

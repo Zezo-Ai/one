@@ -17,10 +17,11 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  getLabelMenuButtonProps,
   ResourceActionConfirmation,
   TabSlot,
   ButtonGroup,
-  Button,
+  ToggleGroup,
 } from '@ComponentsV2Module'
 
 import { ImageAPI, useModalsApi } from '@FeaturesModule'
@@ -30,7 +31,7 @@ import {
   aggregateImageEnabledState,
   aggregateImagePersistenceState,
 } from '@ModelsModule'
-import { IMAGE_ACTIONS, STYLE_BUTTONS, T } from '@ConstantsModule'
+import { IMAGE_ACTIONS, RESOURCE_NAMES, T } from '@ConstantsModule'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import {
@@ -104,12 +105,20 @@ export const AggregatedView = ({
     />
   )
 
-  const handleConfirmAction = ({ title, description, onSubmit }) =>
+  const handleConfirmAction = ({
+    title,
+    description,
+    confirmLabel,
+    confirmButtonProps,
+    onSubmit,
+  }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
         description,
+        confirmLabel,
+        confirmButtonProps,
       },
       onSubmit,
     })
@@ -123,6 +132,7 @@ export const AggregatedView = ({
     handleConfirmAction({
       title: `${T.Enable} ${T.Images}`,
       description: getResourceConfirmation(T['resource.enable.confirmation']),
+      confirmLabel: T.Enable,
       onSubmit: () => handleActionForSelected((id) => enable(id)),
     })
 
@@ -130,6 +140,7 @@ export const AggregatedView = ({
     handleConfirmAction({
       title: `${T.Disable} ${T.Images}`,
       description: getResourceConfirmation(T['resource.disable.confirmation']),
+      confirmLabel: T.Disable,
       onSubmit: () => handleActionForSelected((id) => disable(id)),
     })
 
@@ -137,6 +148,7 @@ export const AggregatedView = ({
     handleConfirmAction({
       title: `${T.Lock} ${T.Images}`,
       description: getResourceConfirmation(T['resource.lock.confirmation']),
+      confirmLabel: T.Lock,
       onSubmit: () => handleActionForSelected((id) => lock({ id })),
     })
 
@@ -144,13 +156,19 @@ export const AggregatedView = ({
     handleConfirmAction({
       title: `${T.Unlock} ${T.Images}`,
       description: getResourceConfirmation(T['resource.unlock.confirmation']),
+      confirmLabel: T.Unlock,
       onSubmit: () => handleActionForSelected((id) => unlock({ id })),
     })
 
   const handlePersistent = (isPersistent = true) =>
     handleConfirmAction({
       title: isPersistent ? T.Persistent : T.NonPersistent,
-      description: getResourceConfirmation(T.DoYouWantProceed),
+      description: getResourceConfirmation(
+        isPersistent
+          ? T['resource.persistent.confirmation']
+          : T['resource.nonPersistent.confirmation']
+      ),
+      confirmLabel: isPersistent ? T.Persistent : T.NonPersistent,
       onSubmit: () =>
         handleActionForSelected((id) =>
           persistent({ id, persistent: isPersistent })
@@ -183,6 +201,10 @@ export const AggregatedView = ({
     handleConfirmAction({
       title: `${T.Delete} ${T.Images}`,
       description: getResourceConfirmation(T['resource.delete.confirmation']),
+      confirmLabel: T.Delete,
+      confirmButtonProps: {
+        isDestructive: true,
+      },
       onSubmit: async () => {
         await Promise.all(selectedData.map(({ ID }) => remove({ id: ID })))
         handleClose()
@@ -356,29 +378,41 @@ export const AggregatedView = ({
                   />
                 )}
 
-                {cloneButtons.length > 0 && (
-                  <ButtonGroup buttons={cloneButtons} />
-                )}
-
-                {deleteButtons.length > 0 && (
-                  <Button
-                    type={STYLE_BUTTONS.TYPE.PRIMARY}
-                    size="small"
-                    startIcon={<Trash width={'16px'} height={'16px'} />}
-                    onClick={handleOpenDeleteForm}
-                    isDestructive
-                    isDisabled={!noneLocked || isMutating}
-                  >
-                    {T.DeleteSelected}
-                  </Button>
-                )}
-
-                <Button
-                  type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                <ToggleGroup
                   size="medium"
-                  iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
-                  tooltip={T.Close}
-                  onClick={handleClose}
+                  options={[
+                    cloneButtons,
+                    [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: selectedData,
+                          resourceType: RESOURCE_NAMES.IMAGE,
+                          isDisabled: isMutating,
+                        }),
+                      },
+                    ],
+                    [
+                      deleteButtons.length > 0 && {
+                        startIcon: <Trash width="16px" height="16px" />,
+                        onClick: handleOpenDeleteForm,
+                        value: IMAGE_ACTIONS.DELETE,
+                        tooltip: T.Delete,
+                        isDisabled: !noneLocked || isMutating,
+                        sx: (theme) => ({
+                          color:
+                            !noneLocked || isMutating
+                              ? theme.palette.text.disabled
+                              : theme.palette.icon.error,
+                        }),
+                      },
+                      {
+                        startIcon: <CloseIcon width="16px" height="16px" />,
+                        onClick: handleClose,
+                        value: 'close',
+                        tooltip: T.Close,
+                      },
+                    ].filter(Boolean),
+                  ].filter(({ length }) => length > 0)}
                 />
               </Box>
             ),

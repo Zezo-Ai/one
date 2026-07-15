@@ -15,3 +15,4 @@
  * ------------------------------------------------------------------------- */
 
 export * from '@modules/componentsv2/primitives/Loaders/Default'
+export * from '@modules/componentsv2/primitives/Loaders/Skeleton'

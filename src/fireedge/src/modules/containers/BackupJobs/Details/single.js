@@ -17,7 +17,9 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
   ToggleGroup,
@@ -35,13 +37,14 @@ import {
   Trash,
   Cancel,
 } from 'iconoir-react'
-import { BACKUPJOB_ACTIONS, T } from '@ConstantsModule'
+import { BACKUPJOB_ACTIONS, RESOURCE_NAMES, T } from '@ConstantsModule'
 import { cloneObject, createActions, jsonToXml, set } from '@UtilsModule'
 import { BackupJobAPI, useModalsApi } from '@FeaturesModule'
 import { BackupJobs as BackupJobsResource } from '@ResourcesModule'
 import {
   getBackupJobLastBackupTime,
   getBackupJobVisibleAttributes,
+  getLabelTags,
 } from '@ModelsModule'
 
 /**
@@ -88,7 +91,6 @@ export const SingleView = ({
       : selectedData
   const { ID, LAST_BACKUP_TIME, PRIORITY, TEMPLATE } = data
 
-  const modalLabel = `#${ID} ${data?.NAME}`.trim()
   const backupJobIsLocked = data?.LOCK != null
 
   const isActionsDisabled =
@@ -109,15 +111,24 @@ export const SingleView = ({
   const refreshCurrentData = async () =>
     ID !== undefined && (await refresh({ id: ID }))
 
-  const getConfirmationDescription = () =>
-    `${T.BackupJob}: ${modalLabel}. ${T.DoYouWantProceed}`
-
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({ title, description, onSubmit }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
-        description: getConfirmationDescription(),
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={data}
+            resourceType={T.BackupJobs}
+          />
+        ),
+        confirmLabel: title,
+        ...(title === T.Delete && {
+          confirmButtonProps: {
+            isDestructive: true,
+          },
+        }),
       },
       onSubmit,
     })
@@ -130,6 +141,7 @@ export const SingleView = ({
   const handleStart = () =>
     handleConfirmAction({
       title: T.Start,
+      description: T['resource.start.confirmation'],
       onSubmit: async () => {
         await start({ id: ID })
         await refreshCurrentData()
@@ -139,6 +151,7 @@ export const SingleView = ({
   const handleCancel = () =>
     handleConfirmAction({
       title: T.Cancel,
+      description: T['resource.cancel.confirmation'],
       onSubmit: async () => {
         await cancel({ id: ID })
         await refreshCurrentData()
@@ -148,6 +161,7 @@ export const SingleView = ({
   const handleLock = () =>
     handleConfirmAction({
       title: T.Lock,
+      description: T['resource.lock.confirmation'],
       onSubmit: async () => {
         await lock({ id: ID })
         await refreshCurrentData()
@@ -157,6 +171,7 @@ export const SingleView = ({
   const handleUnlock = () =>
     handleConfirmAction({
       title: T.Unlock,
+      description: T['resource.unlock.confirmation'],
       onSubmit: async () => {
         await unlock({ id: ID })
         await refreshCurrentData()
@@ -166,6 +181,7 @@ export const SingleView = ({
   const handleDelete = () =>
     handleConfirmAction({
       title: T.Delete,
+      description: T['resource.delete.confirmation'],
       onSubmit: async () => {
         await deleteBackupJob({ id: ID })
         handleClose()
@@ -272,6 +288,13 @@ export const SingleView = ({
   const toggleOptions = [
     [
       {
+        ...getLabelMenuButtonProps({
+          selectedRows: [data],
+          resourceType: RESOURCE_NAMES.BACKUPJOBS,
+          isDisabled: isActionsDisabled,
+        }),
+      },
+      {
         startIcon: <RefreshDouble width="16px" height="16px" />,
         onClick: handleRefresh,
         value: 'refresh',
@@ -299,6 +322,7 @@ export const SingleView = ({
             onClick: handleDelete,
             value: BACKUPJOB_ACTIONS.DELETE,
             title: T.Delete,
+            isDestructive: true,
             isDisabled: isActionsDisabled,
           },
         ],
@@ -325,6 +349,7 @@ export const SingleView = ({
 
             title: data?.NAME,
             id: ID,
+            tags: getLabelTags(data?.LABELS),
             Toolbar: () => (
               <Box
                 sx={(theme) => ({

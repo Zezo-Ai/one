@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { FormWithSchema, Translate } from '@ResourcesModule'
+import { FormWithSchema } from '@ResourcesModule'
+import { Translate, useResourceSingleViewContext } from '@ProvidersModule'
+import { jsonToXml } from '@UtilsModule'
 import { ButtonGroup } from '@ComponentsV2Module'
 import {
   RESOURCE_NAMES,
@@ -21,7 +23,6 @@ import {
   SERVER_CONFIG,
   T,
   TABLE_VIEW_MODE,
-  PATH,
 } from '@ConstantsModule'
 import {
   UserAPI,
@@ -31,7 +32,7 @@ import {
   useGeneralApi,
   useViews,
 } from '@FeaturesModule'
-import { jsonToXml } from '@UtilsModule'
+
 import { css } from '@emotion/css'
 import {
   SystemShut,
@@ -55,7 +56,6 @@ import {
   useForm,
   useFormContext,
 } from 'react-hook-form'
-import { Link as RouterLink, generatePath } from 'react-router-dom'
 
 const { USER } = RESOURCE_NAMES
 
@@ -161,6 +161,7 @@ const style = ({ scale }) => ({
 const Settings = () => {
   const { Legend, InternalWrapper } = useSettingWrapper()
   const { user, settings: { FIREEDGE: fireedge = {} } = {} } = useAuth()
+  const { openResourceSingleView } = useResourceSingleViewContext()
 
   const { data: zones = [], isLoading } = ZoneAPI.useGetZonesQuery()
 
@@ -306,8 +307,9 @@ const Settings = () => {
           <Box className={classes.linkPlace}>
             <Link
               color="primary"
-              component={RouterLink}
-              to={generatePath(PATH.SYSTEM.USERS.DETAIL, { id: user.ID })}
+              component="button"
+              type="button"
+              onClick={() => openResourceSingleView(USER, user)}
             >
               <Translate
                 word={T.LinkOtherConfigurationsUser}

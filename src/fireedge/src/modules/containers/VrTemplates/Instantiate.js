@@ -28,14 +28,12 @@ import {
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  Form,
-  TranslateProvider,
+  VrTemplate,
 } from '@ResourcesModule'
 
 import { jsonToXml } from '@UtilsModule'
-import { T, PATH } from '@ConstantsModule'
-const { VrTemplate } = Form
 
+import { T, PATH } from '@ConstantsModule'
 const _ = require('lodash')
 
 /**
@@ -127,8 +125,8 @@ export function InstantiateVrTemplate() {
 
   if (!templateId) {
     return (
-      <TranslateProvider>
-        <VrTemplate.InstantiateForm
+      <>
+        <VrTemplate.Forms.InstantiateForm
           initialValues={dataTemplateExtended}
           stepProps={{
             dataTemplateExtended,
@@ -141,17 +139,17 @@ export function InstantiateVrTemplate() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </VrTemplate.InstantiateForm>
-      </TranslateProvider>
+        </VrTemplate.Forms.InstantiateForm>
+      </>
     )
   }
 
   return (
-    <TranslateProvider>
+    <>
       {!dataTemplateExtended || !dataTemplate || _.isEmpty(oneConfig) ? (
         <SkeletonStepsForm />
       ) : (
-        <VrTemplate.InstantiateForm
+        <VrTemplate.Forms.InstantiateForm
           initialValues={dataTemplateExtended}
           stepProps={{
             dataTemplateExtended,
@@ -164,8 +162,8 @@ export function InstantiateVrTemplate() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </VrTemplate.InstantiateForm>
+        </VrTemplate.Forms.InstantiateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

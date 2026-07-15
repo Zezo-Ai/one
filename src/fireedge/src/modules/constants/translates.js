@@ -35,21 +35,46 @@ module.exports = {
   First: 'First',
   Last: 'Last',
   ApplyLabels: 'Apply labels',
+  Changes: 'changes',
+  ChooseLabelVisibility: 'Choose who can see and use this label.',
+  CreateNew: 'Create New',
   DeleteLabel: 'Delete label',
   DeleteLabelConcept:
     'Deleting a label will remove it from all its applied resources.',
   DeleteTheFollowingLabel: 'Delete the following label',
+  EditLabel: 'Edit Label',
+  ExampleProduction: 'e.g. production',
   Apply: 'Apply',
   Label: 'Label',
   UserLabels: 'User labels',
   UserLabelsConcept:
     'User labels are personal and only visible to the user who created them. They can be used to organize resources privately, and only the owner can apply, edit, or remove them.',
   GroupLabels: 'Group labels',
+  GroupLabelVisibilityConcept: 'Shared with everyone in %s',
   GroupLabelsConcept:
     'Group labels are shared among all members of a group. They can be seen and used by any group member, but only group admins have the ability to apply, edit, or remove them.',
+  Items: 'Items',
+  LabelNameFormat:
+    'Name must only contain alphanumeric characters, "-", "_" and no spaces',
+  LabelNotFound: 'Label not found',
+  LabelsConcept: 'Labels organize resources across all views.',
+  ManageLabelsConcept:
+    'Labels organize resources across all views. Group labels are shared with everyone in the group.',
+  MissingLabelName: 'Missing label name',
+  MyLabels: 'My Labels',
   NoLabels: 'No labels',
+  Private: 'Private',
+  PrivateLabelConcept: 'Only you can see and use it',
+  SearchLabelsInput: 'Search labels',
+  SelectParentLabel: 'Select a parent label',
+  UpdatedLabel: 'Updated label',
+  Visibility: 'Visibility',
+  YourGroup: 'your group',
   NoContent: 'No Content',
   ThereIsNoContent: 'There is no content',
+  NoAttributes: 'No attributes',
+  NoAttributesDescription:
+    'Enter a key and value, then click the + button to add a custom attribute.',
   NoSecurityGroupsToAdd: 'No security groups to add',
   NoSecurityGroupsToAddDescription:
     'There are no security groups available to attach to this NIC.',
@@ -164,6 +189,7 @@ module.exports = {
   DeleteVirtualNetwork: 'Delete Virtual Network',
   DeleteOtherSnapshots: 'This will delete all the other image snapshots',
   Deploy: 'Deploy',
+  Deploying: 'Deploying',
   DeployServiceTemplate: 'Deploy Service Template',
   DeploymentTypes: 'Deployment Types',
   Deprovision: 'Deprovision',
@@ -200,9 +226,12 @@ module.exports = {
   Lock: 'Lock',
   Migrate: 'Migrate',
   MigrateLive: 'Migrate live',
+  Off: 'Off',
   Offline: 'Offline',
   Flush: 'Flush',
   PerformAction: 'Perform action',
+  ActionNotAllowedInCurrentView:
+    'This action is not allowed in the current view',
   AllRoles: 'All roles',
   Pin: 'Pin',
   Poweroff: 'Poweroff',
@@ -415,6 +444,37 @@ module.exports = {
     'The following resources will be permanently deleted. This action cannot be undone.',
   'resource.remove.confirmation':
     'The following resources will be removed from this object. The resources themselves will not be deleted.',
+  'resource.action.confirmation':
+    'The selected action will be applied to the following resources.',
+  'form.cancel.progress.confirmation':
+    'If you continue, the current progress will be discarded.',
+  'resource.persistent.confirmation':
+    'The following resources will be marked as persistent. Changes will be preserved on the backing image.',
+  'resource.nonPersistent.confirmation':
+    'The following resources will be marked as non-persistent. Changes will not be preserved on the backing image.',
+  'resource.recover.confirmation':
+    'The following resources will be recovered so they can be managed again.',
+  'resource.recoverDelete.confirmation':
+    'The following resources will be recovered and then deleted. This action cannot be undone.',
+  'resource.start.confirmation': 'The following resources will be started.',
+  'resource.cancel.confirmation':
+    'The running operation will be cancelled for the following resources.',
+  'resource.offline.confirmation':
+    'The following resources will be set offline and will not run new workloads.',
+  'resource.flush.confirmation':
+    'The following resources will be flushed by moving workloads away before disabling.',
+  'resource.clone.confirmation':
+    'The following resources will be cloned. Please review them before continuing.',
+  'resource.detach.confirmation':
+    'The following resources will be detached from their current object.',
+  'resource.revert.confirmation':
+    'The following resources will be reverted to the selected state.',
+  'resource.flatten.confirmation':
+    'The following resources will be flattened into the image.',
+  'resource.retry.confirmation':
+    'The following resources will retry the failed operation.',
+  'resource.deprovision.confirmation':
+    'The resources associated with the following items will be deleted.',
   'resource.affected': 'Affected resources:',
 
   /* Scheduling */
@@ -571,6 +631,13 @@ module.exports = {
   AllSeverities: 'All Severities',
   Outdated: 'Outdated',
   Updated: 'Updated',
+  UpdatedJustNow: 'Updated just now',
+  UpdatedMinuteAgo: 'Updated %s minute ago',
+  UpdatedMinutesAgo: 'Updated %s minutes ago',
+  UpdatedHourAgo: 'Updated %s hour ago',
+  UpdatedHoursAgo: 'Updated %s hours ago',
+  UpdatedDayAgo: 'Updated %s day ago',
+  UpdatedDaysAgo: 'Updated %s days ago',
   Updating: 'Updating',
   Reserved: 'Reserved',
   Vrouter: 'Vrouter',
@@ -668,7 +735,7 @@ module.exports = {
   DataTablesStyles: 'DataTables Styles',
   Animations: 'Animations',
   Others: 'Others',
-  AppliesTo: 'Applies To',
+  AppliesTo: 'Applies to',
   AllowedOperations: 'Allowed operations',
   AffectedResources: 'Affected resources',
   Schema: 'Schema',
@@ -809,7 +876,8 @@ module.exports = {
   RunningCPULower: 'Running Cpu',
   SystemDiskSize: 'System Disk Size',
   CPU: 'CPU',
-  VCPU: 'VCPU',
+  VCPU: 'vCPU',
+  VcpuUnits: 'vCPU units',
   CPULower: 'Cpu',
   QuotaHelpTitle: 'How to use Quota Controls',
   QuotaHelpStep1: 'Select the quota type from the dropdown.',
@@ -976,12 +1044,15 @@ module.exports = {
   'oneform.provision.delete':
     'This will delete the cluster and all the created resources in the cloud provider and in OpenNebula.',
   Monitored: 'Monitored',
+  Unreachable: 'Unreachable',
 
   /* sections - network */
   Network: 'Network',
   Networks: 'Networks',
   VirtualNetwork: 'Virtual network',
   VirtualNetworks: 'Virtual networks',
+  IPsInUse: 'IPs in use',
+  NoNetworksYet: 'No networks yet',
   RoleNetwork: 'Role Network',
   RoleNetworks: 'Role Networks',
   NetworkTemplate: 'Network Template',
@@ -1008,6 +1079,7 @@ module.exports = {
     'There are machines in outdated, you can refresh to see if the backups are already done',
   Datastore: 'Datastore',
   Datastores: 'Datastores',
+  OnDatastores: 'on datastores',
   NumberOfDatastores: 'Number of datastores',
   Image: 'Image',
   Images: 'Images',
@@ -1276,6 +1348,7 @@ module.exports = {
 
   /* general schema */
   ID: 'ID',
+  TemplateID: 'Template ID',
   Timestamp: 'Timestamp',
   Name: 'Name',
   State: 'State',
@@ -1401,6 +1474,7 @@ module.exports = {
     'VM %1$s is currently running on Host %2$s and Datastore %3$s',
   /* VM schema - capacity */
   Capacity: 'Capacity',
+  ClusterCapacity: 'Cluster capacity',
   CostPerHour: '/Hour',
   PhysicalCpu: 'Physical CPU',
   PhysicalCpuWithPercent: 'Physical CPU',
@@ -1445,6 +1519,7 @@ module.exports = {
   NewImageNameConcept: 'Name for the new Image where the disk will be saved',
   /* VM schema - network */
   NIC: 'NIC',
+  NICs: 'NICs',
   Alias: 'Alias',
   NICAlias: 'NIC Alias',
   CreateAlias: 'Create alias',
@@ -2079,7 +2154,7 @@ module.exports = {
   NestLabelUnder: 'Nest label under',
   AddNewRootLabelConcept: 'Adding new root label',
   AddChartes: 'Add Charters Values Configuration',
-  RecoverDelete: 'Recover delete',
+  RecoverDelete: 'Recover and Delete',
   /* Service Template schema - extra */
   Existing: 'Existing',
   Straight: 'Straight',
@@ -2299,7 +2374,8 @@ module.exports = {
   FirstMacAddress: 'First MAC address',
   PrefixLength: 'Prefix length',
   PrefixLengthConcept: 'Length of the prefix to configure VM interfaces',
-  CannotModifySharedWithLeases: 'Cannot modify shared field',
+  CannotModifySharedWithLeases:
+    'Shared can only be updated when the address range has no leases',
   SLAAC: 'SLAAC',
   IPv6GlobalPrefix: 'IPv6 Global prefix',
   IPv6ULAPrefix: 'IPv6 ULA prefix',
@@ -2371,6 +2447,8 @@ module.exports = {
   /* Host schema - capacity */
   AllocatedMemory: 'Allocated Memory',
   AllocatedCpu: 'Allocated CPU',
+  CpuAllocated: 'CPU allocated',
+  MemoryAllocated: 'Memory allocated',
   RealMemory: 'Real Memory',
   RealCpu: 'Real CPU',
   Cpu: 'CPU',
@@ -2516,7 +2594,7 @@ module.exports = {
   Registered: 'Registered',
 
   LastBackupTime: 'Last Backup Time: %s',
-  LastBackupTimeInfo: 'Last Backup Time',
+  LastBackupTimeInfo: 'Last backup time',
   LastBackupDuration: 'Last Backup Duration',
   Version: 'Version',
   AppTemplate: 'App Template',
@@ -3067,7 +3145,7 @@ module.exports = {
   ErrorServiceActionRole: 'Action %s failed on role: %s. Error: %s',
   ErrorProvisionRetried: 'Error retrying Provision',
   ErrorLogsFetch: 'Failed to fetch logs',
-  ProvisionType: 'Provision Type',
+  ProvisionType: 'Provision type',
 
   /* Info messages */
   InfoDisconnected: 'Disconnected',
@@ -3130,10 +3208,10 @@ module.exports = {
   PublicNetwork: 'Public Network',
   PrivateNetwork: 'Private Network',
   WorkerNodes: 'Worker Nodes',
-  NodeGroups: 'Node Groups',
+  NodeGroups: 'Node groups',
   Events: 'Events',
   Replicas: 'Replicas',
-  KubernetesVersion: 'Kubernetes Version',
+  KubernetesVersion: 'K8s version',
   CreationTime: 'Creation Time',
   WarningDeleteOneKsCluster:
     'Deleting this cluster will permanently destroy all associated resources including node groups, workloads, persistent volumes, and configurations. This action is irreversible.',

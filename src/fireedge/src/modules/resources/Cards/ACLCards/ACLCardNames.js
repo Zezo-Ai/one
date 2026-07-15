@@ -28,7 +28,7 @@ import PropTypes from 'prop-types'
 
 import { ACL_USERS, T } from '@ConstantsModule'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { rowStyles } from '@modules/resources/Tables/styles'
 import { aclStyles } from '@modules/resources/Cards/ACLCards/styles'
 
@@ -41,6 +41,7 @@ import { aclStyles } from '@modules/resources/Cards/ACLCards/styles'
  * @returns {Component} UserCard component
  */
 const ACLCardNames = ({ acl, rootProps }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const {
     ID,
@@ -73,7 +74,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.VMs)}
+            {translate(T.VMs)}
           </span>
           <span
             data-cy="acl-card-name-HOST"
@@ -83,7 +84,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Hosts)}
+            {translate(T.Hosts)}
           </span>
           <span
             data-cy="acl-card-name-NET"
@@ -93,7 +94,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Networks)}
+            {translate(T.Networks)}
           </span>
           <span
             data-cy="acl-card-name-IMAGE"
@@ -103,7 +104,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Images)}
+            {translate(T.Images)}
           </span>
           <span
             data-cy="acl-card-name-USER"
@@ -113,7 +114,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Users)}
+            {translate(T.Users)}
           </span>
           <span
             data-cy="acl-card-name-TEMPLATE"
@@ -123,7 +124,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Templates)}
+            {translate(T.Templates)}
           </span>
           <span
             data-cy="acl-card-name-GROUP"
@@ -133,7 +134,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Groups)}
+            {translate(T.Groups)}
           </span>
           <span
             data-cy="acl-card-name-DATASTORE"
@@ -143,7 +144,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Datastores)}
+            {translate(T.Datastores)}
           </span>
           <span
             data-cy="acl-card-name-CLUSTER"
@@ -153,7 +154,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Clusters)}
+            {translate(T.Clusters)}
           </span>
           <span
             data-cy="acl-card-name-DOCUMENT"
@@ -163,7 +164,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Services)}
+            {translate(T.Services)}
           </span>
           <span
             data-cy="acl-card-name-ZONE"
@@ -173,7 +174,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Zones)}
+            {translate(T.Zones)}
           </span>
           <span
             data-cy="acl-card-name-SECGROUP"
@@ -183,7 +184,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.SecurityGroups)}
+            {translate(T.SecurityGroups)}
           </span>
           <span
             data-cy="acl-card-name-VDC"
@@ -193,7 +194,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.VDCs)}
+            {translate(T.VDCs)}
           </span>
           <span
             data-cy="acl-card-name-VROUTER"
@@ -203,7 +204,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.VirtualRouters)}
+            {translate(T.VirtualRouters)}
           </span>
           <span
             data-cy="acl-card-name-MARKETPLACE"
@@ -213,7 +214,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Apps)}
+            {translate(T.Apps)}
           </span>
           <span
             data-cy="acl-card-name-MARKETPLACEAPP"
@@ -223,7 +224,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.Marketplaces)}
+            {translate(T.Marketplaces)}
           </span>
           <span
             data-cy="acl-card-name-VMGROUP"
@@ -233,7 +234,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.VMGroups)}
+            {translate(T.VMGroups)}
           </span>
           <span
             data-cy="acl-card-name-VNTEMPLATE"
@@ -243,7 +244,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.NetworkTemplates)}
+            {translate(T.NetworkTemplates)}
           </span>
           <span
             data-cy="acl-card-name-BACKUPJOB"
@@ -253,7 +254,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.aclNotApplies
             }
           >
-            {Tr(T.BackupJob)}
+            {translate(T.BackupJob)}
           </span>
         </div>
         <div className={classes.caption}>
@@ -261,21 +262,21 @@ const ACLCardNames = ({ acl, rootProps }) => {
 
           {idResourceType === ACL_USERS.INDIVIDUAL.type && (
             <Tooltip
-              title={Tr([
+              title={translate([
                 T['acls.table.card.resources.individual.tooltip'],
                 idResourceId,
               ])}
             >
               <span>
                 <span data-cy="acl-card-resourcesIdentifier">
-                  {Tr(T.Identifier)} #{idResourceId}
+                  {translate(T.Identifier)} #{idResourceId}
                 </span>
               </span>
             </Tooltip>
           )}
           {idResourceType === ACL_USERS.GROUP.type && (
             <Tooltip
-              title={Tr([
+              title={translate([
                 T['acls.table.card.resources.group.tooltip'],
                 idResourceName,
               ])}
@@ -290,7 +291,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
           )}
           {idResourceType === ACL_USERS.CLUSTER.type && (
             <Tooltip
-              title={Tr([
+              title={translate([
                 T['acls.table.card.resources.cluster.tooltip'],
                 idResourceName,
               ])}
@@ -304,10 +305,12 @@ const ACLCardNames = ({ acl, rootProps }) => {
             </Tooltip>
           )}
           {idResourceType === ACL_USERS.ALL.type && (
-            <Tooltip title={Tr([T['acls.table.card.resources.all.tooltip']])}>
+            <Tooltip
+              title={translate([T['acls.table.card.resources.all.tooltip']])}
+            >
               <span>
                 <AllIcon />
-                <span>{Tr(T.All)}</span>
+                <span>{translate(T.All)}</span>
               </span>
             </Tooltip>
           )}
@@ -317,7 +320,10 @@ const ACLCardNames = ({ acl, rootProps }) => {
         <div className={classes.caption}>
           {idUserType === ACL_USERS.INDIVIDUAL.type && (
             <Tooltip
-              title={Tr([T['acls.table.card.rule.user.tooltip'], idUserName])}
+              title={translate([
+                T['acls.table.card.rule.user.tooltip'],
+                idUserName,
+              ])}
             >
               <span>
                 <UserIcon />
@@ -327,7 +333,10 @@ const ACLCardNames = ({ acl, rootProps }) => {
           )}
           {idUserType === ACL_USERS.GROUP.type && (
             <Tooltip
-              title={Tr([T['acls.table.card.rule.group.tooltip'], idUserName])}
+              title={translate([
+                T['acls.table.card.rule.group.tooltip'],
+                idUserName,
+              ])}
             >
               <span>
                 <GroupIcon />
@@ -336,10 +345,10 @@ const ACLCardNames = ({ acl, rootProps }) => {
             </Tooltip>
           )}
           {idUserType === ACL_USERS.ALL.type && (
-            <Tooltip title={Tr([T['acls.table.card.rule.all.tooltip']])}>
+            <Tooltip title={translate([T['acls.table.card.rule.all.tooltip']])}>
               <span>
                 <AllIcon />
-                <span data-cy="acl-card-user">{Tr(T.All)}</span>
+                <span data-cy="acl-card-user">{translate(T.All)}</span>
               </span>
             </Tooltip>
           )}
@@ -347,7 +356,10 @@ const ACLCardNames = ({ acl, rootProps }) => {
         <div className={classes.caption}>
           {zoneType === ACL_USERS.INDIVIDUAL.type && (
             <Tooltip
-              title={Tr([T['acls.table.card.rule.zone.tooltip'], zoneName])}
+              title={translate([
+                T['acls.table.card.rule.zone.tooltip'],
+                zoneName,
+              ])}
             >
               <span>
                 <ZoneIcon />
@@ -356,10 +368,12 @@ const ACLCardNames = ({ acl, rootProps }) => {
             </Tooltip>
           )}
           {zoneType === ACL_USERS.ALL.type && (
-            <Tooltip title={Tr([T['acls.table.card.rule.zone.tooltip.all']])}>
+            <Tooltip
+              title={translate([T['acls.table.card.rule.zone.tooltip.all']])}
+            >
               <span>
                 <ZoneIcon />
-                <span data-cy="acl-card-zone">{Tr(T.All)}</span>
+                <span data-cy="acl-card-zone">{translate(T.All)}</span>
               </span>
             </Tooltip>
           )}
@@ -373,7 +387,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.rigthNotApplies
             }
           >
-            {Tr(T.Use)}
+            {translate(T.Use)}
           </span>
           <span
             data-cy="acl-card-rights-MANAGE"
@@ -383,7 +397,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.rigthNotApplies
             }
           >
-            {Tr(T.Manage)}
+            {translate(T.Manage)}
           </span>
           <span
             data-cy="acl-card-rights-ADMIN"
@@ -393,7 +407,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.rigthNotApplies
             }
           >
-            {Tr(T.Admin)}
+            {translate(T.Admin)}
           </span>
           <span
             data-cy="acl-card-rights-CREATE"
@@ -403,7 +417,7 @@ const ACLCardNames = ({ acl, rootProps }) => {
                 : aclClasses.rigthNotApplies
             }
           >
-            {Tr(T.Create)}
+            {translate(T.Create)}
           </span>
         </div>
       </div>

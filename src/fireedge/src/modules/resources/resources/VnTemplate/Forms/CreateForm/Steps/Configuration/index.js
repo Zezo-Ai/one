@@ -107,7 +107,7 @@ const Content = ({
 
   const driver = useMemo(() => watch(`${GENERAL_ID}.VN_MAD`), [])
 
-  const totalErrors = Object.keys(errors[STEP_ID] ?? {}).length
+  const stepErrors = errors[STEP_ID]
   const availableTabs = useMemo(() => getTabs(isInstantiate), [isInstantiate])
   const instantiateTabs = useMemo(
     () =>
@@ -135,7 +135,7 @@ const Content = ({
           ...section,
           name,
           title: name,
-          error: getError?.(errors[STEP_ID]),
+          getError,
           Content: () => (
             <TabContent
               isUpdate={isUpdate}
@@ -147,7 +147,7 @@ const Content = ({
           ),
         })
       ),
-    [totalErrors, driver, visibleTabs]
+    [driver, visibleTabs]
   )
 
   const {
@@ -161,8 +161,9 @@ const Content = ({
       <Tabs
         type="line"
         defaultSelect={0}
-        options={tabs.map(({ title }, idx) => ({
+        options={tabs.map(({ title, getError }, idx) => ({
           title,
+          error: !!getError?.(stepErrors),
           value: idx,
         }))}
         onChange={(idx) => setSelected(idx)}
@@ -171,7 +172,6 @@ const Content = ({
         <Box
           key={`tab-${activeId ?? activeName}`}
           data-cy={`tab-content-${activeId ?? activeName}`}
-          sx={{ p: 2 }}
         >
           <ActiveContent />
         </Box>

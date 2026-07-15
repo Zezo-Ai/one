@@ -21,7 +21,7 @@ import PropTypes from 'prop-types'
 import { Check as CheckIcon, Square as BlankSquareIcon } from 'iconoir-react'
 
 import { Action } from '@modules/resources/Cards/SelectCard'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, ACTIONS, STYLE_BUTTONS } from '@ConstantsModule'
 
 import * as Helper from '@ModelsModule'
@@ -45,6 +45,7 @@ const useStyles = (theme) => ({
 })
 
 const Permissions = memo(({ handleEdit, actions, ...permissions }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => useStyles(theme), [theme])
 
@@ -62,16 +63,16 @@ const Permissions = memo(({ handleEdit, actions, ...permissions }) => {
     <Paper variant="outlined" sx={{ height: 'fit-content' }}>
       <List className={classes.list}>
         <ListItem className={classes.title}>
-          <Typography noWrap>{Tr(T.Permissions)}</Typography>
-          <Typography noWrap>{Tr(T.Use)}</Typography>
-          <Typography noWrap>{Tr(T.Manage)}</Typography>
-          <Typography noWrap>{Tr(T.Admin)}</Typography>
+          <Typography noWrap>{translate(T.Permissions)}</Typography>
+          <Typography noWrap>{translate(T.Use)}</Typography>
+          <Typography noWrap>{translate(T.Manage)}</Typography>
+          <Typography noWrap>{translate(T.Admin)}</Typography>
         </ListItem>
         {CATEGORIES.map(({ title, category }) => (
           <ListItem key={category} className={classes.item} dense>
             {/* TITLE */}
             <Typography variant="body2" noWrap title={title}>
-              {Tr(title)}
+              {translate(title)}
             </Typography>
 
             {/* PERMISSIONS */}

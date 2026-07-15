@@ -14,7 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Datastore, DS_THRESHOLD, RESOURCE_NAMES, T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import MultipleTags from '@modules/resources/MultipleTagsCard'
 import {
   LinearProgressWithLabel,
@@ -42,7 +43,6 @@ import {
   getDatastoreType,
   getErrorMessage,
 } from '@ModelsModule'
-import { getResourceLabels } from '@UtilsModule'
 
 const DatastoreCard = memo(
   /**
@@ -54,6 +54,7 @@ const DatastoreCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ datastore: ds, rootProps, onClickLabel, onDeleteLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels } = useAuth()
@@ -119,16 +120,16 @@ const DatastoreCard = memo(
           </div>
           <div className={classes.caption}>
             <span>{`#${ID}`}</span>
-            <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+            <span title={`${translate(T.Owner)}: ${UNAME}`}>
               <User />
               <span>{` ${UNAME}`}</span>
             </span>
-            <span title={`${Tr(T.Group)}: ${GNAME}`}>
+            <span title={`${translate(T.Group)}: ${GNAME}`}>
               <Group />
               <span>{` ${GNAME}`}</span>
             </span>
             {!!clusters?.length && (
-              <span title={`${Tr(T.Clusters)}`}>
+              <span title={`${translate(T.Clusters)}`}>
                 <Server />
                 <Stack direction="row" justifyContent="end" alignItems="center">
                   {clusters?.map((cluster, index) => (
@@ -145,7 +146,7 @@ const DatastoreCard = memo(
             label={percentLabel}
             high={DS_THRESHOLD.CAPACITY.high}
             low={DS_THRESHOLD.CAPACITY.low}
-            title={Tr(T.UsedOfTotal)}
+            title={translate(T.UsedOfTotal)}
           />
         </div>
       </div>

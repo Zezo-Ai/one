@@ -25,6 +25,7 @@ import {
   TitleSlot,
 } from '@ComponentsV2Module'
 import { getLabelSlotLabels } from '@ModelsModule'
+import { getLockIcon } from '@UtilsModule'
 
 /**
  * VnTemplatesCard component displays a VN Template as a card.
@@ -45,7 +46,6 @@ export const VnTemplatesCard = forwardRef(
       UNAME,
       GNAME,
       REGTIME,
-      LOCK,
       TEMPLATE: { VN_MAD } = {},
     } = vnTemplate
     const labelSlotLabels = getLabelSlotLabels(vnTemplate?.LABELS)
@@ -57,7 +57,16 @@ export const VnTemplatesCard = forwardRef(
         onClick={onClick}
         isSelected={isSelected}
         slots={[
-          [TitleSlot, { title: NAME }],
+          [
+            TitleSlot,
+            {
+              title: (
+                <>
+                  {NAME} {getLockIcon(vnTemplate)}
+                </>
+              ),
+            },
+          ],
           [
             MetadataSlot,
             {
@@ -68,11 +77,10 @@ export const VnTemplatesCard = forwardRef(
               ].filter(([, value]) => value),
             },
           ],
-          (LOCK || VN_MAD || labelSlotLabels.length > 0) && [
+          (VN_MAD || labelSlotLabels.length > 0) && [
             LabelSlot,
             {
               labels: [
-                LOCK && [T.Locked, 'information'],
                 VN_MAD && [VN_MAD, 'default'],
                 ...labelSlotLabels,
               ].filter(Boolean),

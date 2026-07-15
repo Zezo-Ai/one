@@ -24,7 +24,7 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -37,6 +37,7 @@ import { T } from '@ConstantsModule'
  * @returns {Component} The rendered component.
  */
 const RoleVmVmPanel = ({ roles, onChange, selectedRoleIndex }) => {
+  const { translate } = useTranslation()
   const handleRoleChange = useCallback(
     (updatedRole) => {
       const updatedRoles = [...roles]
@@ -54,10 +55,10 @@ const RoleVmVmPanel = ({ roles, onChange, selectedRoleIndex }) => {
   return (
     <Box p={2}>
       <Box sx={{ flex: 1 }}>
-        <Typography variant="h6">{Tr(T.RoleDetails)}</Typography>
+        <Typography variant="h6">{translate(T.RoleDetails)}</Typography>
         <Box sx={{ mb: 2 }}>
           <TextField
-            label={Tr(T.RoleName)}
+            label={translate(T.RoleName)}
             name="NAME"
             value={roles?.[selectedRoleIndex]?.NAME ?? ''}
             onChange={handleInputChange}
@@ -71,7 +72,7 @@ const RoleVmVmPanel = ({ roles, onChange, selectedRoleIndex }) => {
           <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
             <InputLabel>VM-VM Affinity</InputLabel>
             <Select
-              label={Tr(T.VMAffinity)}
+              label={translate(T.VMAffinity)}
               name="POLICY"
               data-cy="policy-selector"
               value={roles?.[selectedRoleIndex]?.POLICY ?? 'None'}
@@ -79,19 +80,19 @@ const RoleVmVmPanel = ({ roles, onChange, selectedRoleIndex }) => {
               onChange={handleInputChange}
             >
               <MenuItem data-cy="policy-selector-policy-None" value="None">
-                {Tr(T.None)}
+                {translate(T.None)}
               </MenuItem>
               <MenuItem
                 data-cy="policy-selector-policy-AFFINED"
                 value="AFFINED"
               >
-                {Tr(T.Affined)}
+                {translate(T.Affined)}
               </MenuItem>
               <MenuItem
                 data-cy="policy-selector-policy-ANTI_AFFINED"
                 value="ANTI_AFFINED"
               >
-                {Tr(T.AntiAffined)}
+                {translate(T.AntiAffined)}
               </MenuItem>
             </Select>
           </FormControl>

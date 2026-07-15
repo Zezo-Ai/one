@@ -27,7 +27,7 @@ import {
 
 import { RESOURCE_NAMES, T, VM_TEMPLATE_ACTIONS, PATH } from '@ConstantsModule'
 import { Form } from '@modules/resources'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 const { Vm, VmTemplate } = Form
 
 const ListVmTemplateNames = ({ rows = [] }) =>

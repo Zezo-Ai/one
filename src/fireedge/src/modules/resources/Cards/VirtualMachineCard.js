@@ -15,6 +15,7 @@
  * ------------------------------------------------------------------------- */
 import { Box, Stack, Tooltip, Typography, useTheme } from '@mui/material'
 import { getResourceLabels, prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import PropTypes from 'prop-types'
 import { ReactElement, memo, useMemo } from 'react'
 
@@ -39,7 +40,7 @@ import {
   getVirtualMachineState,
   timeFromMilliseconds,
 } from '@ModelsModule'
-import { Tr } from '@modules/resources/HOC'
+
 import { MemoryIcon } from '@modules/resources/Icons'
 import MultipleTags from '@modules/resources/MultipleTagsCard'
 import { StatusChip, StatusCircle } from '@modules/resources/Status'
@@ -58,6 +59,7 @@ const VirtualMachineCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ vm, rootProps, actions, onClickLabel, globalErrors = [] }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels } = useAuth()
@@ -181,41 +183,41 @@ const VirtualMachineCard = memo(
             <div className={classes.caption}>
               <span data-cy="id">{`#${ID}`}</span>
               <span title={timeFormat}>
-                {`${+ETIME ? Tr(T.Done) : Tr(T.Started)} `}
+                {`${+ETIME ? translate(T.Done) : translate(T.Started)} `}
                 <Timer initial={time} />
               </span>
-              <span title={`${Tr(T.VirtualCpu)}: ${VCPU}`}>
+              <span title={`${translate(T.VirtualCpu)}: ${VCPU}`}>
                 <Cpu />
                 <span data-cy="vcpu">{VCPU}</span>
               </span>
-              <span title={`${Tr(T.Memory)}: ${memValue}`}>
+              <span title={`${translate(T.Memory)}: ${memValue}`}>
                 <MemoryIcon width={20} height={20} />
                 <span data-cy="memory">{memValue}</span>
               </span>
-              <span title={`${Tr(T.Host)}: ${HOSTNAME}`}>
+              <span title={`${translate(T.Host)}: ${HOSTNAME}`}>
                 <HardDrive />
                 <span data-cy="hostname">{HOSTNAME}</span>
               </span>
               {!!VM_HOSTNAME && (
-                <span title={`${Tr(T.Hostname)}: ${VM_HOSTNAME}`}>
+                <span title={`${translate(T.Hostname)}: ${VM_HOSTNAME}`}>
                   <HostnameIcon />
                   <span>{` ${VM_HOSTNAME}`}</span>
                 </span>
               )}
               {!!UNAME && (
-                <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+                <span title={`${translate(T.Owner)}: ${UNAME}`}>
                   <User />
                   <span>{` ${UNAME}`}</span>
                 </span>
               )}
               {!!GNAME && (
-                <span title={`${Tr(T.Group)}: ${GNAME}`}>
+                <span title={`${translate(T.Group)}: ${GNAME}`}>
                   <Group />
                   <span>{` ${GNAME}`}</span>
                 </span>
               )}
               {!!ips?.length && (
-                <span title={`${Tr(T.IP)}`}>
+                <span title={`${translate(T.IP)}`}>
                   <Network />
                   <Stack
                     direction="row"

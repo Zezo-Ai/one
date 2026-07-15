@@ -49,7 +49,7 @@ import {
 import { getLastHistory, isVmAvailableAction } from '@ModelsModule'
 import { Form } from '@modules/resources'
 import * as BackupsResource from '@modules/resources/resources/Backups'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 const { Vm } = Form
 
 const useTableStyles = () => ({

@@ -18,8 +18,9 @@ import PropTypes from 'prop-types'
 import { InputField } from '@modules/componentsv2/primitives/Fields'
 import { TextArea } from '@modules/componentsv2/primitives/TextArea'
 import { useController, useWatch, useFormContext } from 'react-hook-form'
-import { sentenceCase, generateKey, labelCanBeTranslated } from '@UtilsModule'
-import { Tr } from '@ProvidersModule'
+import { sentenceCase, generateKey, isTranslationInput } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+
 import { T } from '@ConstantsModule'
 
 export const TextController = memo(
@@ -37,6 +38,7 @@ export const TextController = memo(
     onConditionChange,
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const {
       hint,
       placeholder,
@@ -78,12 +80,16 @@ export const TextController = memo(
       [onChange, onConditionChange]
     )
 
-    const trLabel = labelCanBeTranslated(label) ? Tr(label) : label
+    const trLabel = isTranslationInput(label) ? translate(label) : label
 
     return multiline ? (
       <TextArea
         {...restFieldProps}
         {...inputProps}
+        inputProps={{
+          ...restFieldProps.inputProps,
+          'data-cy': restFieldProps.inputProps?.['data-cy'] ?? cy,
+        }}
         inputRef={ref}
         onChange={handleChange}
         minRows={8}
@@ -98,6 +104,10 @@ export const TextController = memo(
         {...restFieldProps}
         isRequired={isRequired}
         isOptional={isOptional}
+        inputProps={{
+          ...restFieldProps.inputProps,
+          'data-cy': restFieldProps.inputProps?.['data-cy'] ?? cy,
+        }}
         inputRef={ref}
         initialValue={value}
         value={value ?? ''}
@@ -107,6 +117,7 @@ export const TextController = memo(
         tooltip={tooltip}
         placeholder={placeholder || `${T.Enter} ${trLabel}`}
         hint={hint}
+        errorDataCy={`${cy}-error`}
         error={sentenceCase(
           [error?.message]
             ?.flat()

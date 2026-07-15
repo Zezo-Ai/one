@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Tr } from '@modules/resources/HOC'
+import { jsonToXml } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import { BackupJobAPI, useModalsApi } from '@FeaturesModule'
-import { jsonToXml } from '@UtilsModule'
+
 import { Edit } from 'iconoir-react'
 import PropTypes from 'prop-types'
 import { memo } from 'react'
@@ -25,6 +26,7 @@ import * as BackupJobs from '@modules/resources/resources/BackupJobs'
 import { SubmitButton } from '@ComponentsV2Module'
 
 const AttachVms = memo(({ id, template }) => {
+  const { translate } = useTranslation()
   const { showModal } = useModalsApi()
 
   const [update] = BackupJobAPI.useUpdateBackupJobMutation()
@@ -55,7 +57,7 @@ const AttachVms = memo(({ id, template }) => {
     <SubmitButton
       data-cy={`edit-vms`}
       iconOnly={<Edit />}
-      tooltip={Tr(T.Edit)}
+      tooltip={translate(T.Edit)}
       variant={'outlined'}
       onClick={handleOpenForm}
     />

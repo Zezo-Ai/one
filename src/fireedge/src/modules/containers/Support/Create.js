@@ -18,12 +18,8 @@ import { ReactElement } from 'react'
 import { useHistory } from 'react-router'
 
 import { SupportAPI, SystemAPI, useGeneralApi } from '@FeaturesModule'
-import {
-  DefaultFormStepper,
-  Form,
-  SkeletonStepsForm,
-  TranslateProvider,
-} from '@ResourcesModule'
+import { DefaultFormStepper, Form, SkeletonStepsForm } from '@ResourcesModule'
+
 import { PATH, T } from '@ConstantsModule'
 
 const { Support } = Form
@@ -62,10 +58,10 @@ export function CreateTicket() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <Support.CreateForm onSubmit={onSubmit} fallback={<SkeletonStepsForm />}>
         {(config) => <DefaultFormStepper {...config} />}
       </Support.CreateForm>
-    </TranslateProvider>
+    </>
   )
 }

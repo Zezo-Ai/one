@@ -24,7 +24,7 @@ import {
 } from '@mui/material'
 import { DeleteCircle } from 'iconoir-react'
 import { Component } from 'react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -44,22 +44,23 @@ export const AffinityGroup = ({
   onDeleteGroup,
   onDeleteRole,
 }) => {
+  const { translate } = useTranslation()
   const isAffined = groupType === 'AFFINED'
 
   const description = isAffined
-    ? Tr(T.AffinedGroupsDescription)
-    : Tr(T.AntiAffinedGroupsDescription)
+    ? translate(T.AffinedGroupsDescription)
+    : translate(T.AntiAffinedGroupsDescription)
 
   const useCases = isAffined
     ? [
-        Tr(T.AffinedGroupsPotentialCase1),
-        Tr(T.AffinedGroupsPotentialCase2),
-        Tr(T.AffinedGroupsPotentialCase3),
+        translate(T.AffinedGroupsPotentialCase1),
+        translate(T.AffinedGroupsPotentialCase2),
+        translate(T.AffinedGroupsPotentialCase3),
       ]
     : [
-        Tr(T.AntiAffinedGroupsPotentialCase1),
-        Tr(T.AntiAffinedGroupsPotentialCase2),
-        Tr(T.AntiAffinedGroupsPotentialCase3),
+        translate(T.AntiAffinedGroupsPotentialCase1),
+        translate(T.AntiAffinedGroupsPotentialCase2),
+        translate(T.AntiAffinedGroupsPotentialCase3),
       ]
 
   return (
@@ -87,7 +88,7 @@ export const AffinityGroup = ({
             color="textSecondary"
             sx={{ mt: 14, opacity: 0.7, textAlign: 'start' }}
           >
-            <strong>{Tr(T.PotentialUseCases)}:</strong>
+            <strong>{translate(T.PotentialUseCases)}:</strong>
             <ul>
               {useCases.map((useCase, index) => (
                 <li key={index}>{useCase}</li>

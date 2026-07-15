@@ -28,7 +28,7 @@ import {
   ClusterAPI,
 } from '@FeaturesModule'
 import { nameMapper } from '@modules/resources/Tabs/Quota/Components/helpers/scripts'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import { QuotaTab } from '@ComponentsV2Module'
 
@@ -41,6 +41,7 @@ import { QuotaTab } from '@ComponentsV2Module'
  */
 const generateQuotasInfoTab = ({ groups }) => {
   const QuotasInfoTab = ({ id }) => {
+    const { translate } = useTranslation()
     const datastoresResponse = DatastoreAPI.useGetDatastoresQuery()
     const networksResponse = VnAPI.useGetVNetworksQuery()
     const imagesResponse = ImageAPI.useGetImagesQuery()
@@ -120,7 +121,9 @@ const generateQuotasInfoTab = ({ groups }) => {
             .replace(/_/g, ' ')
             .split(' ')
             .map((word) =>
-              Tr(word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              translate(
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              )
             )
             .join(' ')
 
@@ -172,7 +175,7 @@ const generateQuotasInfoTab = ({ groups }) => {
 
     const quotaTypesConfig = [
       {
-        title: Tr(T.VMQuota),
+        title: translate(T.VMQuota),
         quota: Array.isArray(apiData.VM_QUOTA)
           ? apiData.VM_QUOTA
           : [apiData.VM_QUOTA],
@@ -180,7 +183,7 @@ const generateQuotasInfoTab = ({ groups }) => {
         keyMap: generateKeyMap(apiData.VM_QUOTA),
       },
       {
-        title: Tr(T.DatastoreQuota),
+        title: translate(T.DatastoreQuota),
         quota: Array.isArray(apiData.DATASTORE_QUOTA)
           ? apiData.DATASTORE_QUOTA
           : [apiData.DATASTORE_QUOTA],
@@ -188,7 +191,7 @@ const generateQuotasInfoTab = ({ groups }) => {
         keyMap: generateKeyMap(apiData.DATASTORE_QUOTA),
       },
       {
-        title: Tr(T.NetworkQuota),
+        title: translate(T.NetworkQuota),
         quota: Array.isArray(apiData.NETWORK_QUOTA)
           ? apiData.NETWORK_QUOTA
           : [apiData.NETWORK_QUOTA],
@@ -196,7 +199,7 @@ const generateQuotasInfoTab = ({ groups }) => {
         keyMap: generateKeyMap(apiData.NETWORK_QUOTA),
       },
       {
-        title: Tr(T.ImageQuota),
+        title: translate(T.ImageQuota),
         quota: Array.isArray(apiData.IMAGE_QUOTA)
           ? apiData.IMAGE_QUOTA
           : [apiData.IMAGE_QUOTA],

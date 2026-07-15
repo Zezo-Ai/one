@@ -36,6 +36,8 @@ import {
   Component,
   ReactNode,
 } from 'react'
+import { Lock } from 'iconoir-react'
+import { Box } from '@mui/material'
 
 /**
  * Simulate a delay in a function.
@@ -743,7 +745,31 @@ export const responseDataToArray = (data) =>
  * @param {object} OpennebulaObject - OpennebulaObject
  * @returns {string} - If OpennebulaObject is locked/unlocked
  */
-export const getLocked = (OpennebulaObject) => !!+OpennebulaObject.LOCK?.LOCKED
+export const getLocked = (OpennebulaObject) => {
+  const lock = OpennebulaObject?.LOCK
+
+  if (typeof lock === 'boolean') return lock
+  if (typeof lock === 'object') return !!+lock?.LOCKED
+
+  return lock === 'true' || !!+lock
+}
+
+/**
+ * @param {object} resource - OpenNebula resource
+ * @returns {Element|null} Lock icon if resource is locked
+ */
+export const getLockIcon = (resource) =>
+  getLocked(resource)
+    ? createElement(Box, {
+        component: Lock,
+        sx: {
+          width: '16px',
+          height: '16px',
+          color: 'icon.disabled',
+          flexShrink: 0,
+        },
+      })
+    : null
 
 /**
  * @param {string} errorId - Unique error identifier

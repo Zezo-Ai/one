@@ -29,7 +29,7 @@ import {
 } from '@modules/resources/Tables/Enhanced/Utils'
 
 import { Form } from '@modules/resources/Forms'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { RESOURCE_NAMES, SUPPORT_ACTIONS, T } from '@ConstantsModule'
 const { Support } = Form
 

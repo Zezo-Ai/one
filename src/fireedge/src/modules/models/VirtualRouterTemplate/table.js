@@ -14,27 +14,15 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { createTable, timeFromMilliseconds } from '@UtilsModule'
+import { createTable, getLockIcon, timeFromMilliseconds } from '@UtilsModule'
 import { VmTemplateAPI } from '@FeaturesModule'
 import { T, STATIC_FILES_URL, DEFAULT_TEMPLATE_LOGO } from '@ConstantsModule'
 import { Image } from '@ComponentsV2Module'
 import { createLabelColumn } from '@modules/models/labels'
+import { Box } from '@mui/material'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const VRTEMPLATE_COLUMNS = [
-  {
-    id: 'logo',
-    width: '10%',
-    header: '',
-    cell: ({ row }) => {
-      const logo = row?.original?.TEMPLATE?.LOGO ?? DEFAULT_TEMPLATE_LOGO
-      const src = `${STATIC_FILES_URL}/${logo}`
-
-      return (
-        <Image src={src} width={40} height={40} alt={'list-image-identifier'} />
-      )
-    },
-  },
   {
     accessorKey: 'ID',
     header: T.ID,
@@ -44,11 +32,23 @@ export const VRTEMPLATE_COLUMNS = [
     accessorKey: 'NAME',
     header: T.Name,
     width: '30%',
-  },
-  {
-    accessorKey: 'REGTIME',
-    header: T.RegistrationTime,
-    cell: ({ row }) => timeFromMilliseconds(row.original.REGTIME).toRelative(),
+    cell: ({ row }) => {
+      const logo = row?.original?.TEMPLATE?.LOGO ?? DEFAULT_TEMPLATE_LOGO
+      const src = `${STATIC_FILES_URL}/${logo}`
+
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Image
+            src={src}
+            width={32}
+            height={32}
+            alt={'list-image-identifier'}
+          />
+          <span>{row.original?.NAME}</span>
+          {getLockIcon(row.original)}
+        </Box>
+      )
+    },
   },
   {
     accessorKey: 'UNAME',
@@ -57,6 +57,11 @@ export const VRTEMPLATE_COLUMNS = [
   {
     accessorKey: 'GNAME',
     header: T.Group,
+  },
+  {
+    accessorKey: 'REGTIME',
+    header: T.RegistrationTime,
+    cell: ({ row }) => timeFromMilliseconds(row.original.REGTIME).toRelative(),
   },
   createLabelColumn(),
 ]
@@ -71,5 +76,6 @@ export const vrtemplateTable = createTable(
         isFetching,
         isLoading,
       }),
-    })
+    }),
+  { dataCy: 'vr-templates' }
 )

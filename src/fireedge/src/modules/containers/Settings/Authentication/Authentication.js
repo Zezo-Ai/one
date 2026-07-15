@@ -30,9 +30,9 @@ import PropTypes from 'prop-types'
 import { ReactElement, memo, useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 
-import { Translate } from '@ResourcesModule'
-import { T } from '@ConstantsModule'
+import { Translate } from '@ProvidersModule'
 import { jsonToXml, sanitize } from '@UtilsModule'
+import { T } from '@ConstantsModule'
 
 const styles = ({ palette, spacing }) => ({
   field: css({

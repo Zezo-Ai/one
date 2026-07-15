@@ -31,7 +31,7 @@ import { STYLE_BUTTONS } from '@ConstantsModule'
  * @returns {Component} - TextField component
  */
 export const RefreshSlot = forwardRef(
-  ({ onRefresh = () => {}, isRefreshing = false }, ref) => (
+  ({ onRefresh = () => {}, isRefreshing = false, dataCy }, ref) => (
     <Box
       sx={(theme) =>
         getStyles({
@@ -42,6 +42,7 @@ export const RefreshSlot = forwardRef(
     >
       <Button
         onClick={onRefresh}
+        data-cy={dataCy}
         isDisabled={isRefreshing}
         iconOnly={<RefreshIcon height={'16px'} width={'16px'} />}
         size={'medium'}
@@ -59,6 +60,7 @@ export const RefreshSlot = forwardRef(
 RefreshSlot.propTypes = {
   onRefresh: PropTypes.func,
   isRefreshing: PropTypes.bool,
+  dataCy: PropTypes.string,
 }
 
 RefreshSlot.displayName = 'RefreshSlot'

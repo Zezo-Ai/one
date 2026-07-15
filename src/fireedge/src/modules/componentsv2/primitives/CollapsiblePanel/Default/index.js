@@ -26,6 +26,7 @@ import clsx from 'clsx'
 import { NavArrowDown as ExpandIcon } from 'iconoir-react'
 import { Tag } from '@modules/componentsv2/primitives/Tags'
 import { getStyles } from '@modules/componentsv2/primitives/CollapsiblePanel/Default/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Collapsible panel with arbitrary content.
@@ -52,6 +53,7 @@ export const CollapsiblePanel = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const hasTag =
       isValidElement(tag) || typeof tag === 'string' || typeof tag === 'number'
 
@@ -70,7 +72,9 @@ export const CollapsiblePanel = forwardRef(
           expandIcon={<ExpandIcon />}
           {...summaryProps}
         >
-          <Typography className="title">{title}</Typography>
+          <Typography className="title">
+            {typeof title === 'string' ? translate(title) : title}
+          </Typography>
           {hasTag && <Tag title={String(tag)} />}
         </AccordionSummary>
         <AccordionDetails className="content" {...contentProps}>

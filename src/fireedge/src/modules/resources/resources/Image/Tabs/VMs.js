@@ -17,7 +17,7 @@
 import PropTypes from 'prop-types'
 import { ReactElement, useMemo } from 'react'
 import { Table } from '@ComponentsV2Module'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { vmsTable } from '@ModelsModule'
 
 const HIDDEN_COLUMN_IDS = [
@@ -77,6 +77,8 @@ export const VMs = ({ data }) => {
       isEnableSearchBar={true}
       isEnableSort={true}
       isEnableFilters={true}
+      openRowDetailsOnClick
+      rowDetailsResourceId={RESOURCE_NAMES.VM}
     />
   )
 }

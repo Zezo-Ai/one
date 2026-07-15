@@ -76,8 +76,10 @@ export const getStyles = ({
 }) => {
   const baseStyle = {
     display: 'flex',
+    flexWrap: 'nowrap',
     alignItems: 'center',
     gap: `${theme.scale[200]}px`,
+    whiteSpace: 'nowrap',
     borderRadius: `${theme.scale[150]}px`,
     fontStyle: 'normal',
     fontWeight: 500,

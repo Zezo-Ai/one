@@ -19,7 +19,7 @@ import PropTypes from 'prop-types'
 import { HomeShield } from 'iconoir-react'
 import { useMemo } from 'react'
 import { useTheme, Typography } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { StatusCircle } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
 import { T } from '@ConstantsModule'
@@ -34,6 +34,7 @@ const Row = ({
   toggleRowSelected,
   ...props
 }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => rowStyles(theme), [theme])
   const { ID, NAME, ENDPOINT } = value
@@ -51,7 +52,7 @@ const Row = ({
         </div>
         <div className={classes.caption}>
           <span>{`#${ID}`}</span>
-          <span title={`${Tr(T.Endpoint)}: ${ENDPOINT}`}>
+          <span title={`${translate(T.Endpoint)}: ${ENDPOINT}`}>
             <HomeShield />
             <span>{` ${ENDPOINT}`}</span>
           </span>

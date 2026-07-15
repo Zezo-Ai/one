@@ -32,7 +32,7 @@ import {
   Radio,
 } from '@mui/material'
 import PropTypes from 'prop-types'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -43,6 +43,7 @@ import { T } from '@ConstantsModule'
  * @returns {Component} - User input edit dialog
  */
 const UserInputDialog = ({ open, onClose, userInput }) => {
+  const { translate } = useTranslation()
   const { control, setValue } = useFormContext({
     defaultValues: {
       value: userInput?.default || undefined,
@@ -72,7 +73,7 @@ const UserInputDialog = ({ open, onClose, userInput }) => {
               {...field}
               labelId="value-select-label"
               id="value-select"
-              label={Tr(T.Value)}
+              label={translate(T.Value)}
               multiple={userInput?.type === 'listmultiple'}
             >
               {userInput?.options?.map((option, index) => (
@@ -95,9 +96,13 @@ const UserInputDialog = ({ open, onClose, userInput }) => {
             <FormControlLabel
               value="YES"
               control={<Radio />}
-              label={Tr(T.Yes)}
+              label={translate(T.Yes)}
             />
-            <FormControlLabel value="NO" control={<Radio />} label={Tr(T.No)} />
+            <FormControlLabel
+              value="NO"
+              control={<Radio />}
+              label={translate(T.No)}
+            />
           </RadioGroup>
         )
       default:
@@ -106,7 +111,7 @@ const UserInputDialog = ({ open, onClose, userInput }) => {
             {...field}
             margin="dense"
             id="value"
-            label={Tr(T.Value)}
+            label={translate(T.Value)}
             type={userInput?.type === 'number' ? 'number' : 'text'}
             fullWidth
             variant="outlined"

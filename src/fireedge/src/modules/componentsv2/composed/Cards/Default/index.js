@@ -48,6 +48,7 @@ export const Card = forwardRef(
       slots = [],
       onClick = () => {},
       isRemoveCheckbox = false,
+      dataCy,
       sx,
     },
     ref
@@ -62,6 +63,7 @@ export const Card = forwardRef(
         ...(Array.isArray(sx) ? sx : [sx]),
       ].filter(Boolean)}
       ref={ref}
+      data-cy={dataCy}
       onClick={onClick}
     >
       <Box className="card-info">
@@ -116,6 +118,7 @@ Card.propTypes = {
   slots: PropTypes.array,
   onCheck: PropTypes.func,
   onClick: PropTypes.func,
+  dataCy: PropTypes.string,
   sx: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.func]),
 }
 

@@ -20,8 +20,8 @@ import { FormHelperText, Slider, Stack, TextField } from '@mui/material'
 import { useController, useWatch } from 'react-hook-form'
 
 import { ErrorHelper, Tooltip } from '@modules/resources/FormControl'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
-import { generateKey } from '@UtilsModule'
+import { isTranslationInput, generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const SliderController = memo(
   ({
@@ -37,6 +37,7 @@ const SliderController = memo(
     onConditionChange,
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const watch = useWatch({
       name: dependencies,
       disabled: dependencies == null,
@@ -107,7 +108,7 @@ const SliderController = memo(
             value={value}
             type="number"
             error={Boolean(error)}
-            label={labelCanBeTranslated(label) ? Tr(label) : label}
+            label={isTranslationInput(label) ? translate(label) : label}
             InputLabelProps={{ shrink: true }}
             InputProps={{
               readOnly,

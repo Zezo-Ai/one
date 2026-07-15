@@ -22,6 +22,7 @@ import { MinusSvg as IndeterminateIcon } from '@modules/componentsv2/primitives/
 import PropTypes from 'prop-types'
 import { useControllableState } from '@HooksModule'
 import clsx from 'clsx'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} root0 - Params
@@ -38,13 +39,16 @@ export const Checkbox = forwardRef(
       value,
       onChange,
       checked = false,
-      size = 'small',
+      size = 'medium',
       status = 'default',
       isDisabled = false,
+      inputProps,
       ...opts
     },
     ref
   ) => {
+    const { translateText } = useTranslation()
+    const isSmall = size === 'small'
     const [isCheckedInternal, setIsCheckedInternal] = useControllableState({
       value: checked,
       defaultValue: false,
@@ -61,7 +65,7 @@ export const Checkbox = forwardRef(
           disabled={isDisabled}
           className="checkbox-container"
           value={value}
-          label={text}
+          label={translateText(text)}
           componentsProps={{
             typography: { className: 'checkbox-label' },
           }}
@@ -73,13 +77,17 @@ export const Checkbox = forwardRef(
               })}
               disableRipple
               icon={<Box className="checkbox-unchecked-icon" />}
-              inputProps={{ className: 'checkbox-input' }}
+              inputProps={{ className: 'checkbox-input', ...inputProps }}
               indeterminate={isCheckedInternal === null}
               checkedIcon={
                 <Box className="checkbox-checked-icon">
                   <CheckedIcon
                     className="checkbox-check-svg"
-                    dimensions={{ height: 12, width: 16 }}
+                    dimensions={
+                      isSmall
+                        ? { height: 9, width: 12 }
+                        : { height: 12, width: 16 }
+                    }
                   />
                 </Box>
               }
@@ -87,7 +95,11 @@ export const Checkbox = forwardRef(
                 <Box className="checkbox-indeterminate-icon">
                   <IndeterminateIcon
                     className="checkbox-dash-svg"
-                    dimensions={{ height: 24, width: 24 }}
+                    dimensions={
+                      isSmall
+                        ? { height: 16, width: 16 }
+                        : { height: 24, width: 24 }
+                    }
                   />
                 </Box>
               }
@@ -108,9 +120,10 @@ Checkbox.propTypes = {
   text: PropTypes.string,
   value: PropTypes.any,
   onChange: PropTypes.func,
-  size: PropTypes.string,
+  size: PropTypes.oneOf(['small', 'medium']),
   status: PropTypes.string,
   checked: PropTypes.oneOfType([PropTypes.bool, PropTypes.oneOf([null])]),
   isDisabled: PropTypes.bool,
+  inputProps: PropTypes.object,
 }
 Checkbox.displayName = 'Checkbox'

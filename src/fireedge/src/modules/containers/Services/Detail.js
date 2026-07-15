@@ -16,7 +16,7 @@
 import { ReactElement } from 'react'
 import { useParams, Redirect } from 'react-router-dom'
 
-import { ServiceTabs, TranslateProvider } from '@ResourcesModule'
+import { ServiceTabs } from '@ResourcesModule'
 
 /**
  * Displays the detail information about a Service.
@@ -31,8 +31,8 @@ export function ServiceDetail() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <ServiceTabs id={id} />
-    </TranslateProvider>
+    </>
   )
 }

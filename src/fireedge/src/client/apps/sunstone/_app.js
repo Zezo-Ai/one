@@ -19,13 +19,13 @@ import {
   Notifier,
   NotifierUpload,
 } from '@ResourcesModule'
+import { isDevelopment, processTabManifest } from '@UtilsModule'
 import { Sidebar } from '@ComponentsV2Module'
 import { ENDPOINTS, getEndpointsByView } from 'client/apps/sunstone/routes'
 import Router from 'client/router'
 import { ENDPOINTS as DEV_ENDPOINTS } from 'client/router/dev'
 import { ReactElement, useEffect, useMemo } from 'react'
 import { matchPath, useLocation } from 'react-router-dom'
-import { TranslateProvider } from '@ProvidersModule'
 import { _APPS, SERVER_CONFIG, PATH } from '@ConstantsModule'
 import {
   oneApi,
@@ -35,7 +35,6 @@ import {
   useGeneralApi,
   useViews,
 } from '@FeaturesModule'
-import { isDevelopment, processTabManifest } from '@UtilsModule'
 
 export const APP_NAME = _APPS.sunstone
 
@@ -120,27 +119,25 @@ const SunstoneApp = () => {
   )
 
   return (
-    <TranslateProvider>
-      <AuthLayout
-        subscriptions={[
-          oneApi.endpoints.getOneConfig,
-          oneApi.endpoints.getSunstoneViews,
-        ]}
-      >
-        {isLogged && (
-          <>
-            {!isLayoutDisabled && <Sidebar endpoints={endpoints} />}
-            <Notifier />
-            <NotifierUpload />
-            <ModalHost />
-          </>
-        )}
-        <Router
-          redirectWhenAuth={externalRedirect || PATH.DASHBOARD}
-          endpoints={endpoints}
-        />
-      </AuthLayout>
-    </TranslateProvider>
+    <AuthLayout
+      subscriptions={[
+        oneApi.endpoints.getOneConfig,
+        oneApi.endpoints.getSunstoneViews,
+      ]}
+    >
+      {isLogged && (
+        <>
+          {!isLayoutDisabled && <Sidebar endpoints={endpoints} />}
+          <Notifier />
+          <NotifierUpload />
+          <ModalHost />
+        </>
+      )}
+      <Router
+        redirectWhenAuth={externalRedirect || PATH.DASHBOARD}
+        endpoints={endpoints}
+      />
+    </AuthLayout>
   )
 }
 

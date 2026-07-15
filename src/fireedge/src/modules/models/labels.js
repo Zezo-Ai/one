@@ -14,23 +14,18 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { LABEL_DELIMITER, T } from '@ConstantsModule'
+import { T } from '@ConstantsModule'
 import { TagList } from '@ComponentsV2Module'
+import { cleanLabelPath } from '@UtilsModule'
 
 /* eslint-disable jsdoc/require-jsdoc */
-const LABEL_PATH_SEPARATOR = LABEL_DELIMITER ?? '/'
+export { cleanLabelPath }
 
 const toArray = (value) =>
   []
     .concat(value ?? [])
     .flat()
     .filter((item) => item !== undefined && item !== null && item !== '')
-
-export const cleanLabelPath = (path = '') =>
-  String(path)
-    .split(LABEL_PATH_SEPARATOR)
-    .map((segment) => segment.replace(/^\$+/, ''))
-    .join(LABEL_PATH_SEPARATOR)
 
 const hashString = (value = '') =>
   String(value)

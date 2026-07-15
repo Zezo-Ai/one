@@ -15,21 +15,40 @@
  * ------------------------------------------------------------------------- */
 
 import PropTypes from 'prop-types'
-import { useEffect, useState } from 'react'
-import { Box, Drawer, Typography, useTheme } from '@mui/material'
+import { forwardRef, useEffect, useState } from 'react'
+import { Box, Drawer, Popper, Typography, useTheme } from '@mui/material'
 import { Cancel, FilterList } from 'iconoir-react'
 
 import { T } from '@ConstantsModule'
 import { Button } from '@modules/componentsv2/primitives/Buttons/Default'
 import { Dropdown } from '@modules/componentsv2/primitives/Dropdown'
 import { InputField } from '@modules/componentsv2/primitives/Fields/Default'
-import { getStyles } from '@modules/componentsv2/composed/FilterPanel/Default/styles'
+import {
+  getPopperStyles,
+  getStyles,
+} from '@modules/componentsv2/composed/FilterPanel/Default/styles'
 import {
   cleanFilterValues,
   getAllFilterOption,
   getFilterValue,
   getOptionValue,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+
+const FilterPopper = forwardRef(({ style, ...props }, ref) => {
+  const theme = useTheme()
+
+  return (
+    <Popper
+      {...props}
+      ref={ref}
+      style={{ ...style, ...getPopperStyles({ theme }) }}
+    />
+  )
+})
+
+FilterPopper.propTypes = { style: PropTypes.object }
+FilterPopper.displayName = 'FilterPopper'
 
 /**
  * @param {object} root0 - Props
@@ -47,6 +66,7 @@ export const FilterPanel = ({
   values = {},
   onApply,
 }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const [draftValues, setDraftValues] = useState(() =>
     cleanFilterValues(values)
@@ -101,6 +121,7 @@ export const FilterPanel = ({
         initialValue={selectedOption}
         placeholder={filter.placeholder}
         onChange={(option) => updateValue(filter.id, getOptionValue(option))}
+        PopperComponent={FilterPopper}
       />
     )
   }
@@ -122,7 +143,9 @@ export const FilterPanel = ({
     >
       <Box className="filterpanel-root">
         <Box className="filterpanel-header">
-          <Typography className="filterpanel-title">{T.Filters}</Typography>
+          <Typography className="filterpanel-title">
+            {translate(T.Filters)}
+          </Typography>
           <Button
             type="transparent"
             size="small"
@@ -136,7 +159,7 @@ export const FilterPanel = ({
           {filters.map((filter) => (
             <Box key={filter.id} className="filterpanel-field">
               <Typography className="filterpanel-label">
-                {filter.label}
+                {translate(filter.label)}
               </Typography>
               {renderFilter(filter)}
             </Box>
@@ -150,7 +173,7 @@ export const FilterPanel = ({
             className="filterpanel-apply-button"
             onClick={handleApply}
           >
-            {`${T.Apply} ${T.Filters}`.trim()}
+            {`${translate(T.Apply)} ${translate(T.Filters)}`.trim()}
           </Button>
         </Box>
       </Box>

@@ -26,12 +26,8 @@ import {
   DatastoreAPI,
 } from '@FeaturesModule'
 
-import {
-  DefaultFormStepper,
-  Form,
-  SkeletonStepsForm,
-  TranslateProvider,
-} from '@ResourcesModule'
+import { DefaultFormStepper, Form, SkeletonStepsForm } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 const _ = require('lodash')
 const { Vr } = Form
@@ -87,7 +83,7 @@ export function CreateVirtualRouterTemplate() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {templateId && !dataTemplate ? (
         <SkeletonStepsForm />
       ) : (
@@ -102,6 +98,6 @@ export function CreateVirtualRouterTemplate() {
           {(config) => <DefaultFormStepper {...config} />}
         </Vr.CreateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

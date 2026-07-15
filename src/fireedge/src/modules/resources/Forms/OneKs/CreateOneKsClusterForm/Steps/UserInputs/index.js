@@ -22,7 +22,7 @@ import { useFormContext, useController } from 'react-hook-form'
 import { find } from 'lodash'
 import { SCHEMA } from '@modules/resources/Forms/OneKs/CreateOneKsClusterForm/Steps/UserInputs/schema'
 import { Grid, Alert, useTheme, Stack } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import styles from '@modules/resources/Forms/OneKs/CreateOneKsClusterForm/Steps/styles'
 import { useMemo } from 'react'
 
@@ -30,6 +30,7 @@ export const STEP_ID = 'user_inputs'
 const defaultTypeForm = 'cluster'
 
 const Content = (families, typeForm) => {
+  const { translate } = useTranslation()
   // Access to the form
   const { control } = useFormContext()
 
@@ -61,8 +62,10 @@ const Content = (families, typeForm) => {
           <div>
             {' '}
             {typeForm === defaultTypeForm
-              ? Tr(T['oneks.form.create.userinputs.help.paragraph'])
-              : Tr(T['oneks.form.create_nodegroup.userinputs.help.paragraph'])}
+              ? translate(T['oneks.form.create.userinputs.help.paragraph'])
+              : translate(
+                  T['oneks.form.create_nodegroup.userinputs.help.paragraph']
+                )}
           </div>
         </Stack>
       </Alert>

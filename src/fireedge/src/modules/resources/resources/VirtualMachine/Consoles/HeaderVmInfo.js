@@ -21,10 +21,11 @@ import { DEFAULT_IMAGE, STATIC_FILES_URL, T, PATH } from '@ConstantsModule'
 import { ServiceAPI, VmAPI, useGeneralApi } from '@FeaturesModule'
 import { getIps, getVirtualMachineState } from '@ModelsModule'
 import { timeFromMilliseconds } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { useClipboard } from '@HooksModule'
 import { Badge, Tag, Tooltip } from '@ComponentsV2Module'
 import { Check as CopiedIcon, Copy as CopyIcon } from 'iconoir-react'
-import { Tr } from '@modules/resources/HOC'
+
 import { OpenNebulaLogo } from '@modules/resources/Icons'
 import PropTypes from 'prop-types'
 
@@ -162,6 +163,7 @@ const HeaderVmInfo = ({
   connectionState = '',
   connectionStatus = 'default',
 }) => {
+  const { translate } = useTranslation()
   const { push: redirectTo } = useHistory()
   const { enqueueError } = useGeneralApi()
   const { copy, isCopied } = useClipboard()
@@ -296,7 +298,9 @@ const HeaderVmInfo = ({
         {time && (
           <Box className="info-ownership">
             <Box className="region-label">
-              <span className="region-label--title">{Tr(T.Registered)}</span>
+              <span className="region-label--title">
+                {translate(T.Registered)}
+              </span>
               <span className="region-label--value">{time.toFormat('ff')}</span>
             </Box>
           </Box>

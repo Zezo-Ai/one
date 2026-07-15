@@ -45,5 +45,6 @@ export const SUPPORT_COLUMNS = [
 
 export const supportTable = createTable(
   SUPPORT_COLUMNS,
-  SupportAPI.useGetTicketsQuery
+  SupportAPI.useGetTicketsQuery,
+  { dataCy: 'support-tickets' }
 )

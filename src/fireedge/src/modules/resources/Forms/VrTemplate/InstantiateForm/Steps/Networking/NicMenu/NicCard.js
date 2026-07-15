@@ -25,7 +25,7 @@ import {
   Terminal as SshIcon,
 } from 'iconoir-react'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -39,6 +39,7 @@ import { T } from '@ConstantsModule'
  * @returns {Component} The rendered `NicCard` component.
  */
 const NicCard = ({ info = {}, removeNic, selectNic, active } = {}) => {
+  const { translate } = useTranslation()
   const {
     network,
     IP: ip,
@@ -116,7 +117,7 @@ const NicCard = ({ info = {}, removeNic, selectNic, active } = {}) => {
         >
           <Tooltip title={`#${nicId?.slice(0, 10)}`} arrow>
             <Typography noWrap variant="body1">
-              {autonetworkselect ? Tr(T['nic.card.automatic']) : network}
+              {autonetworkselect ? translate(T['nic.card.automatic']) : network}
             </Typography>
           </Tooltip>
 
@@ -128,19 +129,19 @@ const NicCard = ({ info = {}, removeNic, selectNic, active } = {}) => {
             }}
           >
             {management && (
-              <Tooltip title={Tr(T['nic.card.management'])} arrow>
+              <Tooltip title={translate(T['nic.card.management'])} arrow>
                 <ManagementIcon height={18} width={18} />
               </Tooltip>
             )}
 
             {rdpconnection && (
-              <Tooltip title={Tr(T.RdpConnection)} arrow>
+              <Tooltip title={translate(T.RdpConnection)} arrow>
                 <RdpIcon height={18} width={18} />
               </Tooltip>
             )}
 
             {sshconnection && (
-              <Tooltip title={Tr(T.SshConnection)} arrow>
+              <Tooltip title={translate(T.SshConnection)} arrow>
                 <SshIcon height={18} width={18} />
               </Tooltip>
             )}
@@ -205,7 +206,7 @@ const NicCard = ({ info = {}, removeNic, selectNic, active } = {}) => {
             }}
           >
             <Typography noWrap variant="body2">
-              {secgroup || Tr(T.SecurityGroup)}
+              {secgroup || translate(T.SecurityGroup)}
             </Typography>
           </Box>
         </Box>

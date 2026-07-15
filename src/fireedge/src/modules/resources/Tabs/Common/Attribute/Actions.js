@@ -26,9 +26,10 @@ import {
 } from 'iconoir-react'
 
 import { useClipboard } from '@HooksModule'
-import { Translate } from '@modules/resources/HOC'
-import { Action } from '@modules/resources/Cards/SelectCard'
+import { Translate } from '@ProvidersModule'
 import { camelCase } from '@UtilsModule'
+import { Action } from '@modules/resources/Cards/SelectCard'
+
 import { T } from '@ConstantsModule'
 
 /**

@@ -20,8 +20,8 @@ import { Box } from '@mui/material'
 import { useController } from 'react-hook-form'
 
 import { AlertNotification, Datepicker } from '@modules/componentsv2/primitives'
-import { Tr } from '@ProvidersModule'
 import { generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const toDate = (value) => {
   if (value?.isValid && typeof value.toJSDate === 'function') {
@@ -43,6 +43,7 @@ export const TimeController = memo(
     fieldProps: { defaultValue, minDateTime, ...fieldProps } = {},
     readOnly = false,
   }) => {
+    const { translate } = useTranslation()
     const {
       field: { value, onChange, onBlur },
       fieldState: { error },
@@ -53,7 +54,7 @@ export const TimeController = memo(
         <Datepicker
           {...fieldProps}
           value={toDate(value)}
-          label={Tr(label)}
+          label={translate(label)}
           placeholder="DD/MM/YYYY HH:mm"
           dateFormat="Pp"
           showTimeSelect

@@ -55,7 +55,8 @@ export const TableController = memo(
       disabled: dependencies == null,
       defaultValue: Array.isArray(dependencies) ? [] : undefined,
     })
-    const { filter, ...tableProps } = fieldProps
+    const { filter, dataCy: fieldDataCy, ...tableProps } = fieldProps
+    const tableDataCy = fieldDataCy ?? model.dataCy
     const tableData = useMemo(
       () =>
         typeof filter === 'function'
@@ -128,6 +129,7 @@ export const TableController = memo(
           columns={model.columns()}
           data={[].concat(tableData ?? [])}
           isLoading={isFetching}
+          dataCy={tableDataCy}
           isRowsSelectable={!readOnly}
           isMultiRowSelection={!singleSelect}
           getRowId={getRowId}
@@ -155,6 +157,7 @@ TableController.propTypes = {
   tooltip: PropTypes.any,
   model: PropTypes.shape({
     columns: PropTypes.func.isRequired,
+    dataCy: PropTypes.string,
     useData: PropTypes.func.isRequired,
   }).isRequired,
   singleSelect: PropTypes.bool,

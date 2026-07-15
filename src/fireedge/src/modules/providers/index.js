@@ -14,4 +14,5 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
+export * from '@modules/providers/resourceSingleViewContext'
 export * from '@modules/providers/translationProvider'

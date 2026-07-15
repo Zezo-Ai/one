@@ -15,7 +15,11 @@
  * ------------------------------------------------------------------------- */
 import { Box, Stack, styled } from '@mui/material'
 import { EditPencil, Plus, Trash } from 'iconoir-react'
-import { Button, ToggleGroup } from '@ComponentsV2Module'
+import {
+  Button,
+  ResourceActionConfirmation,
+  ToggleGroup,
+} from '@ComponentsV2Module'
 import { useModalsApi } from '@FeaturesModule'
 import { ScheduleActionCard } from '@modules/resources/Cards'
 import { T } from '@ConstantsModule'
@@ -109,7 +113,20 @@ const Content = () => {
         title: `${T.Delete} ${T.ScheduleAction} #${schedule?.ID} ${sentenceCase(
           schedule?.ACTION
         )}`,
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={{
+              ID: schedule?.ID,
+              NAME: sentenceCase(schedule?.ACTION),
+            }}
+            resourceType={T.ScheduleAction}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: () => handleAction('delete', undefined, index),
     })
@@ -169,6 +186,7 @@ const Content = () => {
                         onClick: () => handleOpenDeleteForm(fakeValues, index),
                         tooltip: T.Delete,
                         value: 'delete',
+                        isDestructive: true,
                         sx: actionButtonSx,
                       },
                     ],

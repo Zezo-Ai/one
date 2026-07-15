@@ -21,10 +21,8 @@ import { createLabelColumn } from '@modules/models/labels'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const SECURITYGROUPS_COLUMNS = [
-  { header: 'ID', accessorKey: 'ID', id: 'id' },
-  { header: 'Name', id: 'name', accessorKey: 'NAME' },
-  { header: 'Owner', accessorKey: 'UNAME' },
-  { header: 'Group', accessorKey: 'GNAME' },
+  { header: T.ID, accessorKey: 'ID', id: 'id' },
+  { header: T.Name, id: 'name', accessorKey: 'NAME' },
   {
     header: 'Updated VMs',
     id: 'UPDATED_VMS',
@@ -40,6 +38,8 @@ export const SECURITYGROUPS_COLUMNS = [
     id: 'ERROR_VMS',
     accessorFn: (row) => getTotalOfResources(row?.ERROR_VMS),
   },
+  { header: T.Owner, accessorKey: 'UNAME' },
+  { header: T.Group, accessorKey: 'GNAME' },
   createLabelColumn(),
 ]
 
@@ -78,10 +78,12 @@ export const SECGROUP_VM_COLUMNS = VM_COLUMNS.filter(({ id }) =>
 
 export const secGroupVmTable = createTable(
   SECGROUP_VM_COLUMNS,
-  VmAPI.useGetVmInfosetQuery
+  VmAPI.useGetVmInfosetQuery,
+  { dataCy: 'security-group-vms' }
 )
 
 export const securitygroupTable = createTable(
   SECURITYGROUPS_COLUMNS,
-  SecurityGroupAPI.useGetSecGroupsQuery
+  SecurityGroupAPI.useGetSecGroupsQuery,
+  { dataCy: 'security-groups' }
 )

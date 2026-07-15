@@ -14,7 +14,6 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { T } from '@ConstantsModule'
 import { Component, forwardRef } from 'react'
 import PropTypes from 'prop-types'
 import {
@@ -25,6 +24,7 @@ import {
   TimeSlot,
 } from '@ComponentsV2Module'
 import { getLabelSlotLabels, getVirtualMachineState } from '@ModelsModule'
+import { getLockIcon } from '@UtilsModule'
 
 /**
  * VirtualMachineCard component displays a Virtual Machine as a card.
@@ -35,81 +35,85 @@ import { getLabelSlotLabels, getVirtualMachineState } from '@ModelsModule'
  * @param {string} root0.GNAME - Group name
  * @param {string} root0.UNAME - Owner name
  * @param {string} root0.STIME - Registration time
- * @param {boolean|object} root0.LOCK - Lock status
  * @param {boolean} root0.isSelected - Whether card is selected
  * @param {Function} root0.onCheck - Check handler
  * @param {Function} root0.onClick - Click handler
  * @param {object} ref - Forwarded ref
  * @returns {Component} VirtualMachineCard component
  */
-export const VirtualMachineCard = forwardRef(
-  (
-    {
-      NAME,
-      ID,
-      GNAME,
-      UNAME,
-      STIME,
-      LOCK,
-      STATE,
-      LCM_STATE,
-      HYPERVISOR,
-      MACHINE,
-      LABELS,
-      isSelected,
-      onCheck,
-      onClick,
-    },
-    ref
-  ) => {
-    const { name: statusName, color: status } = getVirtualMachineState({
-      STATE,
-      LCM_STATE,
-    })
-    const labelSlotLabels = getLabelSlotLabels(LABELS)
+export const VirtualMachineCard = forwardRef((data = {}, ref) => {
+  const {
+    NAME,
+    ID,
+    GNAME,
+    UNAME,
+    STIME,
+    STATE,
+    LCM_STATE,
+    HYPERVISOR,
+    MACHINE,
+    LABELS,
+    isSelected,
+    onCheck,
+    onClick,
+  } = data
+  const { name: statusName, color: status } = getVirtualMachineState({
+    STATE,
+    LCM_STATE,
+  })
+  const labelSlotLabels = getLabelSlotLabels(LABELS)
 
-    return (
-      <Card
-        ref={ref}
-        onCheck={onCheck}
-        onClick={onClick}
-        isSelected={isSelected}
-        slots={[
-          [TitleSlot, { title: NAME, statusName, status }],
-          [
-            MetadataSlot,
-            {
-              labels: [
-                ['ID', ID],
-                ['Owner', UNAME],
-                ['Group', GNAME],
-              ],
-            },
-          ],
+  return (
+    <Card
+      ref={ref}
+      onCheck={onCheck}
+      onClick={onClick}
+      isSelected={isSelected}
+      slots={[
+        [
+          TitleSlot,
+          {
+            title: (
+              <>
+                {NAME} {getLockIcon(data)}
+              </>
+            ),
+            statusName,
+            status,
+          },
+        ],
+        [
+          MetadataSlot,
+          {
+            labels: [
+              ['ID', ID],
+              ['Owner', UNAME],
+              ['Group', GNAME],
+            ],
+          },
+        ],
 
-          (LOCK || HYPERVISOR || MACHINE || labelSlotLabels.length > 0) && [
-            LabelSlot,
-            {
-              labels: [
-                LOCK && [T.Locked, 'information'],
-                HYPERVISOR && [HYPERVISOR, 'miscellaneous'],
-                MACHINE && [MACHINE, 'miscellaneous2'],
-                ...labelSlotLabels,
-              ].filter(Boolean),
-            },
-          ],
+        (HYPERVISOR || MACHINE || labelSlotLabels.length > 0) && [
+          LabelSlot,
+          {
+            labels: [
+              HYPERVISOR && [HYPERVISOR, 'miscellaneous'],
+              MACHINE && [MACHINE, 'miscellaneous2'],
+              ...labelSlotLabels,
+            ].filter(Boolean),
+          },
+        ],
 
-          STIME && [
-            TimeSlot,
-            {
-              time: STIME,
-            },
-          ],
-        ]}
-      />
-    )
-  }
-)
+        STIME && [
+          TimeSlot,
+          {
+            time: STIME,
+          },
+        ],
+      ]}
+    />
+  )
+})
 
 VirtualMachineCard.propTypes = {
   NAME: PropTypes.string,
@@ -120,7 +124,6 @@ VirtualMachineCard.propTypes = {
   HYPERVISOR: PropTypes.string,
   MACHINE: PropTypes.string,
   LABELS: PropTypes.object,
-  LOCK: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
   STATE: PropTypes.string,
   LCM_STATE: PropTypes.string,
   isSelected: PropTypes.bool,

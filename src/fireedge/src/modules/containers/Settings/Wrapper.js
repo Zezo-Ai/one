@@ -14,7 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { Translate, TranslateProvider } from '@ResourcesModule'
+import { Translate } from '@ProvidersModule'
 import { css } from '@emotion/css'
 import { Box, Typography, useTheme } from '@mui/material'
 import PropTypes from 'prop-types'
@@ -115,11 +115,11 @@ const Wrapper = ({ children }) => {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <SettingWrapperContext.Provider value={{ Legend, InternalWrapper }}>
         <Box className={classes.content}>{children}</Box>
       </SettingWrapperContext.Provider>
-    </TranslateProvider>
+    </>
   )
 }
 

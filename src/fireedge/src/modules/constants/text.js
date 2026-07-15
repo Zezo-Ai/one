@@ -43,4 +43,5 @@ export const TEXT_WEIGHTS = {
   BOLD: 'BOLD',
   SEMIBOLD: 'SEMIBOLD',
   REGULAR: 'REGULAR',
+  MEDIUM: 'MEDIUM',
 }

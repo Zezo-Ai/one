@@ -20,11 +20,11 @@ import { ReactElement, memo, useMemo } from 'react'
 import { Cart, Group, Lock, User } from 'iconoir-react'
 
 import { useAuth } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
+import { getResourceLabels, prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import MultipleTags from '@modules/resources/MultipleTagsCard'
 import { StatusChip, StatusCircle } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
-import { getResourceLabels, prettyBytes } from '@UtilsModule'
 
 import { MarketplaceApp, RESOURCE_NAMES, T } from '@ConstantsModule'
 import {
@@ -43,6 +43,7 @@ const MarketplaceAppCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ app, rootProps, onClickLabel, onDeleteLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels } = useAuth()
@@ -108,20 +109,20 @@ const MarketplaceAppCard = memo(
           </div>
           <div className={classes.caption}>
             <span data-cy="id">{`#${ID}`}</span>
-            <span title={`${Tr(T.Version)}: ${VERSION}`}>
+            <span title={`${translate(T.Version)}: ${VERSION}`}>
               <span data-cy="version">
-                {Tr(T.Version)}: {VERSION}
+                {translate(T.Version)}: {VERSION}
               </span>
             </span>
-            <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+            <span title={`${translate(T.Owner)}: ${UNAME}`}>
               <User />
               <span data-cy="owner">{UNAME}</span>
             </span>
-            <span title={`${Tr(T.Group)}: ${GNAME}`}>
+            <span title={`${translate(T.Group)}: ${GNAME}`}>
               <Group />
               <span data-cy="group">{GNAME}</span>
             </span>
-            <span title={`${Tr(T.Marketplace)}: ${MARKETPLACE}`}>
+            <span title={`${translate(T.Marketplace)}: ${MARKETPLACE}`}>
               <Cart />
               <span data-cy="marketplace">{MARKETPLACE}</span>
             </span>
@@ -131,7 +132,7 @@ const MarketplaceAppCard = memo(
           <span className={classes.labels}>
             {ARCHITECTURE && <StatusChip text={ARCHITECTURE} />}
             {HYPERVISOR && <StatusChip text={HYPERVISOR} />}
-            <StatusChip text={`${Tr(T.Zone)} ${ZONE_ID}`} />
+            <StatusChip text={`${translate(T.Zone)} ${ZONE_ID}`} />
             <StatusChip text={prettyBytes(+SIZE, 'MB')} />
           </span>
         </div>

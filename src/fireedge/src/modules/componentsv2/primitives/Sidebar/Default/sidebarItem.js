@@ -23,6 +23,7 @@ import {
 } from 'iconoir-react'
 import { matchPath, useHistory, useLocation } from 'react-router-dom'
 import { useGeneralApi } from '@FeaturesModule'
+import { useTranslation } from '@ProvidersModule'
 
 const isRouteSelected = (pathname, path, exact = true) =>
   !!path && !!matchPath(pathname, { path, exact })
@@ -67,6 +68,7 @@ export const SidebarItem = ({
   const [open, setOpen] = useState(() => shouldRenderOpen)
   const history = useHistory()
   const { fixMenu } = useGeneralApi()
+  const { translate } = useTranslation()
 
   useEffect(() => {
     if (isExpanded && shouldRenderOpen) {
@@ -79,6 +81,9 @@ export const SidebarItem = ({
     fixMenu(false)
   }
 
+  const dataCy = title?.toLocaleLowerCase()
+  const itemDataCy = hasChildren ? dataCy : 'main-menu-item'
+
   return (
     <Box
       className={`sidebar-item ${
@@ -86,15 +91,22 @@ export const SidebarItem = ({
       } ${isActive ? 'active' : ''} ${isExpanded ? 'expanded' : ''}`}
     >
       <Box
+        data-cy={itemDataCy}
         onClick={() => (hasChildren ? setOpen((o) => !o) : handleNavigate())}
         className={`container ${isSelected ? 'selected' : ''}`}
       >
-        {depth === 0 && renderIcon(icon, { className: 'icon' })}
-        {isExpanded && <Typography className="title">{title}</Typography>}
+        {depth === 0 &&
+          renderIcon(icon, { className: 'icon', key: 'sidebar-icon' })}
+        {isExpanded && (
+          <Typography className="title" data-cy="main-menu-item-text">
+            {translate(title)}
+          </Typography>
+        )}
         {isExpanded &&
           hasChildren &&
           renderIcon(open ? CollapseIcon : ExpandIcon, {
             className: 'icon',
+            key: 'sidebar-toggle',
           })}
       </Box>
 

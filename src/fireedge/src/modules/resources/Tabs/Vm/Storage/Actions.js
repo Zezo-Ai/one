@@ -42,7 +42,8 @@ import {
   hasRestrictedAttributes,
   isRestrictedAttributes,
 } from '@UtilsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+
 import { T, VM_ACTIONS, STYLE_BUTTONS } from '@ConstantsModule'
 
 const AttachAction = memo(

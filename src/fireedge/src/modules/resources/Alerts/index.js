@@ -17,15 +17,19 @@
 import PropTypes from 'prop-types'
 
 import { Box, Alert } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
-export const AlertError = ({ children, ...props }) => (
-  <Box pt={3} display="flex" justifyContent="center" {...props}>
-    <Alert severity="error" icon={false} variant="filled">
-      {typeof children === 'string' ? Tr(children) : children}
-    </Alert>
-  </Box>
-)
+export const AlertError = ({ children, ...props }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Box pt={3} display="flex" justifyContent="center" {...props}>
+      <Alert severity="error" icon={false} variant="filled">
+        {typeof children === 'string' ? translate(children) : children}
+      </Alert>
+    </Box>
+  )
+}
 
 AlertError.propTypes = {
   children: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),

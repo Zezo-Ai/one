@@ -20,7 +20,7 @@ import { Box, Button, List, ListItem } from '@mui/material'
 import { Legend } from '@ComponentsV2Module'
 import NicCard from './NicCard'
 import { VnAPI, SecurityGroupAPI } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -35,6 +35,7 @@ import { T } from '@ConstantsModule'
  * @returns {Component} NicColumn.
  */
 const NicColumn = ({ nics, addNic, removeNic, selectNic, activeNic } = {}) => {
+  const { translate } = useTranslation()
   const { data: vnets } = VnAPI.useGetVNetworksQuery()
   const { data: secgroups } = SecurityGroupAPI.useGetSecGroupsQuery()
 
@@ -46,7 +47,7 @@ const NicColumn = ({ nics, addNic, removeNic, selectNic, activeNic } = {}) => {
       height="100%"
       position="relative"
     >
-      <Legend title={Tr(T.VirtualRouterNICConfigured)} />
+      <Legend title={translate(T.VirtualRouterNICConfigured)} />
       <Box
         sx={{
           display: 'flex',
@@ -76,7 +77,7 @@ const NicColumn = ({ nics, addNic, removeNic, selectNic, activeNic } = {}) => {
                             (vnet) => vnet?.ID === nic?.network_id
                           )?.NAME,
                         }
-                      : { network: Tr(T.VirtualRouterNICNetworkName) }),
+                      : { network: translate(T.VirtualRouterNICNetworkName) }),
 
                     ...(nic?.secgroup !== ''
                       ? {
@@ -105,7 +106,7 @@ const NicColumn = ({ nics, addNic, removeNic, selectNic, activeNic } = {}) => {
           marginTop: 'auto',
         }}
       >
-        {Tr(T.VirtualRouterNICAdd)}
+        {translate(T.VirtualRouterNICAdd)}
       </Button>
     </Box>
   )

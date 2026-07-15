@@ -17,14 +17,10 @@ import { ReactElement } from 'react'
 import { useHistory } from 'react-router'
 
 import { jsonToXml } from '@UtilsModule'
+import { DefaultFormStepper, SkeletonStepsForm, Files } from '@ResourcesModule'
+
 import { useGeneralApi, DatastoreAPI, ImageAPI } from '@FeaturesModule'
 
-import {
-  DefaultFormStepper,
-  SkeletonStepsForm,
-  Files,
-  TranslateProvider,
-} from '@ResourcesModule'
 import { T, PATH } from '@ConstantsModule'
 
 /**
@@ -70,13 +66,13 @@ export function CreateFile() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       <Files.Forms.CreateForm
         onSubmit={onSubmit}
         fallback={<SkeletonStepsForm />}
       >
         {(config) => <DefaultFormStepper {...config} />}
       </Files.Forms.CreateForm>
-    </TranslateProvider>
+    </>
   )
 }

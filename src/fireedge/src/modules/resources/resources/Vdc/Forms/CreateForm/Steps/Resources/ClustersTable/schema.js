@@ -51,6 +51,7 @@ const clusterColumns = [
 ]
 
 const getClusterModel = (zoneId) => ({
+  dataCy: 'clusters',
   columns: () => clusterColumns,
   useData: (_args, options) => clusterTable.useData({ zone: zoneId }, options),
 })

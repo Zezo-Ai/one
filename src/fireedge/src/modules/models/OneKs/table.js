@@ -15,43 +15,47 @@
  * ------------------------------------------------------------------------- */
 import { createTable } from '@UtilsModule'
 import { OneKsAPI } from '@FeaturesModule'
+import { T } from '@ConstantsModule'
+import { StatusTag } from '@ComponentsV2Module'
+import { getVirtualOneKsState } from '@modules/models/OneKs/general'
+import { createLabelColumn } from '@modules/models/labels'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const ONEKS_COLUMNS = [
-  { header: 'ID', id: 'id', accessorKey: 'ID', width: '10%' },
-  { header: 'Name', id: 'name', accessorKey: 'NAME', width: '28%' },
+  { header: T.ID, id: 'id', accessorKey: 'ID', width: '10%' },
+  { header: T.Name, id: 'name', accessorKey: 'NAME', width: '28%' },
   {
-    header: 'State',
-    id: 'STATE',
+    header: T.State,
+    id: 'state',
     width: '14%',
-    /**
-     * @param {object} row - row data
-     * @returns {string} Cluster state
-     */
-    accessorFn: (row) => row?.TEMPLATE?.CLUSTER_BODY?.state ?? '',
+    accessorFn: (row) => getVirtualOneKsState(row)?.name,
+    cell: ({ row }) => {
+      const { color, name } = getVirtualOneKsState(row.original) ?? {}
+
+      return <StatusTag statusColor={color} statusName={name} />
+    },
   },
   {
-    header: 'Version',
-    id: 'VERSION',
+    header: T.KubernetesVersion,
+    id: 'version',
     width: '18%',
-    /**
-     * @param {object} row - row data
-     * @returns {string} Kubernetes version
-     */
     accessorFn: (row) => row?.TEMPLATE?.CLUSTER_BODY?.kubernetes_version ?? '',
   },
   {
-    header: 'Created',
-    id: 'CREATED',
+    header: T.NodeGroups,
+    id: 'node_groups',
+    accessorFn: (row) => row?.TEMPLATE?.CLUSTER_BODY?.node_groups?.length ?? 0,
+  },
+  {
+    header: T.RegistrationTime,
+    id: 'registration_time',
     width: '20%',
-    /**
-     * @param {object} row - row data
-     * @returns {string} Cluster creation time
-     */
     accessorFn: (row) => row?.TEMPLATE?.CLUSTER_BODY?.registration_time ?? '',
   },
+  createLabelColumn(),
 ]
 export const oneksTable = createTable(
   ONEKS_COLUMNS,
-  OneKsAPI.useGetOneKsClustersQuery
+  OneKsAPI.useGetOneKsClustersQuery,
+  { dataCy: 'oneks' }
 )

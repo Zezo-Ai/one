@@ -30,7 +30,7 @@ export const getStyles = ({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: `${theme.scale[400]}px`,
+    gap: 0,
     padding: `${theme.scale[500]}px ${theme.scale[600]}px`,
     width: 'min(560px, calc(100vw - 32px))',
     borderRadius: `${theme.borderRadius?.['3xl']}px`,
@@ -42,12 +42,14 @@ export const getStyles = ({ theme }) => ({
 
   '& .MuiDialogTitle-root': {
     padding: 0,
+    marginBottom: `${theme.scale[500]}px`,
     color: 'text.heading',
   },
 
   '& .MuiDialogContent-root': {
     overflow: 'visible',
-    padding: 0,
+    padding: `${theme.scale[100]}px`,
+    boxSizing: 'border-box',
   },
 
   '& .MuiDialogActions-root': {

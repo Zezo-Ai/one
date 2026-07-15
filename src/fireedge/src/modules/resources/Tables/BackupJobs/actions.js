@@ -31,7 +31,7 @@ import {
 
 import { BACKUPJOB_ACTIONS, RESOURCE_NAMES, T, PATH } from '@ConstantsModule'
 import { isVmAvailableAction } from '@ModelsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const isDisabled = (action) => (rows) =>
   !isVmAvailableAction(

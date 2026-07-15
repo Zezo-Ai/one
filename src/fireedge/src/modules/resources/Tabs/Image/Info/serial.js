@@ -14,7 +14,7 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Actions } from '@modules/resources/Tabs/Common/Attribute'
 import {
   Autocomplete,
@@ -80,6 +80,7 @@ const ActionWrapper = (props) => (
  * @returns {ReactElement} Information tab
  */
 const SerialPanel = ({ handleEdit, value = '' }) => {
+  const { translate } = useTranslation()
   const [edit, setEdit] = useState(false)
   const [serial, setSerial] = useState('')
 
@@ -115,7 +116,7 @@ const SerialPanel = ({ handleEdit, value = '' }) => {
         <Item>
           <Column>
             <Typography noWrap component="span" variant="body2" flexGrow={1}>
-              {Tr(T.Serial)}
+              {translate(T.Serial)}
             </Typography>
           </Column>
           <Column isEditing={edit}>
@@ -132,7 +133,7 @@ const SerialPanel = ({ handleEdit, value = '' }) => {
                   onChange={handleChange}
                   onInputChange={handleChange}
                   renderInput={(params) => (
-                    <TextField {...params} label={Tr(T.Serial)} />
+                    <TextField {...params} label={translate(T.Serial)} />
                   )}
                 />
                 <ActionWrapper>
@@ -149,7 +150,7 @@ const SerialPanel = ({ handleEdit, value = '' }) => {
                   flexGrow={1}
                   data-cy={'serial'}
                 >
-                  {Tr(value || '-')}
+                  {translate(value || '-')}
                 </Typography>
                 <ActionWrapper>
                   <Actions.Edit

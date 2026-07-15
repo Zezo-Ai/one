@@ -38,6 +38,7 @@ import { TextField } from '@modules/componentsv2/primitives/TextField'
 import { FILTER_POOL, T } from '@ConstantsModule'
 import { isSameId, toLowerCaseString } from '@UtilsModule'
 import { getStyles } from '@modules/componentsv2/primitives/Header/Default/slots/userGroupDropdown/styles'
+import { useTranslation } from '@ProvidersModule'
 
 const {
   ALL_RESOURCES,
@@ -46,27 +47,28 @@ const {
   USER_RESOURCES,
 } = FILTER_POOL
 
-const getSpecialOptions = () => [
+const getSpecialOptions = (translate) => [
   {
     ID: ALL_RESOURCES,
-    NAME: T.ShowAll,
+    NAME: translate(T.ShowAll),
   },
   {
     ID: USER_GROUPS_RESOURCES,
-    NAME: T.ShowBelongingUserAndGroups,
+    NAME: translate(T.ShowBelongingUserAndGroups),
   },
   {
     ID: USER_RESOURCES,
-    NAME: T.ShowBelongingUser,
+    NAME: translate(T.ShowBelongingUser),
   },
 ]
 
 const optionMatches = (option, query) =>
   !query || toLowerCaseString(option?.NAME).includes(toLowerCaseString(query))
 
-const GroupOption = ({ disabled, icon, isSelected, name, onClick }) => (
+const GroupOption = ({ dataCy, disabled, icon, isSelected, name, onClick }) => (
   <button
     className={`usergroup-option ${isSelected ? 'selected' : ''}`}
+    data-cy={dataCy}
     disabled={disabled}
     onClick={onClick}
     type="button"
@@ -80,6 +82,7 @@ const GroupOption = ({ disabled, icon, isSelected, name, onClick }) => (
 )
 
 GroupOption.propTypes = {
+  dataCy: PropTypes.string,
   disabled: PropTypes.bool,
   icon: PropTypes.node,
   isSelected: PropTypes.bool,
@@ -96,6 +99,7 @@ GroupOption.propTypes = {
  */
 export const UserGroupDropdownSlot = forwardRef(
   ({ groups: groupsProp }, ref) => {
+    const { translate } = useTranslation()
     const { setSelectedItems } = useFunctionalityApi()
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState('')
@@ -103,7 +107,10 @@ export const UserGroupDropdownSlot = forwardRef(
     const [changeGroup, { isLoading }] = AuthAPI.useChangeAuthGroupMutation()
     const { filterPool, groups: authGroups = [], user } = useAuth()
 
-    const specialOptions = useMemo(getSpecialOptions, [])
+    const specialOptions = useMemo(
+      () => getSpecialOptions(translate),
+      [translate]
+    )
     const groups = groupsProp ?? authGroups
     const selectedId =
       filterPool === PRIMARY_GROUP_RESOURCES || !filterPool
@@ -167,7 +174,9 @@ export const UserGroupDropdownSlot = forwardRef(
           startIcon={<GroupIcon />}
           type="secondary"
         >
-          <span className="label">{selectedOption?.NAME ?? T.Groups}</span>
+          <span className="label">
+            {selectedOption?.NAME ?? translate(T.Groups)}
+          </span>
         </Button>
 
         <Popper
@@ -185,8 +194,14 @@ export const UserGroupDropdownSlot = forwardRef(
           ]}
         >
           <ClickAwayListener onClickAway={handleClose}>
-            <Paper id="header-usergroup-menu" className="header-usergroup-menu">
-              <Typography className="title">{T.SwitchGroup}</Typography>
+            <Paper
+              id="header-usergroup-menu"
+              className="header-usergroup-menu"
+              data-cy="header-group-menu"
+            >
+              <Typography className="title">
+                {translate(T.SwitchGroup)}
+              </Typography>
 
               <Box className="search-container">
                 <Divider className="divider" />
@@ -196,10 +211,10 @@ export const UserGroupDropdownSlot = forwardRef(
                   className="search"
                   initialValue=""
                   inputProps={{
-                    'aria-label': T.Search,
+                    'aria-label': translate(T.Search),
                   }}
                   onChange={setQuery}
-                  placeholder={`${T.Search}...`}
+                  placeholder={`${translate(T.Search)}...`}
                   startIcon={UserCircle}
                 />
 
@@ -209,6 +224,7 @@ export const UserGroupDropdownSlot = forwardRef(
               <Box className="usergroup-options">
                 {filteredSpecialOptions.map(({ ID, NAME }) => (
                   <GroupOption
+                    dataCy={`group-${ID}`}
                     disabled={isLoading}
                     isSelected={isSameId(ID, selectedId)}
                     key={`header-filter-${ID}`}
@@ -220,11 +236,14 @@ export const UserGroupDropdownSlot = forwardRef(
                 <Divider className="divider" />
 
                 {!!filteredGroups.length && (
-                  <Typography className="section">{T.Groups}</Typography>
+                  <Typography className="section">
+                    {translate(T.Groups)}
+                  </Typography>
                 )}
 
                 {filteredGroups.map(({ ID, NAME }) => (
                   <GroupOption
+                    dataCy={`group-${ID}`}
                     disabled={isLoading}
                     icon={
                       isSameId(ID, user?.GID) ? <UserStar /> : <GroupIcon />
@@ -241,7 +260,7 @@ export const UserGroupDropdownSlot = forwardRef(
 
                 {!filteredSpecialOptions.length && !filteredGroups.length && (
                   <Typography className="header-usergroup-empty">
-                    {T.NoDataAvailable}
+                    {translate(T.NoDataAvailable)}
                   </Typography>
                 )}
               </Box>

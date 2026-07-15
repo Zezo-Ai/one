@@ -20,9 +20,10 @@ import { useHistory, useLocation } from 'react-router'
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  TranslateProvider,
-  Form,
+  VrTemplate,
 } from '@ResourcesModule'
+
+import { jsonToXml } from '@UtilsModule'
 
 import {
   useSystemData,
@@ -35,11 +36,7 @@ import {
   DatastoreAPI,
 } from '@FeaturesModule'
 
-import { jsonToXml } from '@UtilsModule'
-
 import { T, PATH } from '@ConstantsModule'
-
-const { VrTemplate } = Form
 
 // Should match ResourcesModules' VmTemplate form
 const CUSTOM_ID = 'custom-variables'
@@ -104,6 +101,7 @@ export function CreateVrTemplate() {
         ...general,
         ...extraTemplate,
         ...customVariables,
+        VROUTER: 'YES',
       })
 
       if (!templateId) {
@@ -125,12 +123,12 @@ export function CreateVrTemplate() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {templateId &&
       (!apiTemplateDataExtended || !apiTemplateData || _.isEmpty(oneConfig)) ? (
         <SkeletonStepsForm />
       ) : (
-        <VrTemplate.CreateForm
+        <VrTemplate.Forms.CreateForm
           initialValues={apiTemplateDataExtended}
           stepProps={{
             apiTemplateDataExtended,
@@ -143,8 +141,8 @@ export function CreateVrTemplate() {
           fallback={<SkeletonStepsForm />}
         >
           {(config) => <DefaultFormStepper {...config} />}
-        </VrTemplate.CreateForm>
+        </VrTemplate.Forms.CreateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

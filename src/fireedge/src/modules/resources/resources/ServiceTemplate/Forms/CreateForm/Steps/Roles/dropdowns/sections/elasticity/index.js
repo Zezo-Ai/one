@@ -20,7 +20,7 @@ import { useFieldArray, useFormContext } from 'react-hook-form'
 import { Stack } from '@mui/material'
 import { STEP_ID as ROLES_ID } from '@modules/resources/resources/ServiceTemplate/Forms/CreateForm/Steps/Roles'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 import { GraphUp as PolicyIcon } from 'iconoir-react'
 
@@ -38,27 +38,32 @@ import {
   SECTION_ID,
 } from '@modules/resources/resources/ServiceTemplate/Forms/CreateForm/Steps/Roles/dropdowns/sections/elasticity/schema'
 
-const renderPolicyTitle = (_, idx) => `${Tr(T.Policy)} #${idx}`
+const renderPolicyTitle = (translate) => (_, idx) =>
+  `${translate(T.Policy)} #${idx}`
 
-const renderPolicySubtitle = (watchedPolicies) => (policy, idx) => {
+const renderPolicySubtitle = (watchedPolicies, translate) => (policy, idx) => {
   const policyValues = watchedPolicies?.[idx] ?? policy
 
   const secondaryFields = [
     policyValues?.type &&
-      `${Tr(T.Type)}: ${Tr(ELASTICITY_TYPES?.[policyValues.type])}`,
-    policyValues?.adjust && `${Tr(T.Adjust)}: ${policyValues.adjust}`,
-    policyValues?.min && `${Tr(T.Min)}: ${policyValues.min}`,
-    policyValues?.cooldown && `${Tr(T.Cooldown)}: ${policyValues.cooldown}`,
-    policyValues?.period && `${Tr(T.Period)}: ${policyValues.period}`,
+      `${translate(T.Type)}: ${translate(
+        ELASTICITY_TYPES?.[policyValues.type]
+      )}`,
+    policyValues?.adjust && `${translate(T.Adjust)}: ${policyValues.adjust}`,
+    policyValues?.min && `${translate(T.Min)}: ${policyValues.min}`,
+    policyValues?.cooldown &&
+      `${translate(T.Cooldown)}: ${policyValues.cooldown}`,
+    policyValues?.period && `${translate(T.Period)}: ${policyValues.period}`,
     policyValues?.period_number && `#: ${policyValues.period_number}`,
     policyValues?.expression &&
-      `${Tr(T.Expression)}: ${policyValues.expression}`,
+      `${translate(T.Expression)}: ${policyValues.expression}`,
   ].filter(Boolean)
 
   return secondaryFields.join(' | ')
 }
 
 const ElasticityPolicies = ({ roles, selectedRole }) => {
+  const { translate } = useTranslation()
   const { watch } = useFormContext()
 
   const wPolicies = watch(`${ROLES_ID}.${selectedRole}.${SECTION_ID}`)
@@ -110,8 +115,8 @@ const ElasticityPolicies = ({ roles, selectedRole }) => {
         addButtonCy="roles-add-elastic-policy"
         getItemKey={(policy, idx) => `epolicy-${idx}-${policy?.id}`}
         cardIcon={PolicyIcon}
-        renderCardTitle={renderPolicyTitle}
-        renderCardSubtitle={renderPolicySubtitle(wPolicies)}
+        renderCardTitle={renderPolicyTitle(translate)}
+        renderCardSubtitle={renderPolicySubtitle(wPolicies, translate)}
         sidebarPosition="bottom"
       >
         {selectedPolicy != null && wPolicies?.length > 0 && (

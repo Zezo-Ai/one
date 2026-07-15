@@ -35,7 +35,11 @@ export const STEP_ID = 'extra'
 export const TABS = [Networking, UserInputs, ScheduledActions, AdvancedOptions]
 
 const Content = () => {
-  const { control } = useFormContext()
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext()
+  const stepErrors = errors[STEP_ID]
   const [selected, setSelected] = useState(0)
 
   const tabs = useMemo(
@@ -53,6 +57,7 @@ const Content = () => {
           id,
           title: name,
           startIcon: icon,
+          getError,
           Content: () => (
             <TabContent
               {...{
@@ -76,10 +81,11 @@ const Content = () => {
       <Tabs
         type="line"
         defaultSelect={0}
-        options={tabs.map(({ title, startIcon }, idx) => ({
+        options={tabs.map(({ title, startIcon, getError }, idx) => ({
           title,
           value: idx,
           startIcon,
+          error: !!getError?.(stepErrors),
         }))}
         onChange={(idx) => setSelected(idx)}
       />
@@ -91,7 +97,6 @@ const Content = () => {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            p: '16px 0',
           }}
         >
           <ActiveContent />

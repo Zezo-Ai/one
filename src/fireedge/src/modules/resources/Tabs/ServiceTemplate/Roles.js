@@ -19,7 +19,7 @@ import { Link as RouterLink, generatePath } from 'react-router-dom'
 import { Box, Typography, Link, CircularProgress } from '@mui/material'
 
 import { ServiceTemplateAPI, VmTemplateAPI } from '@FeaturesModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { T, Role, PATH } from '@ConstantsModule'
 
 const COLUMNS = [T.Name, T.Type, T.Cardinality, T.VMTemplate, T.Parents]

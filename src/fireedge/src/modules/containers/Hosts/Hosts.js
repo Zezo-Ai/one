@@ -148,6 +148,7 @@ export function Hosts() {
 
   return (
     <ResourceContainer
+      dataCy={hostTable.dataCy}
       resourceName={T.Hosts}
       onRefresh={refreshHosts}
       isRefreshing={isRefreshing}
@@ -165,6 +166,7 @@ export function Hosts() {
           case TABLE_VIEW_MODE.LIST:
             return (
               <Table
+                dataCy={hostTable.dataCy}
                 columns={hostTable.columns()}
                 data={items}
                 isRowsSelectable
@@ -186,6 +188,7 @@ export function Hosts() {
                 {items?.map((host) => (
                   <Host.Card
                     key={host?.ID}
+                    dataCy={`${hostTable.dataCy}-${host?.ID}`}
                     host={host}
                     isSelected={selectedItemIds.has(String(host?.ID))}
                     onCheck={() =>

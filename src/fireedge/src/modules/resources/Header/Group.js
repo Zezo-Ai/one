@@ -22,7 +22,7 @@ import { Group as GroupIcon, VerifiedUser, Check } from 'iconoir-react'
 import { useAuth, AuthAPI } from '@FeaturesModule'
 import Search from '@modules/resources/Search'
 import HeaderPopover from '@modules/resources/Header/Popover'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { T, FILTER_POOL } from '@ConstantsModule'
 
 const {
@@ -79,20 +79,21 @@ const ButtonGroup = memo(
  * @returns {JSXElementConstructor} Returns group list
  */
 const Group = () => {
+  const { translate } = useTranslation()
   const [changeGroup, { isLoading }] = AuthAPI.useChangeAuthGroupMutation()
   const { user, groups } = useAuth()
 
   const sortGroupAsMainFirst = (a, b) =>
     a.ID === user?.GUID ? -1 : b.ID === user?.GUID ? 1 : 0
 
-  const ShowAllOption = { ID: ALL_RESOURCES, NAME: Tr(T.ShowAll) }
+  const ShowAllOption = { ID: ALL_RESOURCES, NAME: translate(T.ShowAll) }
   const ShowAllOptionUserAndGroups = {
     ID: USER_GROUPS_RESOURCES,
-    NAME: Tr(T.ShowBelongingUserAndGroups),
+    NAME: translate(T.ShowBelongingUserAndGroups),
   }
   const ShowAllOptionUser = {
     ID: USER_RESOURCES,
-    NAME: Tr(T.ShowBelongingUser),
+    NAME: translate(T.ShowBelongingUser),
   }
 
   const sortMainGroupFirst = useMemo(

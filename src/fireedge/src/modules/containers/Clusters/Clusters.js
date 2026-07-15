@@ -109,6 +109,7 @@ export function Clusters() {
 
   return (
     <ResourceContainer
+      dataCy={clusterTable.dataCy}
       resourceName={T.Clusters}
       onRefresh={refresh}
       isRefreshing={isRefreshing}
@@ -126,6 +127,7 @@ export function Clusters() {
           case TABLE_VIEW_MODE.LIST:
             return (
               <Table
+                dataCy={clusterTable.dataCy}
                 columns={clusterTable.columns()}
                 data={items}
                 isLoading={isRefreshing}
@@ -150,6 +152,7 @@ export function Clusters() {
                   return (
                     <Cluster.Card
                       key={id}
+                      dataCy={`${clusterTable.dataCy}-${id}`}
                       cluster={cluster}
                       isSelected={selectedItems?.includes(id)}
                       onCheck={() =>

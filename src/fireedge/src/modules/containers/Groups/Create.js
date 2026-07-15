@@ -25,12 +25,7 @@ import {
   useGeneralApi,
 } from '@FeaturesModule'
 
-import {
-  DefaultFormStepper,
-  SkeletonStepsForm,
-  Group,
-  TranslateProvider,
-} from '@ResourcesModule'
+import { DefaultFormStepper, SkeletonStepsForm, Group } from '@ResourcesModule'
 
 import { jsonToXml } from '@UtilsModule'
 
@@ -162,7 +157,7 @@ export function CreateGroup() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {views && version ? (
         !groupId ? (
           <Group.Forms.CreateForm
@@ -193,7 +188,7 @@ export function CreateGroup() {
       ) : (
         <SkeletonStepsForm />
       )}
-    </TranslateProvider>
+    </>
   )
 }
 

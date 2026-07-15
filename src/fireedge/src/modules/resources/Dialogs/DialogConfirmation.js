@@ -28,7 +28,7 @@ import { Box } from '@mui/system'
 import { Cancel as CancelIcon } from 'iconoir-react'
 import { SubmitButton } from '@ComponentsV2Module'
 import { Action } from '@modules/resources/Cards/SelectCard'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, STYLE_BUTTONS } from '@ConstantsModule'
 
 /**
@@ -67,6 +67,7 @@ const DialogConfirmation = memo(
     children,
     dataCy,
   }) => {
+    const { translate } = useTranslation()
     const isMobile = useMediaQuery((theme) => theme.breakpoints.only('xs'))
 
     return (
@@ -122,12 +123,14 @@ const DialogConfirmation = memo(
           <Box flexGrow={1}>
             {title && (
               <Typography variant="h8">
-                {typeof title === 'string' ? Tr(title) : title}
+                {typeof title === 'string' ? translate(title) : title}
               </Typography>
             )}
             {subheader && (
               <Typography variant="body1">
-                {typeof subheader === 'string' ? Tr(subheader) : subheader}
+                {typeof subheader === 'string'
+                  ? translate(subheader)
+                  : subheader}
               </Typography>
             )}
           </Box>

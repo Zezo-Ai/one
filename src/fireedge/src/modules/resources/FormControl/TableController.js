@@ -44,6 +44,8 @@ const TableController = memo(
       fieldState: { error },
     } = useController({ name, control })
     const { data = [], isFetching } = model.useData()
+    const { dataCy: fieldDataCy, ...tableProps } = fieldProps
+    const tableDataCy = fieldDataCy ?? model.dataCy
 
     const rowSelection = [value ?? []]
       .flat()
@@ -73,12 +75,13 @@ const TableController = memo(
           columns={model.columns()}
           data={[].concat(data)}
           isLoading={isFetching}
+          dataCy={tableDataCy}
           isRowsSelectable={!readOnly}
           isMultiRowSelection={!singleSelect}
           getRowId={getRowId}
           rowSelection={rowSelection}
           onRowSelectionChange={handleRowSelectionChange}
-          {...fieldProps}
+          {...tableProps}
         />
       </>
     )
@@ -93,6 +96,7 @@ TableController.propTypes = {
   tooltip: PropTypes.any,
   model: PropTypes.shape({
     columns: PropTypes.func.isRequired,
+    dataCy: PropTypes.string,
     useData: PropTypes.func.isRequired,
   }).isRequired,
   singleSelect: PropTypes.bool,

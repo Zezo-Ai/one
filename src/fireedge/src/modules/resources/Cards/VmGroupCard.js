@@ -29,7 +29,7 @@ import {
 import { StatusCircle } from '@modules/resources/Status'
 import { getVmGroupState } from '@ModelsModule'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * VmGroupCard component to display vmgroup details.
@@ -40,6 +40,7 @@ import { Tr } from '@modules/resources/HOC'
  * @returns {Component} VmGroupCard component
  */
 const VmGroupCard = ({ vmgroup, rootProps }) => {
+  const { translate } = useTranslation()
   const { ID, NAME, GNAME, LOCK, ROLES } = vmgroup
   const { color: stateColor, name: stateName } = getVmGroupState(LOCK)
 
@@ -77,7 +78,7 @@ const VmGroupCard = ({ vmgroup, rootProps }) => {
         >
           <Typography variant="caption">{`#${ID}`}</Typography>
           <Box display="flex" alignItems="center" mt={1}>
-            <Tooltip title={`${Tr(T.Group)}: ${GNAME}`}>
+            <Tooltip title={`${translate(T.Group)}: ${GNAME}`}>
               <Box display="flex" alignItems="center" mr={2}>
                 <Group />
                 <Typography variant="caption" ml={1}>
@@ -103,6 +104,7 @@ const VmGroupCard = ({ vmgroup, rootProps }) => {
  * @returns {Component} Roles component.
  */
 const RolesComponent = ({ roles }) => {
+  const { translate } = useTranslation()
   const rolesArray = Array.isArray(roles) ? roles : [roles]
 
   const affinedRoles = rolesArray.filter((role) => role?.POLICY === 'AFFINED')
@@ -193,7 +195,7 @@ const RolesComponent = ({ roles }) => {
         }}
       >
         <AccordionSummary>
-          <Typography variant="caption">{Tr(T.AffinedRoles)}</Typography>
+          <Typography variant="caption">{translate(T.AffinedRoles)}</Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ overflow: 'hidden' }}>
           {renderRoles(affinedRoles)}
@@ -222,7 +224,9 @@ const RolesComponent = ({ roles }) => {
         }}
       >
         <AccordionSummary>
-          <Typography variant="caption">{Tr(T.AntiAffinedRoles)}</Typography>
+          <Typography variant="caption">
+            {translate(T.AntiAffinedRoles)}
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>{renderRoles(antiAffinedRoles)}</AccordionDetails>
       </Accordion>

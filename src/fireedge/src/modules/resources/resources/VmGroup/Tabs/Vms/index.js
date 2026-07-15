@@ -17,7 +17,7 @@
 import PropTypes from 'prop-types'
 import { Component } from 'react'
 import { TablePanel } from '@ComponentsV2Module'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { vmgroupVmTable, VMGROUP_VM_COLUMNS } from '@ModelsModule'
 
 /**
@@ -55,6 +55,8 @@ export const VMs = ({ data, config }) => {
       ])}
       data={aVms}
       isLoading={isLoadingVms}
+      openRowDetailsOnClick
+      rowDetailsResourceId={RESOURCE_NAMES.VM}
     />
   )
 }

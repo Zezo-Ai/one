@@ -23,6 +23,8 @@ import { createLabelColumn } from '@modules/models/labels'
 export const SERVICETEMPLATES_COLUMNS = [
   { header: T.ID, id: 'id', accessorKey: 'ID', width: '5%' },
   { header: T.Name, id: 'name', accessorKey: 'NAME' },
+  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
+  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   {
     header: T.RegistrationTime,
     id: 'time',
@@ -32,8 +34,6 @@ export const SERVICETEMPLATES_COLUMNS = [
         row.original?.TEMPLATE?.BODY?.registration_time
       ).toRelative(),
   },
-  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
-  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   createLabelColumn(),
 ]
 
@@ -51,5 +51,6 @@ export const SERVICETEMPLATES_ROLES_COLUMNS = [
 
 export const servicetemplateTable = createTable(
   SERVICETEMPLATES_COLUMNS,
-  ServiceTemplateAPI.useGetServiceTemplatesQuery
+  ServiceTemplateAPI.useGetServiceTemplatesQuery,
+  { dataCy: 'service-templates' }
 )

@@ -18,7 +18,7 @@ import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 import { HostAPI, useGeneralApi } from '@FeaturesModule'
 import { HOST_STATES, T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   Button,
   ButtonGroup,
@@ -37,6 +37,7 @@ import {
  * @returns {Component} The HostAffinityPanel component.
  */
 const HostAffinityPanel = ({ roles, selectedRoleIndex, onChange }) => {
+  const { translate } = useTranslation()
   const { enqueueError } = useGeneralApi()
   const { data = [], error, isFetching, isLoading } = HostAPI.useGetHostsQuery()
   const [selectedHostIds, setSelectedHostIds] = useState([])
@@ -114,15 +115,15 @@ const HostAffinityPanel = ({ roles, selectedRoleIndex, onChange }) => {
     nextAffinityType && setAffinityType(nextAffinityType)
   }, [])
 
-  const idLabel = Tr(T.ID)
-  const nameLabel = Tr(T.Name)
-  const clusterLabel = Tr(T.Cluster)
-  const statusLabel = Tr(T.Status)
-  const affinedLabel = Tr(T.Affined)
-  const antiAffinedLabel = Tr(T.AntiAffined)
-  const hostAffinityLabel = Tr(T.HostAffinity)
-  const addRoleAffinityLabel = Tr(T.AddRoleAffinity)
-  const addLabel = Tr(T.Add)
+  const idLabel = translate(T.ID)
+  const nameLabel = translate(T.Name)
+  const clusterLabel = translate(T.Cluster)
+  const statusLabel = translate(T.Status)
+  const affinedLabel = translate(T.Affined)
+  const antiAffinedLabel = translate(T.AntiAffined)
+  const hostAffinityLabel = translate(T.HostAffinity)
+  const addRoleAffinityLabel = translate(T.AddRoleAffinity)
+  const addLabel = translate(T.Add)
 
   const columns = useMemo(
     () => [

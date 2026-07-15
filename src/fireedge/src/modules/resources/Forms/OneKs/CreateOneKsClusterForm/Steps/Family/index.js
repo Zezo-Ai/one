@@ -19,7 +19,8 @@ import { SCHEMA } from './schema'
 import clsx from 'clsx'
 import { useMemo } from 'react'
 import { sanitize } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
+
 import { Grid, useTheme, Stack, Typography, Alert } from '@mui/material'
 import styles from '@modules/resources/Forms/OneKs/CreateOneKsClusterForm/Steps/styles'
 import { useFormContext, useController } from 'react-hook-form'
@@ -28,6 +29,7 @@ export const STEP_ID = 'family'
 const defaultTypeForm = 'cluster'
 
 const Content = (families, typeForm) => {
+  const { translate } = useTranslation()
   // Access to the form
   const { control } = useFormContext()
   const {
@@ -48,8 +50,8 @@ const Content = (families, typeForm) => {
     <>
       <Alert severity="info" variant="outlined" className={classes.groupInfo}>
         {typeForm === defaultTypeForm
-          ? Tr(T['oneks.form.create.family.help.paragraph'])
-          : Tr(T['oneks.form.create_nodegroup.family.help.paragraph'])}
+          ? translate(T['oneks.form.create.family.help.paragraph'])
+          : translate(T['oneks.form.create_nodegroup.family.help.paragraph'])}
       </Alert>
       {error && (
         <Alert
@@ -57,7 +59,7 @@ const Content = (families, typeForm) => {
           variant="outlined"
           className={classes.groupInfo}
         >
-          {Tr(T['oneks.form.create.family.error'])}
+          {translate(T['oneks.form.create.family.error'])}
         </Alert>
       )}
       <Grid container spacing={2} className={classes.container}>

@@ -105,6 +105,15 @@ export const getStyles = ({ theme }) => {
       alignItems: 'center',
       alignSelf: 'stretch',
     },
+    '& .empty-content-container': {
+      alignItems: 'center',
+      alignSelf: 'stretch',
+      display: 'flex',
+      flex: '1 1 0',
+      justifyContent: 'center',
+      minHeight: 0,
+      width: '100%',
+    },
   }
 
   return {

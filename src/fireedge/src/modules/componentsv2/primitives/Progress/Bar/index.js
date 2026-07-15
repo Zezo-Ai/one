@@ -18,6 +18,7 @@ import { Component, forwardRef } from 'react'
 import PropTypes from 'prop-types'
 import { Box, Typography } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/primitives/Progress/Bar/styles'
+import { useTranslation } from '@ProvidersModule'
 
 const normalizeThresholds = (thresholds) => {
   if (!Array.isArray(thresholds) || thresholds.length !== 2) return undefined
@@ -44,7 +45,7 @@ const normalizeThresholds = (thresholds) => {
 export const ProgressBar = forwardRef(
   (
     {
-      size = 'medium',
+      size = 'extraSmall',
       value = 0,
       thresholds,
       isLabelVisible = false,
@@ -53,6 +54,7 @@ export const ProgressBar = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const clampedValue = Math.min(100, Math.max(0, value))
     const normalizedThresholds = normalizeThresholds(thresholds)
 
@@ -74,7 +76,9 @@ export const ProgressBar = forwardRef(
         aria-valuemax={100}
         {...opts}
       >
-        {label && <Typography className="progress-label">{label}</Typography>}
+        {label && (
+          <Typography className="progress-label">{translate(label)}</Typography>
+        )}
         <Box className="progress-track">
           <Box className="progress-fill" />
         </Box>

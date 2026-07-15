@@ -32,6 +32,8 @@ export const surface = {
   page: neutral.white,
   primary: neutral.white,
   mute: neutral[100],
+  skeleton: neutral[100],
+  skeletonHighlight: neutral.white,
   imageBg: neutral[100],
   error: error[100],
   warning: warning[100],

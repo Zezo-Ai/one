@@ -30,16 +30,16 @@ import {
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
-  TranslateProvider,
   VmTemplate,
 } from '@ResourcesModule'
 
-import { RESOURCE_NAMES, T, TAB_FORM_MAP, PATH } from '@ConstantsModule'
 import {
   jsonToXml,
   filterTemplateData,
   transformActionsInstantiate,
 } from '@UtilsModule'
+
+import { RESOURCE_NAMES, T, TAB_FORM_MAP, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
 
@@ -150,7 +150,7 @@ export function InstantiateVmTemplate() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {!dataTemplateExtended || !apiTemplateData || _.isEmpty(oneConfig) ? (
         <SkeletonStepsForm />
       ) : (
@@ -167,6 +167,6 @@ export function InstantiateVmTemplate() {
           {(config) => <DefaultFormStepper {...config} />}
         </VmTemplate.Forms.InstantiateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

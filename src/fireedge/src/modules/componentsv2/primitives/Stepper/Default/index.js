@@ -26,7 +26,8 @@ import { getStyles } from '@modules/componentsv2/primitives/Stepper/Default/styl
 import { OpenNebulaStepIcon } from '@modules/componentsv2/primitives/Stepper/Default/stepIcon'
 import { OpenNebulaStepLabel } from '@modules/componentsv2/primitives/Stepper/Default/stepLabel'
 import { Tooltip } from '@modules/componentsv2/primitives/Tooltip'
-import { sprintf } from 'sprintf-js'
+import { T } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Gets the error messages to display for a step.
@@ -48,38 +49,33 @@ const getStepErrorMessages = (errorData) => {
  * Converts an error message value into safe text that React can render.
  *
  * @param {string|number|Array|object} message - Message value. It can be raw text, a sprintf tuple, or an object with message data.
+ * @param {Function} translate - Active locale translator.
  * @returns {string} Formatted message text.
  */
-const renderErrorMessage = (message) => {
+const renderErrorMessage = (message, translate) => {
   if (Array.isArray(message)) {
-    const [word = '', values = []] = message
-    const ensuredValues = Array.isArray(values) ? values : [values]
-
-    try {
-      return sprintf(
-        word,
-        ...ensuredValues.filter((value) => value || value === 0)
-      )
-    } catch {
-      return message.map(renderErrorMessage).filter(Boolean).join(' ')
-    }
+    return translate(message)
   }
 
-  if (typeof message === 'string' || typeof message === 'number') {
+  if (typeof message === 'string') {
+    return translate(message)
+  }
+
+  if (typeof message === 'number') {
     return String(message)
   }
 
   if (message && typeof message === 'object') {
     if (message.word) {
-      return renderErrorMessage([message.word, message.values])
+      return translate(message)
     }
 
     if (message.message) {
-      return renderErrorMessage(message.message)
+      return renderErrorMessage(message.message, translate)
     }
 
     return Object.values(message)
-      .map(renderErrorMessage)
+      .map((value) => renderErrorMessage(value, translate))
       .filter(Boolean)
       .join(' ')
   }
@@ -91,12 +87,13 @@ const renderErrorMessage = (message) => {
  * Builds the tooltip content for the step error messages.
  *
  * @param {Array} messages - Step error messages to show in the tooltip.
+ * @param {Function} translate - Active locale translator.
  * @returns {object} Tooltip content node.
  */
-const getStepErrorTooltip = (messages) => (
+const getStepErrorTooltip = (messages, translate) => (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
     {messages.map((message, index) => (
-      <Box key={index}>{renderErrorMessage(message)}</Box>
+      <Box key={index}>{renderErrorMessage(message, translate)}</Box>
     ))}
   </Box>
 )
@@ -113,55 +110,65 @@ export const Stepper = forwardRef(
   (
     { steps = [], activeStep = 0, onClick, stepStatuses = {}, errors = {} },
     ref
-  ) => (
-    <>
-      <MUIStepper
-        ref={ref}
-        connector={<StepConnector />}
-        activeStep={activeStep}
-        alternativeLabel
-        nonLinear
-        sx={(theme) => getStyles({ theme })}
-      >
-        {steps?.map(({ id, label, optional, icon: stepIcon }, stepIdx) => {
-          // Get status of the step and errors
-          const stepStatus = stepStatuses[id]
-          const stepErrorMessages = getStepErrorMessages(errors[id])
-          const hasStepErrors = stepErrorMessages.length > 0
+  ) => {
+    const { translate } = useTranslation()
 
-          return (
-            <Step key={id}>
-              <Tooltip
-                title={
-                  hasStepErrors ? getStepErrorTooltip(stepErrorMessages) : ''
-                }
-                placement="bottom"
-              >
-                <StepLabel
-                  StepIconComponent={(props) => (
-                    <OpenNebulaStepIcon
-                      {...props}
-                      stepIcon={stepIcon}
-                      onClick={onClick}
-                      stepIdx={stepIdx}
-                      stepStatus={stepStatus}
-                    />
-                  )}
+    return (
+      <>
+        <MUIStepper
+          ref={ref}
+          connector={<StepConnector />}
+          activeStep={activeStep}
+          alternativeLabel
+          nonLinear
+          sx={(theme) => getStyles({ theme })}
+        >
+          {steps?.map(({ id, label, optional, icon: stepIcon }, stepIdx) => {
+            // Get status of the step and errors
+            const stepStatus = stepStatuses[id]
+            const stepErrorMessages = getStepErrorMessages(errors[id])
+            const hasStepErrors = stepErrorMessages.length > 0
+
+            return (
+              <Step key={id}>
+                <Tooltip
+                  title={
+                    hasStepErrors
+                      ? getStepErrorTooltip(stepErrorMessages, translate)
+                      : ''
+                  }
+                  placement="bottom"
                 >
-                  <OpenNebulaStepLabel
-                    label={optional ? `${label} - Optional` : label}
-                    stepStatus={stepStatus}
-                    stepNumber={stepIdx + 1}
-                    stepIcon={stepIcon}
-                  />
-                </StepLabel>
-              </Tooltip>
-            </Step>
-          )
-        })}
-      </MUIStepper>
-    </>
-  )
+                  <StepLabel
+                    StepIconComponent={(props) => (
+                      <OpenNebulaStepIcon
+                        {...props}
+                        stepIcon={stepIcon}
+                        onClick={onClick}
+                        stepIdx={stepIdx}
+                        stepStatus={stepStatus}
+                      />
+                    )}
+                  >
+                    <OpenNebulaStepLabel
+                      label={
+                        optional
+                          ? `${translate(label)} - ${translate(T.Optional)}`
+                          : translate(label)
+                      }
+                      stepStatus={stepStatus}
+                      stepNumber={stepIdx + 1}
+                      stepIcon={stepIcon}
+                    />
+                  </StepLabel>
+                </Tooltip>
+              </Step>
+            )
+          })}
+        </MUIStepper>
+      </>
+    )
+  }
 )
 
 Stepper.propTypes = {

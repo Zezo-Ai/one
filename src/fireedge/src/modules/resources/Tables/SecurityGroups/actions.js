@@ -27,7 +27,8 @@ import {
 } from '@modules/resources/Tables/Enhanced/Utils'
 
 import { RESOURCE_NAMES, SEC_GROUP_ACTIONS, T, PATH } from '@ConstantsModule'
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
+
 const { SecurityGroup, Vm } = Form
 
 const ListSecGroupNames = ({ rows = [] }) =>
@@ -68,6 +69,7 @@ const MessageToConfirmAction = (rows, message) => (
  * @returns {GlobalAction} - Actions
  */
 const Actions = (props = {}) => {
+  const { translate } = useTranslation()
   const { setSelectedRows } = props
   const history = useHistory()
   const { view, getResourceView } = useViews()
@@ -118,7 +120,9 @@ const Actions = (props = {}) => {
                     const { ID, NAME } = rows?.[0]?.original ?? {}
 
                     return [
-                      Tr(isMultiple ? T.CloneSecGroups : T.CloneSecGroup),
+                      translate(
+                        isMultiple ? T.CloneSecGroups : T.CloneSecGroup
+                      ),
                       !isMultiple && `#${ID} ${NAME}`,
                     ]
                       .filter(Boolean)
@@ -238,7 +242,7 @@ const Actions = (props = {}) => {
           },
         ],
       }),
-    [view]
+    [view, translate]
   )
 
   return segGroupActions

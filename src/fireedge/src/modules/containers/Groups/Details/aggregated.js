@@ -18,16 +18,16 @@ import {
   Button,
   DetailsDrawer,
   InfoSlot,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
-  ToggleGroup,
 } from '@ComponentsV2Module'
 import { STYLE_BUTTONS, T } from '@ConstantsModule'
 import { GroupAPI, useModalsApi } from '@FeaturesModule'
 import { Group } from '@ResourcesModule'
 import { getTotalOfResources } from '@UtilsModule'
 import { Box } from '@mui/material'
-import { Cancel, RefreshDouble, Trash } from 'iconoir-react'
+import { Cancel, Trash } from 'iconoir-react'
 import PropTypes from 'prop-types'
 import { Component, useMemo } from 'react'
 
@@ -44,19 +44,24 @@ export const AggregatedView = ({
   handleClose,
 }) => {
   const { showModal } = useModalsApi()
-  const [refreshGroup, { isFetching }] = GroupAPI.useLazyGetGroupQuery()
   const [remove, { isLoading: isRemoving }] = GroupAPI.useRemoveGroupMutation()
-
-  const handleRefresh = async () =>
-    await Promise.all(selectedGroups.map(({ ID }) => refreshGroup({ id: ID })))
 
   const handleOpenDeleteForm = () =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title: [T.Delete, T.Groups].filter(Boolean).join(' '),
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedGroups}
+            resourceType={T.Groups}
+          />
+        ),
         confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(selectedGroups.map(({ ID }) => remove({ id: ID })))
@@ -73,7 +78,7 @@ export const AggregatedView = ({
     [selectedGroups]
   )
 
-  const isMutating = isFetching || isRemoving
+  const isMutating = isRemoving
 
   return (
     <DetailsDrawer
@@ -101,24 +106,11 @@ export const AggregatedView = ({
                 >
                   {T.DeleteSelected}
                 </Button>
-
-                <ToggleGroup
-                  size="medium"
-                  options={[
-                    [
-                      {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        isDisabled: isMutating,
-                      },
-                      {
-                        startIcon: <Cancel width="16px" height="16px" />,
-                        onClick: handleClose,
-                        value: 'close',
-                      },
-                    ],
-                  ]}
+                <Button
+                  type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                  size="small"
+                  iconOnly={<Cancel width="16px" height="16px" />}
+                  onClick={handleClose}
                 />
               </Box>
             ),

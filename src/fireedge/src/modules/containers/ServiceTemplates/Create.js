@@ -30,8 +30,8 @@ import {
   DefaultFormStepper,
   SkeletonStepsForm,
   ServiceTemplate,
-  TranslateProvider,
 } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
@@ -93,7 +93,7 @@ export function CreateServiceTemplate() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {templateId && !dataTemplate ? (
         <SkeletonStepsForm />
       ) : (
@@ -108,6 +108,6 @@ export function CreateServiceTemplate() {
           {(config) => <DefaultFormStepper {...config} update={!!templateId} />}
         </ServiceTemplate.Forms.CreateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

@@ -18,7 +18,7 @@ import { ReactElement } from 'react'
 import { LinearProgress, MenuItem, Select } from '@mui/material'
 import { Language as ZoneIcon } from 'iconoir-react'
 
-import { Translate, TranslateProvider } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import HeaderPopover from '@modules/resources/Header/Popover'
 import { T } from '@ConstantsModule'
 import { useGeneral, useGeneralApi, ZoneAPI } from '@FeaturesModule'
@@ -34,7 +34,7 @@ const Zone = () => {
   const { changeZone } = useGeneralApi()
 
   return (
-    <TranslateProvider>
+    <>
       <HeaderPopover
         id="zone-menu"
         tooltip={T.Zone}
@@ -71,7 +71,7 @@ const Zone = () => {
           </>
         )}
       </HeaderPopover>
-    </TranslateProvider>
+    </>
   )
 }
 

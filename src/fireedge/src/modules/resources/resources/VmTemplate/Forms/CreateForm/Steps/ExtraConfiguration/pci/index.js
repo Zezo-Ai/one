@@ -306,7 +306,7 @@ const PciDevices = ({ oneConfig, adminGroup }) => {
         dataCy: 'modal-detach-pci',
         description: (
           <ResourceActionConfirmation
-            description={T.DoYouWantProceed}
+            description={T['resource.detach.confirmation']}
             resources={{ ID: pci?.indexPci, NAME: getPciCardName(pci) }}
             resourceType={T.Pci}
           />

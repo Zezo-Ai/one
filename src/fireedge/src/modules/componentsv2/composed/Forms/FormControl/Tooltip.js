@@ -22,11 +22,12 @@ import {
   Typography,
   Tooltip as MuiTooltip,
 } from '@mui/material'
-import { Tr } from '@ProvidersModule'
-import { labelCanBeTranslated } from '@UtilsModule'
+import { isTranslationInput } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 export const AdornmentWithTooltip = memo(
   ({ title, position = 'end', children }) => {
+    const { translate } = useTranslation()
     if (
       !title ||
       title === '' ||
@@ -41,7 +42,7 @@ export const AdornmentWithTooltip = memo(
         placement="bottom"
         title={
           <Typography variant="subtitle2">
-            {labelCanBeTranslated(title) ? Tr(title) : title}
+            {isTranslationInput(title) ? translate(title) : title}
           </Typography>
         }
       >

@@ -16,12 +16,11 @@
 
 import PropTypes from 'prop-types'
 import { ReactElement, useMemo } from 'react'
-import { generatePath, useHistory } from 'react-router-dom'
 
 import { GroupAPI, VdcAPI } from '@FeaturesModule'
 import { getGroupQuotaUsage } from '@ModelsModule'
 import { LoadingDisplay } from '@modules/resources/LoadingState'
-import { PATH, T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { Table, UserGroupsTab } from '@ComponentsV2Module'
 
 import {
@@ -79,8 +78,6 @@ const groupColumns = [
  * @returns {ReactElement} VDC groups tab
  */
 const GroupsInfoTab = ({ id: vdcId }) => {
-  const path = PATH.SYSTEM.GROUPS.DETAIL
-  const history = useHistory()
   const {
     data: groups = [],
     isLoading: isLoadingGroups,
@@ -113,12 +110,6 @@ const GroupsInfoTab = ({ id: vdcId }) => {
   const isLoading =
     isLoadingGroups || isFetchingGroups || isLoadingVdc || isFetchingVdc
 
-  const handleRowClick = (rowId) => {
-    if (rowId === undefined) return
-
-    history.push(generatePath(path, { id: String(rowId) }))
-  }
-
   if (isLoading || !vdc) {
     return (
       <LoadingDisplay
@@ -134,6 +125,7 @@ const GroupsInfoTab = ({ id: vdcId }) => {
       primaryTitle={null}
       primaryGroup={
         <Table
+          dataCy="vdc-groups"
           data={groupRows}
           columns={groupColumns}
           size="medium"
@@ -142,7 +134,8 @@ const GroupsInfoTab = ({ id: vdcId }) => {
           defaultPageSize={5}
           pageSizeOptions={[5, 10, 25]}
           getRowId={(row) => String(row.ID)}
-          onRowClick={({ ID }) => handleRowClick(ID)}
+          openRowDetailsOnClick
+          rowDetailsResourceId={RESOURCE_NAMES.GROUP}
         />
       }
     />

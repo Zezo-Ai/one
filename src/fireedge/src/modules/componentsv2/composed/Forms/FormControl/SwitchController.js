@@ -19,8 +19,8 @@ import { FormControl, FormHelperText } from '@mui/material'
 import { Switch } from '@modules/componentsv2/primitives/Buttons/Switch'
 import { useController, useWatch } from 'react-hook-form'
 import { ErrorHelper } from '@modules/componentsv2/composed/Forms/FormControl/ErrorHelper'
-import { Tr } from '@ProvidersModule'
-import { labelCanBeTranslated, generateKey } from '@UtilsModule'
+import { isTranslationInput, generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 export const SwitchController = memo(
   ({
@@ -36,6 +36,7 @@ export const SwitchController = memo(
     dependencies,
     description,
   }) => {
+    const { translate } = useTranslation()
     const {
       field: { value = false, onChange, onBlur },
       fieldState: { error },
@@ -81,7 +82,9 @@ export const SwitchController = memo(
         />
         {description && (
           <FormHelperText>
-            {labelCanBeTranslated(description) ? Tr(description) : description}
+            {isTranslationInput(description)
+              ? translate(description)
+              : description}
           </FormHelperText>
         )}
         {Boolean(error) && (

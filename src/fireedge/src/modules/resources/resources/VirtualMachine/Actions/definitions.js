@@ -41,9 +41,13 @@ export default {
   },
   [VM_ACTION_ENUM.LOCK]: {
     useMutation: VmAPI.useLockVmMutation,
+    description: T['resource.lock.confirmation'],
+    confirmLabel: T.Lock,
   },
   [VM_ACTION_ENUM.UNLOCK]: {
     useMutation: VmAPI.useUnlockVmMutation,
+    description: T['resource.unlock.confirmation'],
+    confirmLabel: T.Unlock,
   },
   [VM_ACTION_ENUM.UPDATE_USER_TEMPLATE]: {
     useMutation: VmAPI.useUpdateUserTemplateMutation,
@@ -84,6 +88,10 @@ export default {
   [VM_ACTION_ENUM.SCHED_ACTION_DELETE]: {
     useMutation: VmAPI.useDeleteScheduledActionMutation,
     success: T.DeleteScheduleActionSuccess,
+    isDestructive: true,
+    description: T['resource.delete.confirmation'],
+    confirmLabel: T.Delete,
+    resourceType: T.ScheduleAction,
     params: ({ ID, schedId } = {}) => ({
       schedId: schedId ?? ID,
     }),
@@ -117,6 +125,9 @@ export default {
   [VM_ACTION_ENUM.SNAPSHOT_REVERT]: {
     useMutation: VmAPI.useRevertVmSnapshotMutation,
     success: T.RevertSnapshotSuccess,
+    description: T['resource.revert.confirmation'],
+    confirmLabel: T.Revert,
+    resourceType: T.Snapshot,
     params: ({ SNAPSHOT_ID, ID } = {}) => ({
       snapshot: SNAPSHOT_ID ?? ID,
     }),
@@ -124,6 +135,10 @@ export default {
   [VM_ACTION_ENUM.SNAPSHOT_DELETE]: {
     useMutation: VmAPI.useDeleteVmSnapshotMutation,
     success: T.DeleteSnapshotSuccess,
+    isDestructive: true,
+    description: T['resource.delete.confirmation'],
+    confirmLabel: T.Delete,
+    resourceType: T.Snapshot,
     params: ({ SNAPSHOT_ID, ID } = {}) => ({
       snapshot: SNAPSHOT_ID ?? ID,
     }),
@@ -145,6 +160,10 @@ export default {
   },
   [VM_ACTION_ENUM.DETACH_PCI]: {
     useMutation: VmAPI.useDetachPciMutation,
+    description: T['resource.detach.confirmation'],
+    confirmLabel: T.Detach,
+    isDestructive: true,
+    resourceType: T.Pci,
     params: ({ PCI_ID } = {}) => ({
       pci: PCI_ID,
     }),
@@ -170,6 +189,10 @@ export default {
   [VM_ACTION_ENUM.DETACH_NIC]: {
     useMutation: VmAPI.useDetachNicMutation,
     success: T.DetachNicSuccess,
+    description: T['resource.detach.confirmation'],
+    confirmLabel: T.Detach,
+    isDestructive: true,
+    resourceType: T.NIC,
     params: ({ NIC_ID } = {}) => ({
       nic: NIC_ID,
     }),
@@ -189,6 +212,10 @@ export default {
   [VM_ACTION_ENUM.DETACH_DISK]: {
     useMutation: VmAPI.useDetachDiskMutation,
     success: T.DetachDiskSuccess,
+    description: T['resource.detach.confirmation'],
+    confirmLabel: T.Detach,
+    isDestructive: true,
+    resourceType: T.Disk,
     params: ({ DISK_ID } = {}) => ({
       disk: DISK_ID,
     }),
@@ -245,6 +272,9 @@ export default {
   [VM_ACTION_ENUM.SNAPSHOT_DISK_REVERT]: {
     useMutation: VmAPI.useRevertDiskSnapshotMutation,
     success: T.RevertDiskSnapshotSuccess,
+    description: T['resource.revert.confirmation'],
+    confirmLabel: T.Revert,
+    resourceType: T.DiskSnapshot,
     params: (formData = {}) => ({
       disk: formData?.DISK_ID,
       snapshot: formData?.SNAPSHOT_ID ?? formData?.ID,
@@ -253,6 +283,10 @@ export default {
   [VM_ACTION_ENUM.SNAPSHOT_DISK_DELETE]: {
     useMutation: VmAPI.useDeleteDiskSnapshotMutation,
     success: T.DeleteDiskSnapshotSuccess,
+    isDestructive: true,
+    description: T['resource.delete.confirmation'],
+    confirmLabel: T.Delete,
+    resourceType: T.DiskSnapshot,
     params: (formData = {}) => ({
       disk: formData?.DISK_ID,
       snapshot: formData?.SNAPSHOT_ID ?? formData?.ID,
@@ -442,10 +476,12 @@ export default {
   },
   [VM_ACTION_ENUM.TERMINATE]: {
     useMutation: VmAPI.useActionVmMutation,
+    isDestructive: true,
     params: { action: VM_ACTIONS.TERMINATE },
   },
   [VM_ACTION_ENUM.TERMINATE_HARD]: {
     useMutation: VmAPI.useActionVmMutation,
+    isDestructive: true,
     params: { action: VM_ACTIONS.TERMINATE_HARD },
   },
 }

@@ -34,7 +34,7 @@ import {
 
 import { useGeneral } from '@FeaturesModule'
 import SidebarLink from '@modules/resources/Sidebar/SidebarLink'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import sidebarStyles from '@modules/resources/Sidebar/styles'
 
 /**

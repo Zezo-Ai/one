@@ -21,8 +21,6 @@ import { GroupAPI } from '@FeaturesModule'
 import { AttributePanel } from '@modules/resources/Tabs/Common'
 import Information from '@modules/resources/Tabs/Group/Info/information'
 
-import { Tr } from '@modules/resources/HOC'
-import { T } from '@ConstantsModule'
 import {
   jsonToXml,
   getActionsAvailable,
@@ -30,6 +28,8 @@ import {
   cloneObject,
   set,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { T } from '@ConstantsModule'
 
 const HIDDEN_ATTRIBUTES_REG = /^(SUNSTONE|OPENNEBULA)$/
 
@@ -42,6 +42,7 @@ const HIDDEN_ATTRIBUTES_REG = /^(SUNSTONE|OPENNEBULA)$/
  * @returns {ReactElement} Information tab
  */
 const GroupInfoTab = ({ tabProps = {}, id }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     attributes_panel: attributesPanel,
@@ -92,7 +93,7 @@ const GroupInfoTab = ({ tabProps = {}, id }) => {
           {...ATTRIBUTE_FUNCTION}
           attributes={attributes}
           actions={getActions(attributesPanel?.actions)}
-          title={Tr(T.Attributes)}
+          title={translate(T.Attributes)}
         />
       )}
     </Stack>

@@ -19,8 +19,9 @@ import { ReactElement } from 'react'
 import { T } from '@ConstantsModule'
 import { VmAPI } from '@FeaturesModule'
 import { prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import Chartist from '@modules/resources/Charts/Chartist'
-import { Tr } from '@modules/resources/HOC'
+
 import { useTheme } from '@mui/material'
 
 /**
@@ -31,6 +32,7 @@ import { useTheme } from '@mui/material'
  * @returns {ReactElement} Capacity Graphs.
  */
 const Graphs = ({ id }) => {
+  const { translate } = useTranslation()
   // Get styles
   const theme = useTheme()
 
@@ -65,7 +67,7 @@ const Graphs = ({ id }) => {
   return (
     <>
       <Chartist
-        name={Tr(T.RealCpu)}
+        name={translate(T.RealCpu)}
         data={monitoring}
         isFetching={isFetching}
         y={cpuY}
@@ -128,7 +130,7 @@ const Graphs = ({ id }) => {
       />
 
       <Chartist
-        name={Tr(T.RealMemory)}
+        name={translate(T.RealMemory)}
         filter={['MEMORY', 'MEMORY_FORECAST', 'MEMORY_FORECAST_FAR']}
         data={monitoring}
         y={memoryY}

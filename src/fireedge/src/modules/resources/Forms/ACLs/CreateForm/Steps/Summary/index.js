@@ -18,16 +18,17 @@ import { useMemo } from 'react'
 import { useTheme, Stack, Alert } from '@mui/material'
 import { css } from '@emotion/css'
 import { T, ACL_TYPE_ID, ACL_RESOURCES } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { generateDocLink } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { useFormContext } from 'react-hook-form'
 
 import { createStringACL, translateACL } from '@ModelsModule'
 import { object } from 'yup'
 
-import { generateDocLink } from '@UtilsModule'
 export const STEP_ID = 'summary'
 
 const Content = (version, users, groups, clusters, zones) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const { getValues } = useFormContext()
 
@@ -71,15 +72,15 @@ const Content = (version, users, groups, clusters, zones) => {
       }}
     >
       <Alert severity="info" variant="outlined" className={classes.groupInfo}>
-        {Tr(T['acls.form.create.summary.info.rule'])}
+        {translate(T['acls.form.create.summary.info.rule'])}
         <b data-cy="ruleString">{ruleString}</b>
         <br />
         <br />
-        {Tr(T['acls.form.create.summary.info.translation'])}
+        {translate(T['acls.form.create.summary.info.translation'])}
         <b>{translateACL(ruleString, users, groups, clusters, zones)}</b>
         <br />
         <br />
-        {Tr(T['acls.form.create.stringEditor.info.more'])}
+        {translate(T['acls.form.create.stringEditor.info.more'])}
         <a
           target="_blank"
           href={generateDocLink(
@@ -88,7 +89,7 @@ const Content = (version, users, groups, clusters, zones) => {
           )}
           rel="noreferrer"
         >
-          {Tr(T['acls.form.create.stringEditor.info.more.link'])}
+          {translate(T['acls.form.create.stringEditor.info.more.link'])}
         </a>
       </Alert>
     </Stack>

@@ -28,14 +28,15 @@ import {
 import { object } from 'yup'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { Box } from '@mui/material'
-import { AttributePanel } from '@modules/resources/Tabs/Common'
+import { unset } from 'lodash'
+import { AttributesPanel } from '@ComponentsV2Module'
 
 export const STEP_ID = 'custom-variables'
 
 const Content = ({ isUpdate }) => {
   const { setValue, reset, getValues, watch } = useFormContext()
   const { useLoadOsProfile } = useGeneralApi()
-  const customVars = useWatch({ name: STEP_ID })
+  const customVars = useWatch({ name: STEP_ID }) ?? {}
 
   const [fetchProfile] = SystemAPI.useLazyGetOsProfilesQuery()
   const osProfile = watch('general.OS_PROFILE')
@@ -75,24 +76,40 @@ const Content = ({ isUpdate }) => {
   }, [osProfile])
 
   const handleChangeAttribute = useCallback(
-    (path, newValue) => {
+    ({ key, path, value } = {}) => {
+      const attributePath = path ?? key?.toUpperCase?.() ?? key
+      if (!attributePath) return
+
       const newCustomVars = cloneObject(customVars)
 
-      set(newCustomVars, path, newValue)
+      set(newCustomVars, attributePath, value)
       setValue(STEP_ID, cleanEmpty(newCustomVars))
     },
-    [customVars]
+    [customVars, setValue]
+  )
+
+  const handleDeleteAttribute = useCallback(
+    (index, attribute) => {
+      const attributePath = attribute?.path ?? Object.keys(customVars)?.[index]
+      if (!attributePath) return
+
+      const newCustomVars = cloneObject(customVars)
+      unset(newCustomVars, attributePath)
+      setValue(STEP_ID, cleanEmpty(newCustomVars))
+    },
+    [customVars, setValue]
   )
 
   return (
     <Box display="grid" gap="1em">
-      <AttributePanel
-        allActionsEnabled
+      <AttributesPanel
+        actions={{ add: true, edit: true, delete: true, copy: true }}
         handleAdd={handleChangeAttribute}
         handleEdit={handleChangeAttribute}
-        handleDelete={handleChangeAttribute}
+        handleDelete={handleDeleteAttribute}
         attributes={customVars}
         filtersSpecialAttributes={false}
+        isFullHeight={true}
       />
     </Box>
   )

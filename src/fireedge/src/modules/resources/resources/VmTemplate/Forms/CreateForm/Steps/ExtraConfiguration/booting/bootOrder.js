@@ -25,7 +25,7 @@ import {
   DropResult,
 } from 'react-beautiful-dnd'
 
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { STEP_ID as EXTRA_ID } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration'
 import { TAB_ID as OS_ID } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/booting'
 import { TAB_ID as STORAGE_ID } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/storage'

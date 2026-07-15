@@ -35,9 +35,9 @@ import { rowStyles } from '@modules/resources/Tables/styles'
 
 import { Nic, NicAlias, T } from '@ConstantsModule'
 import { stringToBoolean } from '@ModelsModule'
-import { Tr, Translate } from '@modules/resources/HOC'
-import { SecurityGroupRules } from '@modules/resources/Tabs/Common/RulesSecGroups'
+import { Translate, useTranslation } from '@ProvidersModule'
 import { groupBy } from '@UtilsModule'
+import { SecurityGroupRules } from '@modules/resources/Tabs/Common/RulesSecGroups'
 
 import { find } from 'lodash'
 
@@ -66,6 +66,7 @@ const NicCard = memo(
     aliasLength = 0,
     indexNicAlias,
   }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -107,17 +108,17 @@ const NicCard = memo(
           {
             text: stringToBoolean(RDP) && 'RDP',
             dataCy: `${dataCy}-rdp`,
-            helpText: Tr(T['nic.card.rdp']),
+            helpText: translate(T['nic.card.rdp']),
           },
           {
             text: stringToBoolean(SSH) && 'SSH',
             dataCy: `${dataCy}-ssh`,
-            helpText: Tr(T['nic.card.ssh']),
+            helpText: translate(T['nic.card.ssh']),
           },
           hasAlias && {
             text: `ALIAS: ${aliasLength}`,
             dataCy: `${dataCy}-hasAlias`,
-            helpText: `${Tr(T.HasAlias, [NAME, aliasLength])}`,
+            helpText: `${translate(T.HasAlias, [NAME, aliasLength])}`,
             stateColor: 'info',
           },
           isPciDevice && {
@@ -127,7 +128,7 @@ const NicCard = memo(
             stateColor: 'info',
           },
         ].filter(({ text } = {}) => Boolean(text)),
-      [RDP, SSH, hasAlias]
+      [RDP, SSH, hasAlias, translate]
     )
 
     const tags = useMemo(
@@ -187,7 +188,7 @@ const NicCard = memo(
               ) : (
                 'auto'
               )}
-              {SHARED === 'YES' && Tr(T.Shared)}
+              {SHARED === 'YES' && translate(T.Shared)}
 
               <Stack
                 direction="row"

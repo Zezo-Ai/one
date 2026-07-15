@@ -18,12 +18,8 @@ import { useHistory, useLocation } from 'react-router'
 
 import { VdcAPI, ZoneAPI, useGeneralApi } from '@FeaturesModule'
 
-import {
-  DefaultFormStepper,
-  SkeletonStepsForm,
-  Vdc,
-  TranslateProvider,
-} from '@ResourcesModule'
+import { DefaultFormStepper, SkeletonStepsForm, Vdc } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 
 /**
@@ -61,7 +57,7 @@ export function CreateVDC() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {zones.length ? (
         <Vdc.Forms.CreateForm
           initialValues={state}
@@ -74,6 +70,6 @@ export function CreateVDC() {
       ) : (
         <SkeletonStepsForm />
       )}
-    </TranslateProvider>
+    </>
   )
 }

@@ -17,14 +17,20 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
   ToggleGroup,
 } from '@ComponentsV2Module'
 import { unset } from 'lodash'
 
-import { getDatastoreType, getDatastoreState } from '@ModelsModule'
+import {
+  getDatastoreType,
+  getDatastoreState,
+  getLabelTags,
+} from '@ModelsModule'
 
 import { Box, useTheme } from '@mui/material'
 import { Component, useMemo } from 'react'
@@ -38,7 +44,7 @@ import {
   Edit,
   Cancel,
 } from 'iconoir-react'
-import { DATASTORE_ACTIONS, T, PATH } from '@ConstantsModule'
+import { DATASTORE_ACTIONS, T, PATH, RESOURCE_NAMES } from '@ConstantsModule'
 import { createActions, jsonToXml, cloneObject, set } from '@UtilsModule'
 import { ClusterAPI, DatastoreAPI, useModalsApi } from '@FeaturesModule'
 import { Cluster, Datastore } from '@ResourcesModule'
@@ -95,8 +101,6 @@ export const SingleView = ({
   const { name: stateName } = useMemo(() => getDatastoreState(data), [data])
   const type = useMemo(() => getDatastoreType(data), [data])
 
-  const modalLabel = `#${ID} ${data?.NAME}`.trim()
-
   const isActionsDisabled =
     ID === undefined ||
     isFetching ||
@@ -115,15 +119,26 @@ export const SingleView = ({
   const refreshCurrentData = async () =>
     ID !== undefined && (await refresh({ id: ID }))
 
-  const getConfirmationDescription = () =>
-    `${T.Datastore}: ${modalLabel}. ${T.DoYouWantProceed}`
-
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({
+    title,
+    description = T['resource.action.confirmation'],
+    confirmLabel,
+    confirmButtonProps,
+    onSubmit,
+  }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
-        description: getConfirmationDescription(),
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={selectedData}
+            resourceType={T.Datastores}
+          />
+        ),
+        confirmLabel,
+        confirmButtonProps,
       },
       onSubmit,
     })
@@ -207,6 +222,8 @@ export const SingleView = ({
   const handleEnable = () =>
     handleConfirmAction({
       title: T.Enable,
+      description: T['resource.enable.confirmation'],
+      confirmLabel: T.Enable,
       onSubmit: async () => {
         await enable(ID)
         await refreshCurrentData()
@@ -216,6 +233,8 @@ export const SingleView = ({
   const handleDisable = () =>
     handleConfirmAction({
       title: T.Disable,
+      description: T['resource.disable.confirmation'],
+      confirmLabel: T.Disable,
       onSubmit: async () => {
         await disable(ID)
         await refreshCurrentData()
@@ -225,6 +244,11 @@ export const SingleView = ({
   const handleDelete = () =>
     handleConfirmAction({
       title: T.Delete,
+      description: T['resource.delete.confirmation'],
+      confirmLabel: T.Delete,
+      confirmButtonProps: {
+        isDestructive: true,
+      },
       onSubmit: async () => {
         await remove({ id: ID })
         handleClose()
@@ -301,9 +325,40 @@ export const SingleView = ({
     ],
   })
 
-  // Rest of actions
+  const [editAction, changeClusterAction] = createActions({
+    filters: availableActions,
+    actions: [
+      {
+        accessor: DATASTORE_ACTIONS.UPDATE_DIALOG,
+        startIcon: <Edit width="16px" height="16px" />,
+        onClick: handleEdit,
+        value: DATASTORE_ACTIONS.UPDATE_DIALOG,
+        tooltip: T.Edit,
+        dataCy: `datastore_${DATASTORE_ACTIONS.UPDATE_DIALOG}`,
+        isDisabled: isActionsDisabled,
+      },
+      {
+        accessor: DATASTORE_ACTIONS.CHANGE_CLUSTER,
+        startIcon: <Network width="16px" height="16px" />,
+        onClick: handleChangeClusterForm,
+        value: DATASTORE_ACTIONS.CHANGE_CLUSTER,
+        tooltip: T.SelectCluster,
+        isDisabled: isActionsDisabled,
+      },
+    ],
+  })
+
   const toggleOptions = [
+    [changeClusterAction].filter(Boolean),
     [
+      {
+        ...getLabelMenuButtonProps({
+          selectedRows: [data],
+          resourceType: RESOURCE_NAMES.DATASTORE,
+          isDisabled: isActionsDisabled,
+        }),
+      },
+      editAction,
       {
         startIcon: <RefreshDouble width="16px" height="16px" />,
         onClick: handleRefresh,
@@ -311,29 +366,7 @@ export const SingleView = ({
         tooltip: T.Refresh,
         isDisabled: isActionsDisabled,
       },
-      ...createActions({
-        filters: availableActions,
-        actions: [
-          {
-            accessor: DATASTORE_ACTIONS.UPDATE_DIALOG,
-            startIcon: <Edit width="16px" height="16px" />,
-            onClick: handleEdit,
-            value: DATASTORE_ACTIONS.UPDATE_DIALOG,
-            tooltip: T.Edit,
-            dataCy: `datastore_${DATASTORE_ACTIONS.UPDATE_DIALOG}`,
-            isDisabled: isActionsDisabled,
-          },
-          {
-            accessor: DATASTORE_ACTIONS.CHANGE_CLUSTER,
-            startIcon: <Network width="16px" height="16px" />,
-            onClick: handleChangeClusterForm,
-            value: DATASTORE_ACTIONS.CHANGE_CLUSTER,
-            tooltip: T.SelectCluster,
-            isDisabled: isActionsDisabled,
-          },
-        ],
-      }),
-    ],
+    ].filter(Boolean),
     [
       ...createActions({
         filters: availableActions,
@@ -354,6 +387,7 @@ export const SingleView = ({
             onClick: handleDelete,
             value: DATASTORE_ACTIONS.DELETE,
             tooltip: T.Delete,
+            isDestructive: true,
             isDisabled: isActionsDisabled,
           },
         ],
@@ -380,6 +414,7 @@ export const SingleView = ({
 
             title: data?.NAME,
             id: ID,
+            tags: getLabelTags(data?.LABELS),
             Toolbar: () => (
               <Box
                 sx={(theme) => ({

@@ -18,6 +18,7 @@ import General, { STEP_ID as GENERAL_ID } from './General'
 import ConfigurationAttributes, {
   STEP_ID as CONF_ID,
 } from './ConfigurationAttributes'
+import { FIELDS as CONF_FIELDS } from './ConfigurationAttributes/schema'
 import CustomVariables, {
   STEP_ID as CUSTOM_VARIABLES_ID,
 } from './CustomVariables'
@@ -65,6 +66,21 @@ function getDsAndTMMad({
 
   return [dsMad, tmMad]
 }
+
+const KNOWN_TEMPLATE_ATTRS = new Set([
+  'NAME',
+  'TYPE',
+  'DS_MAD',
+  'TM_MAD',
+  'DISK_TYPE',
+  'COMPATIBLE_SYS_DS',
+  ...CONF_FIELDS.map(({ name }) => name),
+])
+
+const getCustomVariables = (template = {}) =>
+  Object.fromEntries(
+    Object.entries(template).filter(([key]) => !KNOWN_TEMPLATE_ATTRS.has(key))
+  )
 
 const Steps = createSteps(
   (stepProps) =>
@@ -117,6 +133,11 @@ const Steps = createSteps(
       )
 
       return knownTemplate
+        ? {
+            ...knownTemplate,
+            [CUSTOM_VARIABLES_ID]: getCustomVariables(dsTemplate?.TEMPLATE),
+          }
+        : knownTemplate
     },
     transformBeforeSubmit: (formData) => {
       const {

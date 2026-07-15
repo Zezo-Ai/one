@@ -16,3 +16,4 @@
 
 export * from '@modules/componentsv2/primitives/Progress/Bar'
 export * from '@modules/componentsv2/primitives/Progress/Circle'
+export * from '@modules/componentsv2/primitives/Progress/Segments'

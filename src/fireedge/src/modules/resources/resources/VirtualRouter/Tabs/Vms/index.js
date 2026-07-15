@@ -17,7 +17,7 @@
 import PropTypes from 'prop-types'
 import { Component, useMemo } from 'react'
 import { TablePanel } from '@ComponentsV2Module'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { getVirtualRouterVms, VM_COLUMNS, vmsTable } from '@ModelsModule'
 
 /**
@@ -45,6 +45,8 @@ export const Vms = ({ data }) => {
       data={filteredVms}
       isLoading={isFetching}
       isFullHeight
+      openRowDetailsOnClick
+      rowDetailsResourceId={RESOURCE_NAMES.VM}
     />
   )
 }

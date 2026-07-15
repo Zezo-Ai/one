@@ -17,7 +17,6 @@ import { ObjectSchema } from 'yup'
 
 import {
   GENERAL_FIELDS,
-  EDGE_CLUSTER_FIELDS,
   THROTTLING_BYTES_FIELDS,
   THROTTLING_IOPS_FIELDS,
 } from '@modules/resources/resources/VirtualMachine/Forms/AttachDiskForm/CommonFields'
@@ -62,16 +61,6 @@ const SECTIONS = (hypervisor, oneConfig, adminGroup) => [
     legend: T.ThrottlingIOPS,
     fields: disableFields(
       filterFieldsByHypervisor(THROTTLING_IOPS_FIELDS, hypervisor),
-      'DISK',
-      oneConfig,
-      adminGroup
-    ),
-  },
-  {
-    id: 'edge-cluster',
-    legend: T.EdgeCluster,
-    fields: disableFields(
-      filterFieldsByHypervisor(EDGE_CLUSTER_FIELDS, hypervisor),
       'DISK',
       oneConfig,
       adminGroup

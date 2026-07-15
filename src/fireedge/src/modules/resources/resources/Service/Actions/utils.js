@@ -16,6 +16,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { ROLE_ACTIONS, SERVICE_ACTIONS, T } from '@ConstantsModule'
+import { ResourceActionConfirmation } from '@ComponentsV2Module'
 
 const resolveHandler =
   (action, paramsContext) =>
@@ -52,6 +53,9 @@ const generateOption = ({
     form: _actionForm,
     params: _params, // Injected by useAction
     dialogProps = {},
+    description,
+    confirmLabel,
+    resourceType,
     ...optionProps
   } = action ?? {}
 
@@ -73,7 +77,26 @@ const generateOption = ({
       showModal({
         name: title,
         isConfirmDialog: !form,
-        dialogProps: { title, dataCy: `modal-${actionType}`, ...dialogProps },
+        dialogProps: {
+          title,
+          dataCy: `modal-${actionType}`,
+          ...(!form && {
+            description: (
+              <ResourceActionConfirmation
+                description={description ?? T['resource.action.confirmation']}
+                resources={formContext ?? paramsContext}
+                resourceType={resourceType ?? T.Services}
+              />
+            ),
+            confirmLabel: confirmLabel ?? title,
+            ...(optionProps?.isDestructive && {
+              confirmButtonProps: {
+                isDestructive: true,
+              },
+            }),
+          }),
+          ...dialogProps,
+        },
         ...(form && { form }),
         onSubmit: handler,
       }),

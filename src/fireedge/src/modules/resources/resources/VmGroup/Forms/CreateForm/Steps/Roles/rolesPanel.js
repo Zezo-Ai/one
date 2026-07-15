@@ -17,7 +17,7 @@ import { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 import { useController } from 'react-hook-form'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import { CollapsiblePanel, Dropdown, FormWithSchema } from '@ComponentsV2Module'
 import { FIELDS } from './schema'
@@ -31,11 +31,12 @@ import { FIELDS } from './schema'
  * @returns {Component} The rendered component.
  */
 const RoleVmVmPanel = ({ selectedRoleIndex, formId }) => {
-  const noneLabel = Tr(T.None)
-  const affinedLabel = Tr(T.Affined)
-  const antiAffinedLabel = Tr(T.AntiAffined)
-  const roleDetailsLabel = Tr(T.RoleDetails)
-  const vmAffinityLabel = Tr(T.VMAffinity)
+  const { translate } = useTranslation()
+  const noneLabel = translate(T.None)
+  const affinedLabel = translate(T.Affined)
+  const antiAffinedLabel = translate(T.AntiAffined)
+  const roleDetailsLabel = translate(T.RoleDetails)
+  const vmAffinityLabel = translate(T.VMAffinity)
   const policyOptions = [
     { text: noneLabel, value: 'None' },
     { text: affinedLabel, value: 'AFFINED' },

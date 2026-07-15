@@ -164,9 +164,11 @@ const Illustration = () => (
  *
  * @param {object} root0 - Props
  * @param {Function} root0.action - Optional action callback
+ * @param {object} root0.actionProps - Optional action button props
  * @param {*} root0.actionTitle - Optional action button title
  * @param {*} root0.subtitle - Empty state subtitle
  * @param {*} root0.title - Empty state title
+ * @param {'small'|'medium'} root0.size - Empty state size
  * @param {object|Array|Function} root0.sx - Custom SX styles
  * @returns {Component} - EmptyContent component
  */
@@ -174,9 +176,11 @@ export const EmptyContent = forwardRef(
   (
     {
       action,
+      actionProps,
       actionTitle = T.Action,
       subtitle = T.ThereIsNoContent,
       title = T.NoContent,
+      size = 'medium',
       sx,
     },
     ref
@@ -184,41 +188,46 @@ export const EmptyContent = forwardRef(
     <Box
       ref={ref}
       sx={[
-        (theme) => getStyles({ theme }),
+        (theme) => getStyles({ theme, size }),
         ...(Array.isArray(sx) ? sx : [sx]),
       ].filter(Boolean)}
     >
       <Illustration />
-      <Box className="empty-content-text">
-        <Text
-          className="empty-content-title"
-          value={title}
-          variant={TEXT_VARIANTS.BODY_LARGE}
-          weight={TEXT_WEIGHTS.SEMIBOLD}
-        />
-        <Text
-          className="empty-content-subtitle"
-          value={subtitle}
-          variant={TEXT_VARIANTS.BODY_SMALL}
-          weight={TEXT_WEIGHTS.REGULAR}
-        />
+      <Box className="empty-content-body">
+        <Box className="empty-content-text">
+          <Text
+            className="empty-content-title"
+            value={title}
+            variant={TEXT_VARIANTS.BODY_LARGE}
+            weight={TEXT_WEIGHTS.SEMIBOLD}
+          />
+          <Text
+            className="empty-content-subtitle"
+            value={subtitle}
+            variant={TEXT_VARIANTS.BODY_SMALL}
+            weight={TEXT_WEIGHTS.REGULAR}
+          />
+        </Box>
+        {action && (
+          <Button
+            startIcon={Plus}
+            type={STYLE_BUTTONS.TYPE.PRIMARY}
+            {...actionProps}
+            onClick={action}
+          >
+            {actionTitle}
+          </Button>
+        )}
       </Box>
-      {action && (
-        <Button
-          onClick={action}
-          startIcon={Plus}
-          type={STYLE_BUTTONS.TYPE.PRIMARY}
-        >
-          {actionTitle}
-        </Button>
-      )}
     </Box>
   )
 )
 
 EmptyContent.propTypes = {
   action: PropTypes.func,
+  actionProps: PropTypes.object,
   actionTitle: PropTypes.node,
+  size: PropTypes.oneOf(['small', 'medium']),
   subtitle: PropTypes.node,
   sx: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.func]),
   title: PropTypes.node,

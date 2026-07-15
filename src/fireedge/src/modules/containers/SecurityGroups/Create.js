@@ -17,14 +17,14 @@ import { ReactElement } from 'react'
 import { useHistory, useLocation } from 'react-router'
 
 import { jsonToXml } from '@UtilsModule'
-import { SecurityGroupAPI, useGeneralApi } from '@FeaturesModule'
-
 import {
   DefaultFormStepper,
   SkeletonStepsForm,
   SecurityGroup,
-  TranslateProvider,
 } from '@ResourcesModule'
+
+import { SecurityGroupAPI, useGeneralApi } from '@FeaturesModule'
+
 import { T, PATH } from '@ConstantsModule'
 
 /**
@@ -62,7 +62,7 @@ export function CreateSecurityGroup() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {secID && !data ? (
         <SkeletonStepsForm />
       ) : (
@@ -75,6 +75,6 @@ export function CreateSecurityGroup() {
           {(config) => <DefaultFormStepper {...config} update={!!secID} />}
         </SecurityGroup.Forms.CreateForm>
       )}{' '}
-    </TranslateProvider>
+    </>
   )
 }

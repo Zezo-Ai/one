@@ -22,13 +22,17 @@ import {
   TextField,
   Checkbox,
   FormControlLabel,
+  Button,
 } from '@mui/material'
 import * as iconoir from 'iconoir-react'
+import { RESOURCE_NAMES } from '@ConstantsModule'
+import { useResourceSingleView } from '@modules/containers/ResourceSingleView'
 
 export const TestComponents = () => {
   const [module, setModule] = useState(null)
   const [selected, setSelected] = useState(null)
   const [props, setProps] = useState(null)
+  const { ResourceSingleView, openResourceSingleView } = useResourceSingleView()
 
   useEffect(() => {
     import('@ComponentsV2Module').then((mod) => {
@@ -230,6 +234,22 @@ export const TestComponents = () => {
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ display: 'flex', gap: 1, p: 1 }}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => openResourceSingleView(RESOURCE_NAMES.HOST, 0)}
+        >
+          Open Host #0
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => openResourceSingleView(RESOURCE_NAMES.VM, 0)}
+        >
+          Open VM #0
+        </Button>
+      </Box>
       <Box
         sx={{
           display: 'flex',
@@ -429,6 +449,7 @@ export const TestComponents = () => {
           )}
         </Box>
       </Box>
+      <ResourceSingleView />
     </Box>
   )
 }

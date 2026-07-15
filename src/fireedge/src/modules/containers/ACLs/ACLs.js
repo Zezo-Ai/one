@@ -13,7 +13,12 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Button, ResourceContainer, Table } from '@ComponentsV2Module'
+import {
+  Button,
+  ResourceActionConfirmation,
+  ResourceContainer,
+  Table,
+} from '@ComponentsV2Module'
 import { RESOURCE_NAMES, T, TABLE_VIEW_MODE } from '@ConstantsModule'
 import {
   AclAPI,
@@ -97,8 +102,17 @@ export function ACLs() {
       isConfirmDialog: true,
       dialogProps: {
         title: [T.Delete, T.ACLs].filter(Boolean).join(' '),
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T.DoYouWantProceed}
+            resources={selectedIds.map((id) => ({ ID: id }))}
+            resourceType={T.ACLs}
+          />
+        ),
         confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(selectedIds.map((id) => remove({ id })))
@@ -141,6 +155,7 @@ export function ACLs() {
 
   return (
     <ResourceContainer
+      dataCy={aclTable.dataCy}
       resourceName={T.ACLs}
       onRefresh={refresh}
       isRefreshing={isRefreshing}
@@ -148,8 +163,10 @@ export function ACLs() {
       filterOptions={filterOptions}
       extraSlots={extraSlots}
       viewMode={TABLE_VIEW_MODE.LIST}
+      count={items?.length}
     >
       <Table
+        dataCy={aclTable.dataCy}
         columns={aclTable.columns(ACL_LIST_COLUMNS)}
         data={items}
         isLoading={isRefreshing}

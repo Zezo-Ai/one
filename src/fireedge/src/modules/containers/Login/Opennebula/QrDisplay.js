@@ -15,7 +15,8 @@
  * ------------------------------------------------------------------------- */
 
 import { Stack, Box, Link, Typography } from '@mui/material'
-import { Tr, Translate } from '@ResourcesModule'
+import { Translate, useTranslation } from '@ProvidersModule'
+import { getDigits } from '@UtilsModule'
 import { OtpInput, StepList, SubmitButton } from '@ComponentsV2Module'
 import {
   AUTH_APPS,
@@ -25,7 +26,7 @@ import {
 } from '@ConstantsModule'
 import { FIELDS } from '@modules/containers/Settings/Tfa/schema'
 import { AuthAPI } from '@FeaturesModule'
-import { getDigits } from '@UtilsModule'
+
 import { Component, Fragment, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import PropTypes from 'prop-types'
@@ -41,6 +42,7 @@ const TOKEN_FIELD = FIELDS[0].name
  * @returns {Component} Qr code display handler
  */
 export const QrDisplay = ({ imgSrc, token, user, remember } = {}) => {
+  const { translate } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
   const [login, loginState] = AuthAPI.useLoginMutation()
   const [getAuthUser] = AuthAPI.useLazyGetAuthUserQuery()
@@ -140,7 +142,7 @@ export const QrDisplay = ({ imgSrc, token, user, remember } = {}) => {
           <Box
             component="img"
             src={imgSrc}
-            alt={Tr(T.ScanThisQr)}
+            alt={translate(T.ScanThisQr)}
             data-cy="qrTfa"
             sx={{
               width: '179px',
@@ -159,8 +161,8 @@ export const QrDisplay = ({ imgSrc, token, user, remember } = {}) => {
                   </Fragment>
                 ))}
               </Fragment>,
-              Tr(T.ScanQrWithAuthenticatorApp),
-              Tr(T.EnterGeneratedVerificationCode),
+              translate(T.ScanQrWithAuthenticatorApp),
+              translate(T.EnterGeneratedVerificationCode),
             ]}
           />
         </Stack>
@@ -182,8 +184,8 @@ export const QrDisplay = ({ imgSrc, token, user, remember } = {}) => {
             }}
             render={({ field, fieldState }) => (
               <OtpInput
-                label={Tr(T.AuthenticationCode)}
-                hint={Tr(T.EnterVerificationCode)}
+                label={translate(T.AuthenticationCode)}
+                hint={translate(T.EnterVerificationCode)}
                 isDisabled={isSubmitting}
                 error={fieldState.error?.message}
                 length={DEFAULT_OTP_LENGTH}

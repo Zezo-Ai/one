@@ -16,7 +16,7 @@
 import { BY, SERVER_CONFIG, SUPPORT_WEBSITE, T, PATH } from '@ConstantsModule'
 import { css } from '@emotion/css'
 import { SupportAPI, SystemAPI } from '@FeaturesModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { StatusChip } from '@modules/resources/Status'
 import { Link, Typography, styled, useTheme } from '@mui/material'
 import { memo, useEffect, useMemo } from 'react'

@@ -34,6 +34,7 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Add label dialog.
@@ -59,6 +60,7 @@ const AddLabelDialog = ({
   groups = [],
   isLoading = false,
 }) => {
+  const { translate, translateText } = useTranslation()
   const isRootAdd = !parentNodeId
   const [name, setName] = useState('')
   const [type, setType] = useState('user')
@@ -98,7 +100,7 @@ const AddLabelDialog = ({
     const parts = parentNodeId.split('/')
     const immediateParentName =
       parts.length > 1 ? parts[parts?.length - 1].replace(/\$/g, '') : T.Root
-    parentDisplayInfo = `${T.Parent}: ${immediateParentName}`
+    parentDisplayInfo = `${translate(T.Parent)}: ${immediateParentName}`
   }
 
   return (
@@ -111,27 +113,27 @@ const AddLabelDialog = ({
         zIndex: (theme) => theme?.zIndex?.modal + 10,
       }}
     >
-      <DialogTitle>{T.AddNewLabel}</DialogTitle>
+      <DialogTitle>{translate(T.AddNewLabel)}</DialogTitle>
       <DialogContent>
         {!isRootAdd && parentNodeId && (
           <DialogContentText sx={{ mb: 2 }}>
             {parentDisplayInfo}
             <br />
             <Typography variant="caption" color="textSecondary">
-              {T.FullPath}: {parentNodeId}
+              {translate(T.FullPath)}: {parentNodeId}
             </Typography>
           </DialogContentText>
         )}
         {isRootAdd && (
           <DialogContentText sx={{ mb: 2 }}>
-            {T.AddNewRootLabelConcept}
+            {translate(T.AddNewRootLabelConcept)}
           </DialogContentText>
         )}
 
         <TextField
           autoFocus
           margin="dense"
-          label={T.NewLabelName}
+          label={translate(T.NewLabelName)}
           inputProps={{ 'data-cy': 'text-new-user-label' }}
           type="text"
           fullWidth
@@ -169,14 +171,14 @@ const AddLabelDialog = ({
                   control={
                     <Radio inputProps={{ 'data-cy': 'radio-user-label' }} />
                   }
-                  label={`${T.User} ${T.Label}`}
+                  label={translateText(`${T.User} ${T.Label}`)}
                 />
                 <FormControlLabel
                   value="group"
                   control={
                     <Radio inputProps={{ 'data-cy': 'radio-group-label' }} />
                   }
-                  label={`${T.Group} ${T.Label}`}
+                  label={translateText(`${T.Group} ${T.Label}`)}
                 />
               </RadioGroup>
             </FormControl>
@@ -188,11 +190,11 @@ const AddLabelDialog = ({
                 required
                 disabled={isLoading}
               >
-                <InputLabel>{T.SelectGroup}</InputLabel>
+                <InputLabel>{translate(T.SelectGroup)}</InputLabel>
                 <Select
                   data-cy={'select-group-label'}
                   value={groupId}
-                  label={T.SelectGroup}
+                  label={translate(T.SelectGroup)}
                   onChange={(e) => setGroupId(e.target.value)}
                   MenuProps={{
                     disablePortal: true,
@@ -200,7 +202,7 @@ const AddLabelDialog = ({
                 >
                   {!groups || groups.length === 0 ? (
                     <MenuItem disabled value="">
-                      <em>{T.NoDataAvailable}</em>
+                      <em>{translate(T.NoDataAvailable)}</em>
                     </MenuItem>
                   ) : (
                     groups.map((group) => (

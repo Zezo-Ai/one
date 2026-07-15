@@ -24,9 +24,11 @@ export const getStyles = ({ theme }) => {
     display: 'flex',
     flexDirection: 'column',
     flex: '1 1 0',
+    width: '100%',
     minHeight: 0,
-    gap: '16px',
-    overflowY: 'auto',
+    minWidth: 0,
+    gap: `${theme.scale[600]}px`,
+    overflow: 'hidden',
 
     fontSize: {
       xs: theme.fontSize.body.sm.mobile,
@@ -45,7 +47,28 @@ export const getStyles = ({ theme }) => {
     },
   }
 
+  const content = {
+    '& .tab-content': {
+      display: 'flex',
+      flex: '1 1 0',
+      flexDirection: 'column',
+      width: '100%',
+      minWidth: 0,
+      minHeight: 0,
+      overflowX: 'hidden',
+      overflowY: 'auto',
+    },
+
+    '& .tab-content > *': {
+      flex: '1 1 0',
+      width: '100%',
+      minWidth: 0,
+      minHeight: 0,
+    },
+  }
+
   return {
     ...baseStyles,
+    ...content,
   }
 }

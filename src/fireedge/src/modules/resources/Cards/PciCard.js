@@ -20,7 +20,7 @@ import { rowStyles } from '@modules/resources/Tables/styles'
 import { StatusChip } from '@modules/resources/Status'
 import { ModernTv } from 'iconoir-react'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const PciCard = memo(
@@ -32,6 +32,7 @@ const PciCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ pci = {}, indexPci, actions }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -68,11 +69,14 @@ const PciCard = memo(
         <Box className={classes.main}>
           <div className={classes.title}>
             <Typography noWrap component="span" data-cy={`pci-name`}>
-              <span title={`${Tr(T.Device)}: ${DEVICE}`}>{title}</span>
+              <span title={`${translate(T.Device)}: ${DEVICE}`}>{title}</span>
             </Typography>
             <span className={classes.labels}>
               {SHORT_ADDRESS && (
-                <span key={`pci-${indexPci}`} title={`${Tr(T.ShortAddress)}`}>
+                <span
+                  key={`pci-${indexPci}`}
+                  title={`${translate(T.ShortAddress)}`}
+                >
                   <StatusChip
                     text={`${SHORT_ADDRESS}`}
                     dataCy={`pci-address-${indexPci}`}
@@ -85,23 +89,23 @@ const PciCard = memo(
           <div className={classes.caption}>
             {indexPci !== undefined && <span>{`#${indexPci}`}</span>}
             {VENDOR && (
-              <span title={`${Tr(T.Vendor)}: ${VENDOR}`}>{`${Tr(
+              <span title={`${translate(T.Vendor)}: ${VENDOR}`}>{`${translate(
                 T.Vendor
               )}: ${VENDOR_NAME}`}</span>
             )}
             {CLASS && (
-              <span title={`${Tr(T.Class)}: ${CLASS}`}>{`${Tr(
+              <span title={`${translate(T.Class)}: ${CLASS}`}>{`${translate(
                 T.Class
               )}: ${CLASS_NAME}`}</span>
             )}
             {VMID && (
-              <span title={`${Tr(T.VM)}: ${VMID}`}>
+              <span title={`${translate(T.VM)}: ${VMID}`}>
                 <ModernTv />
                 <span data-cy="vm">{` ${VMID}`}</span>
               </span>
             )}
             {IFNAME && (
-              <span title={`${Tr(T.IfName)}: ${IFNAME}`}>{`${Tr(
+              <span title={`${translate(T.IfName)}: ${IFNAME}`}>{`${translate(
                 T.IfName
               )}: ${IFNAME}`}</span>
             )}

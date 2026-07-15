@@ -35,10 +35,9 @@ import {
   getActionsAvailable,
   jsonToXml,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { VM_ACTIONS, T, PCI_TYPES } from '@ConstantsModule'
 import { filter } from 'lodash'
-
-import { Tr } from '@modules/resources/HOC'
 
 const {
   ATTACH_NIC,
@@ -65,6 +64,7 @@ const VmNetworkTab = ({
   oneConfig,
   adminGroup,
 }) => {
+  const { translate } = useTranslation()
   // General api for enqueue
   const { enqueueSuccess } = useGeneralApi()
 
@@ -77,17 +77,17 @@ const VmNetworkTab = ({
     VmAPI.useUpdateNicMutation()
 
   // Success messages
-  const successMessageAttachNic = `${Tr(T.AttachNicSuccess, [id])}`
+  const successMessageAttachNic = `${translate(T.AttachNicSuccess, [id])}`
   useEffect(
     () => isSuccessAttachNic && enqueueSuccess(successMessageAttachNic),
     [isSuccessAttachNic]
   )
-  const successMessageDetachNic = `${Tr(T.DetachNicSuccess, [id])}`
+  const successMessageDetachNic = `${translate(T.DetachNicSuccess, [id])}`
   useEffect(
     () => isSuccessDetachNic && enqueueSuccess(successMessageDetachNic),
     [isSuccessDetachNic]
   )
-  const successMessageUpdateNic = `${Tr(T.UpdatedNicSuccess, [id])}`
+  const successMessageUpdateNic = `${translate(T.UpdatedNicSuccess, [id])}`
   useEffect(
     () => isSuccessUpdateNic && enqueueSuccess(successMessageUpdateNic),
     [isSuccessUpdateNic]

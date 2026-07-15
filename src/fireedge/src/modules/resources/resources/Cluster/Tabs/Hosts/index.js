@@ -21,7 +21,12 @@ import { generatePath, useHistory } from 'react-router-dom'
 import { Box } from '@mui/material'
 
 import { PciProfileSelector, Table } from '@ComponentsV2Module'
-import { CLUSTER_CLOUD_OPERATIONS, PATH, T } from '@ConstantsModule'
+import {
+  CLUSTER_CLOUD_OPERATIONS,
+  PATH,
+  RESOURCE_NAMES,
+  T,
+} from '@ConstantsModule'
 import {
   ClusterAPI,
   HostAPI,
@@ -109,12 +114,6 @@ export const Hosts = ({ data, config }) => {
   const filterHostsIncluded = (dataToFilter) =>
     dataToFilter.filter((host) => hostIds.includes(String(host?.ID)))
 
-  const handleRowClick = (rowId) => {
-    history.push(
-      generatePath(PATH.INFRASTRUCTURE.HOSTS.DETAIL, { id: String(rowId) })
-    )
-  }
-
   const handleAddHost = async (nodes) => {
     if (!nodes) return
 
@@ -184,11 +183,13 @@ export const Hosts = ({ data, config }) => {
             )}
         </Box>
         <Table
+          dataCy={hostTable.dataCy}
           columns={columns}
           data={clusterHosts}
           isRowsSelectable={false}
           isLoading={isFetching}
-          onRowClick={(row) => handleRowClick(row.ID)}
+          openRowDetailsOnClick
+          rowDetailsResourceId={RESOURCE_NAMES.HOST}
         />
       </Box>
     </Box>

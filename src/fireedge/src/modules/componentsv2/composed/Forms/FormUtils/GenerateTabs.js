@@ -17,7 +17,6 @@
 import PropTypes from 'prop-types'
 import { Component, useMemo, useState } from 'react'
 import { Alert, Box, Stack } from '@mui/material'
-import { WarningCircle } from 'iconoir-react'
 
 import { FormWithSchema } from '@modules/componentsv2/composed/Forms/FormWithSchema'
 import { Tabs } from '@modules/componentsv2/primitives/Tabs/Default'
@@ -116,7 +115,7 @@ const UserInputsTabs = ({
     formState: { errors },
   } = useFormContext()
 
-  const totalErrors = Object.keys(errors[stepId] ?? {}).length
+  const stepErrors = errors[stepId]
 
   const userInputFields = useMemo(
     () => getUserInputFields(userInputsLayout),
@@ -139,7 +138,7 @@ const UserInputsTabs = ({
           return {
             id: tabId,
             title: tabName,
-            error: tabFields.some(({ name }) => errors[stepId]?.[name]),
+            getError: (error) => tabFields.some(({ name }) => error?.[name]),
             Content: () => (
               <UserInputsTabContent
                 appName={tabId}
@@ -157,15 +156,7 @@ const UserInputsTabs = ({
           }
         }
       ),
-    [
-      addAppNameToField,
-      errors,
-      fields,
-      showMandatoryOnly,
-      stepId,
-      totalErrors,
-      userInputsLayout,
-    ]
+    [addAppNameToField, fields, showMandatoryOnly, stepId, userInputsLayout]
   )
 
   const {
@@ -190,10 +181,10 @@ const UserInputsTabs = ({
       <Tabs
         type="line"
         defaultSelect={0}
-        options={tabs.map(({ title, error }, idx) => ({
+        options={tabs.map(({ title, getError }, idx) => ({
           title,
           value: idx,
-          startIcon: error ? WarningCircle : undefined,
+          error: !!getError?.(stepErrors),
         }))}
         onChange={(idx) => setSelected(idx)}
       />
@@ -205,7 +196,6 @@ const UserInputsTabs = ({
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            p: 2,
           }}
         >
           <Content />

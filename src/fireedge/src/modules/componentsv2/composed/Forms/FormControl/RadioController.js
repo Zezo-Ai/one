@@ -15,12 +15,9 @@
  * ------------------------------------------------------------------------- */
 import { css } from '@emotion/css'
 import { AdornmentWithTooltip as Tooltip } from '@modules/componentsv2/composed/Forms/FormControl/Tooltip'
-import { Tr } from '@ProvidersModule'
-import {
-  labelCanBeTranslated,
-  findClosestValue,
-  generateKey,
-} from '@UtilsModule'
+import { isTranslationInput, findClosestValue, generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+
 import {
   Box,
   FormControl,
@@ -107,6 +104,7 @@ export const RadioController = memo(
     readOnly = false,
     onConditionChange,
   }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => styles(theme), [theme])
 
@@ -166,7 +164,9 @@ export const RadioController = memo(
         sx={{ width: '100%' }}
       >
         {label && (
-          <legend>{labelCanBeTranslated(label) ? Tr(label) : label}</legend>
+          <legend>
+            {isTranslationInput(label) ? translate(label) : label}
+          </legend>
         )}
         <RadioGroup
           {...inputProps}
@@ -198,7 +198,7 @@ export const RadioController = memo(
                     />
                   </Box>
                   <Box className={clsx(classes.cell, classes.cellFull)}>
-                    <Box sx={{ fontWeight: 500 }}>{Tr(text)}</Box>
+                    <Box sx={{ fontWeight: 500 }}>{translate(text)}</Box>
                     {description && (
                       <Box
                         component="p"
@@ -210,8 +210,8 @@ export const RadioController = memo(
                           lineHeight: 1.4,
                         }}
                       >
-                        {labelCanBeTranslated(description)
-                          ? Tr(description)
+                        {isTranslationInput(description)
+                          ? translate(description)
                           : description}
                       </Box>
                     )}

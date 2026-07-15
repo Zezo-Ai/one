@@ -65,6 +65,7 @@ const CapacityValue = ({
   max,
   min,
   name,
+  dataCy,
   progressLabel,
   progressValue,
   thresholds,
@@ -135,6 +136,7 @@ const CapacityValue = ({
               max: maxValue,
               step: 1,
               'aria-label': name,
+              'data-cy': dataCy && `text-${dataCy}`,
             }}
           />
         </Box>
@@ -150,6 +152,7 @@ const CapacityValue = ({
                 onClick: handleAccept,
                 tooltip: T.Accept,
                 value: 'accept',
+                'data-cy': dataCy && `accept-${dataCy}`,
                 sx: CAPACITY_ACTION_SX,
               },
               {
@@ -170,7 +173,6 @@ const CapacityValue = ({
     <Box className="capacity-value">
       <Box className="capacity-progress">
         <ProgressBar
-          size="small"
           value={progressValue}
           label={progressLabel}
           thresholds={thresholds}
@@ -190,6 +192,7 @@ const CapacityValue = ({
                 onClick: handleActiveEditForm,
                 tooltip: T.Edit,
                 value: 'edit',
+                'data-cy': dataCy && `edit-${dataCy}`,
                 sx: CAPACITY_ACTION_SX,
               },
             ],
@@ -225,7 +228,6 @@ const DatastoresCard = ({ datastores = [] }) => (
           <Box className="datastore-label">{name}</Box>
           <Box className="datastore-progress">
             <ProgressBar
-              size="small"
               value={percentOfUsed}
               label={percentLabel}
               thresholds={[
@@ -356,6 +358,7 @@ export const HostInfoTab = ({ data, config }) => {
   const capacity = [
     {
       name: T.AllocatedCpu,
+      dataCy: 'allocatedCpu',
       handleEdit: handleOvercommitmentCPU,
       canEdit: true,
       progressValue: percentCpuUsed,
@@ -368,6 +371,7 @@ export const HostInfoTab = ({ data, config }) => {
     },
     {
       name: T.AllocatedMemory,
+      dataCy: 'allocatedMemory',
       handleEdit: handleOvercommitmentMemory,
       canEdit: true,
       progressValue: percentMemUsed,

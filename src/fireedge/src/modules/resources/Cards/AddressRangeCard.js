@@ -24,7 +24,7 @@ import MultipleTags from '@modules/resources/MultipleTags'
 import { LinearProgressWithLabel } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
 
-import { Tr, Translate } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 import {
   AddressRange,
   RESOURCE_NAMES,
@@ -46,6 +46,7 @@ const AddressRangeCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ vnet, ar = {}, actions }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
 
@@ -82,7 +83,7 @@ const AddressRangeCard = memo(
       { text: TYPE, dataCy: 'type' },
       IPAM_MAD && { text: IPAM_MAD, dataCy: 'ipam-mad' },
       !USED_LEASES &&
-        SIZE && { text: `${Tr(T.Size)}: ${SIZE}`, dataCy: 'size' },
+        SIZE && { text: `${translate(T.Size)}: ${SIZE}`, dataCy: 'size' },
       canLinkToParent && {
         text: (
           <Link
@@ -118,25 +119,31 @@ const AddressRangeCard = memo(
             {MAC && (
               <span
                 data-cy="range-mac"
-                title={`${Tr(T.First)}: ${MAC} / ${Tr(T.Last)}: ${MAC_END}`}
+                title={`${translate(T.First)}: ${MAC} / ${translate(
+                  T.Last
+                )}: ${MAC_END}`}
               >{`MAC: ${MAC} | ${MAC_END}`}</span>
             )}
             {IP && (
               <span
                 data-cy="range-ip"
-                title={`${Tr(T.First)}: ${IP} / ${Tr(T.Last)}: ${IP_END}`}
+                title={`${translate(T.First)}: ${IP} / ${translate(
+                  T.Last
+                )}: ${IP_END}`}
               >{`IP: ${IP} | ${IP_END}`}</span>
             )}
             {IP6 && (
               <span
                 data-cy="range-ip6"
-                title={`${Tr(T.First)}: ${IP6} / ${Tr(T.Last)}: ${IP6_END}`}
+                title={`${translate(T.First)}: ${IP6} / ${translate(
+                  T.Last
+                )}: ${IP6_END}`}
               >{`IP6: ${IP6} | ${IP6_END}`}</span>
             )}
             {IP6_GLOBAL && (
               <span
                 data-cy="range-ip6-global"
-                title={`${Tr(T.First)}: ${IP6_GLOBAL} / ${Tr(
+                title={`${translate(T.First)}: ${IP6_GLOBAL} / ${translate(
                   T.Last
                 )}: ${IP6_GLOBAL_END}`}
               >{`IP6 GLOBAL: ${IP6_GLOBAL} | ${IP6_GLOBAL_END}`}</span>
@@ -144,7 +151,7 @@ const AddressRangeCard = memo(
             {IP6_ULA && (
               <span
                 data-cy="range-ip6-ula"
-                title={`${Tr(T.First)}: ${IP6_ULA} / ${Tr(
+                title={`${translate(T.First)}: ${IP6_ULA} / ${translate(
                   T.Last
                 )}: ${IP6_ULA_END}`}
               >{`IP6 ULA: ${IP6_ULA} | ${IP6_ULA_END}`}</span>
@@ -158,7 +165,7 @@ const AddressRangeCard = memo(
               high={VNET_THRESHOLD.LEASES.high}
               low={VNET_THRESHOLD.LEASES.low}
               label={percentLabel}
-              title={`${Tr(T.Used)} / ${Tr(T.TotalLeases)}`}
+              title={`${translate(T.Used)} / ${translate(T.TotalLeases)}`}
             />
           )}
           {actions && <div className={classes.actions}>{actions}</div>}

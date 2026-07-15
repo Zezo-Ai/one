@@ -17,6 +17,7 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   ResourceActionConfirmation,
   SummarySlot,
@@ -38,6 +39,7 @@ import {
 } from 'iconoir-react'
 import { PATH, RESOURCE_NAMES, T, VN_TEMPLATE_ACTIONS } from '@ConstantsModule'
 import { VnTemplateAPI, useModalsApi, useViews } from '@FeaturesModule'
+import { getLabelTags } from '@ModelsModule'
 import {
   filterAttributes,
   getActionsAvailable,
@@ -212,6 +214,7 @@ export const SingleView = ({
             resourceType={T.NetworkTemplates}
           />
         ),
+        confirmLabel: T.Lock,
       },
       onSubmit: handleLock,
     })
@@ -228,6 +231,7 @@ export const SingleView = ({
             resourceType={T.NetworkTemplates}
           />
         ),
+        confirmLabel: T.Unlock,
       },
       onSubmit: handleUnlock,
     })
@@ -244,6 +248,10 @@ export const SingleView = ({
             resourceType={T.NetworkTemplates}
           />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: vnTemplate?.ID })
@@ -289,6 +297,7 @@ export const SingleView = ({
             isTitleEditDisabled: isActionsDisabled,
             title: vnTemplate?.NAME,
             id: vnTemplate?.ID,
+            tags: getLabelTags(vnTemplate?.LABELS),
             labels: [
               [T.Owner, vnTemplate?.UNAME],
               [T.Group, vnTemplate?.GNAME],
@@ -330,13 +339,6 @@ export const SingleView = ({
                   size="medium"
                   options={[
                     [
-                      {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isActionsDisabled,
-                      },
                       canInstantiate && {
                         startIcon: <Play width="16px" height="16px" />,
                         onClick: handleInstantiate,
@@ -344,12 +346,28 @@ export const SingleView = ({
                         tooltip: T.Instantiate,
                         isDisabled: isActionsDisabled,
                       },
+                    ].filter(Boolean),
+                    [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [vnTemplate],
+                          resourceType: RESOURCE_NAMES.VN_TEMPLATE,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
                       canUpdate && {
                         startIcon: <Edit width="16px" height="16px" />,
                         onClick: handleUpdate,
                         value: 'update',
                         tooltip: T.Update,
                         isDisabled: isLocked || isActionsDisabled,
+                      },
+                      {
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: handleRefresh,
+                        value: 'refresh',
+                        tooltip: T.Refresh,
+                        isDisabled: isActionsDisabled,
                       },
                     ].filter(Boolean),
                     [
@@ -369,6 +387,7 @@ export const SingleView = ({
                         onClick: handleDeleteForm,
                         value: 'delete',
                         tooltip: T.Delete,
+                        isDestructive: true,
                         isDisabled: isLocked || isActionsDisabled,
                       },
                       {

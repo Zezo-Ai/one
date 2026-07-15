@@ -46,8 +46,10 @@ export const getStyles = ({ theme }) => {
     '& .button-container': {
       minHeight: '32px',
       display: 'flex',
+      flexWrap: 'nowrap',
       alignItems: 'center',
       alignSelf: 'stretch',
+      whiteSpace: 'nowrap',
       '&:not(:last-of-type)': {
         borderRight: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
       },
@@ -102,6 +104,7 @@ export const getStyles = ({ theme }) => {
 
       '> *': {
         display: 'flex',
+        flexWrap: 'nowrap',
         justifyContent: 'center',
         alignItems: 'center',
         gap: `${theme.scale[200]}px`,
@@ -129,6 +132,7 @@ export const getStyles = ({ theme }) => {
 
     '& .MuiButton-root': {
       transition: 'none',
+      whiteSpace: 'nowrap',
       '&:hover': {
         border: 0,
         bgcolor: 'transparent',

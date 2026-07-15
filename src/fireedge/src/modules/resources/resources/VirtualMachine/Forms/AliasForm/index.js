@@ -29,6 +29,7 @@ import {
   EmptyContent,
   LabelSlot,
   MetadataSlot,
+  ResourceActionConfirmation,
   TitleSlot,
 } from '@ComponentsV2Module'
 import { mapNameByIndex } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/schema'
@@ -218,8 +219,18 @@ const Content = ({ parent, methods, vmId }) => {
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.DetachSomething} ${T.Alias}`,
-        children: <p>{T.DoYouWantProceed}</p>,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.detach.confirmation']}
+            resources={{ ID: item?.NIC_ID, NAME: item?.NAME }}
+            resourceType={T.Alias}
+          />
+        ),
         dataCy: 'modal-detach-alias',
+        confirmLabel: T.Detach,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: handleRemove(index, item?.NIC_ID, item),
     })

@@ -24,7 +24,7 @@ import {
 } from '@modules/resources/Charts/MultiChart/helpers/subComponents'
 import { Loader, Text } from '@ComponentsV2Module'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   GetChartDefs,
   processDataForChart,
@@ -38,26 +38,30 @@ import {
  * @param {string} props.error - Error message
  * @returns {object} Chart state component
  */
-const ChartState = ({ isLoading, error }) => (
-  <Box
-    width="100%"
-    height="100%"
-    display="flex"
-    flexDirection="column"
-    justifyContent="center"
-    alignItems="center"
-    gap={2}
-  >
-    {isLoading ? (
-      <Loader size="medium" />
-    ) : (
-      <Text
-        value={error || Tr(T.NoDataAvailable)}
-        sx={{ color: 'text.headings' }}
-      />
-    )}
-  </Box>
-)
+const ChartState = ({ isLoading, error }) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Box
+      width="100%"
+      height="100%"
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      gap={2}
+    >
+      {isLoading ? (
+        <Loader size="medium" />
+      ) : (
+        <Text
+          value={error || translate(T.NoDataAvailable)}
+          sx={{ color: 'text.headings' }}
+        />
+      )}
+    </Box>
+  )
+}
 
 ChartState.propTypes = {
   isLoading: PropTypes.bool,

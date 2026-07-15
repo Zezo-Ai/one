@@ -27,8 +27,6 @@ import Capacity from '@modules/resources/Tabs/Vm/Info/capacity'
 import Information from '@modules/resources/Tabs/Vm/Info/information'
 import { VmAPI } from '@FeaturesModule'
 
-import { Tr } from '@modules/resources/HOC'
-import { T } from '@ConstantsModule'
 import {
   filterAttributes,
   getActionsAvailable,
@@ -37,6 +35,8 @@ import {
   cloneObject,
   set,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { T } from '@ConstantsModule'
 
 const LXC_ATTRIBUTES_REG = /^LXC_/
 const HIDDEN_ATTRIBUTES_REG = /^(USER_INPUTS|BACKUP|HOT_RESIZE)$|SCHED_|ERROR/
@@ -54,6 +54,7 @@ const HIDDEN_MONITORING_REG =
  * @returns {ReactElement} Information tab
  */
 const VmInfoTab = ({ tabProps = {}, id, oneConfig, adminGroup }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     capacity_panel: capacityPanel,
@@ -169,7 +170,7 @@ const VmInfoTab = ({ tabProps = {}, id, oneConfig, adminGroup }) => {
           attributes={attributes}
           actions={getActions(attributesPanel?.actions)}
           filtersSpecialAttributes={false}
-          title={`${Tr(T.Attributes)}`}
+          title={`${translate(T.Attributes)}`}
         />
       )}
       {lxcPanel?.enabled && lxcAttributes && (
@@ -178,7 +179,7 @@ const VmInfoTab = ({ tabProps = {}, id, oneConfig, adminGroup }) => {
           collapse
           actions={getActions(lxcPanel?.actions)}
           attributes={lxcAttributes}
-          title={`LXC ${Tr(T.Information)}`}
+          title={`LXC ${translate(T.Information)}`}
         />
       )}
       {monitoringPanel?.enabled && monitoringAttributes && (
@@ -186,7 +187,7 @@ const VmInfoTab = ({ tabProps = {}, id, oneConfig, adminGroup }) => {
           collapse
           actions={getActions(monitoringPanel?.actions)}
           attributes={monitoringAttributes}
-          title={`${Tr(T.Monitoring)}`}
+          title={`${translate(T.Monitoring)}`}
         />
       )}
     </Stack>

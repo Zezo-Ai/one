@@ -14,11 +14,17 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { ReactNode, Component, forwardRef } from 'react'
+import { ReactNode, Component, forwardRef, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { Button as MUIButton } from '@mui/material'
+import { Button as MUIButton, Typography } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/primitives/Buttons/Default/styles'
+import { Tooltip } from '@modules/componentsv2/primitives/Tooltip/Default'
 import { renderIcon } from '@UtilsModule'
+import {
+  useCompactToolbarAction,
+  useCompactToolbarId,
+} from '@modules/componentsv2/primitives/Buttons/CompactToolbar/context'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} root0 - Params
@@ -31,6 +37,9 @@ import { renderIcon } from '@UtilsModule'
  * @param {ReactNode} root0.endIcon - End icon
  * @param {ReactNode} root0.iconOnly - Only icon to render
  * @param {string} root0.title - Button label
+ * @param {ReactNode} root0.tooltip - Tooltip text content
+ * @param {object} root0.tooltipLink - Tooltip link
+ * @param {object} root0.tooltipprops - Tooltip props
  * @param {string} root0.size - Size of button
  * @returns {Component} - Custom MUI Button component
  */
@@ -46,18 +55,68 @@ export const Button = forwardRef(
       iconOnly = null,
       isDisabled = false,
       isDestructive = false,
+      compactable = false,
       ...opts
     },
     ref
   ) => {
-    const { sx, ...buttonProps } = opts
+    const { translateText } = useTranslation()
+    const {
+      sx,
+      tooltip,
+      tooltipLink,
+      tooltipprops,
+      dataCy,
+      eACTION: _eACTION,
+      ...buttonProps
+    } = opts
+    const { onClick, title } = buttonProps
+    const compactId = useCompactToolbarId('compact-button')
 
-    const content =
+    const rawContent =
       renderIcon(iconOnly) || buttonProps?.title || children || 'Button'
+    const content =
+      typeof rawContent === 'string' ? translateText(rawContent) : rawContent
+    const compactOption = useMemo(
+      () => ({
+        title,
+        tooltip,
+        startIcon: iconOnly ?? startIcon,
+        isDisabled,
+        isDestructive,
+        onClick,
+      }),
+      [iconOnly, isDestructive, isDisabled, onClick, startIcon, title, tooltip]
+    )
+    const isCompacted = useCompactToolbarAction(
+      compactId,
+      compactOption,
+      compactable
+    )
 
-    return (
+    if (isCompacted) return null
+
+    const hasTooltip =
+      typeof tooltip === 'string' ? tooltip.trim().length > 0 : !!tooltip
+    const tooltipTitle =
+      hasTooltip &&
+      (tooltipLink ? (
+        <Typography variant="subtitle2">
+          {typeof tooltip === 'string' ? translateText(tooltip) : tooltip}
+          <a target="_blank" href={tooltipLink.link} rel="noreferrer">
+            {tooltipLink.text}
+          </a>
+        </Typography>
+      ) : (
+        <Typography variant="subtitle2">
+          {typeof tooltip === 'string' ? translateText(tooltip) : tooltip}
+        </Typography>
+      ))
+
+    const button = (
       <MUIButton
         {...buttonProps}
+        data-cy={buttonProps?.['data-cy'] ?? dataCy}
         type={htmlType}
         ref={ref}
         size={size}
@@ -81,6 +140,16 @@ export const Button = forwardRef(
         {content}
       </MUIButton>
     )
+
+    return hasTooltip ? (
+      <Tooltip title={tooltipTitle} {...tooltipprops}>
+        <span style={{ display: 'inline-flex', width: 'fit-content' }}>
+          {button}
+        </span>
+      </Tooltip>
+    ) : (
+      button
+    )
   }
 )
 
@@ -91,10 +160,15 @@ Button.propTypes = {
   size: PropTypes.string,
   isDisabled: PropTypes.bool,
   isDestructive: PropTypes.bool,
+  compactable: PropTypes.bool,
   iconOnly: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
   endIcon: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
   startIcon: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
   title: PropTypes.string,
+  tooltip: PropTypes.node,
+  tooltipLink: PropTypes.object,
+  tooltipprops: PropTypes.object,
+  dataCy: PropTypes.string,
 }
 
 Button.displayName = 'Button'

@@ -33,6 +33,7 @@ import {
   sentenceCase,
   isDevelopment,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   T,
   RESOURCE_NAMES,
@@ -41,7 +42,6 @@ import {
   TAB_FORM_MAP,
 } from '@ConstantsModule'
 import { set } from 'lodash'
-import { Tr } from '@modules/resources/HOC'
 
 let generalFeatures
 
@@ -55,6 +55,7 @@ const Content = ({
   isVrouter,
   lastOsProfile,
 }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const [fetchProfile] = SystemAPI.useLazyGetOsProfilesQuery()
   const classes = useMemo(() => useStyles(theme), [theme])
@@ -71,7 +72,7 @@ const Content = ({
 
   // Prefill current step based on profile
   const profileSuccessMsg =
-    Tr(T.Loaded) + ' ' + Tr(T.Profile.toLowerCase()) + ': '
+    translate(T.Loaded) + ' ' + translate(T.Profile.toLowerCase()) + ': '
 
   useEffect(async () => {
     if (
@@ -198,7 +199,15 @@ const General = ({
     resolver: (formData) => {
       const hypervisor = formData?.[STEP_ID]?.HYPERVISOR ?? initialHypervisor
 
-      return SCHEMA(hypervisor, isUpdate, generalFeatures)
+      return SCHEMA(
+        hypervisor,
+        isUpdate,
+        generalFeatures,
+        oneConfig,
+        adminGroup,
+        isVrouter,
+        lastOsProfile
+      )
     },
     optionsValidate: { abortEarly: false },
     content: (props) =>

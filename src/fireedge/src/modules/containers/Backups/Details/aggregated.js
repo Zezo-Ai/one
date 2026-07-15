@@ -14,7 +14,13 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { Button, DetailsDrawer, InfoSlot, TabSlot } from '@ComponentsV2Module'
+import {
+  Button,
+  DetailsDrawer,
+  InfoSlot,
+  ResourceActionConfirmation,
+  TabSlot,
+} from '@ComponentsV2Module'
 
 import { ImageAPI, useModalsApi } from '@FeaturesModule'
 import { Component } from 'react'
@@ -60,15 +66,24 @@ export const AggregatedView = ({
   const handleRefresh = async () =>
     await Promise.all(selectedData.map(({ ID }) => refresh({ id: ID })))
 
-  const getConfirmationDescription = () =>
-    `${selectedData.length} ${T.Backups}. ${T.DoYouWantProceed}`
-
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({ title, description, onSubmit }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
-        description: getConfirmationDescription(),
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={selectedData}
+            resourceType={T.Backups}
+          />
+        ),
+        confirmLabel: `${title}`.startsWith(T.Delete) ? T.Delete : title,
+        ...(`${title}`.startsWith(T.Delete) && {
+          confirmButtonProps: {
+            isDestructive: true,
+          },
+        }),
       },
       onSubmit,
     })
@@ -76,6 +91,7 @@ export const AggregatedView = ({
   const handleOpenDeleteForm = () =>
     handleConfirmAction({
       title: `${T.Delete} ${T.Backups}`,
+      description: T['resource.delete.confirmation'],
       onSubmit: async () => {
         await Promise.all(selectedData.map(({ ID }) => remove({ id: ID })))
         handleClose()
@@ -142,7 +158,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

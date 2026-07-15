@@ -22,42 +22,67 @@ import PropTypes from 'prop-types'
 import { Link as RouterLink, useHistory } from 'react-router-dom'
 import { useFunctionality } from '@FeaturesModule'
 import { Button } from '@modules/componentsv2/primitives/Buttons/Default'
+import { useTranslation } from '@ProvidersModule'
+
+const translateBreadcrumbLabel = (label, translate) => {
+  if (typeof label !== 'string') return label
+
+  const [section, ...resource] = label.split(' - ')
+
+  return [translate(section), ...resource].join(' - ')
+}
 
 /**
  * @param {object} params - Params
+ * @param {object[]} params.breadcrumbs - Breadcrumbs to render
  * @param {string} params.className - Classname override
- * @returns {Component} - Breadcrumb header
+ * @param {boolean} params.showHome - Whether to render home button
+ * @returns {Component} - Breadcrumb trail
  */
-export const Breadcrumbs = ({ className }) => {
-  const { breadcrumbs } = useFunctionality()
+export const BreadcrumbTrail = ({ breadcrumbs = [], className, showHome }) => {
   const history = useHistory()
   const theme = useTheme()
+  const { translate } = useTranslation()
 
   if (!breadcrumbs?.length) return null
 
   return (
     <Box className={className}>
-      <Button
-        iconOnly={<Home />}
-        type="transparent"
-        size="small"
-        data-cy="breadcrumb-home"
-        onClick={() => history.push('/')}
-        className={'header-home-button'}
-      />
+      {showHome && (
+        <>
+          <Button
+            iconOnly={<Home />}
+            type="transparent"
+            size="small"
+            data-cy="breadcrumb-home"
+            onClick={() => history.push('/')}
+            className={'header-home-button'}
+          />
 
-      <Divider orientation="vertical" flexItem className={'header-divider'} />
+          <Divider
+            orientation="vertical"
+            flexItem
+            className={'header-divider'}
+          />
+        </>
+      )}
 
       <MUIBreadcrumbs
         aria-label="breadcrumb"
         separator={
-          <NavArrowRight height={theme.scale[500]} width={theme.scale[500]} />
+          <NavArrowRight
+            color={theme.palette.icon.primary}
+            height={theme.scale[500]}
+            width={theme.scale[500]}
+          />
         }
         data-cy="breadcrumbs"
         className={'breadcrumb-links'}
       >
-        {breadcrumbs.map(({ label, path }, i) =>
-          path && i < breadcrumbs.length - 1 ? (
+        {breadcrumbs.map(({ label, path }, i) => {
+          const translatedLabel = translateBreadcrumbLabel(label, translate)
+
+          return path && i < breadcrumbs.length - 1 ? (
             <Link
               key={path}
               underline="hover"
@@ -65,7 +90,7 @@ export const Breadcrumbs = ({ className }) => {
               component={RouterLink}
               to={path}
             >
-              {label}
+              {translatedLabel}
             </Link>
           ) : (
             <Typography
@@ -74,12 +99,38 @@ export const Breadcrumbs = ({ className }) => {
               }`}
               key={label}
             >
-              {label}
+              {translatedLabel}
             </Typography>
           )
-        )}
+        })}
       </MUIBreadcrumbs>
     </Box>
+  )
+}
+
+BreadcrumbTrail.propTypes = {
+  breadcrumbs: PropTypes.arrayOf(
+    PropTypes.shape({
+      label: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
+      path: PropTypes.string,
+    })
+  ),
+  className: PropTypes.string,
+  showHome: PropTypes.bool,
+}
+
+BreadcrumbTrail.displayName = 'BreadcrumbTrail'
+
+/**
+ * @param {object} params - Params
+ * @param {string} params.className - Classname override
+ * @returns {Component} - Breadcrumb header
+ */
+export const Breadcrumbs = ({ className }) => {
+  const { breadcrumbs } = useFunctionality()
+
+  return (
+    <BreadcrumbTrail breadcrumbs={breadcrumbs} className={className} showHome />
   )
 }
 

@@ -18,11 +18,12 @@ import {
   Button,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
-  ToggleGroup,
 } from '@ComponentsV2Module'
-import { STYLE_BUTTONS, T } from '@ConstantsModule'
+import { RESOURCE_NAMES, STYLE_BUTTONS, T } from '@ConstantsModule'
 import { VdcAPI, useModalsApi } from '@FeaturesModule'
 import {
   getVdcClustersCount,
@@ -33,7 +34,7 @@ import {
 } from '@ModelsModule'
 import { Vdc } from '@ResourcesModule'
 import { Box } from '@mui/material'
-import { Cancel, RefreshDouble, Trash } from 'iconoir-react'
+import { Cancel, Trash } from 'iconoir-react'
 import PropTypes from 'prop-types'
 import { Component, useMemo } from 'react'
 
@@ -58,7 +59,6 @@ export const AggregatedView = ({
   handleClose,
 }) => {
   const { showModal } = useModalsApi()
-  const [refreshVdc, { isFetching }] = VdcAPI.useLazyGetVDCQuery()
   const [remove, { isLoading: isRemoving }] = VdcAPI.useRemoveVDCMutation()
 
   const selectedIds = useMemo(
@@ -80,16 +80,22 @@ export const AggregatedView = ({
     [selectedVdcs]
   )
 
-  const handleRefresh = async () =>
-    await Promise.all(selectedIds.map((id) => refreshVdc({ id })))
-
   const handleOpenDeleteForm = () =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title: [T.Delete, T.VDCs].filter(Boolean).join(' '),
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedIds.map((id) => ({ ID: id }))}
+            resourceType={T.VDCs}
+          />
+        ),
         confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(selectedIds.map((id) => remove({ id })))
@@ -97,7 +103,7 @@ export const AggregatedView = ({
       },
     })
 
-  const isMutating = isFetching || isRemoving
+  const isMutating = isRemoving
 
   return (
     <DetailsDrawer
@@ -115,6 +121,11 @@ export const AggregatedView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
+                <LabelButton
+                  selectedRows={selectedVdcs}
+                  resourceType={RESOURCE_NAMES.VDC}
+                  isDisabled={isMutating || !selectedIds.length}
+                />
                 <Button
                   type={STYLE_BUTTONS.TYPE.PRIMARY}
                   size="small"
@@ -125,24 +136,11 @@ export const AggregatedView = ({
                 >
                   {T.DeleteSelected}
                 </Button>
-
-                <ToggleGroup
-                  size="medium"
-                  options={[
-                    [
-                      {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        isDisabled: isMutating || !selectedIds.length,
-                      },
-                      {
-                        startIcon: <Cancel width="16px" height="16px" />,
-                        onClick: handleClose,
-                        value: 'close',
-                      },
-                    ],
-                  ]}
+                <Button
+                  type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                  size="small"
+                  iconOnly={<Cancel width="16px" height="16px" />}
+                  onClick={handleClose}
                 />
               </Box>
             ),

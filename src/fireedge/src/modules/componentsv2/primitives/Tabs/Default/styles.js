@@ -14,6 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
+import { getStyles as getButtonStyles } from '@modules/componentsv2/primitives/Buttons/Default/styles'
+
 const getTypeModifiers = ({ theme, type }) => {
   const modifiers = {
     default: {
@@ -74,10 +76,10 @@ const getTypeModifiers = ({ theme, type }) => {
 
         '&:hover': {
           borderRadius: `${theme.borderRadius.xlg}px ${theme.borderRadius.xlg}px 0 0`,
-          borderBottom: `${theme.borderWidth.md}px solid ${theme.palette.surface.actionHover2}`,
+          borderBottom: `${theme.borderWidth.md}px solid ${theme.palette.border.actionHover2}`,
 
-          bgcolor: 'surface.actionHover2',
-          color: 'text.actionHover2',
+          bgcolor: 'surface.actionHover3',
+          color: 'text.actionHover',
         },
 
         '&:focus-visible': {
@@ -134,10 +136,18 @@ export const getStyles = ({ theme, type }) => {
     theme,
     type,
   })
+  const scrollButtonStyles = getButtonStyles({
+    theme,
+    type: 'transparent',
+    iconOnly: true,
+    size: 'small',
+    isDestructive: false,
+  })
 
   const baseStyle = {
     width: '100%',
-    overflow: 'visible',
+    minWidth: 0,
+    overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',
     bgcolor: 'surface.primary',
@@ -164,7 +174,8 @@ export const getStyles = ({ theme, type }) => {
   const tabbar = {
     '& .tabbar': {
       width: '100%',
-      overflow: 'visible',
+      minWidth: 0,
+      overflow: 'hidden',
       display: 'flex',
       alignItems: 'center',
       minHeight: 'unset',
@@ -210,11 +221,25 @@ export const getStyles = ({ theme, type }) => {
         pointerEvents: 'none',
       },
     },
+    '& .tab-error .tab-starticon': {
+      color: 'icon.error',
+    },
   }
 
   const overrides = {
-    '& .MuiTabs-scroller, & .MuiTabs-fixed': {
-      overflow: 'visible !important',
+    '& .MuiTabs-scrollButtons': {
+      ...scrollButtonStyles,
+      marginInline: `${theme.scale[100]}px`,
+
+      '&.Mui-disabled': {
+        ...scrollButtonStyles['&.Mui-disabled'],
+        opacity: 1,
+      },
+    },
+
+    '& .MuiTabs-flexContainer': {
+      width: 'max-content',
+      minWidth: '100%',
     },
 
     '& .MuiTabs-indicator': {

@@ -17,6 +17,7 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   ResourceActionConfirmation,
   SummarySlot,
@@ -40,6 +41,7 @@ import {
 import { PATH, RESOURCE_NAMES, T, VN_ACTIONS } from '@ConstantsModule'
 import { VnAPI, useModalsApi, useViews } from '@FeaturesModule'
 import {
+  getLabelTags,
   getLeasesInfo,
   getTotalSecurityGroups,
   getVirtualNetworkState,
@@ -223,6 +225,7 @@ export const SingleView = ({
             resourceType={T.VirtualNetworks}
           />
         ),
+        confirmLabel: T.Lock,
       },
       onSubmit: handleLock,
     })
@@ -239,6 +242,7 @@ export const SingleView = ({
             resourceType={T.VirtualNetworks}
           />
         ),
+        confirmLabel: T.Unlock,
       },
       onSubmit: handleUnlock,
     })
@@ -255,6 +259,10 @@ export const SingleView = ({
             resourceType={T.VirtualNetworks}
           />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: vnet?.ID })
@@ -288,6 +296,7 @@ export const SingleView = ({
             isTitleEditDisabled: isActionsDisabled,
             title: vnet?.NAME,
             id: vnet?.ID,
+            tags: getLabelTags(vnet?.LABELS),
             labels: [
               [T.Owner, vnet?.UNAME],
               [T.Group, vnet?.GNAME],
@@ -325,12 +334,21 @@ export const SingleView = ({
                   size="medium"
                   options={[
                     [
+                      canReserve && {
+                        startIcon: <AddSquare width="16px" height="16px" />,
+                        onClick: handleReserveForm,
+                        value: 'reserve',
+                        tooltip: T.Reserve,
+                        isDisabled: isActionsDisabled || isLocked,
+                      },
+                    ].filter(Boolean),
+                    [
                       {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: handleRefresh,
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isActionsDisabled,
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [vnet],
+                          resourceType: RESOURCE_NAMES.VNET,
+                          isDisabled: isActionsDisabled,
+                        }),
                       },
                       canUpdate && {
                         startIcon: <Edit width="16px" height="16px" />,
@@ -339,12 +357,12 @@ export const SingleView = ({
                         tooltip: T.Update,
                         isDisabled: isActionsDisabled || isLocked,
                       },
-                      canReserve && {
-                        startIcon: <AddSquare width="16px" height="16px" />,
-                        onClick: handleReserveForm,
-                        value: 'reserve',
-                        tooltip: T.Reserve,
-                        isDisabled: isActionsDisabled || isLocked,
+                      {
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: handleRefresh,
+                        value: 'refresh',
+                        tooltip: T.Refresh,
+                        isDisabled: isActionsDisabled,
                       },
                     ].filter(Boolean),
                     [
@@ -363,6 +381,7 @@ export const SingleView = ({
                         onClick: handleDeleteForm,
                         value: 'delete',
                         tooltip: T.Delete,
+                        isDestructive: true,
                         isDisabled: isDeleteDisabled,
                       },
                       {

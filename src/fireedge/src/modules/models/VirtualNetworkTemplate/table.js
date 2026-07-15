@@ -13,18 +13,27 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { createTable, timeFromMilliseconds } from '@UtilsModule'
+import { createTable, getLockIcon, timeFromMilliseconds } from '@UtilsModule'
 import { VnTemplateAPI } from '@FeaturesModule'
 import { T } from '@ConstantsModule'
-import { StatusTag, Tag } from '@ComponentsV2Module'
+import { Tag } from '@ComponentsV2Module'
 import { createLabelColumn } from '@modules/models/labels'
+import { Box } from '@mui/material'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const VNTEMPLATE_COLUMNS = [
   { header: T.ID, id: 'id', accessorKey: 'ID', width: '5%' },
-  { header: T.Name, id: 'name', accessorKey: 'NAME' },
-  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
-  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
+  {
+    header: T.Name,
+    id: 'name',
+    accessorKey: 'NAME',
+    cell: ({ row }) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>{row.original?.NAME}</span>
+        {getLockIcon(row.original)}
+      </Box>
+    ),
+  },
   {
     header: T.Driver,
     id: 'driver',
@@ -36,17 +45,8 @@ export const VNTEMPLATE_COLUMNS = [
         '-'
       ),
   },
-  {
-    header: T.Locked,
-    id: 'locked',
-    accessorFn: (row) => (row?.LOCK ? T.Locked : ''),
-    cell: ({ row }) =>
-      row.original?.LOCK ? (
-        <StatusTag statusColor="information" statusName={T.Locked} />
-      ) : (
-        '-'
-      ),
-  },
+  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
+  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   {
     header: T.RegistrationTime,
     id: 'time',
@@ -60,5 +60,6 @@ export const VNTEMPLATE_COLUMNS = [
 
 export const vntemplateTable = createTable(
   VNTEMPLATE_COLUMNS,
-  VnTemplateAPI.useGetVNTemplatesQuery
+  VnTemplateAPI.useGetVNTemplatesQuery,
+  { dataCy: 'vnet-templates' }
 )

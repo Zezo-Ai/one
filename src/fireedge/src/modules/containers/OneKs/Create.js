@@ -17,14 +17,10 @@ import { ReactElement } from 'react'
 import { generatePath, useHistory, useLocation } from 'react-router-dom'
 import { OneKsAPI, useGeneralApi } from '@FeaturesModule'
 
-import {
-  DefaultFormStepper,
-  OneKs,
-  SkeletonStepsForm,
-  TranslateProvider,
-} from '@ResourcesModule'
-import { T, ONEKS_OPERATIONS, PATH } from '@ConstantsModule'
+import { DefaultFormStepper, OneKs, SkeletonStepsForm } from '@ResourcesModule'
+
 import { createFieldsFromOneKsOdsUserInputs } from '@UtilsModule'
+import { T, ONEKS_OPERATIONS, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation form for a kubernetes cluster.
@@ -70,7 +66,7 @@ export function CreateOneKsCluster() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {families ? (
         <OneKs.Forms.CreateOneKsClusterForm
           initialValues={initialValues}
@@ -86,6 +82,6 @@ export function CreateOneKsCluster() {
       ) : (
         <SkeletonStepsForm />
       )}
-    </TranslateProvider>
+    </>
   )
 }

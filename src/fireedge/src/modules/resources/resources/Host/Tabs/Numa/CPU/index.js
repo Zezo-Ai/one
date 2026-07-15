@@ -16,7 +16,7 @@
 import { ReactElement } from 'react'
 import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   T,
   CPU_STATUS,
@@ -37,6 +37,7 @@ import { Text } from '@ComponentsV2Module'
  * @returns {ReactElement} Information tab
  */
 const NumaCoreCPU = ({ core, status }) => {
+  const { translate } = useTranslation()
   // Generates unique colors for VM id, uses grey bg for isolated/free.
   const history = useHistory()
   const isKnownStatus = !!CPU_STATUS?.[status]
@@ -56,7 +57,7 @@ const NumaCoreCPU = ({ core, status }) => {
         component="div"
         variant={TEXT_VARIANTS.CAPTION}
         weight={TEXT_WEIGHTS.SEMIBOLD}
-        value={Tr(T.NumaNodeCPUItem, core)}
+        value={translate(T.NumaNodeCPUItem, core)}
         noWrap
       />
       <Text

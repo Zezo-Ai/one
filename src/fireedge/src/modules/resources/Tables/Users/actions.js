@@ -26,7 +26,7 @@ import {
 } from '@modules/resources/Tables/Enhanced/Utils'
 
 import { RESOURCE_NAMES, T, USER_ACTIONS, PATH } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 const { useDisableUserMutation, useEnableUserMutation, useRemoveUserMutation } =
   UserAPI
 

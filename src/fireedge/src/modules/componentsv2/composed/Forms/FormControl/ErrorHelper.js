@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { memo } from 'react'
+import { isValidElement, memo } from 'react'
 import PropTypes from 'prop-types'
 import { Stack, Typography, styled } from '@mui/material'
 import { WarningCircle as WarningIcon } from 'iconoir-react'
+import { Translate } from '@ProvidersModule'
 
 const ErrorTypo = styled(Typography)(({ theme }) => ({
   ...theme.typography.body1,
@@ -24,17 +25,37 @@ const ErrorTypo = styled(Typography)(({ theme }) => ({
   overflowWrap: 'anywhere',
 }))
 
-export const ErrorHelper = memo(({ label, children, ...rest }) => (
+const getTranslateProps = (label) => {
+  const ensuredLabel = Array.isArray(label) && label[0]?.word ? label[0] : label
+
+  if (ensuredLabel?.word) return { ...ensuredLabel }
+
+  return { word: ensuredLabel }
+}
+
+const renderLabel = (label) => {
+  if (!label && label !== 0) return null
+  if (isValidElement(label)) return label
+  if (label?.message) return renderLabel(label.message)
+
+  return <Translate {...getTranslateProps(label)} />
+}
+
+export const ErrorHelper = memo(({ label, children, sx, ...rest }) => (
   <Stack
     component="span"
-    color="error.dark"
+    color="text.error"
     direction="row"
     alignItems="center"
+    sx={[
+      (theme) => ({ gap: `${theme.scale[100]}px` }),
+      ...(Array.isArray(sx) ? sx : [sx]),
+    ]}
     {...rest}
   >
-    <WarningIcon />
+    <WarningIcon width="16px" height="16px" strokeWidth={1.6} />
     <ErrorTypo component="span" data-cy="error-text">
-      {!!label && label}
+      {renderLabel(label)}
       {!!children && children}
     </ErrorTypo>
   </Stack>
@@ -42,6 +63,7 @@ export const ErrorHelper = memo(({ label, children, ...rest }) => (
 
 ErrorHelper.propTypes = {
   children: PropTypes.any,
+  sx: PropTypes.oneOfType([PropTypes.object, PropTypes.func, PropTypes.array]),
   label: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.node,

@@ -21,6 +21,7 @@ import { Field, getValidationFromFields } from '@UtilsModule'
 import { ObjectSchema, array, object, string } from 'yup'
 
 const getDatastoreModel = (zoneId) => ({
+  dataCy: 'datastores',
   columns: datastoreTable.columns,
   useData: (_args, options) =>
     datastoreTable.useData({ zone: zoneId }, options),

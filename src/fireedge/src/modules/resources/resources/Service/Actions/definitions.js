@@ -53,15 +53,23 @@ export default {
   [SERVICE_ACTION_ENUM.RECOVER]: {
     title: T.Recover,
     useMutation: ServiceAPI.useRecoverServiceMutation,
+    description: T['resource.recover.confirmation'],
+    confirmLabel: T.Recover,
   },
   [SERVICE_ACTION_ENUM.RECOVER_DELETE]: {
     title: T.RecoverDelete,
     useMutation: ServiceAPI.useRecoverServiceMutation,
+    isDestructive: true,
+    description: T['resource.recoverDelete.confirmation'],
+    confirmLabel: T.Delete,
     params: { delete: true },
   },
   [SERVICE_ACTION_ENUM.DELETE]: {
     title: T.Delete,
     useMutation: ServiceAPI.useRemoveServiceMutation,
+    isDestructive: true,
+    description: T['resource.delete.confirmation'],
+    confirmLabel: T.Delete,
   },
   [SERVICE_ACTION_ENUM.ADD_ROLE]: {
     title: T.AddRole,
@@ -143,10 +151,12 @@ export default {
   },
   [ROLE_ACTION_ENUM.TERMINATE]: {
     useMutation: ServiceAPI.useServiceRoleActionMutation,
+    isDestructive: true,
     params: { perform: ROLE_ACTIONS.TERMINATE },
   },
   [ROLE_ACTION_ENUM.TERMINATE_HARD]: {
     useMutation: ServiceAPI.useServiceRoleActionMutation,
+    isDestructive: true,
     params: { perform: ROLE_ACTIONS.TERMINATE_HARD },
   },
   [ROLE_ACTION_ENUM.UNDEPLOY]: {

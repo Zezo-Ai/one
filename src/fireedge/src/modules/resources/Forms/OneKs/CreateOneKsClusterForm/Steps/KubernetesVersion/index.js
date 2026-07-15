@@ -20,11 +20,12 @@ import { useMemo } from 'react'
 import { Grid, useTheme, Alert } from '@mui/material'
 import styles from '@modules/resources/Forms/OneKs/CreateOneKsClusterForm/Steps/styles'
 import { FormWithSchema } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 export const STEP_ID = 'kubernetes_version'
 
 const Content = (families) => {
+  const { translate } = useTranslation()
   // Theme
   const theme = useTheme()
   // Style classes
@@ -33,7 +34,7 @@ const Content = (families) => {
   return (
     <>
       <Alert severity="info" variant="outlined" className={classes.groupInfo}>
-        {Tr(T['oneks.form.create.kubernetes_version.info'])}
+        {translate(T['oneks.form.create.kubernetes_version.info'])}
       </Alert>
       <Grid container mt={2} className={classes.container}>
         <Grid item xs={12}>

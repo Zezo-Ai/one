@@ -22,8 +22,8 @@ import { useFormContext, useController } from 'react-hook-form'
 
 import { ErrorHelper, Tooltip } from '@modules/resources/FormControl'
 import { SubmitButton } from '@ComponentsV2Module'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
-import { generateKey } from '@UtilsModule'
+import { isTranslationInput, generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const HiddenInput = styled('input')({ display: 'none' })
 
@@ -49,6 +49,7 @@ const FileController = memo(
     readOnly = false,
     onConditionChange,
   }) => {
+    const { translate } = useTranslation()
     const { setValue, setError, clearErrors, watch } = useFormContext()
 
     const {
@@ -137,7 +138,7 @@ const FileController = memo(
             data-cy={`${cy}-button`}
             isSubmitting={isLoading}
             iconOnly={success ? <CheckIcon /> : <FileIcon />}
-            label={labelCanBeTranslated(label) ? Tr(label) : label}
+            label={isTranslationInput(label) ? translate(label) : label}
             tooltip={tooltip && <Tooltip title={tooltip} />}
           />
         </Label>

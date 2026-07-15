@@ -42,7 +42,7 @@ export const useDialogStyles = ({
     border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
     borderRadius: `${theme.borderRadius.xlg}px`,
     padding: `${theme.scale[600]}px`,
-    gap: `${theme.scale[400]}px`,
+    gap: 0,
     minWidth: dialogMinWidth,
     maxWidth: dialogMaxWidth,
     ...(dialogWidth && { width: dialogWidth }),
@@ -58,6 +58,7 @@ export const useDialogStyles = ({
  */
 export const useHeaderStyles = ({ theme }) => ({
   padding: 0,
+  marginBottom: `${theme.scale[500]}px`,
   color: 'text.headings',
   fontSize: {
     xs: theme.fontSize.heading.h5.mobile,

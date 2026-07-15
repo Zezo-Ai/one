@@ -2153,6 +2153,53 @@ patches:
             \   provision:\n      actions:\n        add: true\n        delete: true\n  vnet:\n    enabled: true\n    provision:\n
             \     actions:\n        add: true\n        delete: true\n        delete_ar: true\n        \n  datastore:\n    enabled:
             true\n  drs:\n    enabled: true\n  events:\n    enabled: true  \n  logs:\n    enabled: true  \n"
+    "/etc/one/fireedge/sunstone/views/admin/dashboard-tab.yaml":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        content: |-
+            # This file configures the cards available in the dashboard for the admin view.
+            #
+            # Cards are rendered by ascending order. Supported sizes are:
+            # quarter, third, half, full, wide and narrow.
+            # The to option enables navigation for the card or its resource rows.
+
+            resource_name: 'DASHBOARD'
+
+            cards:
+              - id: virtual-machines
+                order: 10
+                size: quarter
+                to: true
+              - id: hosts-summary
+                order: 20
+                size: quarter
+                to: true
+              - id: virtual-networks
+                order: 30
+                size: quarter
+                to: true
+              - id: images
+                order: 40
+                size: quarter
+                to: true
+              - id: cpu-chart
+                order: 50
+                size: half
+                to: false
+              - id: memory-chart
+                order: 60
+                size: half
+                to: false
+              - id: cluster-capacity
+                order: 70
+                size: wide
+                to: false
+              - id: system
+                order: 80
+                size: narrow
+                to: true
     "/etc/one/fireedge/sunstone/views/admin/datastore-tab.yaml":
         class: Yaml
         owner: root
@@ -3900,23 +3947,27 @@ patches:
         group: oneadmin
         mode: '0640'
         content: |-
-            # This file describes the information and actions available in the cloud view dashboard
+            # This file configures the cards available in the dashboard for the cloud view.
+            #
+            # Cards are rendered by ascending order. Supported sizes are:
+            # quarter, third, half, full, wide and narrow.
+            # The to option enables navigation for the card or its resource rows.
 
-            # Resource
+            resource_name: 'DASHBOARD'
 
-            resource_name: "DASHBOARD"
-
-            actions:
-              settings: true
-              instantiate: true
-
-            graphs:
-              cpu: true
-              memory: true
-              disks: true
-              networks: true
-              host-cpu: true
-              host-memory: true
+            cards:
+              - id: virtual-machines
+                order: 10
+                size: full
+                to: true
+              - id: host-cpu-chart
+                order: 20
+                size: half
+                to: false
+              - id: host-memory-chart
+                order: 30
+                size: half
+                to: false
     "/etc/one/fireedge/sunstone/views/cloud/marketplace-app-tab.yaml":
         class: Yaml
         owner: root
@@ -4349,6 +4400,45 @@ patches:
                   not_on:
                     - lxc
                 backup: true
+    "/etc/one/fireedge/sunstone/views/groupadmin/dashboard-tab.yaml":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        content: |-
+            # This file configures the cards available in the dashboard for the groupadmin view.
+            #
+            # Cards are rendered by ascending order. Supported sizes are:
+            # quarter, third, half, full, wide and narrow.
+            # The to option enables navigation for the card or its resource rows.
+
+            resource_name: 'DASHBOARD'
+
+            cards:
+              - id: virtual-machines
+                order: 10
+                size: third
+                to: true
+              - id: virtual-networks
+                order: 30
+                size: third
+                to: true
+              - id: images
+                order: 40
+                size: third
+                to: true
+              - id: cpu-chart
+                order: 50
+                size: half
+                to: false
+              - id: memory-chart
+                order: 60
+                size: half
+                to: false
+              - id: system
+                order: 80
+                size: full
+                to: true
     "/etc/one/fireedge/sunstone/views/groupadmin/backup-tab.yaml":
         class: Yaml
         owner: root
@@ -5482,6 +5572,41 @@ patches:
             dialogs:
                deploy_dialog:
                create_dialog:
+    "/etc/one/fireedge/sunstone/views/user/dashboard-tab.yaml":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        content: |-
+            # This file configures the cards available in the dashboard for the user view.
+            #
+            # Cards are rendered by ascending order. Supported sizes are:
+            # quarter, third, half, full, wide and narrow.
+            # The to option enables navigation for the card or its resource rows.
+
+            resource_name: 'DASHBOARD'
+
+            cards:
+              - id: virtual-machines
+                order: 10
+                size: third
+                to: true
+              - id: virtual-networks
+                order: 30
+                size: third
+                to: true
+              - id: images
+                order: 40
+                size: third
+                to: true
+              - id: cpu-chart
+                order: 50
+                size: half
+                to: false
+              - id: memory-chart
+                order: 60
+                size: half
+                to: false
     "/etc/one/fireedge/sunstone/views/user/backup-tab.yaml":
         class: Yaml
         owner: root

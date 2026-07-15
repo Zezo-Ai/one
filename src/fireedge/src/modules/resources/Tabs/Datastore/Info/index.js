@@ -25,8 +25,6 @@ import {
 } from '@modules/resources/Tabs/Common'
 import Information from '@modules/resources/Tabs/Datastore/Info/information'
 
-import { Tr } from '@modules/resources/HOC'
-import { T } from '@ConstantsModule'
 import {
   getActionsAvailable,
   filterAttributes,
@@ -34,6 +32,8 @@ import {
   cloneObject,
   set,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { T } from '@ConstantsModule'
 
 /**
  * Renders mainly information tab.
@@ -44,6 +44,7 @@ import {
  * @returns {ReactElement} Information tab
  */
 const DatastoreInfoTab = ({ tabProps = {}, id }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     permissions_panel: permissionsPanel,
@@ -130,7 +131,7 @@ const DatastoreInfoTab = ({ tabProps = {}, id }) => {
           {...ATTRIBUTE_FUNCTION}
           attributes={attributes}
           actions={getActions(attributesPanel?.actions)}
-          title={Tr(T.Attributes)}
+          title={translate(T.Attributes)}
         />
       )}
     </Stack>

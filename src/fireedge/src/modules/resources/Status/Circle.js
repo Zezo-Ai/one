@@ -18,7 +18,7 @@ import PropTypes from 'prop-types'
 
 import { SvgIcon, Tooltip, Typography } from '@mui/material'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC/Translate'
+import { useTranslation } from '@ProvidersModule'
 
 // ----------------------------------------
 // Circle SVG
@@ -54,14 +54,16 @@ Circle.displayName = 'Circle'
 // ----------------------------------------
 
 const StatusCircle = memo(
-  ({ color, tooltip, size = 12 }) =>
-    tooltip ? (
+  ({ color, tooltip, size = 12 }) => {
+    const { translate } = useTranslation()
+
+    return tooltip ? (
       <Tooltip
         arrow
         placement="right-end"
         title={
           <Typography variant="subtitle2">
-            {Tr(T[tooltip] ?? tooltip)}
+            {translate(T[tooltip] ?? tooltip)}
           </Typography>
         }
       >
@@ -69,7 +71,8 @@ const StatusCircle = memo(
       </Tooltip>
     ) : (
       <Circle color={color} size={size} />
-    ),
+    )
+  },
   (prev, next) => prev.color === next.color && prev.tooltip === next.tooltip
 )
 

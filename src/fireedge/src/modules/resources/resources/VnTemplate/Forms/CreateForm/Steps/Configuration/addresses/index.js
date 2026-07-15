@@ -104,8 +104,11 @@ const AddressesContent = ({ oneConfig, adminGroup }) => {
             resourceType={T.AddressRanges}
           />
         ),
-        confirmLabel: T.Accept,
+        confirmLabel: T.Delete,
         cancelLabel: T.Cancel,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: () => remove(index),
     })
@@ -173,6 +176,7 @@ const AddressesContent = ({ oneConfig, adminGroup }) => {
                     },
                     {
                       title: T.Delete,
+                      isDestructive: true,
                       onClick: () => handleOpenRemove(row.original, index),
                     },
                   ],

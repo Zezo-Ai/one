@@ -16,20 +16,22 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   SummarySlot,
   TabSlot,
   ToggleGroup,
   ButtonGroup,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
 import { Component } from 'react'
-import { T, PATH } from '@ConstantsModule'
+import { RESOURCE_NAMES, T, PATH } from '@ConstantsModule'
 import { Box, useTheme } from '@mui/material'
 import PropTypes from 'prop-types'
 import { RefreshDouble, Edit, Cancel, Trash, Lock, NoLock } from 'iconoir-react'
 import { useHistory } from 'react-router'
 import { VmGroupAPI, useModalsApi } from '@FeaturesModule'
-import { vmgroupVmTable } from '@ModelsModule'
+import { getLabelTags, vmgroupVmTable } from '@ModelsModule'
 import { VmGroup } from '@ResourcesModule'
 
 /**
@@ -85,7 +87,17 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.VMGroup}`,
-        description: T['template.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedVmGroup}
+            resourceType={T.VMGroups}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: selectedVmGroup?.ID })
@@ -97,13 +109,39 @@ export const SingleView = ({
     await rename({ id: selectedVmGroup?.ID, name: newName })
   }
 
-  const handleLock = async () => {
-    await lock({ id: selectedVmGroup?.ID })
-  }
+  const handleLock = () =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Lock,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.lock.confirmation']}
+            resources={selectedVmGroup}
+            resourceType={T.VMGroups}
+          />
+        ),
+        confirmLabel: T.Lock,
+      },
+      onSubmit: async () => await lock({ id: selectedVmGroup?.ID }),
+    })
 
-  const handleUnlock = async () => {
-    await unlock({ id: selectedVmGroup?.ID })
-  }
+  const handleUnlock = () =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Unlock,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.unlock.confirmation']}
+            resources={selectedVmGroup}
+            resourceType={T.VMGroups}
+          />
+        ),
+        confirmLabel: T.Unlock,
+      },
+      onSubmit: async () => await unlock({ id: selectedVmGroup?.ID }),
+    })
 
   const handleEdit = () => {
     history.push(PATH.TEMPLATE.VMGROUP.CREATE, selectedVmGroup)
@@ -140,6 +178,7 @@ export const SingleView = ({
             isTitleEditDisabled: isRenaming,
             title: selectedVmGroup?.NAME,
             id: selectedVmGroup?.ID,
+            tags: getLabelTags(selectedVmGroup?.LABELS),
             labels: [
               [T.Owner, selectedVmGroup?.UNAME],
               [T.Group, selectedVmGroup?.GNAME],
@@ -174,18 +213,24 @@ export const SingleView = ({
                   options={[
                     [
                       {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: () =>
-                          refreshVmGroup({ id: selectedVmGroup?.ID }),
-                        value: 'refresh',
-                        isDisabled: isActionsDisabled,
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [selectedVmGroup],
+                          resourceType: RESOURCE_NAMES.VM_GROUP,
+                          isDisabled: isActionsDisabled,
+                        }),
                       },
-
                       {
                         startIcon: <Edit width="16px" height="16px" />,
                         onClick: handleEdit,
                         value: 'edit',
                         isDisabled: templateIsLocked || isActionsDisabled,
+                      },
+                      {
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: () =>
+                          refreshVmGroup({ id: selectedVmGroup?.ID }),
+                        value: 'refresh',
+                        isDisabled: isActionsDisabled,
                       },
                     ],
 

@@ -14,25 +14,32 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { createTable } from '@UtilsModule'
+import { createTable, getLockIcon } from '@UtilsModule'
 import { VrAPI } from '@FeaturesModule'
-import { StatusTag } from '@ComponentsV2Module'
 import { T } from '@ConstantsModule'
 import {
-  getVirtualRouterLocked,
   getVirtualRouterTotalNics,
   getVirtualRouterTotalVms,
 } from '@modules/models/VirtualRouter/general'
 import { createLabelColumn } from '@modules/models/labels'
+import { Box } from '@mui/material'
 
 /* eslint-disable jsdoc/require-jsdoc */
 export const VR_COLUMNS = [
   { header: T.ID, id: 'id', accessorKey: 'ID', width: '5%' },
-  { header: T.Name, id: 'name', accessorKey: 'NAME' },
-  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
-  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   {
-    header: `${T.Template} ${T.ID}`,
+    header: T.Name,
+    id: 'name',
+    accessorKey: 'NAME',
+    cell: ({ row }) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>{row.original?.NAME}</span>
+        {getLockIcon(row.original)}
+      </Box>
+    ),
+  },
+  {
+    header: T.TemplateID,
     id: 'template',
     accessorKey: 'TEMPLATE_ID',
   },
@@ -42,22 +49,15 @@ export const VR_COLUMNS = [
     accessorFn: getVirtualRouterTotalVms,
   },
   {
-    header: T.NIC,
+    header: T.NICs,
     id: 'nics',
     accessorFn: getVirtualRouterTotalNics,
   },
-  {
-    header: T.Locked,
-    id: 'locked',
-    accessorFn: getVirtualRouterLocked,
-    cell: ({ row }) =>
-      row.original?.LOCK ? (
-        <StatusTag statusColor="information" statusName={T.Locked} />
-      ) : (
-        '-'
-      ),
-  },
+  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
+  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   createLabelColumn(),
 ]
 
-export const vrTable = createTable(VR_COLUMNS, VrAPI.useGetVrsQuery)
+export const vrTable = createTable(VR_COLUMNS, VrAPI.useGetVrsQuery, {
+  dataCy: 'vrs',
+})

@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 import PropTypes from 'prop-types'
 import { ReactElement, useMemo } from 'react'
-import { generatePath, useHistory } from 'react-router-dom'
 
 import { GroupAPI, UserAPI, useGeneralApi } from '@FeaturesModule'
 import { getActionsAvailable } from '@UtilsModule'
@@ -23,7 +22,7 @@ import { getGroupQuotaUsage } from '@ModelsModule'
 
 import { AddToGroup, ChangePrimaryGroup, RemoveFromGroup } from './Action'
 
-import { T, USER_ACTIONS, PATH } from '@ConstantsModule'
+import { RESOURCE_NAMES, T, USER_ACTIONS } from '@ConstantsModule'
 import { LoadingDisplay } from '@modules/resources/LoadingState'
 import { UserGroupsTab, Table } from '@ComponentsV2Module'
 import {
@@ -90,8 +89,6 @@ const groupColumns = [
  * @returns {ReactElement} Information tab
  */
 const GroupsInfoTab = ({ tabProps: { actions } = {}, id: userId }) => {
-  const path = PATH.SYSTEM.GROUPS.DETAIL
-  const history = useHistory()
   const { enqueueSuccess } = useGeneralApi()
   const {
     data: groups = [],
@@ -115,12 +112,6 @@ const GroupsInfoTab = ({ tabProps: { actions } = {}, id: userId }) => {
     isLoadingGroups || isFetchingGroups || isLoadingUser || isFetchingUser
 
   const actionsAvailable = getActionsAvailable(actions)
-
-  const handleRowClick = (rowId) => {
-    if (rowId === undefined) return
-
-    history.push(generatePath(path, { id: String(rowId) }))
-  }
 
   const primaryGroupId = user?.GID ?? USER_GROUPS?.[0]
 
@@ -243,11 +234,13 @@ const GroupsInfoTab = ({ tabProps: { actions } = {}, id: userId }) => {
         <Table
           data={primaryGroupRows}
           columns={groupColumns}
+          dataCy="primary-group"
           size="medium"
           isRowsSelectable
           isDisablePagination
           getRowId={(row) => String(row.ID)}
-          onRowClick={({ ID }) => handleRowClick(ID)}
+          openRowDetailsOnClick
+          rowDetailsResourceId={RESOURCE_NAMES.GROUP}
         />
       }
       secondaryGroups={[
@@ -257,11 +250,13 @@ const GroupsInfoTab = ({ tabProps: { actions } = {}, id: userId }) => {
             <Table
               data={secondaryGroupRows}
               columns={groupColumns}
+              dataCy="secondary-group"
               size="medium"
               isRowsSelectable
               isDisablePagination
               getRowId={(row) => String(row.ID)}
-              onRowClick={({ ID }) => handleRowClick(ID)}
+              openRowDetailsOnClick
+              rowDetailsResourceId={RESOURCE_NAMES.GROUP}
             />
           ),
         },

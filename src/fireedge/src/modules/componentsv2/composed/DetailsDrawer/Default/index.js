@@ -14,10 +14,116 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { Component, forwardRef } from 'react'
+import { Component, forwardRef, useEffect, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { Box, Drawer, useTheme } from '@mui/material'
+import { NavArrowLeft, NavArrowRight } from 'iconoir-react'
+import { useLocation } from 'react-router-dom'
+import { useResourceSingleViewContext } from '@ProvidersModule'
 import { getStyles } from '@modules/componentsv2/composed/DetailsDrawer/Default/styles'
+import { getResourceIcon } from '@modules/componentsv2/composed/DetailsDrawer/resourceIcons'
+import { useDetailsDrawerStack } from '@modules/componentsv2/composed/DetailsDrawer/Stack'
+import { BreadcrumbTrail } from '@modules/componentsv2/primitives/Header/Default/breadcrumbs'
+
+const hasValue = (value) =>
+  value !== undefined && value !== null && value !== ''
+
+/**
+ * @param {string} pathname - Current path
+ * @returns {string} Current resource route id
+ */
+const getRouteResource = (pathname) =>
+  String(pathname ?? '')
+    .split('/')
+    .filter(Boolean)[0]
+
+/**
+ * @param {object} entry - Stack entry
+ * @returns {string|number} Entry resource id
+ */
+const getEntryId = (entry = {}) =>
+  hasValue(entry?.data?.ID) ? entry.data.ID : entry?.data?.id
+
+/**
+ * @param {object} entry - Stack entry
+ * @param {string} resource - Resource id
+ * @param {string|number} id - Resource row id
+ * @returns {boolean} True when entry matches resource and id
+ */
+const isEntry = (entry, resource, id) =>
+  String(entry?.resource) === String(resource) &&
+  hasValue(id) &&
+  String(getEntryId(entry)) === String(id)
+
+/**
+ * @param {Array} slots - Drawer slots
+ * @returns {object} Base stack data
+ */
+const getBaseData = (slots = []) => {
+  const { id, title } = slots?.[0]?.[1] ?? {}
+
+  return { ID: id, NAME: title }
+}
+
+/**
+ * Renders details drawer slots.
+ *
+ * @param {Array} slots - Component slots
+ * @returns {Component} Slots content
+ */
+const renderSlots = (slots) => (
+  <Box className="detailsdrawer-slots">
+    {slots?.map(([Slot, slotProps = {}, containerSx = {}], idx) => (
+      <Box
+        key={idx}
+        className={[
+          'detailsdrawer-slot',
+          `detailsdrawer-slot--${idx}`,
+          Slot.displayName && `detailsdrawer-slot--${Slot.displayName}`,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        sx={[...(Array.isArray(containerSx) ? containerSx : [containerSx])]}
+      >
+        <Slot {...slotProps} />
+      </Box>
+    ))}
+  </Box>
+)
+
+/**
+ * Stack arrow button.
+ *
+ * @param {object} root0 - Params
+ * @param {string} root0.direction - Navigation direction
+ * @param {boolean} root0.disabled - Whether button is disabled
+ * @param {Function} root0.onClick - Click handler
+ * @returns {Component} Stack arrow button
+ */
+const StackArrow = ({ direction, disabled, onClick }) => {
+  const Icon = direction === 'back' ? NavArrowLeft : NavArrowRight
+  const label = direction === 'back' ? 'Previous drawer' : 'Next drawer'
+
+  return (
+    <Box
+      component="button"
+      type="button"
+      className="detailsdrawer-stack-arrow"
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+    >
+      <Icon width="16px" height="16px" />
+    </Box>
+  )
+}
+
+StackArrow.propTypes = {
+  direction: PropTypes.oneOf(['back', 'forward']),
+  disabled: PropTypes.bool,
+  onClick: PropTypes.func,
+}
 
 /**
  * DetailsDrawer component.
@@ -29,30 +135,171 @@ import { getStyles } from '@modules/componentsv2/composed/DetailsDrawer/Default/
 export const DetailsDrawer = forwardRef(
   ({ isOpen = false, slots = [] }, ref) => {
     const theme = useTheme()
+    const { pathname } = useLocation()
+    const drawerStack = useDetailsDrawerStack()
+    const {
+      clearResourceSingleViewBase,
+      goBackResourceSingleView,
+      goForwardResourceSingleView,
+      goToResourceSingleView,
+      registerResourceSingleViewBase,
+      stack: resourceStack = {},
+    } = useResourceSingleViewContext()
+    const routeResource = getRouteResource(pathname)
+    const { ID: baseId, NAME: baseName } = getBaseData(slots)
+    const baseData = useMemo(
+      () => ({ ID: baseId, NAME: baseName }),
+      [baseId, baseName]
+    )
+    const baseIdentity = useMemo(
+      () =>
+        routeResource && hasValue(baseData.ID)
+          ? `${routeResource}:${baseData.ID}`
+          : '',
+      [baseData.ID, routeResource]
+    )
+    const isStackDrawer = drawerStack.entries.length > 0
+
+    useEffect(() => {
+      if (
+        isStackDrawer ||
+        !isOpen ||
+        !routeResource ||
+        !hasValue(baseData.ID)
+      ) {
+        return undefined
+      }
+
+      const isRegistered = registerResourceSingleViewBase(
+        routeResource,
+        baseData
+      )
+
+      if (!isRegistered) return undefined
+    }, [
+      baseData,
+      isOpen,
+      isStackDrawer,
+      registerResourceSingleViewBase,
+      routeResource,
+    ])
+
+    useEffect(() => {
+      if (isStackDrawer || !isOpen || !baseIdentity) {
+        return undefined
+      }
+
+      return () => {
+        clearResourceSingleViewBase(routeResource, { ID: baseData.ID })
+      }
+    }, [
+      baseData.ID,
+      baseIdentity,
+      clearResourceSingleViewBase,
+      isOpen,
+      isStackDrawer,
+      routeResource,
+    ])
+
+    const isBaseStackDrawer =
+      !isStackDrawer &&
+      isOpen &&
+      resourceStack.entries?.length > 1 &&
+      isEntry(resourceStack.entries[0], routeResource, baseData.ID)
+    const stack = isBaseStackDrawer
+      ? {
+          ...resourceStack,
+          index: 0,
+          isActive: resourceStack.activeIndex === 0,
+          breadcrumbs: resourceStack.entries[0]?.breadcrumbs ?? [],
+          goBack: goBackResourceSingleView,
+          goForward: goForwardResourceSingleView,
+          goTo: goToResourceSingleView,
+        }
+      : drawerStack
+    const {
+      entries = [],
+      activeIndex = 0,
+      index = 0,
+      isActive = true,
+      breadcrumbs = [],
+      goBack,
+      goForward,
+      goTo,
+    } = stack
+    const hasStack = entries.length > 1
+    const showStackChrome = hasStack && isActive
+    const stackEntry = entries[index]
+    const StackIcon = getResourceIcon(stackEntry?.resource)
+    const stackTitle = stackEntry?.title
+    const showStackTab = hasStack && !isActive && hasValue(stackTitle)
 
     return (
       <Drawer
         hideBackdrop={true}
         anchor={'right'}
-        sx={{ ...getStyles({ theme }) }}
+        sx={{ ...getStyles({ theme, stack: { ...stack, hasStack } }) }}
         open={isOpen}
+        ModalProps={{
+          disableAutoFocus: hasStack && !isActive,
+          disableEnforceFocus: hasStack && !isActive,
+          disableRestoreFocus: hasStack && !isActive,
+        }}
         PaperProps={{
-          className: 'detailsdrawer-paper',
+          className: [
+            'detailsdrawer-paper',
+            hasStack && 'detailsdrawer-paper--stacked',
+            hasStack && isActive && 'detailsdrawer-paper--active',
+            hasStack && !isActive && 'detailsdrawer-paper--background',
+          ]
+            .filter(Boolean)
+            .join(' '),
+          'data-stack-index': index,
         }}
         ref={ref}
       >
-        <Box className="detailsdrawer-slots">
-          {slots?.map(([Slot, slotProps = {}, containerSx = {}], idx) => (
-            <Box
-              key={idx}
-              className={`detailsdrawer-slot detailsdrawer-slot--${idx}`}
-              sx={[
-                ...(Array.isArray(containerSx) ? containerSx : [containerSx]),
-              ]}
-            >
-              <Slot {...slotProps} />
+        {showStackTab && (
+          <Box
+            component="button"
+            type="button"
+            className="detailsdrawer-stack-tab"
+            title={String(stackTitle)}
+            aria-label={`Open ${stackTitle}`}
+            onClick={() => goTo?.(index)}
+          >
+            <Box component="span" className="detailsdrawer-stack-tab-label">
+              <StackIcon className="detailsdrawer-stack-tab-icon" />
+              <Box component="span" className="detailsdrawer-stack-tab-text">
+                {stackTitle}
+              </Box>
             </Box>
-          ))}
+          </Box>
+        )}
+        <Box className="detailsdrawer-stack-content">
+          {showStackChrome && (
+            <Box className="detailsdrawer-stack-header">
+              <Box className="detailsdrawer-stack-nav">
+                <StackArrow
+                  direction="back"
+                  disabled={activeIndex < 1}
+                  onClick={goBack}
+                />
+                <StackArrow
+                  direction="forward"
+                  disabled={activeIndex >= entries.length - 1}
+                  onClick={goForward}
+                />
+                <Box className="detailsdrawer-stack-count">
+                  {activeIndex + 1}/{entries.length}
+                </Box>
+              </Box>
+              <BreadcrumbTrail
+                breadcrumbs={breadcrumbs}
+                className="detailsdrawer-stack-breadcrumbs"
+              />
+            </Box>
+          )}
+          {renderSlots(slots)}
         </Box>
       </Drawer>
     )

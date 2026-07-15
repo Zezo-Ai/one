@@ -19,7 +19,7 @@ import { useHistory } from 'react-router-dom'
 
 import { PROVIDER_ACTIONS, RESOURCE_NAMES, T, PATH } from '@ConstantsModule'
 import { ProviderAPI, useGeneralApi, useViews } from '@FeaturesModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import {
   ChangeGroupForm,
   ChangeUserForm,

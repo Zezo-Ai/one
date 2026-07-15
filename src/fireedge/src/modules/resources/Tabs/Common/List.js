@@ -29,13 +29,13 @@ import {
   Typography,
 } from '@mui/material'
 
-import { Tr } from '@modules/resources/HOC'
+import { camelCase } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   Attribute,
   AttributePropTypes,
 } from '@modules/resources/Tabs/Common/Attribute'
 import AttributeCreateForm from '@modules/resources/Tabs/Common/AttributeCreateForm'
-import { camelCase } from '@UtilsModule'
 
 const Title = styled(ListItem)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightBold,
@@ -64,6 +64,7 @@ const AttributeList = ({
   subListProps = {},
   collapse = false,
 }) => {
+  const { translate } = useTranslation()
   const RootElement = useMemo(() => (collapse ? Box : Paper), [collapse])
   const ListElement = useMemo(() => (collapse ? Accordion : List), [collapse])
 
@@ -123,7 +124,7 @@ const AttributeList = ({
         {title && (
           <TitleElement>
             {typeof title === 'string' ? (
-              <Typography noWrap>{Tr(title)}</Typography>
+              <Typography noWrap>{translate(title)}</Typography>
             ) : (
               title
             )}

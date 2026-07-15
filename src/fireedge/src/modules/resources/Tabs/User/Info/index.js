@@ -21,8 +21,6 @@ import { UserAPI } from '@FeaturesModule'
 import { AttributePanel } from '@modules/resources/Tabs/Common'
 import Information from '@modules/resources/Tabs/User/Info/information'
 
-import { Tr } from '@modules/resources/HOC'
-import { T } from '@ConstantsModule'
 import {
   cloneObject,
   filterAttributes,
@@ -30,6 +28,9 @@ import {
   jsonToXml,
   set,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { T } from '@ConstantsModule'
+
 const { useGetUserQuery, useUpdateUserMutation } = UserAPI
 
 const HIDDEN_ATTRIBUTES_REG =
@@ -44,6 +45,7 @@ const HIDDEN_ATTRIBUTES_REG =
  * @returns {ReactElement} Information tab
  */
 const UserInfoTab = ({ tabProps = {}, id }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     attributes_panel: attributesPanel,
@@ -91,7 +93,7 @@ const UserInfoTab = ({ tabProps = {}, id }) => {
           {...ATTRIBUTE_FUNCTION}
           attributes={attributes}
           actions={getActions(attributesPanel?.actions)}
-          title={Tr(T.Attributes)}
+          title={translate(T.Attributes)}
         />
       )}
     </Stack>

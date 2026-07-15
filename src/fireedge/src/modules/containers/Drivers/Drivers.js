@@ -21,9 +21,8 @@ import {
   MultipleTags,
   ResourcesBackButton,
   SubmitButton,
-  Tr,
-  TranslateProvider,
 } from '@ResourcesModule'
+import { useTranslation } from '@ProvidersModule'
 import { Driver, RESOURCE_NAMES, SERVER_CONFIG, T } from '@ConstantsModule'
 import { useAuth, useGeneral, useGeneralApi, DriverAPI } from '@FeaturesModule'
 import { Chip, Stack } from '@mui/material'
@@ -69,7 +68,7 @@ export function Drivers() {
 
   return (
     <MuiProvider theme={SunstoneTheme}>
-      <TranslateProvider>
+      <>
         <ResourcesBackButton
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
@@ -107,7 +106,7 @@ export function Drivers() {
             return <InfoTabs {...propsInfo} />
           }}
         />
-      </TranslateProvider>
+      </>
     </MuiProvider>
   )
 }
@@ -123,6 +122,7 @@ export function Drivers() {
  */
 const InfoTabs = memo(
   ({ driver, gotoPage, unselect, selectedRows, handleUseRefetch }) => {
+    const { translate } = useTranslation()
     const [getDriver, { data: lazyData, isFetching }] =
       DriverAPI.useLazyGetDriverQuery()
     const name = driver?.name ?? lazyData?.name
@@ -157,7 +157,7 @@ const InfoTabs = memo(
               <SubmitButton
                 data-cy="detail-back"
                 icon={<NavArrowLeft />}
-                tooltip={Tr(T.Back)}
+                tooltip={translate(T.Back)}
                 isSubmitting={isFetching}
                 onClick={() => unselect()}
               />
@@ -175,7 +175,7 @@ const InfoTabs = memo(
               <SubmitButton
                 data-cy="detail-full-mode"
                 icon={isFullMode ? <Collapse /> : <Expand />}
-                tooltip={Tr(T.FullScreen)}
+                tooltip={translate(T.FullScreen)}
                 isSubmitting={isFetching}
                 onClick={() => {
                   setFullMode(!isFullMode)
@@ -185,7 +185,7 @@ const InfoTabs = memo(
             <SubmitButton
               data-cy="detail-refresh"
               icon={<RefreshDouble />}
-              tooltip={Tr(T.Refresh)}
+              tooltip={translate(T.Refresh)}
               isSubmitting={isFetching}
               onClick={async () => {
                 await getDriver({ name: name?.toLowerCase() })
@@ -196,7 +196,7 @@ const InfoTabs = memo(
               <SubmitButton
                 data-cy="unselect"
                 icon={<Cancel />}
-                tooltip={Tr(T.Close)}
+                tooltip={translate(T.Close)}
                 onClick={() => unselect()}
               />
             )}

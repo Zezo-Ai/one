@@ -25,7 +25,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 
 import { Table, FormWithSchema, Button } from '@ComponentsV2Module'
 import { Legend } from '@modules/resources/Forms'
-import { Translate, Tr } from '@modules/resources/HOC'
+import { Translate, useTranslation } from '@ProvidersModule'
 
 import {
   FIELDS,
@@ -66,6 +66,7 @@ const RulesSection = memo(
    * @returns {ReactElement} - Inputs section
    */
   ({ stepId }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => useStyles(theme), [theme])
 
@@ -141,13 +142,13 @@ const RulesSection = memo(
         }
 
         return {
-          PROTOCOL: Tr(PROTOCOL),
-          RULE_TYPE: Tr(RULE_TYPE),
-          RANGE: Tr(RANGE),
-          NETWORK: Tr(network),
-          ICMP_TYPE: `${Tr(ICMP_STRING[ICMP_TYPE]) || ''}`,
+          PROTOCOL: translate(PROTOCOL),
+          RULE_TYPE: translate(RULE_TYPE),
+          RANGE: translate(RANGE),
+          NETWORK: translate(network),
+          ICMP_TYPE: `${translate(ICMP_STRING[ICMP_TYPE]) || ''}`,
           // eslint-disable-next-line camelcase
-          ICMPv6_TYPE: `${Tr(ICMP_V6_STRING[ICMPv6_TYPE]) || ''}`,
+          ICMPv6_TYPE: `${translate(ICMP_V6_STRING[ICMPv6_TYPE]) || ''}`,
           ACTIONS: (
             <Button
               type={STYLE_BUTTONS.TYPE.TRANSPARENT}

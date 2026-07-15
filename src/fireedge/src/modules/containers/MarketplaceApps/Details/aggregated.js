@@ -19,6 +19,7 @@ import {
   ButtonGroup,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
@@ -36,6 +37,7 @@ import {
 } from 'iconoir-react'
 import {
   MARKETPLACE_APP_ACTIONS,
+  RESOURCE_NAMES,
   STYLE_BUTTONS,
   T,
   UNITS,
@@ -185,6 +187,7 @@ export const AggregatedView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Enable,
       },
       onSubmit: handleEnable,
     })
@@ -201,6 +204,7 @@ export const AggregatedView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Disable,
       },
       onSubmit: handleDisable,
     })
@@ -217,6 +221,7 @@ export const AggregatedView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Lock,
       },
       onSubmit: handleLock,
     })
@@ -233,6 +238,7 @@ export const AggregatedView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Unlock,
       },
       onSubmit: handleUnlock,
     })
@@ -249,6 +255,10 @@ export const AggregatedView = ({
             resourceType={T.Apps}
           />
         ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(
@@ -274,29 +284,6 @@ export const AggregatedView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
-                {(canLock || canUnlock) && (
-                  <ButtonGroup
-                    selected={
-                      allLocked ? ['lock'] : noneLocked ? ['unlock'] : []
-                    }
-                    buttons={[
-                      canLock && {
-                        startIcon: <Lock width="16px" height="16px" />,
-                        onClick: handleLockForm,
-                        value: 'lock',
-                        tooltip: T.Lock,
-                        isDisabled: isMutating,
-                      },
-                      canUnlock && {
-                        startIcon: <NoLock width="16px" height="16px" />,
-                        onClick: handleUnlockForm,
-                        value: 'unlock',
-                        tooltip: T.Unlock,
-                        isDisabled: isMutating,
-                      },
-                    ].filter(Boolean)}
-                  />
-                )}
                 {(canEnable || canDisable) && (
                   <ButtonGroup
                     selected={
@@ -320,7 +307,35 @@ export const AggregatedView = ({
                     ].filter(Boolean)}
                   />
                 )}
+                {(canLock || canUnlock) && (
+                  <ButtonGroup
+                    selected={
+                      allLocked ? ['lock'] : noneLocked ? ['unlock'] : []
+                    }
+                    buttons={[
+                      canLock && {
+                        startIcon: <Lock width="16px" height="16px" />,
+                        onClick: handleLockForm,
+                        value: 'lock',
+                        tooltip: T.Lock,
+                        isDisabled: isMutating,
+                      },
+                      canUnlock && {
+                        startIcon: <NoLock width="16px" height="16px" />,
+                        onClick: handleUnlockForm,
+                        value: 'unlock',
+                        tooltip: T.Unlock,
+                        isDisabled: isMutating,
+                      },
+                    ].filter(Boolean)}
+                  />
+                )}
 
+                <LabelButton
+                  selectedRows={selectedMarketplaceApps}
+                  resourceType={RESOURCE_NAMES.APP}
+                  isDisabled={isMutating}
+                />
                 {canDelete && (
                   <Button
                     type={STYLE_BUTTONS.TYPE.PRIMARY}
@@ -336,7 +351,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   tooltip={T.Close}
                   onClick={handleClose}

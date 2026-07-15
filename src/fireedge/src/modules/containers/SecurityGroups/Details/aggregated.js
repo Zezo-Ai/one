@@ -14,12 +14,19 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import { DetailsDrawer, InfoSlot, TabSlot, Button } from '@ComponentsV2Module'
+import {
+  Button,
+  DetailsDrawer,
+  InfoSlot,
+  LabelButton,
+  ResourceActionConfirmation,
+  TabSlot,
+} from '@ComponentsV2Module'
 
 import { useModalsApi, SecurityGroupAPI } from '@FeaturesModule'
 import { Component } from 'react'
 
-import { T, STYLE_BUTTONS } from '@ConstantsModule'
+import { T, STYLE_BUTTONS, RESOURCE_NAMES } from '@ConstantsModule'
 import { SecurityGroup } from '@ResourcesModule'
 
 import { Box } from '@mui/material'
@@ -86,7 +93,17 @@ export const AggregatedView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.SecurityGroup}`,
-        description: T['securitygroup.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedSecurityGroups}
+            resourceType={T.SecurityGroups}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(
@@ -118,6 +135,11 @@ export const AggregatedView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
+                <LabelButton
+                  selectedRows={selectedSecurityGroups}
+                  resourceType={RESOURCE_NAMES.SEC_GROUP}
+                  isDisabled={isMutating}
+                />
                 <Button
                   type={STYLE_BUTTONS.TYPE.PRIMARY}
                   size="small"
@@ -131,7 +153,7 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

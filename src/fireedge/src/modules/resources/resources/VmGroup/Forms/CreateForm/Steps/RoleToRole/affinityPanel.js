@@ -18,7 +18,7 @@ import { Component, useCallback, useEffect, useMemo, useState } from 'react'
 import { Box, Stack } from '@mui/material'
 import { Group, Plus } from 'iconoir-react'
 import { AffinityGroup } from './affinityGroup'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import { Button, Checkbox } from '@ComponentsV2Module'
 
@@ -142,6 +142,7 @@ const GroupBuilder = ({
   onCreate,
   onCancel,
 }) => {
+  const { translate } = useTranslation()
   const hasEnoughRoles = selectedRoles.length >= 2
 
   return (
@@ -190,10 +191,10 @@ const GroupBuilder = ({
           startIcon={<Plus width="16px" height="16px" />}
           type="secondary"
         >
-          {Tr(T.AddGroup)}
+          {translate(T.AddGroup)}
         </Button>
         <Button isDestructive onClick={onCancel} size="small" type="secondary">
-          {Tr(T.Cancel)}
+          {translate(T.Cancel)}
         </Button>
         {!hasEnoughRoles && (
           <Box
@@ -249,6 +250,7 @@ const AffinityCard = ({
   onDeleteGroup,
   onDeleteRole,
 }) => {
+  const { translate } = useTranslation()
   const config = GROUP_TYPES[type]
   const eligibleRoles = useMemo(
     () => getEligibleRoles(roles, config.policy),
@@ -291,9 +293,9 @@ const AffinityCard = ({
           <Group width="24px" height="24px" />
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Box sx={getTitleStyles}>{Tr(config.title)}</Box>
+          <Box sx={getTitleStyles}>{translate(config.title)}</Box>
           <Box sx={(theme) => ({ ...getSubtitleStyles(theme), mt: 0.5 })}>
-            {Tr(config.description)}
+            {translate(config.description)}
           </Box>
         </Box>
       </Box>

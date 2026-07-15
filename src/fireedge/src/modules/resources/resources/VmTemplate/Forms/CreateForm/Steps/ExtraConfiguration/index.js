@@ -20,13 +20,14 @@ import PropTypes from 'prop-types'
 // eslint-disable-next-line no-unused-vars
 import { useFormContext, FieldErrors } from 'react-hook-form'
 import { useViews, SystemAPI, useGeneralApi } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
-import { Tabs } from '@ComponentsV2Module'
 import {
   deepmerge,
   flattenObjectByKeys,
   getActionsAvailable as getSectionsAvailable,
 } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { Tabs } from '@ComponentsV2Module'
+
 import Storage from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/storage'
 import Networking from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/networking'
 import Placement from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/placement'
@@ -70,7 +71,6 @@ const TAB_CONTENT_SX = {
   height: 'auto',
   display: 'flex',
   flexDirection: 'column',
-  p: 2,
 }
 
 /**
@@ -106,6 +106,7 @@ const Content = ({
   isUpdate,
   isVrouter,
 }) => {
+  const { translate } = useTranslation()
   const {
     watch,
     formState: { errors },
@@ -161,7 +162,7 @@ const Content = ({
     return getSectionsAvailable(dialog, hypervisor)
   }, [view])
 
-  const totalErrors = Object.keys(errors[STEP_ID] ?? {}).length
+  const stepErrors = errors[STEP_ID]
   const [selected, setSelected] = useState(0)
 
   const tabs = useMemo(
@@ -173,8 +174,9 @@ const Content = ({
       ).map(({ Content: TabContent, name, getError, icon, ...section }) => ({
         ...section,
         name,
-        title: Tr(name),
-        // startIcon: getError?.(errors[STEP_ID]) ? WarningCircle : icon,
+        title: translate(name),
+        startIcon: icon,
+        getError,
         Content: () => (
           <TabContent
             {...{
@@ -190,21 +192,22 @@ const Content = ({
           />
         ),
       })),
-    [totalErrors, view, control, oneConfig, adminGroup]
+    [view, control, oneConfig, adminGroup, translate]
   )
 
   const ActiveTab = tabs[selected] ?? tabs[0]
 
   return (
-    <Box sx={{ height: 'auto', overflow: 'visible', marginTop: '30px' }}>
+    <Box sx={{ height: 'auto', overflow: 'visible' }}>
       <Box sx={TABS_CONTAINER_SX}>
         <Box sx={TABS_BREAKOUT_SX}>
           <Tabs
             type="line"
             defaultSelect={0}
-            options={tabs.map(({ title, startIcon }, idx) => ({
+            options={tabs.map(({ title, startIcon, getError }, idx) => ({
               title,
               startIcon,
+              error: !!getError?.(stepErrors),
               value: idx,
             }))}
             onChange={(idx) => setSelected(idx)}

@@ -152,4 +152,10 @@ export const getAclSearchValue = (acl = {}) =>
     .join(' ')
     .toLowerCase()
 
-export const aclTable = createTable(ACL_COLUMNS, AclAPI.useGetAclsExtendedQuery)
+export const aclTable = createTable(
+  ACL_COLUMNS,
+  AclAPI.useGetAclsExtendedQuery,
+  {
+    dataCy: 'acls',
+  }
+)

@@ -15,7 +15,7 @@
  * ------------------------------------------------------------------------- */
 import { Box, styled } from '@mui/material'
 import { SubmitButton } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import VmTemplatesTable from '@modules/resources/Tables/VmTemplates'
 import { T } from '@ConstantsModule'
 import { Table as TableIcon, TableRows } from 'iconoir-react'
@@ -29,6 +29,7 @@ const StyledBoxStyles = styled(Box)(() => ({
 }))
 
 const Table = memo((props) => {
+  const { translate } = useTranslation()
   const [enableStyles, setEnableStyles] = useState(true)
 
   const { classes, ...restProps } = props
@@ -43,7 +44,7 @@ const Table = memo((props) => {
       <StyledBoxStyles>
         <SubmitButton
           data-cy="clear-styles-table"
-          tooltip={Tr(enableStyles ? T.ItemsRow : T.ItemsTables)}
+          tooltip={translate(enableStyles ? T.ItemsRow : T.ItemsTables)}
           iconOnly={enableStyles ? <TableRows /> : <TableIcon />}
           onClick={handleClasses}
         />

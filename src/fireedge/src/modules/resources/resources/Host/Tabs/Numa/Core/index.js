@@ -16,7 +16,7 @@
 import { ReactElement } from 'react'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, TEXT_VARIANTS, TEXT_WEIGHTS } from '@ConstantsModule'
 import NumaCoreCPU from '@modules/resources/resources/Host/Tabs/Numa/CPU'
 import { getStyles } from '@modules/resources/resources/Host/Tabs/Numa/Core/styles'
@@ -28,6 +28,7 @@ import { Text } from '@ComponentsV2Module'
  * @returns {ReactElement} Information tab
  */
 const NumaCore = ({ core }) => {
+  const { translate } = useTranslation()
   if (!core) return null
 
   const cpus = `${core.CPUS ?? ''}`
@@ -46,7 +47,7 @@ const NumaCore = ({ core }) => {
         component="h6"
         variant={TEXT_VARIANTS.H6}
         weight={TEXT_WEIGHTS.SEMIBOLD}
-        value={Tr(T.NumaCore, core.ID)}
+        value={translate(T.NumaCore, core.ID)}
       />
       <Box className="numa-core__cpus">
         {cpus.map(({ coreId, allocationStatus }, index) => (

@@ -16,7 +16,8 @@
 import { ReactElement, memo, useMemo } from 'react'
 import { useTheme, Typography, Paper, Link, Tooltip, Box } from '@mui/material'
 import PropTypes from 'prop-types'
-import { Tr } from '@modules/resources/HOC'
+import { isValidOneKsResourceId } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { getNodeGroupState, getValidKeys } from '@ModelsModule'
 import Timer from '@modules/resources/Timer'
 import { rowStyles } from '@modules/resources/Tables/styles'
@@ -27,7 +28,6 @@ import { StatusCircle } from '@modules/resources/Status'
 import { Link as RouterLink, generatePath } from 'react-router-dom'
 import { find, isEmpty } from 'lodash'
 import { WarningCircle as WarningIcon } from 'iconoir-react'
-import { isValidOneKsResourceId } from '@UtilsModule'
 
 const VmLinks = memo(
   /**
@@ -86,6 +86,7 @@ const RenderNodeMetadata = memo(
    * @returns {ReactElement} Node metadata component
    */
   ({ dataObj }) => {
+    const { translate } = useTranslation()
     const validKeys = getValidKeys(dataObj)
 
     return (
@@ -94,9 +95,9 @@ const RenderNodeMetadata = memo(
           <span
             key={key}
             data-cy={`node-card-${key}`}
-            title={Tr(T[key] || key)}
+            title={translate(T[key] || key)}
           >
-            {`${Tr(T[key] || key)}: ${dataObj[key]}`}
+            {`${translate(T[key] || key)}: ${dataObj[key]}`}
           </span>
         ))}
       </>
@@ -119,6 +120,7 @@ const NodeGroupRecordCard = memo(
    * @returns {ReactElement} History record card component
    */
   ({ node = {}, id, families = [] }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const createdTime = node?.registration_time
@@ -157,21 +159,21 @@ const NodeGroupRecordCard = memo(
           </div>
           <div className={classes.vmActionLayout}>
             <div className={classes.caption}>
-              <span data-cy="node-card-id" title={`${Tr(T.ID)}`}>
+              <span data-cy="node-card-id" title={`${translate(T.ID)}`}>
                 {`#${nodeId}`}
               </span>
-              <span data-cy="node-card-nodes" title={`${Tr(T.Nodes)}`}>
-                {`${Tr(T.Nodes)}: ${nodes}`}
+              <span data-cy="node-card-nodes" title={`${translate(T.Nodes)}`}>
+                {`${translate(T.Nodes)}: ${nodes}`}
               </span>
-              <span title={`${Tr(T.Created)}`}>
+              <span title={`${translate(T.Created)}`}>
                 {!createdTime ? '' : <Timer initial={+createdTime} />}
               </span>
-              <span title={`${Tr(T.Vms)}`}>
-                {`${Tr(T.VMs)}: `}
+              <span title={`${translate(T.Vms)}`}>
+                {`${translate(T.VMs)}: `}
                 <VmLinks ids={vms} />
               </span>
-              <span data-cy="flavour" title={`${Tr(T.Flavour)}`}>
-                {`${Tr(T.Flavour)}: ${flavour}`}
+              <span data-cy="flavour" title={`${translate(T.Flavour)}`}>
+                {`${translate(T.Flavour)}: ${flavour}`}
                 <Tooltip
                   arrow
                   placement="bottom"

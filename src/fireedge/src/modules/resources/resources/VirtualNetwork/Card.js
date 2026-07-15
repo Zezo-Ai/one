@@ -29,6 +29,7 @@ import {
   getLeasesInfo,
   getVirtualNetworkState,
 } from '@ModelsModule'
+import { getLockIcon } from '@UtilsModule'
 
 /**
  * VirtualNetworkCard component displays a Virtual Network as a card.
@@ -43,7 +44,7 @@ import {
  */
 export const VirtualNetworkCard = forwardRef(
   ({ vnet = {}, isSelected, onCheck, onClick }, ref) => {
-    const { ID, NAME, UNAME, GNAME, LOCK, VN_MAD, CLUSTERS } = vnet
+    const { ID, NAME, UNAME, GNAME, VN_MAD, CLUSTERS } = vnet
 
     const { color: stateColor, name: stateName } =
       getVirtualNetworkState(vnet) ?? {}
@@ -61,7 +62,11 @@ export const VirtualNetworkCard = forwardRef(
           [
             TitleSlot,
             {
-              title: NAME,
+              title: (
+                <>
+                  {NAME} {getLockIcon(vnet)}
+                </>
+              ),
               status: stateColor,
               statusName: stateName,
             },
@@ -77,11 +82,10 @@ export const VirtualNetworkCard = forwardRef(
               ].filter(([, value]) => value),
             },
           ],
-          (LOCK || VN_MAD || labelSlotLabels.length > 0) && [
+          (VN_MAD || labelSlotLabels.length > 0) && [
             LabelSlot,
             {
               labels: [
-                LOCK && [T.Locked, 'information'],
                 VN_MAD && [VN_MAD, 'default'],
                 ...labelSlotLabels,
               ].filter(Boolean),
@@ -93,7 +97,6 @@ export const VirtualNetworkCard = forwardRef(
               bars: [
                 {
                   label: `${T.UsedLeases} ${percentLabel}`,
-                  size: 'small',
                   value: percentOfUsed,
                   isLabelVisible: true,
                   thresholds: [

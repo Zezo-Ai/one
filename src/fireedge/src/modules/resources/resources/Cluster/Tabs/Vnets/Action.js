@@ -81,6 +81,7 @@ const DeleteIps = memo(({ addressRanges = [], isDisabled, submit }) => {
       data-cy="del-ip"
       type="secondary"
       onClick={handleOpenForm}
+      isDestructive
       isDisabled={isDisabled || addressRanges.length === 0}
       label={T['cluster.vnet.del.ip']}
     />

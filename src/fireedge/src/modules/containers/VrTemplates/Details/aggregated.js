@@ -17,15 +17,17 @@
 import {
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   SummarySlot,
   TabSlot,
   ButtonGroup,
   Button,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
 import { useModalsApi, VmTemplateAPI, VrTemplateAPI } from '@FeaturesModule'
 import { Component, useMemo } from 'react'
 import { prettyBytes, aggregateLockState, aggregateMetrics } from '@UtilsModule'
-import { T, UNITS, STYLE_BUTTONS } from '@ConstantsModule'
+import { RESOURCE_NAMES, T, UNITS, STYLE_BUTTONS } from '@ConstantsModule'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import { Lock, NoLock, Trash, Cancel as CloseIcon } from 'iconoir-react'
@@ -107,7 +109,17 @@ export const AggregatedView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.VRTemplates}`,
-        description: T['template.delete.confirmation'],
+        description: (
+          <ResourceActionConfirmation
+            description={T['template.delete.confirmation']}
+            resources={selectedTemplates}
+            resourceType={T.VRTemplates}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await Promise.all(selectedTemplates.map(({ ID }) => remove({ id: ID })))
@@ -155,16 +167,23 @@ export const AggregatedView = ({
                       onClick: handleLock,
                       value: 'lock',
                       isDisabled: isMutating,
+                      tooltip: T.Lock,
                     },
                     {
                       startIcon: <NoLock width="16px" height="16px" />,
                       onClick: handleUnlock,
                       value: 'unlock',
                       isDisabled: isMutating,
+                      tooltip: T.Unlock,
                     },
                   ]}
                 />
 
+                <LabelButton
+                  selectedRows={selectedTemplates}
+                  resourceType={RESOURCE_NAMES.VROUTER_TEMPLATE}
+                  isDisabled={isMutating}
+                />
                 <Button
                   type={STYLE_BUTTONS.TYPE.PRIMARY}
                   size="small"
@@ -178,9 +197,10 @@ export const AggregatedView = ({
 
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
+                  tooltip={T.Close}
                 />
               </Box>
             ),

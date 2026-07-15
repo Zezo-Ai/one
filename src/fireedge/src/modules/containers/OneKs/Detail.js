@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { LoadingDisplay, TranslateProvider } from '@ResourcesModule'
+import { LoadingDisplay } from '@ResourcesModule'
+
 import { ReactElement, useMemo } from 'react'
 import { Redirect, useHistory, useParams } from 'react-router-dom'
 import { PATH, RESOURCE_NAMES } from '@ConstantsModule'
@@ -46,7 +47,7 @@ export function OneKsDetail() {
   const selectedData = data?.DOCUMENT ?? {}
 
   return (
-    <TranslateProvider>
+    <>
       {isFetching && !selectedData?.ID ? (
         <LoadingDisplay />
       ) : (
@@ -57,6 +58,6 @@ export function OneKsDetail() {
           handleClose={() => history.push(PATH.ONEKS.LIST)}
         />
       )}
-    </TranslateProvider>
+    </>
   )
 }

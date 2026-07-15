@@ -53,9 +53,10 @@ export const ScheduledActions = ({ data, config }) => {
     message && enqueueSuccess(message, [selectedVm?.ID])
 
   const { data: history = [], isFetching: isFetchingScheduledActions } =
-    vmschedactionsTable.useData({
-      id: selectedVm?.ID,
-    })
+    vmschedactionsTable.useData(
+      { id: selectedVm?.ID },
+      { skip: !selectedVm?.ID }
+    )
 
   const { actions, isLoading: isPerformingAction } =
     VirtualMachine.Actions.useActions({
@@ -80,7 +81,7 @@ export const ScheduledActions = ({ data, config }) => {
         dataCy: 'modal-delete-sched-action',
         description: (
           <ResourceActionConfirmation
-            description={T.DoYouWantProceed}
+            description={T['resource.delete.confirmation']}
             resources={{
               ID: schedule?.ID,
               NAME: getScheduleActionResourceName(schedule),

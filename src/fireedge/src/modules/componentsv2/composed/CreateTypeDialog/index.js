@@ -19,6 +19,7 @@ import { useMemo } from 'react'
 import { Box, Dialog, Stack, Typography, useTheme } from '@mui/material'
 import { Button } from '@modules/componentsv2/primitives/Buttons/Default'
 import { getStyles } from '@modules/componentsv2/composed/CreateTypeDialog/styles'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * Dialog to choose between different creation flows.
@@ -34,6 +35,8 @@ import { getStyles } from '@modules/componentsv2/composed/CreateTypeDialog/style
  * @param {Function} root0.onConfirm - Confirm callback
  * @param {*} root0.cancelLabel - Cancel button label
  * @param {*} root0.confirmLabel - Confirm button label
+ * @param {string} root0.cancelDataCy - Cypress selector for the cancel button
+ * @param {string} root0.confirmDataCy - Cypress selector for the confirm button
  * @returns {*} Create type dialog
  */
 export const CreateTypeDialog = ({
@@ -47,15 +50,24 @@ export const CreateTypeDialog = ({
   onConfirm,
   cancelLabel,
   confirmLabel,
+  cancelDataCy,
+  confirmDataCy,
 }) => {
+  const { translateText } = useTranslation()
   const theme = useTheme()
   const styles = useMemo(() => getStyles({ theme }), [theme])
 
   return (
     <Dialog open={open} onClose={onCancel} sx={styles.root}>
       <Stack direction="column" sx={styles.header}>
-        <Typography sx={styles.title}>{title}</Typography>
-        {subtitle && <Typography sx={styles.subtitle}>{subtitle}</Typography>}
+        <Typography sx={styles.title}>
+          {typeof title === 'string' ? translateText(title) : title}
+        </Typography>
+        {subtitle && (
+          <Typography sx={styles.subtitle}>
+            {typeof subtitle === 'string' ? translateText(subtitle) : subtitle}
+          </Typography>
+        )}
       </Stack>
       <Box sx={styles.cards}>
         {options.map(
@@ -84,10 +96,16 @@ export const CreateTypeDialog = ({
                 </Box>
               )}
               <Stack direction="column" sx={styles.cardContent}>
-                <Typography sx={styles.cardTitle}>{optionTitle}</Typography>
+                <Typography sx={styles.cardTitle}>
+                  {typeof optionTitle === 'string'
+                    ? translateText(optionTitle)
+                    : optionTitle}
+                </Typography>
                 {optionSubtitle && (
                   <Typography sx={styles.cardSubtitle}>
-                    {optionSubtitle}
+                    {typeof optionSubtitle === 'string'
+                      ? translateText(optionSubtitle)
+                      : optionSubtitle}
                   </Typography>
                 )}
               </Stack>
@@ -97,12 +115,12 @@ export const CreateTypeDialog = ({
       </Box>
       <Box sx={styles.actions}>
         {cancelLabel && (
-          <Button type="secondary" onClick={onCancel}>
+          <Button data-cy={cancelDataCy} type="secondary" onClick={onCancel}>
             {cancelLabel}
           </Button>
         )}
         {confirmLabel && (
-          <Button type="primary" onClick={onConfirm}>
+          <Button data-cy={confirmDataCy} type="primary" onClick={onConfirm}>
             {confirmLabel}
           </Button>
         )}
@@ -138,6 +156,8 @@ CreateTypeDialog.propTypes = {
   onConfirm: PropTypes.func,
   cancelLabel: PropTypes.node,
   confirmLabel: PropTypes.node,
+  cancelDataCy: PropTypes.string,
+  confirmDataCy: PropTypes.string,
 }
 
 CreateTypeDialog.displayName = 'CreateTypeDialog'

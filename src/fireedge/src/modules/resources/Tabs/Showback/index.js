@@ -21,9 +21,9 @@ import { VmAPI, useAuth } from '@FeaturesModule'
 import { Component, useState, useEffect } from 'react'
 import { DateTime } from 'luxon'
 import { DateRangeFilter, ShowbackTab } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
-import { mapValues } from 'lodash'
 import { getMonthName } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { mapValues } from 'lodash'
 
 const keyMap = {
   VMID: 'OID',
@@ -83,6 +83,7 @@ const generateShowbackInfoTab = ({ groups }) => {
    * @returns {Component} Rendered component.
    */
   const ShowbackInfoTab = ({ id }) => {
+    const { translate } = useTranslation()
     const { settings: fireedge = {} } = useAuth()
     const lang = fireedge?.LANG?.substring(0, 2)
 
@@ -197,10 +198,10 @@ const generateShowbackInfoTab = ({ groups }) => {
     }
 
     const topMetricNamesTranslated = mapValues(topMetricNames, (value, key) =>
-      Tr(value)
+      translate(value)
     )
     const metricNamesTranslated = mapValues(metricNames, (value, key) =>
-      Tr(value)
+      translate(value)
     )
 
     return (

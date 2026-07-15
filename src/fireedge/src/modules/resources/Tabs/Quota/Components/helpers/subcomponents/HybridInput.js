@@ -17,7 +17,7 @@ import PropTypes from 'prop-types'
 import { Component } from 'react'
 import { Box, Popover } from '@mui/material'
 import { Cancel } from 'iconoir-react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 import { Button, InputField } from '@ComponentsV2Module'
 
@@ -61,6 +61,7 @@ export const HybridInputField = ({
   touchedFields,
   setTouchedFields,
 }) => {
+  const { translate } = useTranslation()
   const isDisabled = () =>
     state.selectedIdentifier === '' ||
     (state.quotaType !== 'VM' && state.globalIds?.length === 0) ||
@@ -95,7 +96,7 @@ export const HybridInputField = ({
   return (
     <>
       <InputField
-        label={Tr(T.Value)}
+        label={translate(T.Value)}
         isDisabled={isDisabled()}
         disabled={isDisabled()}
         value={getInputValue({ state, getConcatenatedValues })}

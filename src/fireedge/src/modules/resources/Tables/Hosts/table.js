@@ -22,7 +22,8 @@ import {
   getColorFromString,
   getHostState,
 } from '@ModelsModule'
-import { Tr } from '@modules/resources/HOC'
+import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import MultipleTags from '@modules/resources/MultipleTags'
 import {
   LinearProgressWithLabel,
@@ -38,7 +39,7 @@ import {
 import WrapperRow from '@modules/resources/Tables/Enhanced/WrapperRow'
 import HostColumns from '@modules/resources/Tables/Hosts/columns'
 import HostRow from '@modules/resources/Tables/Hosts/row'
-import { getResourceLabels } from '@UtilsModule'
+
 import { useFormContext } from 'react-hook-form'
 
 const DEFAULT_DATA_CY = 'hosts'
@@ -48,6 +49,7 @@ const DEFAULT_DATA_CY = 'hosts'
  * @returns {ReactElement} Hosts table
  */
 const HostsTable = (props) => {
+  const { translate } = useTranslation()
   const {
     rootProps = {},
     searchProps = {},
@@ -201,7 +203,7 @@ const HostsTable = (props) => {
             high={HOST_THRESHOLD.CPU.high}
             low={HOST_THRESHOLD.CPU.low}
             label={percentCpuLabel}
-            title={`${Tr(T.AllocatedCpu)}`}
+            title={`${translate(T.AllocatedCpu)}`}
             color={colorCpu}
           />
         )
@@ -220,7 +222,7 @@ const HostsTable = (props) => {
             high={HOST_THRESHOLD.MEMORY.high}
             low={HOST_THRESHOLD.MEMORY.low}
             label={percentMemLabel}
-            title={`${Tr(T.AllocatedMemory)}`}
+            title={`${translate(T.AllocatedMemory)}`}
             color={colorMem}
           />
         )

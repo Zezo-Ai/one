@@ -26,7 +26,8 @@ import PropTypes from 'prop-types'
 import { memo, ReactElement, useMemo } from 'react'
 
 import { useAuth } from '@FeaturesModule'
-import { Tr } from '@modules/resources/HOC'
+import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import MultipleTags from '@modules/resources/MultipleTagsCard'
 import {
   LinearProgressWithLabel,
@@ -49,7 +50,6 @@ import {
   VirtualNetwork,
   VNET_THRESHOLD,
 } from '@ConstantsModule'
-import { getResourceLabels } from '@UtilsModule'
 
 const NetworkCard = memo(
   /**
@@ -62,6 +62,7 @@ const NetworkCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ network, rootProps, actions, onClickLabel, onDeleteLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels } = useAuth()
@@ -131,16 +132,16 @@ const NetworkCard = memo(
           </div>
           <div className={classes.caption}>
             <span>{`#${ID}`}</span>
-            <span title={`${Tr(T.Owner)}: ${UNAME}`}>
+            <span title={`${translate(T.Owner)}: ${UNAME}`}>
               <User />
               <span>{` ${UNAME}`}</span>
             </span>
-            <span title={`${Tr(T.Group)}: ${GNAME}`}>
+            <span title={`${translate(T.Group)}: ${GNAME}`}>
               <Group />
               <span>{` ${GNAME}`}</span>
             </span>
             {!!clusters?.length && (
-              <span title={`${Tr(T.Clusters)}`}>
+              <span title={`${translate(T.Clusters)}`}>
                 <Server />
                 <Stack direction="row" justifyContent="end" alignItems="center">
                   <MultipleTags tags={clusters} />
@@ -155,7 +156,7 @@ const NetworkCard = memo(
             high={VNET_THRESHOLD.LEASES.high}
             low={VNET_THRESHOLD.LEASES.low}
             label={percentLabel}
-            title={`${Tr(T.Used)} / ${Tr(T.TotalLeases)}`}
+            title={`${translate(T.Used)} / ${translate(T.TotalLeases)}`}
           />
         </div>
         {actions && <div className={classes.actions}>{actions}</div>}

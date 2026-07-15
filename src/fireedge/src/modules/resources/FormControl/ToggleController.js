@@ -28,8 +28,8 @@ import {
 import { useController } from 'react-hook-form'
 
 import { ErrorHelper, Tooltip } from '@modules/resources/FormControl'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
-import { generateKey } from '@UtilsModule'
+import { isTranslationInput, generateKey } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const Label = styled('label')(({ theme, error }) => ({
   display: 'flex',
@@ -55,6 +55,7 @@ const ToggleController = memo(
     onConditionChange,
     defaultValue,
   }) => {
+    const { translate } = useTranslation()
     const {
       field: { ref, value: optionSelected, onChange, onBlur },
       fieldState: { error: { message } = {} },
@@ -93,7 +94,7 @@ const ToggleController = memo(
       <FormControl fullWidth margin="dense">
         {label && (
           <Label htmlFor={cy} error={message}>
-            {labelCanBeTranslated(label) ? Tr(label) : label}
+            {isTranslationInput(label) ? translate(label) : label}
             {tooltip && <Tooltip title={tooltip} />}
           </Label>
         )}
@@ -111,7 +112,7 @@ const ToggleController = memo(
             <ToggleButton key={`${name}-${value}`} value={value} sx={{ p: 1 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <Typography variant="body2" fontWeight={600}>
-                  {Tr(text)}
+                  {translate(text)}
                 </Typography>
 
                 {description && (
@@ -120,8 +121,8 @@ const ToggleController = memo(
                     display="block"
                     color="text.secondary"
                   >
-                    {labelCanBeTranslated(description)
-                      ? Tr(description)
+                    {isTranslationInput(description)
+                      ? translate(description)
                       : description}
                   </Typography>
                 )}

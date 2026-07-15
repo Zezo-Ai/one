@@ -46,16 +46,17 @@ export const getStyles = ({
     borderRadius: `${theme.borderRadius['2xl']}px`,
     '& .MuiButton-startIcon, & .MuiButton-endIcon': {
       margin: 0,
-      width: '16px',
-      height: '16px',
+      width: '8px',
+      height: '8px',
+      color: 'inherit',
       aspectRatio: '1/1',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    '& .tag-title': {
-      minWidth: 0,
-      color: 'inherit',
+
+      '& > .MuiBox-root': {
+        backgroundColor: 'currentColor',
+      },
     },
 
     cursor: 'default',
@@ -80,17 +81,26 @@ export const getStyles = ({
       boxShadow: 'none',
     },
 
-    fontStyle: 'normal',
-    fontSize: {
-      xs: theme.fontSize.body.caption.mobile,
-      sm: theme.fontSize.body.caption.tablet,
-      md: theme.fontSize.body.caption.desktop,
-    },
-    fontWeight: 600,
-    lineHeight: {
-      xs: theme.lineHeight.body.caption.mobile,
-      sm: theme.lineHeight.body.caption.tablet,
-      md: theme.lineHeight.body.caption.desktop,
+    '& .tag-title': {
+      minWidth: 0,
+      color: 'inherit',
+      fontStyle: 'normal',
+      textTransform: 'lowercase',
+      fontSize: {
+        xs: theme.fontSize.body.caption.mobile,
+        sm: theme.fontSize.body.caption.tablet,
+        md: theme.fontSize.body.caption.desktop,
+      },
+      fontWeight: 600,
+      lineHeight: {
+        xs: theme.lineHeight.body.caption.mobile,
+        sm: theme.lineHeight.body.caption.tablet,
+        md: theme.lineHeight.body.caption.desktop,
+      },
+
+      '&:first-letter': {
+        textTransform: 'uppercase',
+      },
     },
   }
 

@@ -17,7 +17,7 @@ import { string, boolean, object } from 'yup'
 
 import { useAuth } from '@FeaturesModule'
 import { getValidationFromFields, arrayToOptions } from '@UtilsModule'
-import { Tr } from '@ResourcesModule'
+import { useTranslation } from '@ProvidersModule'
 import {
   DEFAULT_OTP_LENGTH,
   T,
@@ -91,30 +91,33 @@ const TFA_TOKEN = {
   },
 }
 
+const useGroupOptions = () => {
+  const { user, groups } = useAuth()
+  const { translate } = useTranslation()
+  const primaryText = translate(T.Primary)
+
+  const formatGroups = arrayToOptions(groups, {
+    addEmpty: false,
+    getText: ({ ID, NAME }) => {
+      const isPrimary = user?.GID === ID ? `(${primaryText})` : ''
+
+      return `${ID} - ${NAME} ${isPrimary}`
+    },
+    getValue: ({ ID }) => String(ID),
+    sorter: (a, b) => a.ID - b.ID,
+  })
+
+  return [{ text: T.ShowAll, value: FILTER_POOL.ALL_RESOURCES }].concat(
+    formatGroups
+  )
+}
+
 const GROUP = {
   name: 'group',
   label: T.SelectYourActiveGroup,
   type: INPUT_TYPES.AUTOCOMPLETE,
   optionsOnly: true,
-  values: () => {
-    const { user, groups } = useAuth()
-    const primaryText = Tr(T.Primary)
-
-    const formatGroups = arrayToOptions(groups, {
-      addEmpty: false,
-      getText: ({ ID, NAME }) => {
-        const isPrimary = user?.GID === ID ? `(${primaryText})` : ''
-
-        return `${ID} - ${NAME} ${isPrimary}`
-      },
-      getValue: ({ ID }) => String(ID),
-      sorter: (a, b) => a.ID - b.ID,
-    })
-
-    return [{ text: T.ShowAll, value: FILTER_POOL.ALL_RESOURCES }].concat(
-      formatGroups
-    )
-  },
+  values: useGroupOptions,
   validation: string().trim().nullable().default(FILTER_POOL.ALL_RESOURCES),
   grid: { md: 12 },
   fieldProps: {

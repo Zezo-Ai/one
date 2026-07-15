@@ -17,10 +17,11 @@
 import PropTypes from 'prop-types'
 import React, { useMemo } from 'react'
 import { Box, Paper, Typography } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 export const CustomTooltip = React.memo(
   ({ active, payload, labels, generateColor, formatMetric, metricHues }) => {
+    const { translate } = useTranslation()
     if (active && payload && payload.length) {
       const groupedMetrics = useMemo(
         () =>
@@ -90,7 +91,7 @@ export const CustomTooltip = React.memo(
                     style={{ margin: '0.5px 0' }}
                   >
                     <span style={{ color: metricColor }}>
-                      {Tr(formatMetric(entry.metric))}:
+                      {translate(formatMetric(entry.metric))}:
                     </span>
                     {formattedValue}
                   </Typography>

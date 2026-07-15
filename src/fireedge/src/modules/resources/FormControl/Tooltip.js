@@ -18,10 +18,12 @@ import PropTypes from 'prop-types'
 
 import { HelpCircle } from 'iconoir-react'
 import { InputAdornment, Typography, Tooltip } from '@mui/material'
-import { Tr, labelCanBeTranslated } from '@modules/resources/HOC'
+import { isTranslationInput } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const AdornmentWithTooltip = memo(
   ({ title, position = 'end', children }) => {
+    const { translate } = useTranslation()
     if (
       !title ||
       title === '' ||
@@ -36,7 +38,7 @@ const AdornmentWithTooltip = memo(
         placement="bottom"
         title={
           <Typography variant="subtitle2">
-            {labelCanBeTranslated(title) ? Tr(title) : title}
+            {isTranslationInput(title) ? translate(title) : title}
           </Typography>
         }
       >

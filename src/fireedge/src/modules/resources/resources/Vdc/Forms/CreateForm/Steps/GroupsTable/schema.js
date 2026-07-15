@@ -19,6 +19,7 @@ import { Field } from '@UtilsModule'
 import { ArraySchema, array, string } from 'yup'
 
 const groupSelectorTable = {
+  dataCy: 'groups',
   columns: () => groupTable.columns(GROUP_LIST_COLUMNS),
   useData: groupTable.useData,
 }

@@ -25,9 +25,9 @@ import {
   RolesAffinityVmGroupsTable,
 } from '@modules/resources/Tabs/Common'
 import Information from '@modules/resources/Tabs/VmGroup/Info/information'
-import { Tr } from '@modules/resources/HOC'
-import { T } from '@ConstantsModule'
 import { getActionsAvailable } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
+import { T } from '@ConstantsModule'
 
 /**
  * Renders mainly information tab.
@@ -38,6 +38,7 @@ import { getActionsAvailable } from '@UtilsModule'
  * @returns {ReactElement} Information tab
  */
 const VmGroupInfoTab = ({ tabProps = {}, id }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     permissions_panel: permissionsPanel,
@@ -101,13 +102,13 @@ const VmGroupInfoTab = ({ tabProps = {}, id }) => {
       )}
       {rolesPanel?.enabled && (
         <RolesVmGroupsTable
-          title={Tr(T.Roles)}
+          title={translate(T.Roles)}
           roles={Array.isArray(ROLES?.ROLE) ? ROLES?.ROLE : [ROLES?.ROLE]}
         />
       )}
       {rolesAffinityPanel?.enabled && (
         <RolesAffinityVmGroupsTable
-          title={Tr(T.RolesAffinity)}
+          title={translate(T.RolesAffinity)}
           roles={TEMPLATE ?? []}
         />
       )}

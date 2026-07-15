@@ -30,6 +30,7 @@ import {
 import { SystemAPI, useAuthApi, useViews } from '@FeaturesModule'
 import { MenuDropdown } from '@modules/componentsv2/primitives/Dropdown'
 import { T } from '@ConstantsModule'
+import { useTranslation } from '@ProvidersModule'
 
 const VIEW_ICONS = {
   admin: UserCrown,
@@ -38,11 +39,8 @@ const VIEW_ICONS = {
   user: User,
 }
 
-const getTranslatedText = (text, fallback = '') =>
+const getSourceText = (text, fallback = '') =>
   text ? T[text] ?? text : fallback
-
-const getRoleLabel = (text, fallback = '') =>
-  getTranslatedText(text, fallback).replace(/\s+view$/i, '')
 
 /**
  * Sidebar role option.
@@ -59,6 +57,7 @@ const RoleOption = ({ role, isSelected = false, onSelect }) => {
   return (
     <MenuItem
       className={['option', isSelected && 'selected'].filter(Boolean).join(' ')}
+      data-cy={`view-${view}`}
       disableGutters
       aria-selected={isSelected}
       onClick={() => onSelect(view)}
@@ -94,6 +93,7 @@ RoleOption.propTypes = {
  * @returns {object} Sidebar role menu component
  */
 export const SidebarRoleMenu = ({ isExpanded = false }) => {
+  const { translate } = useTranslation()
   const { view: currentView, views = {} } = useViews()
   const { data: viewDefinitions = [] } =
     SystemAPI.useGetSunstoneAvailableViewsQuery()
@@ -109,15 +109,20 @@ export const SidebarRoleMenu = ({ isExpanded = false }) => {
 
     return availableViewNames.map((view) => {
       const definition = viewDefinitionByType[view]
+      const sourceLabel = getSourceText(definition?.name, view)
+      const translatedLabel = translate(sourceLabel)
 
       return {
         view,
-        label: getRoleLabel(definition?.name, view),
-        description: getTranslatedText(definition?.description),
+        label:
+          translatedLabel === sourceLabel
+            ? sourceLabel.replace(/\s+view$/i, '')
+            : translatedLabel,
+        description: translate(getSourceText(definition?.description)),
         icon: VIEW_ICONS[view] ?? User,
       }
     })
-  }, [views, viewDefinitions])
+  }, [translate, views, viewDefinitions])
 
   const selectedRole = availableRoles.find(
     ({ view }) => view === currentView
@@ -135,6 +140,7 @@ export const SidebarRoleMenu = ({ isExpanded = false }) => {
     <Box className="role-menu">
       <MenuDropdown
         className="dropdown"
+        dataCy="header-view-button"
         id="sidebar-role-menu"
         expanded={isExpanded}
         title={selectedRole.label}
@@ -147,9 +153,11 @@ export const SidebarRoleMenu = ({ isExpanded = false }) => {
         <Box className="panel">
           <Box className="header">
             <Typography className="title">
-              {T.ViewingAs} {selectedRole.label}
+              {translate(T.ViewingAs)} {selectedRole.label}
             </Typography>
-            <Typography className="subtitle">{T.SwitchRole}</Typography>
+            <Typography className="subtitle">
+              {translate(T.SwitchRole)}
+            </Typography>
           </Box>
 
           <Divider className="divider" />

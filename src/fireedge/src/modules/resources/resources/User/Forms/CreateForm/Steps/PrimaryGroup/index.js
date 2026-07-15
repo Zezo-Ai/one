@@ -16,8 +16,7 @@
 import PropTypes from 'prop-types'
 import { FormWithSchema } from '@ComponentsV2Module'
 import { INPUT_TYPES, T } from '@ConstantsModule'
-import { GroupAPI } from '@FeaturesModule'
-import { GROUP_LIST_COLUMNS } from '@ModelsModule'
+import { GROUP_LIST_COLUMNS, groupTable } from '@ModelsModule'
 import { Field, getValidationFromFields } from '@UtilsModule'
 import { object, string } from 'yup'
 
@@ -25,8 +24,8 @@ export const STEP_ID = 'primaryGroup'
 export const FIELD_NAME = 'group'
 
 const groupModel = {
-  columns: () => GROUP_LIST_COLUMNS,
-  useData: GroupAPI.useGetGroupsQuery,
+  ...groupTable,
+  columns: () => groupTable.columns(GROUP_LIST_COLUMNS),
 }
 
 /** @type {Field} Primary group selection field */

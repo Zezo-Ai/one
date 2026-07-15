@@ -21,12 +21,8 @@ import { useController, useWatch } from 'react-hook-form'
 
 import { ErrorHelper } from '@modules/componentsv2/composed/Forms/FormControl/ErrorHelper'
 import { AdornmentWithTooltip as Tooltip } from '@modules/componentsv2/composed/Forms/FormControl/Tooltip'
-import { Tr } from '@ProvidersModule'
-import {
-  labelCanBeTranslated,
-  generateKey,
-  findClosestValue,
-} from '@UtilsModule'
+import { isTranslationInput, generateKey, findClosestValue } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 export const SelectController = memo(
   ({
@@ -45,6 +41,7 @@ export const SelectController = memo(
     readOnly = false,
     onConditionChange,
   }) => {
+    const { translate } = useTranslation()
     const watch = useWatch({
       name: dependencies,
       disabled: dependencies == null,
@@ -140,7 +137,7 @@ export const SelectController = memo(
         fullWidth
         disabled={readOnly}
         SelectProps={{ native: true, multiple }}
-        label={labelCanBeTranslated(label) ? Tr(label) : label}
+        label={isTranslationInput(label) ? translate(label) : label}
         InputLabelProps={{ shrink: needShrink }}
         InputProps={{
           ...(multiple && { sx: { paddingTop: '0.5em' } }),
@@ -156,7 +153,7 @@ export const SelectController = memo(
       >
         {values?.map(({ text, value = '' }) => (
           <option key={`${name}-${value}`} value={value}>
-            {Tr(text)}
+            {translate(text)}
           </option>
         ))}
       </TextField>

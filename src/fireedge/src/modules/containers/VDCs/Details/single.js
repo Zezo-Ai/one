@@ -16,14 +16,17 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
+  ResourceActionConfirmation,
   TabSlot,
   ToggleGroup,
 } from '@ComponentsV2Module'
 
-import { PATH, T } from '@ConstantsModule'
+import { PATH, RESOURCE_NAMES, T } from '@ConstantsModule'
 import { VdcAPI, useModalsApi } from '@FeaturesModule'
 import {
+  getLabelTags,
   getVdcClustersCount,
   getVdcDatastoresCount,
   getVdcGroupsCount,
@@ -79,8 +82,18 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: [T.Delete, T.VDC].filter(Boolean).join(' '),
-        description: T.DoYouWantProceed,
+        dataCy: 'modal-delete',
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={selectedVdc}
+            resourceType={T.VDCs}
+          />
+        ),
         confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: ID })
@@ -102,6 +115,8 @@ export const SingleView = ({
             isTitleEditDisabled: isRenaming,
             title: NAME,
             id: ID,
+            dataCy: 'vdc-info',
+            tags: getLabelTags(vdc?.LABELS),
             labels: [
               [T.Groups, getVdcGroupsCount(vdc)],
               [T.Clusters, getVdcClustersCount(vdc)],
@@ -122,9 +137,17 @@ export const SingleView = ({
                   options={[
                     [
                       {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [vdc],
+                          resourceType: RESOURCE_NAMES.VDC,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
+                      {
                         startIcon: <Edit width="16px" height="16px" />,
                         onClick: handleUpdate,
                         value: 'update',
+                        'data-cy': 'action-update_dialog',
                         isDisabled: isActionsDisabled,
                       },
                       {
@@ -149,6 +172,7 @@ export const SingleView = ({
                         ),
                         onClick: handleOpenDeleteForm,
                         value: 'delete',
+                        'data-cy': 'action-vdc_delete',
                         isDisabled: isActionsDisabled,
                       },
                       {

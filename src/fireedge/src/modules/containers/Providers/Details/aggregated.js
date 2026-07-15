@@ -18,10 +18,11 @@ import {
   Button,
   DetailsDrawer,
   InfoSlot,
+  LabelButton,
   SummarySlot,
   TabSlot,
 } from '@ComponentsV2Module'
-import { STYLE_BUTTONS, T } from '@ConstantsModule'
+import { RESOURCE_NAMES, STYLE_BUTTONS, T } from '@ConstantsModule'
 import { Provider } from '@ResourcesModule'
 import { aggregateMetrics } from '@UtilsModule'
 import { Box } from '@mui/material'
@@ -68,9 +69,14 @@ export const AggregatedView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
+                <LabelButton
+                  selectedRows={selectedProviders}
+                  resourceType={RESOURCE_NAMES.PROVIDER}
+                  isDisabled={!selectedProviders.length}
+                />
                 <Button
                   type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
+                  size="small"
                   iconOnly={<CloseIcon width={'16px'} height={'16px'} />}
                   onClick={handleClose}
                 />

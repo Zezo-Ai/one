@@ -21,7 +21,12 @@ import {
   STYLE_BUTTONS,
   PCI_TYPES,
 } from '@ConstantsModule'
-import { Table, MenuButton, Button } from '@ComponentsV2Module'
+import {
+  Button,
+  MenuButton,
+  ResourceActionConfirmation,
+  Table,
+} from '@ComponentsV2Module'
 import { Box, Dialog, Stack, Typography } from '@mui/material'
 import PropTypes from 'prop-types'
 import { Component, useMemo, useState } from 'react'
@@ -251,9 +256,10 @@ export const Network = ({ data, config }) => {
           }),
     })
 
-  const { data: nics = [], isFetching: isFetchingNics } = vmnicsTable.useData({
-    id: selectedVm?.ID,
-  })
+  const { data: nics = [], isFetching: isFetchingNics } = vmnicsTable.useData(
+    { id: selectedVm?.ID },
+    { skip: !selectedVm?.ID }
+  )
   const { data: securityGroups = [], isFetching: isFetchingSecurityGroups } =
     SecurityGroupAPI.useGetSecGroupsQuery(undefined, {
       skip: !securityGroupsDialog,
@@ -369,8 +375,18 @@ export const Network = ({ data, config }) => {
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.DetachSomething} ${T.NIC} #${nic?.NIC_ID}`,
-        children: <p>{T.DoYouWantProceed}</p>,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.detach.confirmation']}
+            resources={{ ID: nic?.NIC_ID, NAME: nic?.NAME }}
+            resourceType={T.NIC}
+          />
+        ),
         dataCy: 'modal-detach-nic',
+        confirmLabel: T.Detach,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: handleDetachNic(nic),
     })
@@ -395,7 +411,13 @@ export const Network = ({ data, config }) => {
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.DetachSecurityGroup} ${securityGroupId} ${T.FromNic} #${nic?.NIC_ID}`,
-        children: <p>{T.DoYouWantProceed}</p>,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.detach.confirmation']}
+            resources={{ ID: securityGroupId }}
+            resourceType={T.SecurityGroup}
+          />
+        ),
         dataCy: `modal-detach-secgroup-${securityGroupId}-from-${nic?.NIC_ID}`,
         confirmLabel: T.Detach,
         confirmButtonProps: {

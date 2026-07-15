@@ -16,6 +16,7 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   SummarySlot,
   TabSlot,
@@ -27,6 +28,7 @@ import {
 import { Component } from 'react'
 import { prettyBytes, timeFromMilliseconds } from '@UtilsModule'
 import { VmTemplate } from '@ResourcesModule'
+import { getLabelTags } from '@ModelsModule'
 import {
   T,
   RESOURCE_NAMES,
@@ -96,7 +98,7 @@ export const SingleView = ({
         dataCy: 'modal-clone',
         description: (
           <ResourceActionConfirmation
-            description={T.DoYouWantProceed}
+            description={T['resource.clone.confirmation']}
             resources={selectedTemplate}
             resourceType={T.VMTemplates}
           />
@@ -118,7 +120,7 @@ export const SingleView = ({
         title: `${T.Delete} ${T.VMTemplate}`,
         description: (
           <ResourceActionConfirmation
-            description={T['template.delete.confirmation']}
+            description={T['resource.delete.confirmation']}
             resources={selectedTemplate}
             resourceType={T.VMTemplates}
           />
@@ -142,15 +144,45 @@ export const SingleView = ({
     await rename({ id: selectedTemplate?.ID, name: newName })
   }
 
-  const handleLock = async () => {
-    await lock({ id: selectedTemplate?.ID })
-    await refreshTemplate({ id: selectedTemplate?.ID })
-  }
+  const handleLock = () =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Lock,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.lock.confirmation']}
+            resources={selectedTemplate}
+            resourceType={T.VMTemplates}
+          />
+        ),
+        confirmLabel: T.Lock,
+      },
+      onSubmit: async () => {
+        await lock({ id: selectedTemplate?.ID })
+        await refreshTemplate({ id: selectedTemplate?.ID })
+      },
+    })
 
-  const handleUnlock = async () => {
-    await unlock({ id: selectedTemplate?.ID })
-    await refreshTemplate({ id: selectedTemplate?.ID })
-  }
+  const handleUnlock = () =>
+    showModal({
+      isConfirmDialog: true,
+      dialogProps: {
+        title: T.Unlock,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.unlock.confirmation']}
+            resources={selectedTemplate}
+            resourceType={T.VMTemplates}
+          />
+        ),
+        confirmLabel: T.Unlock,
+      },
+      onSubmit: async () => {
+        await unlock({ id: selectedTemplate?.ID })
+        await refreshTemplate({ id: selectedTemplate?.ID })
+      },
+    })
 
   const handleEdit = () => {
     history.push(PATH.TEMPLATE.VMS.UPDATE, selectedTemplate)
@@ -201,6 +233,7 @@ export const SingleView = ({
             }`,
             title: selectedTemplate?.NAME,
             id: selectedTemplate?.ID,
+            tags: getLabelTags(selectedTemplate?.LABELS),
             labels: [
               [T.Owner, selectedTemplate?.UNAME],
               [T.Group, selectedTemplate?.GNAME],
@@ -242,14 +275,6 @@ export const SingleView = ({
                   options={[
                     [
                       {
-                        startIcon: <RefreshDouble width="16px" height="16px" />,
-                        onClick: () =>
-                          refreshTemplate({ id: selectedTemplate?.ID }),
-                        value: 'refresh',
-                        tooltip: T.Refresh,
-                        isDisabled: isActionsDisabled,
-                      },
-                      {
                         startIcon: <Play width="16px" height="16px" />,
                         onClick: handleInstantiate,
                         value: 'instantiate',
@@ -263,9 +288,22 @@ export const SingleView = ({
                         tooltip: T.Export,
                         isDisabled: templateIsLocked || isActionsDisabled,
                       },
+                      {
+                        startIcon: <CloneIcon width="16px" height="16px" />,
+                        onClick: handleOpenCloneForm,
+                        value: 'clone',
+                        tooltip: T.Clone,
+                        isDisabled: templateIsLocked || isActionsDisabled,
+                      },
                     ],
-
                     [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [selectedTemplate],
+                          resourceType: RESOURCE_NAMES.VM_TEMPLATE,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
                       {
                         startIcon: <Edit width="16px" height="16px" />,
                         onClick: handleEdit,
@@ -274,11 +312,12 @@ export const SingleView = ({
                         isDisabled: templateIsLocked || isActionsDisabled,
                       },
                       {
-                        startIcon: <CloneIcon width="16px" height="16px" />,
-                        onClick: handleOpenCloneForm,
-                        value: 'clone',
-                        tooltip: T.Clone,
-                        isDisabled: templateIsLocked || isActionsDisabled,
+                        startIcon: <RefreshDouble width="16px" height="16px" />,
+                        onClick: () =>
+                          refreshTemplate({ id: selectedTemplate?.ID }),
+                        value: 'refresh',
+                        tooltip: T.Refresh,
+                        isDisabled: isActionsDisabled,
                       },
                     ],
 
@@ -299,6 +338,7 @@ export const SingleView = ({
                         onClick: handleOpenDeleteForm,
                         value: 'delete',
                         tooltip: T.Delete,
+                        isDestructive: true,
                         isDisabled: templateIsLocked || isActionsDisabled,
                       },
                       {

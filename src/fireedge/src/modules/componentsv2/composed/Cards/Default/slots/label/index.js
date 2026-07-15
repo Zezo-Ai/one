@@ -19,6 +19,7 @@ import PropTypes from 'prop-types'
 import { Box } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/composed/Cards/Default/slots/label/styles'
 import { Tag } from '@modules/componentsv2/primitives/Tags'
+import { TagList } from '@modules/componentsv2/primitives/Tags/List'
 
 const getLabelTitleClassName = (className) =>
   ['tag-title', className].filter(Boolean).join(' ')
@@ -27,10 +28,12 @@ const getLabelTitleClassName = (className) =>
  * LabelSlot component.
  *
  * @param {object} root0 - Params
- * @param {string} root0.label - Label text
+ * @param {Array} root0.labels - Informational tags
+ * @param {Array} root0.tags - Label tags
+ * @param {number} root0.max - Maximum number of tags to display
  * @returns {Component} - LabelSlot component
  */
-export const LabelSlot = forwardRef(({ labels = [] }, ref) => {
+export const LabelSlot = forwardRef(({ labels = [], tags = [], max }, ref) => {
   const renderLabel = (label, idx) => {
     if (!Array.isArray(label)) {
       const tagOptions =
@@ -68,12 +71,15 @@ export const LabelSlot = forwardRef(({ labels = [] }, ref) => {
       ref={ref}
     >
       {labels?.map(renderLabel)}
+      {tags.length > 0 && <TagList tags={tags} max={max} />}
     </Box>
   )
 })
 
 LabelSlot.propTypes = {
   labels: PropTypes.array,
+  tags: PropTypes.array,
+  max: PropTypes.number,
 }
 
 LabelSlot.displayName = 'LabelSlot'

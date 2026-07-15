@@ -32,7 +32,7 @@ import {
 } from '@mui/material'
 import { Group } from 'iconoir-react'
 import { AffinityGroup } from './affinityGroup'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 /**
@@ -51,6 +51,7 @@ const RoleAffinityPanel = ({
   antiAffinedGroups,
   onGroupsChange,
 }) => {
+  const { translate } = useTranslation()
   const [affinityType, setAffinityType] = useState('AFFINED')
   const [selectedRoles, setSelectedRoles] = useState([])
 
@@ -165,10 +166,10 @@ const RoleAffinityPanel = ({
               fullWidth
             >
               <ToggleButton data-cy="policy-AFFINED" value="AFFINED">
-                {Tr(T.Affined)}
+                {translate(T.Affined)}
               </ToggleButton>
               <ToggleButton data-cy="policy-ANTI_AFFINED" value="ANTI_AFFINED">
-                {Tr(T.AntiAffined)}
+                {translate(T.AntiAffined)}
               </ToggleButton>
             </ToggleButtonGroup>
             <List
@@ -221,7 +222,7 @@ const RoleAffinityPanel = ({
               size="large"
               fullWidth
             >
-              {Tr(T.AddGroup)}
+              {translate(T.AddGroup)}
             </Button>
           </CardActions>
         </Card>
@@ -240,7 +241,7 @@ const RoleAffinityPanel = ({
                     color: affinedGroups.length ? 'inherit' : 'text.disabled',
                   }}
                 >
-                  {Tr(T.AffinedGroups)}
+                  {translate(T.AffinedGroups)}
                 </Typography>
                 <Box maxHeight={'500px'} minHeight={'500px'} overflow={'auto'}>
                   <AffinityGroup
@@ -267,7 +268,7 @@ const RoleAffinityPanel = ({
                       : 'text.disabled',
                   }}
                 >
-                  {Tr(T.AntiAffinedGroups)}
+                  {translate(T.AntiAffinedGroups)}
                 </Typography>
                 <Box maxHeight={'500px'} minHeight={'500px'} overflow={'auto'}>
                   <AffinityGroup

@@ -28,6 +28,7 @@ import { List as MUIList, Typography, Box, Stack } from '@mui/material'
 import { getStyles } from '@modules/componentsv2/primitives/Lists/Default/styles'
 import { v4 as uuidv4 } from 'uuid'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} opts - Params
@@ -47,6 +48,7 @@ export const List = forwardRef(
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const parentRef = useRef(null)
     const listId = useMemo(() => uuidv4(), [])
     const isOrdered = type === 'ordered'
@@ -74,7 +76,9 @@ export const List = forwardRef(
 
     return (
       <Box sx={(theme) => getStyles({ theme, type, isLoading })}>
-        {title && <Typography className="list-header">{title}</Typography>}
+        {title && (
+          <Typography className="list-header">{translate(title)}</Typography>
+        )}
         <MUIList className="list-container" ref={parentRef}>
           <Box
             className="list-virtual-container"

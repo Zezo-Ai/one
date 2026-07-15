@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Tooltip, Typography } from '@mui/material'
 import { memo } from 'react'
 import { Button } from '@modules/componentsv2/primitives/Buttons/Default'
 import PropTypes from 'prop-types'
@@ -26,46 +25,24 @@ export const SubmitButton = memo(
     title,
     tooltipLink,
     tooltip: tooltipText,
+    tooltipprops,
     ...props
-  }) => {
-    const hasTooltip =
-      typeof tooltipText === 'string'
-        ? tooltipText.trim().length > 0
-        : !!tooltipText
-
-    const buttonContent = (
-      <Button
-        isDisabled={isDisabled || isSubmitting}
-        {...props}
-        htmlType="submit"
-      >
-        {label || title}
-      </Button>
-    )
-
-    return hasTooltip ? (
-      <Tooltip
-        arrow
-        placement="bottom"
-        title={
-          tooltipLink ? (
-            <Typography variant="subtitle2">
-              {tooltipText}
-              <a target="_blank" href={tooltipLink.link} rel="noreferrer">
-                {tooltipLink.text}
-              </a>
-            </Typography>
-          ) : (
-            <Typography variant="subtitle2">{tooltipText}</Typography>
-          )
-        }
-      >
-        <span>{buttonContent}</span>
-      </Tooltip>
-    ) : (
-      buttonContent
-    )
-  },
+  }) => (
+    <Button
+      isDisabled={isDisabled || isSubmitting}
+      {...props}
+      htmlType="submit"
+      tooltip={tooltipText}
+      tooltipLink={tooltipLink}
+      tooltipprops={{
+        arrow: true,
+        placement: 'bottom',
+        ...tooltipprops,
+      }}
+    >
+      {label || title}
+    </Button>
+  ),
   (prev, next) =>
     prev.icon === next.icon &&
     prev.isSubmitting === next.isSubmitting &&
@@ -76,9 +53,9 @@ export const SubmitButton = memo(
 
 const SubmitButtonPropTypes = {
   children: PropTypes.any,
-  endIcon: PropTypes.node,
-  startIcon: PropTypes.node,
-  iconOnly: PropTypes.node,
+  endIcon: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
+  startIcon: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
+  iconOnly: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
   label: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
   tooltip: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),

@@ -17,8 +17,10 @@
 import { Component, forwardRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { Box, Tabs as MUITabs, Tab as MUITab } from '@mui/material'
+import { WarningCircle } from 'iconoir-react'
 import { getStyles } from '@modules/componentsv2/primitives/Tabs/Default/styles'
 import { renderIcon } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * @param {object} root0 - Params
@@ -28,6 +30,7 @@ import { renderIcon } from '@UtilsModule'
  */
 export const Tabs = forwardRef(
   ({ type = 'default', options = [], defaultSelect = null, onChange }, ref) => {
+    const { translateText } = useTranslation()
     const [selected, setSelected] = useState(defaultSelect)
     const handleChange = (_, newValue) => {
       setSelected(newValue)
@@ -38,44 +41,63 @@ export const Tabs = forwardRef(
 
     return (
       <Box ref={ref} sx={(theme) => ({ ...getStyles({ theme, type }) })}>
-        <MUITabs value={selected} className="tabbar" onChange={handleChange}>
+        <MUITabs
+          value={selected}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          className="tabbar"
+          onChange={handleChange}
+        >
           {options?.map(
             (
               {
                 startIcon,
+                id,
+                dataCy,
                 title,
                 onClick = () => {},
                 endIcon,
+                error = false,
                 value,
                 disabled = false,
               },
               idx
-            ) => (
-              <MUITab
-                key={value ?? idx}
-                value={value ?? idx}
-                disabled={disabled}
-                onClick={onClick}
-                disableRipple
-                disableFocusRipple
-                label={
-                  <Box className="tab-label" data-text={title}>
-                    {startIcon &&
-                      renderIcon(startIcon, { className: 'tab-starticon' })}
-                    <Box
-                      component="span"
-                      className="tab-title"
-                      data-text={title}
-                    >
-                      {title}
+            ) => {
+              const translatedTitle =
+                typeof title === 'string' ? translateText(title) : title
+
+              return (
+                <MUITab
+                  key={value ?? idx}
+                  value={value ?? idx}
+                  data-cy={dataCy ?? (id ? `tab-${id}` : undefined)}
+                  aria-invalid={error || undefined}
+                  disabled={disabled}
+                  onClick={onClick}
+                  disableRipple
+                  disableFocusRipple
+                  label={
+                    <Box className="tab-label" data-text={translatedTitle}>
+                      {(error || startIcon) &&
+                        renderIcon(error ? WarningCircle : startIcon, {
+                          className: 'tab-starticon',
+                        })}
+                      <Box
+                        component="span"
+                        className="tab-title"
+                        data-text={translatedTitle}
+                      >
+                        {translatedTitle}
+                      </Box>
+                      {endIcon &&
+                        renderIcon(endIcon, { className: 'tab-endicon' })}
                     </Box>
-                    {endIcon &&
-                      renderIcon(endIcon, { className: 'tab-endicon' })}
-                  </Box>
-                }
-                className="tab"
-              />
-            )
+                  }
+                  className={`tab${error ? ' tab-error' : ''}`}
+                />
+              )
+            }
           )}
         </MUITabs>
       </Box>

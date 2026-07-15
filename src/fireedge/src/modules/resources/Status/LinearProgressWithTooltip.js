@@ -18,7 +18,7 @@ import PropTypes from 'prop-types'
 
 import { Tooltip, Typography, Box } from '@mui/material'
 import { Component } from 'react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * `LinearProgressWithTooltip` component displays a linear progress bar with a label and an optional tooltip.
@@ -39,27 +39,33 @@ const LinearProgressWithTooltip = ({
   icon,
   high,
   low,
-}) => (
-  <Box display="flex" alignItems="center">
-    <Box flexGrow={1} lineHeight={1}>
-      <LinearProgressWithLabel
-        value={value}
-        label={label}
-        high={high}
-        low={low}
-      />
-    </Box>
-    <Tooltip
-      arrow
-      placement="right"
-      title={<Typography variant="subtitle2">{Tr(tooltipTitle)}</Typography>}
-    >
-      <Box component="span" ml={2} mt={1} mr={2} lineHeight={1}>
-        {icon}
+}) => {
+  const { translate } = useTranslation()
+
+  return (
+    <Box display="flex" alignItems="center">
+      <Box flexGrow={1} lineHeight={1}>
+        <LinearProgressWithLabel
+          value={value}
+          label={label}
+          high={high}
+          low={low}
+        />
       </Box>
-    </Tooltip>
-  </Box>
-)
+      <Tooltip
+        arrow
+        placement="right"
+        title={
+          <Typography variant="subtitle2">{translate(tooltipTitle)}</Typography>
+        }
+      >
+        <Box component="span" ml={2} mt={1} mr={2} lineHeight={1}>
+          {icon}
+        </Box>
+      </Tooltip>
+    </Box>
+  )
+}
 
 LinearProgressWithTooltip.propTypes = {
   value: PropTypes.number.isRequired,

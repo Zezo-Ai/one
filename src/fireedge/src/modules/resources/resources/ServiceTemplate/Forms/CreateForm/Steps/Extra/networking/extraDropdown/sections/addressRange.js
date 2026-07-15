@@ -28,7 +28,7 @@ import { STEP_ID as EXTRA_ID } from '@modules/resources/resources/ServiceTemplat
 
 import { SECTION_ID as EXTRA_SECTION_ID } from '@modules/resources/resources/ServiceTemplate/Forms/CreateForm/Steps/Extra/networking/extraDropdown'
 import { useModalsApi } from '@FeaturesModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import {
   RESTRICTED_ATTRIBUTES_TYPE,
   STYLE_BUTTONS,
@@ -37,7 +37,13 @@ import {
   VN_ACTIONS,
 } from '@ConstantsModule'
 import { getARLeasesInfo } from '@ModelsModule'
-import { ProgressBar, SubmitButton, Table, Tag } from '@ComponentsV2Module'
+import {
+  ProgressBar,
+  ResourceActionConfirmation,
+  SubmitButton,
+  Table,
+  Tag,
+} from '@ComponentsV2Module'
 
 const SECTION_ID = 'AR'
 const FORM_DIALOG_SIZE = {
@@ -117,7 +123,17 @@ const AddressRanges = ({ selectedNetwork }) => {
             <Translate word={T.DeleteAddressRange} />: #{idx}
           </>
         ),
-        description: <Translate word={T.DoYouWantProceed} />,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={{ ID: idx }}
+            resourceType={T.AddressRanges}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: () => handleRemove(idx),
     })
@@ -191,7 +207,6 @@ const AddressRanges = ({ selectedNetwork }) => {
 
         return (
           <ProgressBar
-            size="small"
             value={percentOfUsed}
             label={percentLabel}
             isLabelVisible

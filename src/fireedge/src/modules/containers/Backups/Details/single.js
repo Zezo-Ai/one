@@ -15,8 +15,10 @@
  * ------------------------------------------------------------------------- */
 
 import {
+  ButtonGroup,
   DetailsDrawer,
   InfoSlot,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
   ToggleGroup,
@@ -26,7 +28,14 @@ import { unset } from 'lodash'
 import { Box, useTheme } from '@mui/material'
 import { Component, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { RefreshCircular, RefreshDouble, Trash, Cancel } from 'iconoir-react'
+import {
+  RefreshCircular,
+  RefreshDouble,
+  Trash,
+  Cancel,
+  Lock,
+  NoLock,
+} from 'iconoir-react'
 import { IMAGE_ACTIONS, T } from '@ConstantsModule'
 import { cloneObject, createActions, jsonToXml, set } from '@UtilsModule'
 import { ImageAPI, useModalsApi } from '@FeaturesModule'
@@ -76,6 +85,8 @@ export const SingleView = ({
   const { palette } = useTheme()
   const { showModal } = useModalsApi()
 
+  const [lock, { isLoading: isLocking }] = ImageAPI.useLockImageMutation()
+  const [unlock, { isLoading: isUnlocking }] = ImageAPI.useUnlockImageMutation()
   const [refresh, { data: refreshedData = {}, isFetching }] =
     ImageAPI.useLazyGetImageQuery()
   const [restore, { isLoading: isRestoring }] =
@@ -99,12 +110,13 @@ export const SingleView = ({
   const type = useMemo(() => getImageType(data), [data])
   const { DATASTORE, PERSISTENT } = data
 
-  const modalLabel = `#${ID} ${data?.NAME}`.trim()
   const backupIsLocked = data?.LOCK != null
 
   const isActionsDisabled =
     ID === undefined ||
     isFetching ||
+    isLocking ||
+    isUnlocking ||
     isRestoring ||
     isDeleting ||
     isRenaming ||
@@ -117,15 +129,28 @@ export const SingleView = ({
   const refreshCurrentData = async () =>
     ID !== undefined && (await refresh({ id: ID }))
 
-  const getConfirmationDescription = () =>
-    `${T.Backup}: ${modalLabel}. ${T.DoYouWantProceed}`
+  const getResourceConfirmation = (description) => (
+    <ResourceActionConfirmation
+      description={description}
+      resources={data}
+      resourceType={T.Backups}
+    />
+  )
 
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({
+    title,
+    description,
+    confirmLabel,
+    confirmButtonProps,
+    onSubmit,
+  }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
-        description: getConfirmationDescription(),
+        description,
+        confirmLabel,
+        confirmButtonProps,
       },
       onSubmit,
     })
@@ -154,9 +179,36 @@ export const SingleView = ({
       },
     })
 
+  const handleLock = () =>
+    handleConfirmAction({
+      title: `${T.Lock} ${T.Backup}`,
+      description: getResourceConfirmation(T['resource.lock.confirmation']),
+      confirmLabel: T.Lock,
+      onSubmit: async () => {
+        await lock({ id: ID })
+        await refreshCurrentData()
+      },
+    })
+
+  const handleUnlock = () =>
+    handleConfirmAction({
+      title: `${T.Unlock} ${T.Backup}`,
+      description: getResourceConfirmation(T['resource.unlock.confirmation']),
+      confirmLabel: T.Unlock,
+      onSubmit: async () => {
+        await unlock({ id: ID })
+        await refreshCurrentData()
+      },
+    })
+
   const handleDelete = () =>
     handleConfirmAction({
-      title: T.Delete,
+      title: `${T.Delete} ${T.Backup}`,
+      description: getResourceConfirmation(T['resource.delete.confirmation']),
+      confirmLabel: T.Delete,
+      confirmButtonProps: {
+        isDestructive: true,
+      },
       onSubmit: async () => {
         await deleteImage({ id: ID })
         handleClose()
@@ -220,15 +272,30 @@ export const SingleView = ({
     await refreshCurrentData()
   }
 
+  const lockButtons = createActions({
+    filters: availableActions,
+    actions: [
+      {
+        accessor: IMAGE_ACTIONS.LOCK,
+        startIcon: <Lock width="16px" height="16px" />,
+        onClick: handleLock,
+        value: IMAGE_ACTIONS.LOCK,
+        isDisabled: isActionsDisabled,
+        tooltip: T.Lock,
+      },
+      {
+        accessor: IMAGE_ACTIONS.UNLOCK,
+        startIcon: <NoLock width="16px" height="16px" />,
+        onClick: handleUnlock,
+        value: IMAGE_ACTIONS.UNLOCK,
+        isDisabled: isActionsDisabled,
+        tooltip: T.Unlock,
+      },
+    ],
+  })
+
   const toggleOptions = [
     [
-      {
-        startIcon: <RefreshDouble width="16px" height="16px" />,
-        onClick: handleRefresh,
-        value: 'refresh',
-        tooltip: T.Refresh,
-        isDisabled: isActionsDisabled,
-      },
       ...createActions({
         filters: availableActions,
         actions: [
@@ -242,6 +309,15 @@ export const SingleView = ({
           },
         ],
       }),
+    ],
+    [
+      {
+        startIcon: <RefreshDouble width="16px" height="16px" />,
+        onClick: handleRefresh,
+        value: 'refresh',
+        tooltip: T.Refresh,
+        isDisabled: isActionsDisabled,
+      },
     ],
     [
       ...createActions({
@@ -263,6 +339,7 @@ export const SingleView = ({
             onClick: handleDelete,
             value: IMAGE_ACTIONS.DELETE,
             title: T.Delete,
+            isDestructive: true,
             isDisabled: isActionsDisabled,
           },
         ],
@@ -297,6 +374,16 @@ export const SingleView = ({
                   gap: `${theme.scale[500]}px`,
                 })}
               >
+                {lockButtons.length > 0 && (
+                  <ButtonGroup
+                    selected={[
+                      backupIsLocked
+                        ? IMAGE_ACTIONS.LOCK
+                        : IMAGE_ACTIONS.UNLOCK,
+                    ]}
+                    buttons={lockButtons}
+                  />
+                )}
                 <ToggleGroup size="medium" options={toggleOptions} />
               </Box>
             ),

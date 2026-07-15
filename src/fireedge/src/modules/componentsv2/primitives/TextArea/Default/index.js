@@ -21,6 +21,7 @@ import { getStyles } from '@modules/componentsv2/primitives/TextArea/Default/sty
 import { T } from '@ConstantsModule'
 import { renderIcon } from '@UtilsModule'
 import { Label } from '@modules/componentsv2/primitives/Labels/Default'
+import { useTranslation } from '@ProvidersModule'
 
 /**
  * TextArea input component .
@@ -61,10 +62,12 @@ export const TextArea = forwardRef(
       initialValue,
       minRows = 8,
       maxRows,
+      inputProps,
       ...opts
     },
     ref
   ) => {
+    const { translate } = useTranslation()
     const [value, setValue] = useState(initialValue ?? '')
     const [charCount, setCharCount] = useState(null)
 
@@ -100,7 +103,9 @@ export const TextArea = forwardRef(
             {label}
           </Label>
         )}
-        {hint && <Typography className={'textarea-hint'}>{hint}</Typography>}
+        {hint && (
+          <Typography className={'textarea-hint'}>{translate(hint)}</Typography>
+        )}
         <Box className={'textarea-container'}>
           {startIcon && renderIcon(startIcon, { className: 'start-icon' })}
           <Box
@@ -108,9 +113,10 @@ export const TextArea = forwardRef(
             className={'textarea'}
             variant="body1"
             value={value}
-            placeholder={placeholder}
+            placeholder={translate(placeholder)}
             minRows={minRows}
             maxRows={maxRows}
+            {...inputProps}
             onChange={(event) => {
               setValue(event?.target?.value)
             }}
@@ -120,7 +126,7 @@ export const TextArea = forwardRef(
         </Box>
         {isCountChars && (
           <Typography className={'textarea-character-count'}>
-            {T.CharCount}
+            {translate(T.CharCount)}
             {charCount > 0 ? ` ${charCount}` : ''}
           </Typography>
         )}
@@ -145,6 +151,7 @@ TextArea.propTypes = {
   initialValue: PropTypes.string,
   minRows: PropTypes.number,
   maxRows: PropTypes.number,
+  inputProps: PropTypes.object,
 }
 
 TextArea.displayName = 'TextArea'

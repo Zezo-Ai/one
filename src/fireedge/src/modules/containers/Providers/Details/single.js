@@ -16,14 +16,22 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   SummarySlot,
   TabSlot,
   ToggleGroup,
+  ResourceActionConfirmation,
 } from '@ComponentsV2Module'
-import { LOGO_DRIVERS_IMAGES_URL, PROVIDER_ACTIONS, T } from '@ConstantsModule'
+import {
+  LOGO_DRIVERS_IMAGES_URL,
+  PROVIDER_ACTIONS,
+  RESOURCE_NAMES,
+  T,
+} from '@ConstantsModule'
 import { ProviderAPI, useModalsApi } from '@FeaturesModule'
 import { Provider } from '@ResourcesModule'
+import { getLabelTags } from '@ModelsModule'
 import {
   permissionsToOctal,
   timeFromMilliseconds,
@@ -100,7 +108,17 @@ export const SingleView = ({
       isConfirmDialog: true,
       dialogProps: {
         title: `${T.Delete} ${T.Providers}`,
-        description: T.DoYouWantProceed,
+        description: (
+          <ResourceActionConfirmation
+            description={T['resource.delete.confirmation']}
+            resources={provider}
+            resourceType={T.Providers}
+          />
+        ),
+        confirmLabel: T.Delete,
+        confirmButtonProps: {
+          isDestructive: true,
+        },
       },
       onSubmit: async () => {
         await remove({ id: ID })
@@ -153,6 +171,7 @@ export const SingleView = ({
             icon: getLogoSource(fireedge),
             title: NAME,
             id: ID,
+            tags: getLabelTags(provider?.LABELS),
             labels: [
               [T.Owner, UNAME],
               [T.Group, GNAME],
@@ -170,6 +189,13 @@ export const SingleView = ({
                   size="medium"
                   options={[
                     [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [provider],
+                          resourceType: RESOURCE_NAMES.PROVIDER,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
                       {
                         startIcon: <RefreshDouble width="16px" height="16px" />,
                         onClick: handleRefresh,

@@ -21,6 +21,7 @@ import { Field, getValidationFromFields } from '@UtilsModule'
 import { ObjectSchema, array, object, string } from 'yup'
 
 const getHostModel = (zoneId) => ({
+  dataCy: 'hosts',
   columns: hostTable.columns,
   useData: (_args, options) => hostTable.useData({ zone: zoneId }, options),
 })

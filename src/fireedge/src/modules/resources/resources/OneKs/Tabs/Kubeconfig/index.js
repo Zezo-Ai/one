@@ -19,7 +19,7 @@ import { Alert, Box } from '@mui/material'
 import { OneKsAPI } from '@FeaturesModule'
 import { CodeSnippet } from '@ComponentsV2Module'
 import { T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { isEmpty } from 'lodash'
 
 /**
@@ -30,6 +30,7 @@ import { isEmpty } from 'lodash'
  * @returns {Component} Configuration tab
  */
 const KubernetesConfig = ({ data: tabData }) => {
+  const { translate } = useTranslation()
   const id = tabData?.selected?.ID ?? tabData?.id
   const { data: cluster = {} } = OneKsAPI.useGetOneKsClusterQuery(
     { id, expand: true },
@@ -48,7 +49,7 @@ const KubernetesConfig = ({ data: tabData }) => {
   if (isEmpty(DOCUMENT) || !data?.kubeconfig || error) {
     return (
       <Alert severity="info" variant="outlined">
-        {Tr(T['oneks.tab.info.kubeconfig.help.paragraph'])}
+        {translate(T['oneks.tab.info.kubeconfig.help.paragraph'])}
       </Alert>
     )
   }

@@ -22,13 +22,14 @@ import styles from '@modules/resources/Forms/OneKs/CreateOneKsClusterForm/Steps/
 import { STEP_ID as FAMILY_ID } from '@modules/resources/Forms/OneKs/CreateOneKsClusterForm/Steps/Family'
 import { useFormContext, useController } from 'react-hook-form'
 import clsx from 'clsx'
-import { Tr } from '@modules/resources/HOC'
 import { sanitize } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 
 export const STEP_ID = 'flavours'
 const defaultTypeForm = 'cluster'
 
 const Content = (families, typeForm) => {
+  const { translate } = useTranslation()
   // Theme
   const theme = useTheme()
   // Style classes
@@ -56,8 +57,8 @@ const Content = (families, typeForm) => {
     <>
       <Alert severity="info" variant="outlined" className={classes.groupInfo}>
         {typeForm === defaultTypeForm
-          ? Tr(T['oneks.form.create.flavour.help.parapraph'])
-          : Tr(T['oneks.form.create_nodegroup.flavour.help.paragraph'])}
+          ? translate(T['oneks.form.create.flavour.help.parapraph'])
+          : translate(T['oneks.form.create_nodegroup.flavour.help.paragraph'])}
       </Alert>
       {error && (
         <Alert
@@ -65,7 +66,7 @@ const Content = (families, typeForm) => {
           variant="outlined"
           className={classes.groupInfo}
         >
-          {Tr(T['oneks.form.create.flavours.error'])}
+          {translate(T['oneks.form.create.flavours.error'])}
         </Alert>
       )}
       <Grid container spacing={2} className={classes.container}>

@@ -32,7 +32,7 @@ import {
 } from 'iconoir-react'
 
 import SelectCard from '@modules/resources/Cards/SelectCard'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const useStyles = (theme) => ({
@@ -44,6 +44,7 @@ const useStyles = (theme) => ({
 
 const ApplicationTemplateCard = memo(
   ({ value, handleEdit, handleDeploy, handleShow, handleRemove }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => useStyles(theme), [theme])
     const { NAME, TEMPLATE } = value
@@ -60,7 +61,7 @@ const ApplicationTemplateCard = memo(
           <Box className={classes.badgesWrapper}>
             <Badge
               showZero
-              title={Tr(T.Tiers)}
+              title={translate(T.Tiers)}
               classes={{ badge: 'badge' }}
               color="primary"
               badgeContent={numberOfTiers}
@@ -70,7 +71,7 @@ const ApplicationTemplateCard = memo(
             </Badge>
             <Badge
               showZero
-              title={Tr(T.Networks)}
+              title={translate(T.Networks)}
               classes={{ badge: 'badge' }}
               color="primary"
               badgeContent={numberOfNetworks}
@@ -88,7 +89,7 @@ const ApplicationTemplateCard = memo(
               onClick={handleEdit}
               disableElevation
             >
-              {Tr(T.Edit)}
+              {translate(T.Edit)}
             </Button>
           )}
           {handleDeploy && (
@@ -98,7 +99,7 @@ const ApplicationTemplateCard = memo(
               onClick={handleDeploy}
               disableElevation
             >
-              {Tr(T.Deploy)}
+              {translate(T.Deploy)}
             </Button>
           )}
           {handleShow && (
@@ -108,12 +109,12 @@ const ApplicationTemplateCard = memo(
               onClick={handleShow}
               disableElevation
             >
-              {Tr(T.Info)}
+              {translate(T.Info)}
             </Button>
           )}
           {handleRemove && (
             <Button size="small" onClick={handleRemove} disableElevation>
-              {Tr(T.Remove)}
+              {translate(T.Remove)}
             </Button>
           )}
         </CardActions>

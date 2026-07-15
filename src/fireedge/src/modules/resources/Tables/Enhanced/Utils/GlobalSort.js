@@ -22,7 +22,7 @@ import { UseSortByInstanceProps, UseSortByState } from 'opennebula-react-table'
 
 import { T } from '@ConstantsModule'
 import HeaderPopover from '@modules/resources/Header/Popover'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 /**
  * Render all selected sorters.

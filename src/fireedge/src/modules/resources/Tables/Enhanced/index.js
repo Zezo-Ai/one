@@ -59,7 +59,7 @@ import EnhancedTableStyles from '@modules/resources/Tables/Enhanced/styles'
 
 import { T } from '@ConstantsModule'
 import { useAuth } from '@FeaturesModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import _ from 'lodash'
 
 const RELOAD_STATE = 'RELOAD_STATE'

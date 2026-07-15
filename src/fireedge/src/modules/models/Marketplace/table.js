@@ -27,8 +27,6 @@ import { createLabelColumn } from '@modules/models/labels'
 export const MARKETPLACE_COLUMNS = [
   { header: T.ID, accessorKey: 'ID', width: '5%' },
   { header: T.Name, accessorKey: 'NAME' },
-  { header: T.Owner, accessorKey: 'UNAME' },
-  { header: T.Group, accessorKey: 'GNAME' },
   {
     header: T.State,
     id: 'STATE',
@@ -50,7 +48,6 @@ export const MARKETPLACE_COLUMNS = [
         '-'
       ),
   },
-  { header: T.Zone, accessorKey: 'ZONE_ID' },
   {
     header: T.Apps,
     id: 'TOTAL_APPS',
@@ -67,7 +64,6 @@ export const MARKETPLACE_COLUMNS = [
 
       return (
         <ProgressBar
-          size="small"
           value={percentOfUsed}
           label={percentLabel}
           isLabelVisible
@@ -79,10 +75,14 @@ export const MARKETPLACE_COLUMNS = [
       )
     },
   },
+  { header: T.Zone, accessorKey: 'ZONE_ID' },
+  { header: T.Owner, accessorKey: 'UNAME' },
+  { header: T.Group, accessorKey: 'GNAME' },
   createLabelColumn(),
 ]
 
 export const marketplaceTable = createTable(
   MARKETPLACE_COLUMNS,
-  MarketplaceAPI.useGetMarketplacesQuery
+  MarketplaceAPI.useGetMarketplacesQuery,
+  { dataCy: 'marketplaces' }
 )

@@ -17,7 +17,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { DataGrid, GridToolbarFilterButton } from '@mui/x-data-grid'
 import { Box } from '@mui/material'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 const CustomToolbar = () => (
@@ -45,6 +45,7 @@ const CustomToolbar = () => (
  * @returns {React.Component} The rendered data grid table component.
  */
 const DataGridTable = ({ data, columns, enableToolbar = false }) => {
+  const { translate } = useTranslation()
   const flattenedData = data.flatMap((dataset) => dataset.data)
 
   return (
@@ -68,17 +69,17 @@ const DataGridTable = ({ data, columns, enableToolbar = false }) => {
             : {}
         }
         localeText={{
-          columnMenuLabel: Tr(T.ColumnMenuLabel),
-          columnMenuShowColumns: Tr(T.ColumnMenuShowColumns),
-          columnMenuManageColumns: Tr(T.ColumnMenuManageColumns),
-          columnMenuFilter: Tr(T.ColumnMenuFilter),
-          columnMenuHideColumn: Tr(T.ColumnMenuHideColumn),
-          columnMenuUnsort: Tr(T.ColumnMenuUnsort),
-          columnMenuSortAsc: Tr(T.ColumnMenuSortAsc),
-          columnMenuSortDesc: Tr(T.ColumnMenuSortDesc),
-          columnHeaderSortIconLabel: Tr(T.ColumnHeaderSortIconLabel),
+          columnMenuLabel: translate(T.ColumnMenuLabel),
+          columnMenuShowColumns: translate(T.ColumnMenuShowColumns),
+          columnMenuManageColumns: translate(T.ColumnMenuManageColumns),
+          columnMenuFilter: translate(T.ColumnMenuFilter),
+          columnMenuHideColumn: translate(T.ColumnMenuHideColumn),
+          columnMenuUnsort: translate(T.ColumnMenuUnsort),
+          columnMenuSortAsc: translate(T.ColumnMenuSortAsc),
+          columnMenuSortDesc: translate(T.ColumnMenuSortDesc),
+          columnHeaderSortIconLabel: translate(T.ColumnHeaderSortIconLabel),
           MuiTablePagination: {
-            labelRowsPerPage: Tr(T.RowsPerPage),
+            labelRowsPerPage: translate(T.RowsPerPage),
           },
         }}
       />

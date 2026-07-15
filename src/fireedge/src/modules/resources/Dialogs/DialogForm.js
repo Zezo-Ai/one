@@ -78,6 +78,7 @@ const DialogForm = ({
 
   return (
     <AlertDialog
+      dataCy={dataCy}
       title={title}
       onSubmit={handleSubmit && methods.handleSubmit(callbackSubmit)}
       onCancel={handleCancel}

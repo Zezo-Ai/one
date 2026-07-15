@@ -23,8 +23,8 @@ import {
 } from 'react'
 import { css } from '@emotion/css'
 import { prettyBytes } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import PropTypes from 'prop-types'
-import { Tr } from '@modules/resources/HOC'
 
 import { Actions } from '@modules/resources/Tabs/Common/Attribute'
 
@@ -99,6 +99,7 @@ const Text = forwardRef(
    * @returns {JSXElementConstructor} Text field
    */
   ({ name = '', initialValue = '', ...props }, ref) => {
+    const { translate } = useTranslation()
     const [newValue, setNewValue] = useState(() => initialValue)
 
     const handleChange = (event) => setNewValue(event.target.value)
@@ -111,7 +112,7 @@ const Text = forwardRef(
         inputRef={ref}
         onChange={handleChange}
         value={newValue}
-        name={Tr(name)}
+        name={translate(name)}
         {...props}
       />
     )

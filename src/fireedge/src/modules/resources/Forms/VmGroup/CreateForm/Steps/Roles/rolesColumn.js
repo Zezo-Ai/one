@@ -17,7 +17,7 @@ import { useCallback, Component } from 'react'
 import PropTypes from 'prop-types'
 import { Box, List, ListItem } from '@mui/material'
 import { Cancel } from 'iconoir-react'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, STYLE_BUTTONS } from '@ConstantsModule'
 import { SubmitButton } from '@ComponentsV2Module'
 
@@ -37,6 +37,7 @@ const RoleColumn = ({
   selectedRoleIndex,
   setSelectedRoleIndex,
 }) => {
+  const { translate } = useTranslation()
   const handleAddRole = useCallback(() => {
     const newRole = { NAME: '', POLICY: 'None' }
     onChange([...roles, newRole])
@@ -127,7 +128,7 @@ const RoleColumn = ({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {role?.NAME || Tr(T.NewRole)}
+                    {role?.NAME || translate(T.NewRole)}
                   </div>
                 </ListItem>
               ))}

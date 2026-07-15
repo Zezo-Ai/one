@@ -28,10 +28,10 @@ import {
 import { useAuth } from '@FeaturesModule'
 import MultipleTags from '@modules/resources/MultipleTagsCard'
 
-import { Tr } from '@modules/resources/HOC'
+import { getResourceLabels } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { StatusCircle } from '@modules/resources/Status'
 import { rowStyles } from '@modules/resources/Tables/styles'
-import { getResourceLabels } from '@UtilsModule'
 
 import { ALL_SELECTED, COLOR, RESOURCE_NAMES, T, VDC } from '@ConstantsModule'
 
@@ -49,6 +49,7 @@ const VirtualDataCenterCard = memo(
    * @returns {ReactElement} - Card
    */
   ({ template, rootProps, onClickLabel }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => rowStyles(theme), [theme])
     const { labels } = useAuth()
@@ -136,23 +137,23 @@ const VirtualDataCenterCard = memo(
           </div>
           <div className={classes.caption}>
             <span>{`#${ID}`}</span>
-            <span title={`${Tr(T.Groups)}: ${groupsCount}`}>
+            <span title={`${translate(T.Groups)}: ${groupsCount}`}>
               <GroupIcon />
               <span>{` ${groupsCount}`}</span>
             </span>
-            <span title={`${Tr(T.Clusters)}: ${clustersCount}`}>
+            <span title={`${translate(T.Clusters)}: ${clustersCount}`}>
               <ClusterIcon />
               <span>{` ${clustersCount}`}</span>
             </span>
-            <span title={`${Tr(T.Hosts)}: ${hostsCount}`}>
+            <span title={`${translate(T.Hosts)}: ${hostsCount}`}>
               <HostIcon />
               <span>{` ${hostsCount}`}</span>
             </span>
-            <span title={`${Tr(T.Datastores)}: ${datastoresCount}`}>
+            <span title={`${translate(T.Datastores)}: ${datastoresCount}`}>
               <DatastoreIcon />
               <span>{` ${datastoresCount}`}</span>
             </span>
-            <span title={`${Tr(T.VirtualNetworks)}: ${vnetsCount}`}>
+            <span title={`${translate(T.VirtualNetworks)}: ${vnetsCount}`}>
               <VNetIcon />
               <span>{` ${vnetsCount}`}</span>
             </span>

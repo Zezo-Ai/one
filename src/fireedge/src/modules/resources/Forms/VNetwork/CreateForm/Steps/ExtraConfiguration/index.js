@@ -29,7 +29,7 @@ import { Box } from '@mui/material'
 import { SCHEMA } from '@modules/resources/Forms/VNetwork/CreateForm/Steps/ExtraConfiguration/schema'
 import { STEP_ID as GENERAL_ID } from '@modules/resources/Forms/VNetwork/CreateForm/Steps/General'
 import { T, VirtualNetwork, RESOURCE_NAMES } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { useViews } from '@FeaturesModule'
 
 /**

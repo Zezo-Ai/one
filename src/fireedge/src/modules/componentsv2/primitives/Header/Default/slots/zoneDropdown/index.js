@@ -33,6 +33,7 @@ import { getZoneDetail, getZoneState } from '@ModelsModule'
 import { isSameId } from '@UtilsModule'
 import { getStyles } from '@modules/componentsv2/primitives/Header/Default/slots/zoneDropdown/styles'
 import { Tag } from '@modules/componentsv2/primitives/Tags/Default'
+import { useTranslation } from '@ProvidersModule'
 
 const ZoneStatusDot = ({ color }) => (
   <span className="status-dot" style={{ backgroundColor: color }} />
@@ -43,6 +44,7 @@ ZoneStatusDot.propTypes = {
 }
 
 const ZoneOption = ({ disabled, isCurrent, onClick, state, zone }) => {
+  const { translate } = useTranslation()
   const { NAME, ID } = zone
   const { color, name } = state ?? {}
   const detail = getZoneDetail(zone, name)
@@ -61,12 +63,14 @@ const ZoneOption = ({ disabled, isCurrent, onClick, state, zone }) => {
         <span className="name">{NAME}</span>
         {detail && (
           <span className="detail">
-            {name?.toLowerCase().replace(/^\w/, (c) => c.toUpperCase())}
+            {translate(
+              name?.toLowerCase().replace(/^\w/, (c) => c.toUpperCase())
+            )}
           </span>
         )}
       </span>
 
-      {isCurrent && <Tag title={T.Current} />}
+      {isCurrent && <Tag title={translate(T.Current)} />}
     </button>
   )
 }
@@ -87,6 +91,7 @@ ZoneOption.propTypes = {
  * @returns {Component} - Zone switcher slot
  */
 export const ZoneDropdownSlot = forwardRef(({ zones: zonesProp }, ref) => {
+  const { translate } = useTranslation()
   const [open, setOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState(null)
   const { data: fetchedZones = [], isLoading } = ZoneAPI.useGetZonesQuery()
@@ -101,7 +106,7 @@ export const ZoneDropdownSlot = forwardRef(({ zones: zonesProp }, ref) => {
   )
 
   const currentState = getZoneState(currentZone)
-  const currentName = currentZone?.NAME ?? T.Zones
+  const currentName = currentZone?.NAME ?? translate(T.Zones)
 
   const handleClose = () => setOpen(false)
 
@@ -152,7 +157,9 @@ export const ZoneDropdownSlot = forwardRef(({ zones: zonesProp }, ref) => {
       >
         <ClickAwayListener onClickAway={handleClose}>
           <Paper id="header-zone-menu" className="header-zone-menu">
-            <Typography className="zone-title">{T.CurrentZone}</Typography>
+            <Typography className="zone-title">
+              {translate(T.CurrentZone)}
+            </Typography>
 
             <Divider className="divider" />
 
@@ -173,7 +180,9 @@ export const ZoneDropdownSlot = forwardRef(({ zones: zonesProp }, ref) => {
                   )
                 })
               ) : (
-                <Typography className="zone-empty">{T.LoadingZones}</Typography>
+                <Typography className="zone-empty">
+                  {translate(T.LoadingZones)}
+                </Typography>
               )}
             </Box>
           </Paper>

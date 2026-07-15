@@ -28,7 +28,7 @@ import PropTypes from 'prop-types'
 import { Page as FileIcon } from 'iconoir-react'
 
 import SelectCard from '@modules/resources/Cards/SelectCard'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, APPLICATION_STATES } from '@ConstantsModule'
 
 const useStyles = (theme) => ({
@@ -39,6 +39,7 @@ const useStyles = (theme) => ({
 })
 
 const ApplicationCard = memo(({ value, handleShow, handleRemove }) => {
+  const { translate } = useTranslation()
   const theme = useTheme()
   const classes = useMemo(() => useStyles(theme), [theme])
   const { ID, NAME, TEMPLATE } = value
@@ -69,12 +70,12 @@ const ApplicationCard = memo(({ value, handleShow, handleRemove }) => {
             onClick={handleShow}
             disableElevation
           >
-            {Tr(T.Info)}
+            {translate(T.Info)}
           </Button>
         )}
         {handleRemove && (
           <Button size="small" onClick={handleRemove} disableElevation>
-            {Tr(T.Remove)}
+            {translate(T.Remove)}
           </Button>
         )}
       </CardActions>

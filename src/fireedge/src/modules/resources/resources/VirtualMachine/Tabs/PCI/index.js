@@ -14,19 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-import {
-  T,
-  VM_ACTIONS,
-  VM_ACTION_ENUM,
-  STYLE_BUTTONS,
-  STATES,
-} from '@ConstantsModule'
-import {
-  Table,
-  Button,
-  ResourceActionConfirmation,
-  AlertNotification,
-} from '@ComponentsV2Module'
+import { T, VM_ACTIONS, VM_ACTION_ENUM, STYLE_BUTTONS } from '@ConstantsModule'
+import { Table, Button, ResourceActionConfirmation } from '@ComponentsV2Module'
 import { Box } from '@mui/material'
 import PropTypes from 'prop-types'
 import { Component } from 'react'
@@ -34,11 +23,7 @@ import { getStyles } from '@modules/resources/resources/VirtualMachine/Tabs/PCI/
 import { VirtualMachine } from '@modules/resources/resources'
 import { Trash } from 'iconoir-react'
 import { useGeneralApi, useModalsApi, useSystemData } from '@FeaturesModule'
-import {
-  getVirtualMachineState,
-  isVmAvailableAction,
-  vmpcisTable,
-} from '@ModelsModule'
+import { isVmAvailableAction, vmpcisTable } from '@ModelsModule'
 
 const PCI_FORM_DIALOG_PROPS = {
   dialogWidth: {
@@ -62,8 +47,6 @@ export const PCI = ({ data, config }) => {
   const { enqueueSuccess } = useGeneralApi()
   const { oneConfig, adminGroup } = useSystemData()
   const { selectedVm } = data || {}
-  const vmState = getVirtualMachineState(selectedVm)?.name
-  const showPoweroffAlert = vmState !== undefined && vmState !== STATES.POWEROFF
 
   const { actions, isLoading: isPerformingAction } =
     VirtualMachine.Actions.useActions({
@@ -76,9 +59,10 @@ export const PCI = ({ data, config }) => {
           }),
     })
 
-  const { data: pcis = [], isFetching: isFetchingPcis } = vmpcisTable.useData({
-    id: selectedVm?.ID,
-  })
+  const { data: pcis = [], isFetching: isFetchingPcis } = vmpcisTable.useData(
+    { id: selectedVm?.ID },
+    { skip: !selectedVm?.ID }
+  )
 
   const handleAttachPci = async (formData) => {
     const result = await actions?.[VM_ACTION_ENUM.ATTACH_PCI]?.mutate(formData)
@@ -117,7 +101,7 @@ export const PCI = ({ data, config }) => {
         dataCy: 'modal-detach-pci',
         description: (
           <ResourceActionConfirmation
-            description={T.DoYouWantProceed}
+            description={T['resource.detach.confirmation']}
             resources={{ ID: pci?.PCI_ID }}
             resourceType={T.Pci}
           />
@@ -170,26 +154,6 @@ export const PCI = ({ data, config }) => {
 
   return (
     <Box sx={(theme) => getStyles({ theme })}>
-      <Box
-        sx={(theme) => ({
-          display: 'grid',
-          gap: `${theme.scale[400]}px`,
-          '& .pci-alert': {
-            width: '100%',
-          },
-        })}
-      >
-        {showPoweroffAlert && (
-          <AlertNotification
-            className="pci-alert"
-            type="primary"
-            status="information"
-            title={T.Notice}
-            description={T.PciAttachWarning}
-            isDismissible={false}
-          />
-        )}
-      </Box>
       <Button
         {...attachPciOption}
         type={STYLE_BUTTONS.TYPE.SECONDARY}

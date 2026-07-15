@@ -17,13 +17,13 @@
 import { T, UNITS } from '@ConstantsModule'
 import { SystemAPI } from '@FeaturesModule'
 import { css } from '@emotion/css'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
+import { formatNumberByCurrency } from '@UtilsModule'
 import { Typography, useTheme } from '@mui/material'
 import clsx from 'clsx'
 import PropTypes from 'prop-types'
 import { ReactElement, memo, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
-import { formatNumberByCurrency } from '@UtilsModule'
 
 const ARRAY_UNITS = Object.values(UNITS)
 ARRAY_UNITS.splice(0, 1) // remove KB

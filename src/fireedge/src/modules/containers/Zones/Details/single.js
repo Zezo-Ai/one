@@ -16,6 +16,7 @@
 
 import {
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
   SummarySlot,
   TabSlot,
@@ -27,9 +28,9 @@ import { Box } from '@mui/material'
 import { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Cancel, RefreshDouble } from 'iconoir-react'
-import { T } from '@ConstantsModule'
+import { RESOURCE_NAMES, T } from '@ConstantsModule'
 import { ZoneAPI } from '@FeaturesModule'
-import { getZoneState } from '@ModelsModule'
+import { getLabelTags, getZoneState } from '@ModelsModule'
 import { Zone } from '@ResourcesModule'
 
 /**
@@ -78,6 +79,7 @@ export const SingleView = ({
             isTitleEditDisabled: isRenaming,
             title: zone?.NAME,
             id: zone?.ID,
+            tags: getLabelTags(zone?.LABELS),
             Toolbar: () => (
               <Box
                 sx={(theme) => ({
@@ -90,6 +92,13 @@ export const SingleView = ({
                   size="medium"
                   options={[
                     [
+                      {
+                        ...getLabelMenuButtonProps({
+                          selectedRows: [zone],
+                          resourceType: RESOURCE_NAMES.ZONE,
+                          isDisabled: isActionsDisabled,
+                        }),
+                      },
                       {
                         startIcon: <RefreshDouble width="16px" height="16px" />,
                         onClick: handleRefresh,

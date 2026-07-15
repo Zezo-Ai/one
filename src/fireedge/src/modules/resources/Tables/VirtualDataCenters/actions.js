@@ -26,7 +26,7 @@ import {
 } from '@modules/resources/Tables/Enhanced/Utils'
 
 import { RESOURCE_NAMES, T, VDC_ACTIONS, PATH } from '@ConstantsModule'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 const ListVDCNames = ({ rows = [] }) =>
   rows?.map?.(({ id, original }) => {

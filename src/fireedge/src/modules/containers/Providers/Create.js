@@ -22,8 +22,8 @@ import {
   DefaultFormStepper,
   SkeletonStepsForm,
   Provider,
-  TranslateProvider,
 } from '@ResourcesModule'
+
 import { T, PATH } from '@ConstantsModule'
 
 const _ = require('lodash')
@@ -75,7 +75,7 @@ export function CreateProvider() {
   }
 
   return (
-    <TranslateProvider>
+    <>
       {!drivers || (providerId && !dataTemplate) ? (
         <SkeletonStepsForm />
       ) : (
@@ -91,6 +91,6 @@ export function CreateProvider() {
           {(config) => <DefaultFormStepper {...config} />}
         </Provider.Forms.CreateForm>
       )}
-    </TranslateProvider>
+    </>
   )
 }

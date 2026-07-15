@@ -17,7 +17,9 @@
 import {
   ButtonGroup,
   DetailsDrawer,
+  getLabelMenuButtonProps,
   InfoSlot,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
   ToggleGroup,
@@ -31,7 +33,6 @@ import {
   Cancel,
   CloudError,
   Network,
-  RefreshDouble,
   Trash,
   OnTag,
   OffTag,
@@ -94,13 +95,6 @@ export const AggregatedView = ({
   const handleRefresh = async () =>
     await Promise.all(selectedHosts.map(({ ID }) => refreshHost({ id: ID })))
 
-  const hostLabels = selectedHosts
-    .map(({ ID, NAME }) => `#${ID} ${NAME}`.trim())
-    .join(', ')
-
-  const getConfirmationDescription = () =>
-    `${T.Hosts}: ${hostLabels}. ${T.DoYouWantProceed}`
-
   const handleOpenChangeClusterForm = () =>
     showModal({
       name: T.SelectCluster,
@@ -122,12 +116,24 @@ export const AggregatedView = ({
       form: ChangeClusterForm(),
     })
 
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({ title, description, onSubmit }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
-        description: getConfirmationDescription(),
+        description: (
+          <ResourceActionConfirmation
+            description={description}
+            resources={selectedHosts}
+            resourceType={T.Hosts}
+          />
+        ),
+        confirmLabel: `${title}`.startsWith(T.Delete) ? T.Delete : title,
+        ...(`${title}`.startsWith(T.Delete) && {
+          confirmButtonProps: {
+            isDestructive: true,
+          },
+        }),
       },
       onSubmit,
     })
@@ -135,6 +141,7 @@ export const AggregatedView = ({
   const handleEnable = () =>
     handleConfirmAction({
       title: T.Enable,
+      description: T['resource.enable.confirmation'],
       onSubmit: async () => {
         await Promise.all(selectedHosts.map(({ ID }) => enableHost(ID)))
         await handleRefresh()
@@ -144,6 +151,7 @@ export const AggregatedView = ({
   const handleDisable = () =>
     handleConfirmAction({
       title: T.Disable,
+      description: T['resource.disable.confirmation'],
       onSubmit: async () => {
         await Promise.all(selectedHosts.map(({ ID }) => disableHost(ID)))
         await handleRefresh()
@@ -153,6 +161,7 @@ export const AggregatedView = ({
   const handleOffline = () =>
     handleConfirmAction({
       title: T.Offline,
+      description: T['resource.offline.confirmation'],
       onSubmit: async () => {
         await Promise.all(selectedHosts.map(({ ID }) => offlineHost(ID)))
         await handleRefresh()
@@ -162,6 +171,7 @@ export const AggregatedView = ({
   const handleDelete = () =>
     handleConfirmAction({
       title: T.Delete,
+      description: T['resource.delete.confirmation'],
       onSubmit: async () => {
         await Promise.all(selectedHosts.map(({ ID }) => removeHost({ id: ID })))
         handleClose()
@@ -215,28 +225,6 @@ export const AggregatedView = ({
   })
 
   const toggleOptions = [
-    [
-      {
-        startIcon: <RefreshDouble width="16px" height="16px" />,
-        onClick: handleRefresh,
-        value: 'refresh',
-        tooltip: T.Refresh,
-        isDisabled: isActionsDisabled,
-      },
-      ...createActions({
-        filters: viewActions,
-        actions: [
-          {
-            accessor: HOST_ACTIONS.CHANGE_CLUSTER,
-            startIcon: <Network width="16px" height="16px" />,
-            onClick: handleOpenChangeClusterForm,
-            value: HOST_ACTIONS.CHANGE_CLUSTER,
-            tooltip: T.SelectCluster,
-            isDisabled: isActionsDisabled,
-          },
-        ],
-      }),
-    ],
     createActions({
       filters: viewActions,
       actions: [
@@ -248,8 +236,25 @@ export const AggregatedView = ({
           tooltip: T.Offline,
           isDisabled: isActionsDisabled,
         },
+        {
+          accessor: HOST_ACTIONS.CHANGE_CLUSTER,
+          startIcon: <Network width="16px" height="16px" />,
+          onClick: handleOpenChangeClusterForm,
+          value: HOST_ACTIONS.CHANGE_CLUSTER,
+          tooltip: T.SelectCluster,
+          isDisabled: isActionsDisabled,
+        },
       ],
     }),
+    [
+      {
+        ...getLabelMenuButtonProps({
+          selectedRows: selectedHosts,
+          resourceType: RESOURCE_NAMES.HOST,
+          isDisabled: isActionsDisabled,
+        }),
+      },
+    ],
     [
       ...createActions({
         filters: viewActions,
@@ -270,6 +275,7 @@ export const AggregatedView = ({
             onClick: handleDelete,
             value: HOST_ACTIONS.DELETE,
             tooltip: T.Delete,
+            isDestructive: true,
             isDisabled: isActionsDisabled,
           },
         ],

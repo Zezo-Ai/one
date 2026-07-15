@@ -15,11 +15,12 @@
  * ------------------------------------------------------------------------- */
 import { memo } from 'react'
 import { Plus } from 'iconoir-react'
-import { Tr } from '@modules/resources/HOC'
+import { createFieldsFromOneKsOdsUserInputs } from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import { T, ONEKS_OPERATIONS, PATH } from '@ConstantsModule'
 import { CreateOneKsNodeGroupForm } from '@modules/resources/Forms/OneKs'
 import { OneKsAPI, useGeneralApi, useModalsApi } from '@FeaturesModule'
-import { createFieldsFromOneKsOdsUserInputs } from '@UtilsModule'
+
 import { generatePath, useHistory } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { SubmitButton } from '@ComponentsV2Module'
@@ -34,6 +35,7 @@ import { SubmitButton } from '@ComponentsV2Module'
  */
 
 const AddNodeGroupAction = memo(({ id, disable }) => {
+  const { translate } = useTranslation()
   const history = useHistory()
   const { showModal } = useModalsApi()
   const { enqueueSuccess, enqueueError } = useGeneralApi()
@@ -76,7 +78,7 @@ const AddNodeGroupAction = memo(({ id, disable }) => {
     <SubmitButton
       data-cycy={`add-node-group`}
       startIcon={<Plus />}
-      tooltip={Tr(T.Create)}
+      tooltip={translate(T.Create)}
       variant={'outlined'}
       onClick={handleOpenForm}
     />

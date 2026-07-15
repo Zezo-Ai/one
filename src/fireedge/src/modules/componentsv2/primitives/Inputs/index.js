@@ -15,3 +15,4 @@
  * ------------------------------------------------------------------------- */
 
 export * from '@modules/componentsv2/primitives/Inputs/Otp'
+export * from '@modules/componentsv2/primitives/Inputs/Unit'

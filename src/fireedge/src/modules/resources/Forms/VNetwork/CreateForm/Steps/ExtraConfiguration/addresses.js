@@ -24,7 +24,7 @@ import {
   UpdateAddressRangeAction,
   DeleteAddressRangeAction,
 } from '@modules/resources/Buttons'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 
 import {
   STEP_ID as EXTRA_ID,

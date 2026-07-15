@@ -17,7 +17,14 @@ import { Stack } from '@mui/material'
 import PropTypes from 'prop-types'
 import { ReactElement } from 'react'
 
-import { Tr } from '@modules/resources/HOC'
+import {
+  filterAttributes,
+  getActionsAvailable,
+  jsonToXml,
+  cloneObject,
+  set,
+} from '@UtilsModule'
+import { useTranslation } from '@ProvidersModule'
 import Information from '@modules/resources/Tabs/BackupJobs/Info/information'
 import {
   AttributePanel,
@@ -26,13 +33,6 @@ import {
 } from '@modules/resources/Tabs/Common'
 import { T } from '@ConstantsModule'
 import { BackupJobAPI } from '@FeaturesModule'
-import {
-  filterAttributes,
-  getActionsAvailable,
-  jsonToXml,
-  cloneObject,
-  set,
-} from '@UtilsModule'
 
 const HIDDEN_BACKUPJOBS_REG = /^(SCHED_ACTION|ERROR)$/
 
@@ -45,6 +45,7 @@ const HIDDEN_BACKUPJOBS_REG = /^(SCHED_ACTION|ERROR)$/
  * @returns {ReactElement} Information tab
  */
 const BackupJobInfoTab = ({ tabProps = {}, id }) => {
+  const { translate } = useTranslation()
   const {
     information_panel: informationPanel,
     permissions_panel: permissionsPanel,
@@ -123,7 +124,7 @@ const BackupJobInfoTab = ({ tabProps = {}, id }) => {
         <AttributePanel
           attributes={attributes}
           actions={getActions(attributesPanel?.actions)}
-          title={Tr(T.Attributes)}
+          title={translate(T.Attributes)}
           handleAdd={handleAttributeInXml}
           handleEdit={handleAttributeInXml}
           handleDelete={handleAttributeInXml}

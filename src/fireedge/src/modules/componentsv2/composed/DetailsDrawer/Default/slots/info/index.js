@@ -23,7 +23,9 @@ import PropTypes from 'prop-types'
 import EditableTitle from '@modules/componentsv2/composed/DetailsDrawer/Default/slots/info/EditableTitle'
 import { DEFAULT_IMAGE, STYLE_BUTTONS, T } from '@ConstantsModule'
 import { Tooltip } from '@modules/componentsv2/primitives/Tooltip'
-import { Tr } from '@ProvidersModule'
+import { useTranslation } from '@ProvidersModule'
+import { CompactToolbar } from '@modules/componentsv2/primitives/Buttons/CompactToolbar'
+import { TagList } from '@modules/componentsv2/primitives/Tags/List'
 
 const hasValue = (value) =>
   value !== undefined && value !== null && value !== '' && value !== false
@@ -44,11 +46,15 @@ export const InfoSlot = forwardRef(
       isTitleEditDisabled = false,
       id,
       labels = [],
+      tags = [],
       Toolbar,
+      dataCy,
     },
     ref
   ) => {
+    const { translate, translateText } = useTranslation()
     const editableTitleRef = useRef(null)
+    const clickToRename = translate(T.ClickToRename)
 
     const handleEditTitle = () => {
       editableTitleRef.current?.startEditing()
@@ -78,51 +84,75 @@ export const InfoSlot = forwardRef(
                 />
               </Box>
             )}
-            {title &&
-              (isTitleEditable ? (
-                <EditableTitle
-                  ref={editableTitleRef}
-                  value={title}
-                  onSave={onTitleChange}
-                  isDisabled={isTitleEditDisabled}
-                />
-              ) : (
-                <Box className="info-title">{title}</Box>
-              ))}
-            {id && <Box className="info-id">{`#${id}`}</Box>}
-            {isTitleEditable && !isTitleEditDisabled && (
-              <Tooltip
-                title={Tr(T.ClickToRename)}
-                placement="bottom"
-                followCursor
-              >
-                <Button
-                  type={STYLE_BUTTONS.TYPE.TRANSPARENT}
-                  size="medium"
-                  iconOnly={<EditPencil width={'16px'} height={'16px'} />}
-                  onClick={handleEditTitle}
-                />
-              </Tooltip>
-            )}
-          </Box>
-          {!!labels?.length && (
-            <Box className="info-ownership">
-              {labels?.map(([ltitle, value], idx) => (
-                <Box key={idx} className="region-label">
-                  {ltitle && (
-                    <span className="region-label--title">{ltitle}</span>
-                  )}
-                  {hasValue(value) && (
-                    <span className="region-label--value">{value}</span>
-                  )}
+            <Box className="info-title-wrapper">
+              {title &&
+                (isTitleEditable ? (
+                  <EditableTitle
+                    ref={editableTitleRef}
+                    value={title}
+                    onSave={onTitleChange}
+                    isDisabled={isTitleEditDisabled}
+                    dataCy={dataCy && `${dataCy}-title`}
+                  />
+                ) : (
+                  <Box
+                    className="info-title"
+                    data-cy={dataCy && `${dataCy}-title`}
+                  >
+                    {title}
+                  </Box>
+                ))}
+              {id && (
+                <Box className="info-id" data-cy={dataCy && `${dataCy}-id`}>
+                  {`#${id}`}
                 </Box>
-              ))}
+              )}
+              {isTitleEditable && !isTitleEditDisabled && (
+                <Tooltip title={clickToRename} placement="bottom" followCursor>
+                  <Button
+                    data-cy={dataCy && `${dataCy}-edit-title`}
+                    type={STYLE_BUTTONS.TYPE.TRANSPARENT}
+                    size="medium"
+                    iconOnly={<EditPencil width={'16px'} height={'16px'} />}
+                    onClick={handleEditTitle}
+                  />
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+          {(!!labels?.length || !!tags?.length) && (
+            <Box className="info-metadata">
+              {!!labels?.length && (
+                <Box className="info-ownership">
+                  {labels?.map(([ltitle, value], idx) => (
+                    <Box key={idx} className="region-label">
+                      {ltitle && (
+                        <span className="region-label--title">
+                          {typeof ltitle === 'string'
+                            ? translateText(ltitle)
+                            : ltitle}
+                        </span>
+                      )}
+                      {hasValue(value) && (
+                        <span className="region-label--value">{value}</span>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              {!!tags?.length && (
+                <Box className="info-tags">
+                  <TagList tags={tags} max={tags.length} />
+                </Box>
+              )}
             </Box>
           )}
         </Box>
         {Toolbar && (
           <Box className="info-action-toggles">
-            <Toolbar />
+            <CompactToolbar>
+              <Toolbar />
+            </CompactToolbar>
           </Box>
         )}
       </Box>
@@ -135,10 +165,12 @@ InfoSlot.propTypes = {
   title: PropTypes.string,
   id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   labels: PropTypes.array,
+  tags: PropTypes.array,
   Toolbar: PropTypes.elementType,
   isTitleEditable: PropTypes.bool,
   onTitleChange: PropTypes.func,
   isTitleEditDisabled: PropTypes.bool,
+  dataCy: PropTypes.string,
 }
 
 InfoSlot.displayName = 'InfoSlot'

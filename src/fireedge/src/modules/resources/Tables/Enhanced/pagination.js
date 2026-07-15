@@ -21,7 +21,7 @@ import { NavArrowLeft, NavArrowRight } from 'iconoir-react'
 import { UsePaginationState } from 'opennebula-react-table'
 
 import { PAGINATION_SIZES, T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 
 const Pagination = ({
   count = 0,
@@ -30,6 +30,7 @@ const Pagination = ({
   showPageCount = true,
   styles,
 }) => {
+  const { translate } = useTranslation()
   /** @type {UsePaginationState} */
   const { pageIndex, pageSize } = useTableProps.state
 
@@ -49,10 +50,10 @@ const Pagination = ({
       {useTableProps?.setPageSize && (
         <>
           <Typography className={styles?.paginationText}>
-            {`${Tr(T.RowsPerPage)}`}
+            {`${translate(T.RowsPerPage)}`}
           </Typography>
           <Tooltip
-            title={Tr(T.NumberPerPage)}
+            title={translate(T.NumberPerPage)}
             arrow
             placement="top"
             disableInteractive
@@ -89,7 +90,7 @@ const Pagination = ({
       {showPageCount && (
         <>
           <Typography className={styles?.paginationText}>
-            {`${startItem}-${endItem} ${Tr(T.Of)} ${count}`}
+            {`${startItem}-${endItem} ${translate(T.Of)} ${count}`}
           </Typography>
           <Button
             aria-label="previous page"

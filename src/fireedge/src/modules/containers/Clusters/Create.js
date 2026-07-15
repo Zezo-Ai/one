@@ -22,10 +22,10 @@ import {
   Cluster,
   DefaultFormStepper,
   SkeletonStepsForm,
-  TranslateProvider,
 } from '@ResourcesModule'
-import { T, PATH } from '@ConstantsModule'
+
 import { jsonToXml } from '@UtilsModule'
+import { T, PATH } from '@ConstantsModule'
 
 /**
  * Displays the creation form for a cluster.
@@ -212,8 +212,12 @@ export function CreateCluster() {
     }
   }
 
+  const handleCancel = () => {
+    history.push(PATH.INFRASTRUCTURE.CLUSTERS.LIST)
+  }
+
   return (
-    <TranslateProvider>
+    <>
       {shouldSelectCreateType ? (
         <Cluster.Actions.CreateAction />
       ) : version && (!clusterId || (clusterId && cluster)) ? (
@@ -225,11 +229,17 @@ export function CreateCluster() {
           }}
           fallback={<SkeletonStepsForm />}
         >
-          {(config) => <DefaultFormStepper {...config} update={!!clusterId} />}
+          {(config) => (
+            <DefaultFormStepper
+              {...config}
+              update={!!clusterId}
+              onCancel={handleCancel}
+            />
+          )}
         </Cluster.Forms.CreateForm>
       ) : (
         <SkeletonStepsForm />
       )}
-    </TranslateProvider>
+    </>
   )
 }

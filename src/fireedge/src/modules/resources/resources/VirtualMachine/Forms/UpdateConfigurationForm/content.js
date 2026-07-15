@@ -27,7 +27,7 @@ import Context from '@modules/resources/resources/VirtualMachine/Forms/UpdateCon
 import InputOutput from '@modules/resources/resources/VirtualMachine/Forms/UpdateConfigurationForm/inputOutput'
 
 import { HYPERVISORS, T } from '@ConstantsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { Tabs } from '@ComponentsV2Module'
 import { Box } from '@mui/material'
 
@@ -48,7 +48,6 @@ const TAB_CONTENT_SX = {
   height: 'auto',
   display: 'flex',
   flexDirection: 'column',
-  p: 2,
 }
 
 /**
@@ -60,6 +59,7 @@ const TAB_CONTENT_SX = {
  * @returns {ReactElement} Form content component
  */
 const Content = ({ hypervisor, oneConfig, adminGroup, vm }) => {
+  const { translate } = useTranslation()
   const {
     formState: { errors },
   } = useFormContext()
@@ -72,7 +72,7 @@ const Content = ({ hypervisor, oneConfig, adminGroup, vm }) => {
       {
         id: 'booting',
         icon: OsIcon,
-        title: Tr(T.OSAndCpu),
+        title: translate(T.OSAndCpu),
         Content: () => (
           <Booting
             hypervisor={hypervisor}
@@ -81,12 +81,12 @@ const Content = ({ hypervisor, oneConfig, adminGroup, vm }) => {
             vm={vm}
           />
         ),
-        error: !!errors?.OS,
+        getError: (error) => !!error?.OS,
       },
       {
         id: 'input_output',
         icon: IOIcon,
-        title: Tr(T.InputOrOutput),
+        title: translate(T.InputOrOutput),
         Content: () => (
           <InputOutput
             hypervisor={hypervisor}
@@ -94,12 +94,12 @@ const Content = ({ hypervisor, oneConfig, adminGroup, vm }) => {
             adminGroup={adminGroup}
           />
         ),
-        error: ['GRAPHICS', 'INPUT'].some((id) => errors?.[id]),
+        getError: (error) => ['GRAPHICS', 'INPUT'].some((id) => error?.[id]),
       },
       {
         id: 'context',
         icon: ContextIcon,
-        title: Tr(T.Context),
+        title: translate(T.Context),
         tooltip: !hasContext ? T.NoContextInVm : undefined,
         disabled: !hasContext,
         Content: () => (
@@ -109,10 +109,10 @@ const Content = ({ hypervisor, oneConfig, adminGroup, vm }) => {
             adminGroup={adminGroup}
           />
         ),
-        error: !!errors?.CONTEXT,
+        getError: (error) => !!error?.CONTEXT,
       },
     ],
-    [adminGroup, errors, hasContext, hypervisor, oneConfig, vm]
+    [adminGroup, hasContext, hypervisor, oneConfig, vm, translate]
   )
 
   const ActiveTab = tabs[selected] ?? tabs[0]
@@ -124,9 +124,10 @@ const Content = ({ hypervisor, oneConfig, adminGroup, vm }) => {
           <Tabs
             type="line"
             defaultSelect={0}
-            options={tabs.map(({ title, icon, disabled }, idx) => ({
+            options={tabs.map(({ title, icon, getError, disabled }, idx) => ({
               title,
               startIcon: icon,
+              error: !!getError?.(errors),
               value: idx,
               disabled,
             }))}

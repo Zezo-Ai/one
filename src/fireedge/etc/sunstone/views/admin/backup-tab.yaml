@@ -12,6 +12,8 @@ actions:
   chown: true
   chgrp: true
   delete: true
+  lock: true
+  unlock: true
 
 # Filters - List of criteria to filter the resources
 

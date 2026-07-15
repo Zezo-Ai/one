@@ -151,9 +151,9 @@ export const getStyles = ({ theme }) => ({
   cardTitle: {
     color: 'text.headings',
     fontSize: {
-      xs: theme.fontSize.heading.h6.mobile,
-      sm: theme.fontSize.heading.h6.tablet,
-      md: theme.fontSize.heading.h6.desktop,
+      xs: `${theme.scale[500]}px`,
+      sm: `${theme.scale[500]}px`,
+      md: `${theme.scale[500]}px`,
     },
     fontWeight: {
       xs: theme.fontWeight.heading.h6.mobile,

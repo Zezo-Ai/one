@@ -24,7 +24,7 @@ import {
 } from 'iconoir-react'
 
 import { SubmitButton } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T } from '@ConstantsModule'
 
 import listHeaderStyles from '@modules/resources/List/ListHeader/styles'
@@ -39,6 +39,7 @@ const ListHeader = memo(
     hasSearch,
     searchProps,
   }) => {
+    const { translate } = useTranslation()
     const theme = useTheme()
     const classes = useMemo(() => listHeaderStyles(theme), [theme])
 
@@ -50,7 +51,7 @@ const ListHeader = memo(
           )}
           {title && (
             <Typography variant="h5" className={classes.titleText}>
-              {Tr(title)}
+              {translate(title)}
             </Typography>
           )}
         </Box>
@@ -68,7 +69,7 @@ const ListHeader = memo(
                 type="search"
                 onChange={searchProps.handleChange}
                 fullWidth
-                placeholder={`${Tr(T.Search)}...`}
+                placeholder={`${translate(T.Search)}...`}
                 classes={{
                   root: classes.inputRoot,
                   input: classes.inputInput,

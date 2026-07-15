@@ -40,7 +40,7 @@ import StepLabel from '@mui/material/StepLabel'
 import Stepper from '@mui/material/Stepper'
 import { styled } from '@mui/styles'
 import { SubmitButton } from '@ComponentsV2Module'
-import { Translate } from '@modules/resources/HOC'
+import { Translate } from '@ProvidersModule'
 import { SCHEMES, T, STYLE_BUTTONS } from '@ConstantsModule'
 
 import FormStepperStyles from '@modules/resources/FormStepper/styles'

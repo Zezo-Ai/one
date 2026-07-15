@@ -167,6 +167,13 @@ export const getStyles = ({ theme, variant, weight }) => {
         md: 400,
       },
     },
+    MEDIUM: {
+      fontWeight: {
+        xs: 500,
+        sm: 500,
+        md: 500,
+      },
+    },
   }
 
   const colorStyles = {

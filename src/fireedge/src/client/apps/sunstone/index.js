@@ -28,11 +28,11 @@ import { Provider as ReduxProvider } from 'react-redux'
 import { BrowserRouter, StaticRouter } from 'react-router-dom'
 import { Store } from 'redux'
 import { Providers } from '@StylesModule'
-import { TranslateProvider } from '@ProvidersModule'
+import { TranslationProvider } from '@ProvidersModule'
+import { buildTranslationLocale } from '@UtilsModule'
 import { SnackbarProvider } from '@ComponentsV2Module'
 import App, { APP_NAME as SunstoneAppName } from 'client/apps/sunstone/_app'
 import { APP_URL } from '@ConstantsModule'
-import { buildTranslationLocale } from '@UtilsModule'
 
 buildTranslationLocale()
 
@@ -46,7 +46,7 @@ const Sunstone = ({ store = {}, location = '' }) => (
   <Providers.PreloadConfigProvider>
     <ReduxProvider store={store}>
       <Providers.MuiThemeProvider>
-        <TranslateProvider>
+        <TranslationProvider>
           <SnackbarProvider>
             {location ? (
               // server build
@@ -60,7 +60,7 @@ const Sunstone = ({ store = {}, location = '' }) => (
               </BrowserRouter>
             )}
           </SnackbarProvider>
-        </TranslateProvider>
+        </TranslationProvider>
       </Providers.MuiThemeProvider>
     </ReduxProvider>
   </Providers.PreloadConfigProvider>

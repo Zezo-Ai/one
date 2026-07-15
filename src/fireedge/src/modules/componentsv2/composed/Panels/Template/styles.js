@@ -22,16 +22,26 @@
 export const getStyles = ({ theme }) => {
   const baseStyle = {
     display: 'flex',
-    flex: '1 0 0',
+    flex: '1 1 0',
     flexDirection: 'column',
+    width: '100%',
+    minWidth: 0,
+    minHeight: 0,
     padding: `${theme.scale[200]}px`,
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
     gap: `${theme.scale[200]}px`,
-    maxHeight: '65vh',
+    overflow: 'hidden',
 
     borderRadius: `${theme.borderRadius?.['4xl']}px`,
     border: `${theme.borderWidth.sm}px solid ${theme.palette.border.primary}`,
     bgcolor: 'surface.primary',
+
+    '& > *': {
+      flex: '1 1 0',
+      width: '100%',
+      minWidth: 0,
+      minHeight: 0,
+    },
   }
 
   return {

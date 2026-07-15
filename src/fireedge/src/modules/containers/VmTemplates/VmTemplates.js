@@ -152,6 +152,7 @@ export function VmTemplates() {
 
   return (
     <ResourceContainer
+      dataCy={vmtemplateTable.dataCy}
       resourceName={T.Templates}
       onRefresh={refresh}
       isRefreshing={isRefreshing}
@@ -169,6 +170,7 @@ export function VmTemplates() {
           case TABLE_VIEW_MODE.LIST:
             return (
               <Table
+                dataCy={vmtemplateTable.dataCy}
                 columns={vmtemplateTable.columns()}
                 data={items}
                 isLoading={isRefreshing}

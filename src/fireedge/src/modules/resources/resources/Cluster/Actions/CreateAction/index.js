@@ -16,7 +16,7 @@
 import { ReactElement, useMemo, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { CreateTypeDialog } from '@ComponentsV2Module'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import { T, PATH } from '@ConstantsModule'
 import { OpenNebulaLogo } from '@modules/resources/Icons'
 import { Cloud, City } from 'iconoir-react'
@@ -64,6 +64,7 @@ export const CLUSTER_CREATE_OPTIONS = [
  * @returns {ReactElement} - Create Cluster Action component
  */
 export const CreateAction = () => {
+  const { translate } = useTranslation()
   const history = useHistory()
   const [selectedType, setSelectedType] = useState(CLUSTER_TYPES.OPENNEBULA)
 
@@ -92,10 +93,10 @@ export const CreateAction = () => {
         }
       }).map(({ title, subtitle, ...option }) => ({
         ...option,
-        title: Tr(title),
-        subtitle: Tr(subtitle),
+        title: translate(title),
+        subtitle: translate(subtitle),
       })),
-    [enabledCloudDrivers, enabledOnpremDriver]
+    [enabledCloudDrivers, enabledOnpremDriver, translate]
   )
 
   const handleCancel = () => history.push(PATH.INFRASTRUCTURE.CLUSTERS.LIST)
@@ -120,15 +121,16 @@ export const CreateAction = () => {
 
   return (
     <CreateTypeDialog
-      title={Tr(T['cluster.create.selection.title'])}
-      subtitle={Tr(T['cluster.create.selection.subtitle'])}
+      title={translate(T['cluster.create.selection.title'])}
+      subtitle={translate(T['cluster.create.selection.subtitle'])}
       options={options}
       selectedValue={selectedType}
       onChange={setSelectedType}
       onCancel={handleCancel}
       onConfirm={handleContinue}
-      cancelLabel={Tr(T.Cancel)}
-      confirmLabel={Tr(T.Continue)}
+      cancelLabel={translate(T.Cancel)}
+      confirmLabel={translate(T.Continue)}
+      confirmDataCy="dg-accept-button"
     />
   )
 }

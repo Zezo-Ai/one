@@ -17,7 +17,8 @@ import { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Box, Paper, Typography } from '@mui/material'
 import { isDevelopment } from '@UtilsModule'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
+
 /**
  * Formats the input data for use in a polar chart.
  *
@@ -103,6 +104,7 @@ FormatPolarDataset.propTypes = {
  * @returns {Component|null} The rendered tooltip component or null.
  */
 export const PolarTooltip = ({ active, payload }) => {
+  const { translate } = useTranslation()
   if (active && payload && payload.length) {
     const data = payload[0].payload
 
@@ -116,7 +118,7 @@ export const PolarTooltip = ({ active, payload }) => {
           }}
         >
           <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            {Tr(
+            {translate(
               data.name
                 .split('_')
                 .map(

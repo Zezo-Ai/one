@@ -14,10 +14,16 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { getMarketplaceAppState } from '@modules/models/MarketplaceApp/general'
-import { createTable, prettyBytes, timeFromMilliseconds } from '@UtilsModule'
+import {
+  createTable,
+  getLockIcon,
+  prettyBytes,
+  timeFromMilliseconds,
+} from '@UtilsModule'
 import { MarketplaceAppAPI } from '@FeaturesModule'
 import { T, UNITS } from '@ConstantsModule'
 import { StatusTag, Tag } from '@ComponentsV2Module'
+import { Box } from '@mui/material'
 import { createLabelColumn } from '@modules/models/labels'
 
 /* eslint-disable jsdoc/require-jsdoc */
@@ -31,9 +37,17 @@ const stringifyValue = (value) => {
 
 export const MARKETPLACEAPP_COLUMNS = [
   { header: T.ID, id: 'id', accessorKey: 'ID', width: '5%' },
-  { header: T.Name, id: 'name', accessorKey: 'NAME' },
-  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
-  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
+  {
+    header: T.Name,
+    id: 'name',
+    accessorKey: 'NAME',
+    cell: ({ row }) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>{row.original?.NAME}</span>
+        {getLockIcon(row.original)}
+      </Box>
+    ),
+  },
   {
     header: T.State,
     id: 'state',
@@ -43,13 +57,6 @@ export const MARKETPLACEAPP_COLUMNS = [
 
       return <StatusTag statusColor={color} statusName={name} />
     },
-  },
-  {
-    header: T.Size,
-    id: 'size',
-    accessorKey: 'SIZE',
-    width: '5%',
-    cell: ({ row }) => prettyBytes(row.original?.SIZE, UNITS.MB),
   },
   {
     header: T.Hypervisor,
@@ -91,16 +98,14 @@ export const MARKETPLACEAPP_COLUMNS = [
       ),
   },
   {
-    header: T.Locked,
-    id: 'locked',
-    accessorFn: (row) => (row?.LOCK ? T.Locked : ''),
-    cell: ({ row }) =>
-      row.original?.LOCK ? (
-        <StatusTag statusColor="information" statusName={T.Locked} />
-      ) : (
-        '-'
-      ),
+    header: T.Size,
+    id: 'size',
+    accessorKey: 'SIZE',
+    width: '5%',
+    cell: ({ row }) => prettyBytes(row.original?.SIZE, UNITS.MB),
   },
+  { header: T.Owner, id: 'owner', accessorKey: 'UNAME' },
+  { header: T.Group, id: 'group', accessorKey: 'GNAME' },
   {
     header: T.RegistrationTime,
     id: 'time',
@@ -115,5 +120,6 @@ export const MARKETPLACEAPP_COLUMNS = [
 
 export const marketplaceAppTable = createTable(
   MARKETPLACEAPP_COLUMNS,
-  MarketplaceAppAPI.useGetMarketplaceAppsQuery
+  MarketplaceAppAPI.useGetMarketplaceAppsQuery,
+  { dataCy: 'marketplace-apps' }
 )

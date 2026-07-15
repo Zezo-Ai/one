@@ -18,6 +18,7 @@ import {
   ButtonGroup,
   DetailsDrawer,
   InfoSlot,
+  ResourceActionConfirmation,
   SummarySlot,
   TabSlot,
   ToggleGroup,
@@ -28,7 +29,15 @@ import { getImageState } from '@ModelsModule'
 import { Box, useTheme } from '@mui/material'
 import { Component, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { RefreshDouble, Trash, OnTag, OffTag, Cancel } from 'iconoir-react'
+import {
+  RefreshDouble,
+  Trash,
+  OnTag,
+  OffTag,
+  Lock,
+  NoLock,
+  Cancel,
+} from 'iconoir-react'
 import { IMAGE_ACTIONS, T } from '@ConstantsModule'
 import {
   cloneObject,
@@ -59,6 +68,8 @@ export const SingleView = ({
 
   const [refresh, { data: refreshedData = {}, isFetching }] =
     ImageAPI.useLazyGetImageQuery()
+  const [lock, { isLoading: isLocking }] = ImageAPI.useLockImageMutation()
+  const [unlock, { isLoading: isUnlocking }] = ImageAPI.useUnlockImageMutation()
   const [enable, { isLoading: isEnabling }] = ImageAPI.useEnableImageMutation()
   const [disable, { isLoading: isDisabling }] =
     ImageAPI.useDisableImageMutation()
@@ -84,12 +95,13 @@ export const SingleView = ({
 
   const fileDisabled = data?.STATE === '3'
 
-  const modalLabel = `#${ID} ${data?.NAME}`.trim()
   const fileIsLocked = data?.LOCK
 
   const isActionsDisabled =
     ID === undefined ||
     isFetching ||
+    isLocking ||
+    isUnlocking ||
     isEnabling ||
     isDisabling ||
     isDeleting ||
@@ -103,18 +115,53 @@ export const SingleView = ({
   const refreshCurrentData = async () =>
     ID !== undefined && (await refresh({ id: ID }))
 
-  const getConfirmationDescription = () =>
-    `${T.File}: ${modalLabel}. ${T.DoYouWantProceed}`
+  const getResourceConfirmation = (description) => (
+    <ResourceActionConfirmation
+      description={description}
+      resources={data}
+      resourceType={T.Files}
+    />
+  )
 
-  const handleConfirmAction = ({ title, onSubmit }) =>
+  const handleConfirmAction = ({
+    title,
+    description,
+    confirmLabel,
+    confirmButtonProps,
+    onSubmit,
+  }) =>
     showModal({
       isConfirmDialog: true,
       dialogProps: {
         title,
-        description: getConfirmationDescription(),
+        description,
+        confirmLabel,
+        confirmButtonProps,
       },
       onSubmit,
     })
+
+  // const handleConfirmAction = ({ title, description, onSubmit }) =>
+  //   showModal({
+  //     isConfirmDialog: true,
+  //     dialogProps: {
+  //       title,
+  //       description: (
+  //         <ResourceActionConfirmation
+  //           description={description}
+  //           resources={data}
+  //           resourceType={T.Files}
+  //         />
+  //       ),
+  //       confirmLabel: title,
+  //       ...(title === T.Delete && {
+  //         confirmButtonProps: {
+  //           isDestructive: true,
+  //         },
+  //       }),
+  //     },
+  //     onSubmit,
+  //   })
 
   const handleRename = async (newName) => {
     await rename({ id: ID, name: newName })
@@ -124,6 +171,7 @@ export const SingleView = ({
   const handleEnable = () =>
     handleConfirmAction({
       title: T.Enable,
+      description: T['resource.enable.confirmation'],
       onSubmit: async () => {
         await enable(ID)
         await refreshCurrentData()
@@ -133,15 +181,43 @@ export const SingleView = ({
   const handleDisable = () =>
     handleConfirmAction({
       title: T.Disable,
+      description: T['resource.disable.confirmation'],
       onSubmit: async () => {
         await disable(ID)
         await refreshCurrentData()
       },
     })
 
+  const handleLock = () =>
+    handleConfirmAction({
+      title: `${T.Lock} ${T.File}`,
+      description: getResourceConfirmation(T['resource.lock.confirmation']),
+      confirmLabel: T.Lock,
+      onSubmit: async () => {
+        await lock({ id: ID })
+        await refreshCurrentData()
+      },
+    })
+
+  const handleUnlock = () =>
+    handleConfirmAction({
+      title: `${T.Unlock} ${T.File}`,
+      description: getResourceConfirmation(T['resource.unlock.confirmation']),
+      confirmLabel: T.Unlock,
+      onSubmit: async () => {
+        await unlock({ id: ID })
+        await refreshCurrentData()
+      },
+    })
+
   const handleDelete = () =>
     handleConfirmAction({
-      title: T.Delete,
+      title: `${T.Delete} ${T.File}`,
+      description: getResourceConfirmation(T['resource.delete.confirmation']),
+      confirmLabel: T.Delete,
+      confirmButtonProps: {
+        isDestructive: true,
+      },
       onSubmit: async () => {
         await deleteImage({ id: ID })
         handleClose()
@@ -227,6 +303,28 @@ export const SingleView = ({
     ],
   })
 
+  const lockButtons = createActions({
+    filters: availableActions,
+    actions: [
+      {
+        accessor: IMAGE_ACTIONS.LOCK,
+        startIcon: <Lock width="16px" height="16px" />,
+        onClick: handleLock,
+        value: IMAGE_ACTIONS.LOCK,
+        isDisabled: isActionsDisabled,
+        tooltip: T.Lock,
+      },
+      {
+        accessor: IMAGE_ACTIONS.UNLOCK,
+        startIcon: <NoLock width="16px" height="16px" />,
+        onClick: handleUnlock,
+        value: IMAGE_ACTIONS.UNLOCK,
+        isDisabled: isActionsDisabled,
+        tooltip: T.Unlock,
+      },
+    ],
+  })
+
   const toggleOptions = [
     [
       {
@@ -257,6 +355,7 @@ export const SingleView = ({
             onClick: handleDelete,
             value: IMAGE_ACTIONS.DELETE,
             tooltip: T.Delete,
+            isDestructive: true,
             isDisabled: isActionsDisabled,
           },
         ],
@@ -299,6 +398,14 @@ export const SingleView = ({
                         : IMAGE_ACTIONS.ENABLE,
                     ]}
                     buttons={statusButtons}
+                  />
+                )}
+                {lockButtons.length > 0 && (
+                  <ButtonGroup
+                    selected={[
+                      fileIsLocked ? IMAGE_ACTIONS.LOCK : IMAGE_ACTIONS.UNLOCK,
+                    ]}
+                    buttons={lockButtons}
                   />
                 )}
                 <ToggleGroup size="medium" options={toggleOptions} />

@@ -16,7 +16,7 @@
 import PropTypes from 'prop-types'
 import { ReactElement, useMemo } from 'react'
 
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   LinearProgressWithLabel,
   StatusCircle,
@@ -39,6 +39,7 @@ const DEFAULT_DATA_CY = 'marketplaces'
  * @returns {ReactElement} Marketplaces table
  */
 const MarketplacesTable = ({ filter, ...props }) => {
+  const { translate } = useTranslation()
   const {
     rootProps = {},
     searchProps = {},
@@ -88,7 +89,7 @@ const MarketplacesTable = ({ filter, ...props }) => {
             label={percentLabel}
             high={MARKET_THRESHOLD.CAPACITY.high}
             low={MARKET_THRESHOLD.CAPACITY.low}
-            title={Tr(T.UsedOfTotal)}
+            title={translate(T.UsedOfTotal)}
           />
         )
       },

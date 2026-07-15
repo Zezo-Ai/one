@@ -51,7 +51,7 @@ import {
   TabType,
 } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration'
 import { mapNameByIndex } from '@modules/resources/resources/VmTemplate/Forms/CreateForm/Steps/ExtraConfiguration/schema'
-import { Tr } from '@modules/resources/HOC'
+import { useTranslation } from '@ProvidersModule'
 import {
   dateToMilliseconds,
   hasRestrictedAttributes,
@@ -86,7 +86,7 @@ const formatValue = (value) => {
   return String(value)
 }
 
-const formatActionTime = (time) => {
+const formatActionTime = (time, translate) => {
   if (!time) return '-'
 
   if (isDate(time)) {
@@ -116,9 +116,9 @@ const formatActionTime = (time) => {
       const { period, time: periodicityTime } =
         getPeriodicityByTimeInSeconds(seconds)
 
-      return `${periodicityTime} ${Tr(period)}`
+      return `${periodicityTime} ${translate(period)}`
     } catch {
-      return `${seconds} ${Tr(T.Seconds)}`
+      return `${seconds} ${translate(T.Seconds)}`
     }
   }
 
@@ -148,13 +148,13 @@ const getScheduleActionResourceName = (schedule) => {
 const getScheduleActionName = (schedule) =>
   `#${schedule?.SCHED_ACTION_ID} ${getScheduleActionResourceName(schedule)}`
 
-const getScheduleActionMetadata = (schedule) => {
+const getScheduleActionMetadata = (schedule, translate) => {
   const { repeat, end } = getRepeatInformation(schedule)
 
   return [
     [T.ID, formatValue(schedule?.SCHED_ACTION_ID)],
     [T.Action, formatValue(sentenceCase(schedule?.ACTION))],
-    [T.Time, formatActionTime(schedule?.TIME)],
+    [T.Time, formatActionTime(schedule?.TIME, translate)],
     [T.Arguments, formatValue(schedule?.ARGS)],
     repeat && [T.Repeat, Array.isArray(repeat) ? repeat.join(' ') : repeat],
     end && [T.Ends, Array.isArray(end) ? end.join(' ') : end],
@@ -197,6 +197,7 @@ ScheduleActionTitleSlot.propTypes = {
 }
 
 const VmTemplateScheduleActionCard = ({ actions, schedule }) => {
+  const { translate } = useTranslation()
   const tags = getScheduleActionTags(schedule)
   const slots = [
     [
@@ -206,7 +207,7 @@ const VmTemplateScheduleActionCard = ({ actions, schedule }) => {
         title: getScheduleActionName(schedule),
       },
     ],
-    [MetadataSlot, { labels: getScheduleActionMetadata(schedule) }],
+    [MetadataSlot, { labels: getScheduleActionMetadata(schedule, translate) }],
     tags.length > 0 && [LabelSlot, { labels: tags }],
   ].filter(Boolean)
 
@@ -410,7 +411,7 @@ const ScheduleAction = ({ oneConfig, adminGroup }) => {
         dataCy: 'modal-delete-sched-action',
         description: (
           <ResourceActionConfirmation
-            description={T.DoYouWantProceed}
+            description={T['resource.delete.confirmation']}
             resources={{
               ID: schedule?.SCHED_ACTION_ID,
               NAME: getScheduleActionResourceName(schedule),
@@ -439,6 +440,7 @@ const ScheduleAction = ({ oneConfig, adminGroup }) => {
       },
       {
         title: T.Delete,
+        isDestructive: true,
         tooltip: disableDelete ? T.DetachRestricted : T.Delete,
         isDisabled: disableDelete,
         onClick: () => openDeleteScheduleActionConfirm(schedule),
