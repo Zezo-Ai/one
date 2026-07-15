@@ -2070,6 +2070,19 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path: &1
+            - actions
+            key: lock
+            value: true
+            state: ins
+            extra: {}
+        -   path: *1
+            key: unlock
+            value: true
+            state: ins
+            extra: {}
         content: |
             ---
             # This file describes the information and actions available in the IMAGE tab
@@ -2085,6 +2098,8 @@ patches:
               chown: true
               chgrp: true
               delete: true
+              lock: true
+              unlock: true
 
             # Filters - List of criteria to filter the resources
 
@@ -2153,53 +2168,6 @@ patches:
             \   provision:\n      actions:\n        add: true\n        delete: true\n  vnet:\n    enabled: true\n    provision:\n
             \     actions:\n        add: true\n        delete: true\n        delete_ar: true\n        \n  datastore:\n    enabled:
             true\n  drs:\n    enabled: true\n  events:\n    enabled: true  \n  logs:\n    enabled: true  \n"
-    "/etc/one/fireedge/sunstone/views/admin/dashboard-tab.yaml":
-        class: Yaml
-        owner: root
-        group: oneadmin
-        mode: '0640'
-        content: |-
-            # This file configures the cards available in the dashboard for the admin view.
-            #
-            # Cards are rendered by ascending order. Supported sizes are:
-            # quarter, third, half, full, wide and narrow.
-            # The to option enables navigation for the card or its resource rows.
-
-            resource_name: 'DASHBOARD'
-
-            cards:
-              - id: virtual-machines
-                order: 10
-                size: quarter
-                to: true
-              - id: hosts-summary
-                order: 20
-                size: quarter
-                to: true
-              - id: virtual-networks
-                order: 30
-                size: quarter
-                to: true
-              - id: images
-                order: 40
-                size: quarter
-                to: true
-              - id: cpu-chart
-                order: 50
-                size: half
-                to: false
-              - id: memory-chart
-                order: 60
-                size: half
-                to: false
-              - id: cluster-capacity
-                order: 70
-                size: wide
-                to: false
-              - id: system
-                order: 80
-                size: narrow
-                to: true
     "/etc/one/fireedge/sunstone/views/admin/datastore-tab.yaml":
         class: Yaml
         owner: root
@@ -2300,6 +2268,19 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
+        action: apply
+        change:
+        -   path: &2
+            - actions
+            key: lock
+            value: true
+            state: ins
+            extra: {}
+        -   path: *2
+            key: unlock
+            value: true
+            state: ins
+            extra: {}
         content: |-
             ---
             # This file describes the information and actions available in the FILE tab
@@ -2315,6 +2296,8 @@ patches:
               import_dialog: true
               disable: true
               enable: true
+              lock: true
+              unlock: true
               chown: true
               chgrp: true
               delete: true
@@ -2882,7 +2865,7 @@ patches:
             old: false
             state: set
             extra: {}
-        -   path: &1
+        -   path: &3
             - info-tabs
             - sched_actions
             - actions
@@ -2890,7 +2873,7 @@ patches:
             old: true
             state: rm
             extra: {}
-        -   path: *1
+        -   path: *3
             key: perform_action
             old: true
             state: rm
@@ -3201,7 +3184,7 @@ patches:
         mode: '0640'
         action: apply
         change:
-        -   path: &2
+        -   path: &4
             - info-tabs
             - info
             - ownership_panel
@@ -3210,7 +3193,7 @@ patches:
             old: true
             state: rm
             extra: {}
-        -   path: *2
+        -   path: *4
             key: chgrp
             value: true
             state: ins
@@ -3231,7 +3214,7 @@ patches:
         mode: '0640'
         action: apply
         change:
-        -   path: &3
+        -   path: &5
             - info-tabs
             - storage
             - actions
@@ -3250,12 +3233,12 @@ patches:
                 enabled: true
             state: set
             extra: {}
-        -   path: *3
+        -   path: *5
             key: disk-attach-image
             value: true
             state: ins
             extra: {}
-        -   path: *3
+        -   path: *5
             key: disk-attach-volatile
             value: true
             state: ins
@@ -3946,7 +3929,44 @@ patches:
         owner: root
         group: oneadmin
         mode: '0640'
-        content: |-
+        action: apply
+        change:
+        -   path: &6 []
+            key: actions
+            old:
+                settings: true
+                instantiate: true
+            state: rm
+            extra: {}
+        -   path: *6
+            key: graphs
+            old:
+                cpu: true
+                memory: true
+                disks: true
+                networks: true
+                host-cpu: true
+                host-memory: true
+            state: rm
+            extra: {}
+        -   path: *6
+            key: cards
+            value:
+            -   id: virtual-machines
+                order: 10
+                size: full
+                to: true
+            -   id: host-cpu-chart
+                order: 20
+                size: half
+                to: false
+            -   id: host-memory-chart
+                order: 30
+                size: half
+                to: false
+            state: ins
+            extra: {}
+        content: |
             # This file configures the cards available in the dashboard for the cloud view.
             #
             # Cards are rendered by ascending order. Supported sizes are:
@@ -4090,7 +4110,7 @@ patches:
             old: false
             state: set
             extra: {}
-        -   path: &4
+        -   path: &7
             - info-tabs
             - sched_actions
             - actions
@@ -4098,7 +4118,7 @@ patches:
             old: true
             state: rm
             extra: {}
-        -   path: *4
+        -   path: *7
             key: perform_action
             old: true
             state: rm
@@ -4400,45 +4420,6 @@ patches:
                   not_on:
                     - lxc
                 backup: true
-    "/etc/one/fireedge/sunstone/views/groupadmin/dashboard-tab.yaml":
-        class: Yaml
-        owner: root
-        group: oneadmin
-        mode: '0640'
-        content: |-
-            # This file configures the cards available in the dashboard for the groupadmin view.
-            #
-            # Cards are rendered by ascending order. Supported sizes are:
-            # quarter, third, half, full, wide and narrow.
-            # The to option enables navigation for the card or its resource rows.
-
-            resource_name: 'DASHBOARD'
-
-            cards:
-              - id: virtual-machines
-                order: 10
-                size: third
-                to: true
-              - id: virtual-networks
-                order: 30
-                size: third
-                to: true
-              - id: images
-                order: 40
-                size: third
-                to: true
-              - id: cpu-chart
-                order: 50
-                size: half
-                to: false
-              - id: memory-chart
-                order: 60
-                size: half
-                to: false
-              - id: system
-                order: 80
-                size: full
-                to: true
     "/etc/one/fireedge/sunstone/views/groupadmin/backup-tab.yaml":
         class: Yaml
         owner: root
@@ -4871,7 +4852,7 @@ patches:
             old: false
             state: set
             extra: {}
-        -   path: &5
+        -   path: &8
             - info-tabs
             - sched_actions
             - actions
@@ -4879,7 +4860,7 @@ patches:
             old: true
             state: rm
             extra: {}
-        -   path: *5
+        -   path: *8
             key: perform_action
             old: true
             state: rm
@@ -5572,41 +5553,6 @@ patches:
             dialogs:
                deploy_dialog:
                create_dialog:
-    "/etc/one/fireedge/sunstone/views/user/dashboard-tab.yaml":
-        class: Yaml
-        owner: root
-        group: oneadmin
-        mode: '0640'
-        content: |-
-            # This file configures the cards available in the dashboard for the user view.
-            #
-            # Cards are rendered by ascending order. Supported sizes are:
-            # quarter, third, half, full, wide and narrow.
-            # The to option enables navigation for the card or its resource rows.
-
-            resource_name: 'DASHBOARD'
-
-            cards:
-              - id: virtual-machines
-                order: 10
-                size: third
-                to: true
-              - id: virtual-networks
-                order: 30
-                size: third
-                to: true
-              - id: images
-                order: 40
-                size: third
-                to: true
-              - id: cpu-chart
-                order: 50
-                size: half
-                to: false
-              - id: memory-chart
-                order: 60
-                size: half
-                to: false
     "/etc/one/fireedge/sunstone/views/user/backup-tab.yaml":
         class: Yaml
         owner: root
@@ -5964,7 +5910,7 @@ patches:
             old: false
             state: set
             extra: {}
-        -   path: &6
+        -   path: &9
             - info-tabs
             - sched_actions
             - actions
@@ -5972,7 +5918,7 @@ patches:
             old: true
             state: rm
             extra: {}
-        -   path: *6
+        -   path: *9
             key: perform_action
             old: true
             state: rm
@@ -6079,7 +6025,7 @@ patches:
             value: true
             state: ins
             extra: {}
-        -   path: &7
+        -   path: &10
             - info-tabs
             - storage
             - actions
@@ -6098,12 +6044,12 @@ patches:
                 enabled: true
             state: set
             extra: {}
-        -   path: *7
+        -   path: *10
             key: disk-attach-image
             value: true
             state: ins
             extra: {}
-        -   path: *7
+        -   path: *10
             key: disk-attach-volatile
             value: true
             state: ins
@@ -6372,28 +6318,28 @@ patches:
         mode: '0640'
         action: apply
         change:
-        -   path: &8 []
+        -   path: &11 []
             key: ComponentsModule
             old:
                 name: ComponentsModule
                 entry: __HOST__/fireedge/modules/ComponentsModule/remoteEntry.js
             state: rm
             extra: {}
-        -   path: *8
+        -   path: *11
             key: ResourcesModule
             value:
                 name: ResourcesModule
                 entry: __HOST__/fireedge/modules/ResourcesModule/remoteEntry.js
             state: ins
             extra: {}
-        -   path: *8
+        -   path: *11
             key: ComponentsV2Module
             value:
                 name: ComponentsV2Module
                 entry: __HOST__/fireedge/modules/ComponentsV2Module/remoteEntry.js
             state: ins
             extra: {}
-        -   path: *8
+        -   path: *11
             key: StylesModule
             value:
                 name: StylesModule
@@ -6438,7 +6384,7 @@ patches:
         mode: '0640'
         action: apply
         change:
-        -   path: &9 []
+        -   path: &12 []
             key:
             old:
                 title: Instances
@@ -6476,7 +6422,7 @@ patches:
                     Component: ServiceDetail
             state: rm
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             old:
                 title: Templates
@@ -6537,7 +6483,7 @@ patches:
                     Component: VmGroups
             state: rm
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             old:
                 title: Storage
@@ -6613,7 +6559,7 @@ patches:
                     Component: BackupJobDetail
             state: rm
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             old:
                 title: Networks
@@ -6654,7 +6600,7 @@ patches:
                     Component: CreateSecurityGroup
             state: rm
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             old:
                 title: Infrastructure
@@ -6708,7 +6654,7 @@ patches:
                     Component: Zones
             state: rm
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             old:
                 title: System
@@ -6757,7 +6703,7 @@ patches:
                     Component: ACLs
             state: rm
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             value:
                 title: Instances
@@ -6795,7 +6741,7 @@ patches:
                     Component: ServiceDetail
             state: ins
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             value:
                 title: Templates
@@ -6856,7 +6802,7 @@ patches:
                     Component: VmGroups
             state: ins
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             value:
                 title: Storage
@@ -6935,7 +6881,7 @@ patches:
                     Component: BackupJobDetail
             state: ins
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             value:
                 title: Networks
@@ -6976,7 +6922,7 @@ patches:
                     Component: CreateSecurityGroup
             state: ins
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             value:
                 title: Infrastructure
@@ -7030,7 +6976,7 @@ patches:
                     Component: Zones
             state: ins
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             value:
                 title: System
@@ -7079,7 +7025,7 @@ patches:
                     Component: ACLs
             state: ins
             extra: {}
-        -   path: *9
+        -   path: *12
             key:
             value:
                 title: Create Ticket
@@ -9261,17 +9207,17 @@ patches:
         mode: '0640'
         action: apply
         change:
-        -   path: &10 []
+        -   path: &13 []
             key: :host
             old: 127.0.0.1
             state: rm
             extra: {}
-        -   path: *10
+        -   path: *13
             key: :port
             old: 5030
             state: rm
             extra: {}
-        -   path: *10
+        -   path: *13
             key: :server
             value:
                 :bind: 127.0.0.1
@@ -10796,6 +10742,130 @@ patches:
             # - :service_port: 5030
             #   :remote_addr: 10.11.12.13 # HA VIP
             #   :remote_port: 5030
+    "/etc/one/fireedge/sunstone/views/admin/dashboard-tab.yaml":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        action: create
+        content: |
+            # This file configures the cards available in the dashboard for the admin view.
+            #
+            # Cards are rendered by ascending order. Supported sizes are:
+            # quarter, third, half, full, wide and narrow.
+            # The to option enables navigation for the card or its resource rows.
+
+            resource_name: 'DASHBOARD'
+
+            cards:
+              - id: virtual-machines
+                order: 10
+                size: quarter
+                to: true
+              - id: hosts-summary
+                order: 20
+                size: quarter
+                to: true
+              - id: virtual-networks
+                order: 30
+                size: quarter
+                to: true
+              - id: images
+                order: 40
+                size: quarter
+                to: true
+              - id: cpu-chart
+                order: 50
+                size: half
+                to: false
+              - id: memory-chart
+                order: 60
+                size: half
+                to: false
+              - id: cluster-capacity
+                order: 70
+                size: wide
+                to: false
+              - id: system
+                order: 80
+                size: narrow
+                to: true
+    "/etc/one/fireedge/sunstone/views/groupadmin/dashboard-tab.yaml":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        action: create
+        content: |
+            # This file configures the cards available in the dashboard for the groupadmin view.
+            #
+            # Cards are rendered by ascending order. Supported sizes are:
+            # quarter, third, half, full, wide and narrow.
+            # The to option enables navigation for the card or its resource rows.
+
+            resource_name: 'DASHBOARD'
+
+            cards:
+              - id: virtual-machines
+                order: 10
+                size: third
+                to: true
+              - id: virtual-networks
+                order: 30
+                size: third
+                to: true
+              - id: images
+                order: 40
+                size: third
+                to: true
+              - id: cpu-chart
+                order: 50
+                size: half
+                to: false
+              - id: memory-chart
+                order: 60
+                size: half
+                to: false
+              - id: system
+                order: 80
+                size: full
+                to: true
+    "/etc/one/fireedge/sunstone/views/user/dashboard-tab.yaml":
+        class: Yaml
+        owner: root
+        group: oneadmin
+        mode: '0640'
+        action: create
+        content: |
+            # This file configures the cards available in the dashboard for the user view.
+            #
+            # Cards are rendered by ascending order. Supported sizes are:
+            # quarter, third, half, full, wide and narrow.
+            # The to option enables navigation for the card or its resource rows.
+
+            resource_name: 'DASHBOARD'
+
+            cards:
+              - id: virtual-machines
+                order: 10
+                size: third
+                to: true
+              - id: virtual-networks
+                order: 30
+                size: third
+                to: true
+              - id: images
+                order: 40
+                size: third
+                to: true
+              - id: cpu-chart
+                order: 50
+                size: half
+                to: false
+              - id: memory-chart
+                order: 60
+                size: half
+                to: false
     "/etc/one/fireedge/sunstone/views/user/group-tab.yaml":
         class: Yaml
         owner: root
