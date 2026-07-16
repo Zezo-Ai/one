@@ -47,7 +47,10 @@ _one_list() {
 }
 
 _one_simple() {
+    local cur
     COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${1}" -- "${cur}") )
         return 0
@@ -162,7 +165,7 @@ _onebackupjob() {
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
     opts="create delete list show lock unlock chgrp chown chmod rename
-            update execute cancel sched-delete sched-update"
+            update backup cancel retry priority sched-delete sched-update"
     cmd=onebackupjob
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -170,7 +173,7 @@ _onebackupjob() {
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
         delete|show|lock|unlock|chgrp|chown|chmod|rename| \
-        update|execute|cancel|sched-update|sched-delete)
+        update|backup|cancel|retry|priority|sched-update|sched-delete)
             _complete $cmd
         ;;
         create)
@@ -192,7 +195,7 @@ _onecluster() {
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
     opts="create delete list show addhost delhost adddatastore deldatastore
-            addvnet delvnet update rename"
+            addvnet delvnet update rename optimize planexecute plandelete"
     cmd=onecluster
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -200,7 +203,7 @@ _onecluster() {
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
         delete|show|addhost|delhost|adddatastore|deldatastore|addvnet| \
-        delvnet|update|rename)
+        delvnet|update|rename|optimize|planexecute|plandelete)
             _complete $cmd
         ;;
         esac
@@ -281,19 +284,29 @@ _oneflow() {
     if [ "${#COMP_WORDS[@]}" -gt "2" ]; then
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
-    opts="list top show delete recover scale chgrp chown chmod rename action"
+    opts="list top show delete recover scale chgrp chown chmod rename action
+            sched-delete update purge-done add-role remove-role release"
     cmd=oneflow
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        show|delete|recover|scale|chgrp|chown|chmod|rename|action)
+        show|delete|recover|scale|chgrp|chown|chmod|rename|action| \
+        sched-delete|update|add-role|remove-role|release)
             _complete $cmd
         ;;
         esac
     elif [ "$COMP_CWORD" == 3 ]; then
-        _one_owner_update "$pprev"
+        case "$pprev" in
+        add-role)
+            COMPREPLY=( $(compgen -A file -- "${cur}") )
+            return 0
+        ;;
+        *)
+            _one_owner_update "$pprev"
+        ;;
+        esac
     fi
 }
 
@@ -333,14 +346,15 @@ _onegroup() {
     if [ "${#COMP_WORDS[@]}" -gt "2" ]; then
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
-    opts="create update delete list show addadmin deladmin quota batchquota defaultquota"
+    opts="create update delete list show addadmin deladmin quota batchquota
+            defaultquota vlan"
     cmd=onegroup
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        update|delete|show|addadmin|deladmin|quota|batchquota)
+        update|delete|show|addadmin|deladmin|quota|batchquota|vlan)
             _complete $cmd
         ;;
         defaultquota)
@@ -353,7 +367,7 @@ _onegroup() {
         addadmin|deladmin)
             _complete oneuser
         ;;
-        update|quota|batchquota)
+        update|quota|batchquota|vlan)
             COMPREPLY=( $(compgen -A file -- "${cur}") )
             return 0
         ;;
@@ -506,15 +520,15 @@ _onemarketapp() {
     if [ "${#COMP_WORDS[@]}" -gt "2" ]; then
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
-    opts="create export download delete update chgrp chown chmod rename list show
-            enable disable lock unlock"
+    opts="create export delete update chgrp chown chmod rename list show enable
+            disable lock unlock"
     cmd=onemarketapp
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        export|download|delete|update|chgrp|chown|chmod|rename|show|lock|unlock)
+        export|delete|update|chgrp|chown|chmod|rename|show|lock|unlock)
             _complete $cmd
         ;;
         create)
@@ -548,7 +562,7 @@ _oneform()
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        show|enable|disable|create)
+        show|enable|disable)
             local drivers
             drivers="$(oneform list --csv --no-header -l name 2>/dev/null | tr -d '\r')"
             COMPREPLY=( $(compgen -W "${drivers}" -- "${cur}") )
@@ -599,7 +613,7 @@ _oneprovider() {
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        show|update|rename|chgrp|chown|chmod|delete|retry)
+        show|update|rename|chgrp|chown|chmod|delete)
             _complete $cmd ID
         ;;
         create)
@@ -677,7 +691,7 @@ _onesecgroup() {
 _oneshowback() {
     local opts
     opts="list calculate"
-    _one_simple
+    _one_simple "$opts"
 }
 
 _onetemplate() {
@@ -697,7 +711,7 @@ _oneuser() {
     fi
     opts="create update quota batchquota defaultquota umask login key delete
             passwd chgrp addgroup delgroup chauth list show encode passwdsearch
-            token-create token-set token-delete token-delete-all"
+            token-create token-set token-delete token-delete-all enable disable"
     cmd=oneuser
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -705,7 +719,7 @@ _oneuser() {
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
         update|quota|batchquota|umask|delete|passwd|chgrp|addgroup| \
-        delgroup|chauth|show)
+        delgroup|chauth|show|enable|disable)
             _complete $cmd
         ;;
         defaultquota)
@@ -782,27 +796,33 @@ _onevm() {
     fi
     opts="create update hold release disk-saveas terminate undeploy poweroff
             reboot deploy migrate stop suspend resume recover disk-attach
-            disk-detach nic-attach nic-detach chgrp chown chmod resched unresched
-            rename snapshot-create snapshot-revert snapshot-delete snapshot-list
-            disk-snapshot-create disk-snapshot-revert disk-snapshot-delete
-            disk-snapshot-rename disk-snapshot-list disk-resize list show top
-            resize save updateconf lock unlock create-chart delete-chart
-            update-chart backup restore ssh port-forward backupmode"
+            disk-detach nic-attach nic-detach nic-update sg-attach sg-detach
+            chgrp chown chmod resched unresched rename snapshot-create
+            snapshot-revert snapshot-delete snapshot-list disk-snapshot-create
+            disk-snapshot-revert disk-snapshot-delete disk-snapshot-rename
+            disk-snapshot-list disk-resize list show top resize save backupmode
+            updateconf lock unlock exec exec-retry exec-cancel create-chart
+            delete-chart update-chart sched-delete sched-update backup
+            backup-cancel pci-attach pci-detach ssh port-forward vnc restore
+            vmgroup-add vmgroup-del"
     cmd=onevm
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        update|hold|release|disk-saveas|terminate|show|delete|resume|recover| \
-        disk-attach|disk-detach|nic-attach|nic-detach|chgrp|chown|chmod|resched| \
-        unresched|rename|snapshot-create|snapshot-revert|snapshot-delete|snapshot-list| \
-        disk-snapshot-create|disk-snapshot-delete|disk-snapshot-revert| \
-        disk-snapshot-rename|disk-snapshot-list|disk-resize|save|updateconf|lock|unlock| \
-        create-chart|delete-chart|update-chart|backup|restore|ssh|port-forward|backupmode)
+        update|hold|release|disk-saveas|terminate|show|resume|recover| \
+        disk-attach|disk-detach|nic-attach|nic-detach|nic-update|sg-attach| \
+        sg-detach|chgrp|chown|chmod|resched|unresched|rename|snapshot-create| \
+        snapshot-revert|snapshot-delete|snapshot-list|disk-snapshot-create| \
+        disk-snapshot-delete|disk-snapshot-revert|disk-snapshot-rename| \
+        disk-snapshot-list|disk-resize|save|backupmode|updateconf|lock|unlock| \
+        exec|exec-retry|exec-cancel|create-chart|delete-chart|update-chart| \
+        sched-delete|sched-update|backup|backup-cancel|pci-attach|pci-detach| \
+        restore|ssh|port-forward|vnc|vmgroup-add|vmgroup-del)
             _complete $cmd
         ;;
-        undeploy|poweroff|reboot|shutdown|suspend|stop|migrate)
+        undeploy|poweroff|reboot|suspend|stop|migrate)
             _complete $cmd $COL_NAME "stat=runn"
         ;;
         deploy)
@@ -821,6 +841,12 @@ _onevm() {
         deploy|migrate)
             _complete onehost $COL_NAME "stat=on"
         ;;
+        restore)
+            _complete oneimage $COL_NAME "type=BK"
+        ;;
+        vmgroup-add)
+            _complete onevmgroup
+        ;;
         esac
         _one_owner_update "$pprev"
     fi
@@ -834,14 +860,16 @@ _onevmgroup() {
     if [ "${#COMP_WORDS[@]}" -gt "2" ]; then
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
-    opts="create delete list show chgrp chown chmod update rename lock unlock"
+    opts="create delete list show chgrp chown chmod update rename lock unlock
+            role-add role-delete role-update"
     cmd=onevmgroup
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        delete|show|chgrp|chown|chmod|update|rename|lock|unlock)
+        delete|show|chgrp|chown|chmod|update|rename|lock|unlock| \
+        role-add|role-delete|role-update)
             _complete $cmd
         ;;
         create)
@@ -850,7 +878,15 @@ _onevmgroup() {
         ;;
         esac
     elif [ "$COMP_CWORD" == 3 ]; then
-        _one_owner_update "$pprev"
+        case "$pprev" in
+        role-add)
+            COMPREPLY=( $(compgen -A file -- "${cur}") )
+            return 0
+        ;;
+        *)
+            _one_owner_update "$pprev"
+        ;;
+        esac
     fi
 }
 
@@ -862,15 +898,15 @@ _onevnet() {
     if [ "${#COMP_WORDS[@]}" -gt "2" ]; then
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
-    opts="create delete addar rmar free hold release release
-            chgrp chown chmod list show update updatear rename lock unlock orphans"
+    opts="create delete addar rmar free hold release reserve chgrp chown chmod
+            list show update updatear rename lock unlock orphans recover"
     cmd=onevnet
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        delete|addar|rmar|free|hold|release|reserve|chgrp| \
+        delete|addar|rmar|free|hold|release|reserve|recover|chgrp| \
         chown|chmod|show|update|updatear|rename|lock|unlock)
             _complete $cmd
         ;;
@@ -884,6 +920,9 @@ _onevnet() {
         addar|update)
             COMPREPLY=( $(compgen -A file -- "${cur}") )
             return 0
+        ;;
+        reserve)
+            _complete onevnet
         ;;
         esac
         _one_owner_update "$pprev"
@@ -936,14 +975,16 @@ _onezone() {
     if [ "${#COMP_WORDS[@]}" -gt "2" ]; then
         pprev="${COMP_WORDS[COMP_CWORD-2]}"
     fi
-    opts="create rename server-add server-del server-reset update delete list show set serversync"
+    opts="create rename server-add server-del server-reset update delete list
+            show set serversync enable disable"
     cmd=onezone
     if [ "$COMP_CWORD" == 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
         return 0
     elif [ "$COMP_CWORD" == 2 ]; then
         case "$prev" in
-        rename|server-add|server-del|server-reset|update|delete|show|set)
+        rename|server-add|server-del|server-reset|update|delete|show|set| \
+        enable|disable)
             _complete $cmd
         ;;
         create)
