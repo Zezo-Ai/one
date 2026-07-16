@@ -62,7 +62,7 @@ module TransferManager
                 @id   = disk_xml.elements['DISK_ID'].text.to_i
                 @size = disk_xml.elements['SIZE'].text.to_i
 
-                imageid = disk_xml.elements['IMAGE_ID'].text
+                imageid = disk_xml.elements['IMAGE_ID']&.text
                 is_persistent = disk_xml.elements['PERSISTENT']&.text&.downcase == 'yes'
                 imgds_id = disk_xml.elements['DATASTORE_ID'].text.to_i
                 sysds_id = @vm.elements['HISTORY_RECORDS/HISTORY[last()]/DS_ID'].text.to_i
@@ -381,7 +381,12 @@ module TransferManager
                 vm      = vm_xml.root
 
                 indexed_disks = []
-                vm.elements.each('TEMPLATE/DISK[TYPE="BLOCK"]') do |d|
+                vm.elements.each('TEMPLATE/DISK') do |d|
+                    type      = d.elements['TYPE']&.text&.upcase
+                    disk_type = d.elements['DISK_TYPE']&.text&.upcase
+
+                    next unless type == 'BLOCK' || (type == 'FS' && disk_type == 'BLOCK')
+
                     disk = new(vm, d)
                     indexed_disks[disk.id] = disk
                 end

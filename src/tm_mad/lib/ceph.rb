@@ -302,7 +302,12 @@ module TransferManager
                 vm      = vm_xml.root
 
                 indexed_disks = []
-                vm.elements.each('TEMPLATE/DISK[TYPE="RBD"]') do |d|
+                vm.elements.each('TEMPLATE/DISK') do |d|
+                    type      = d.elements['TYPE']&.text&.upcase
+                    disk_type = d.elements['DISK_TYPE']&.text&.upcase
+
+                    next unless type == 'RBD' || (type == 'FS' && disk_type == 'RBD')
+
                     disk = new(vm, d)
                     indexed_disks[disk.id] = disk
                 end
