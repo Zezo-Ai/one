@@ -2591,37 +2591,8 @@ ONECFG_LIB_EE_CONFIG_FILES="src/onecfg/lib/ee/config/settings.rb \
 
 ONECFG_LIB_EE_PATCH_FILES="src/onecfg/lib/ee/patch/generate.rb"
 
-ONECFG_SHARE_MIGRATORS_FILES="src/onecfg/share/migrators/5.4.0_to_5.4.1.yaml \
-                              src/onecfg/share/migrators/5.4.1_to_5.4.2.yaml \
-                              src/onecfg/share/migrators/5.4.2_to_5.4.6.yaml \
-                              src/onecfg/share/migrators/5.4.6_to_5.6.0.rb \
-                              src/onecfg/share/migrators/5.4.6_to_5.6.0.yaml \
-                              src/onecfg/share/migrators/5.6.0_to_5.8.0.rb \
-                              src/onecfg/share/migrators/5.6.0_to_5.8.0.yaml \
-                              src/onecfg/share/migrators/5.8.0_to_5.10.0.rb \
-                              src/onecfg/share/migrators/5.8.0_to_5.10.0.yaml \
-                              src/onecfg/share/migrators/5.10.0_to_5.12.0.rb \
-                              src/onecfg/share/migrators/5.10.0_to_5.12.0.yaml \
-                              src/onecfg/share/migrators/5.12.0_to_6.0.0.rb \
-                              src/onecfg/share/migrators/5.12.0_to_6.0.0.yaml \
-                              src/onecfg/share/migrators/6.0.0_to_6.2.0.rb \
-                              src/onecfg/share/migrators/6.0.0_to_6.2.0.yaml \
-                              src/onecfg/share/migrators/6.2.0_to_6.4.0.rb \
-                              src/onecfg/share/migrators/6.2.0_to_6.4.0.yaml \
-                              src/onecfg/share/migrators/6.4.0_to_6.6.0.rb \
-                              src/onecfg/share/migrators/6.4.0_to_6.6.0.yaml \
-                              src/onecfg/share/migrators/6.6.0_to_6.8.0.rb \
-                              src/onecfg/share/migrators/6.6.0_to_6.8.0.yaml \
-                              src/onecfg/share/migrators/6.8.0_to_6.10.0.rb \
-                              src/onecfg/share/migrators/6.8.0_to_6.10.0.yaml \
-                              src/onecfg/share/migrators/6.10.0_to_6.10.2.rb \
-                              src/onecfg/share/migrators/6.10.0_to_6.10.2.yaml \
-                              src/onecfg/share/migrators/6.10.2_to_7.0.0.rb \
-                              src/onecfg/share/migrators/6.10.2_to_7.0.0.yaml \
-                              src/onecfg/share/migrators/7.0.0_to_7.2.0.rb \
-                              src/onecfg/share/migrators/7.0.0_to_7.2.0.yaml \
-                              src/onecfg/share/migrators/7.2.0_to_7.3.85.rb \
-                              src/onecfg/share/migrators/7.2.0_to_7.3.85.yaml"
+ONECFG_SHARE_MIGRATORS_FILES="src/onecfg/share/migrators/*.yaml \
+                              src/onecfg/share/migrators/*.rb"
 
 #-----------------------------------------------------------------------------
 # OneHem files
