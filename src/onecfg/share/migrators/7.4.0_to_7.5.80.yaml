@@ -3763,11 +3763,11 @@ patches:
                 order: 10
                 size: full
                 to: true
-              - id: host-cpu-chart
+              - id: cpu-chart
                 order: 20
                 size: half
                 to: false
-              - id: host-memory-chart
+              - id: memory-chart
                 order: 30
                 size: half
                 to: false
@@ -6182,6 +6182,9 @@ patches:
                   Component: VrTemplates
                 - title: Create VR Template
                   path: /vrouter-template/create
+                  Component: CreateVrTemplate
+                - title: Update VR Template
+                  path: /vrouter-template/update
                   Component: CreateVrTemplate
                 - title: VR Template
                   path: /vrouter-template/:id
